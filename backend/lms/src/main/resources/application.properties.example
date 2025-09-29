@@ -1,0 +1,10 @@
+/**
+ * Example configuration file for a Spring Boot application.
+ * Copy this file as 'application.properties' and update the values as needed.
+ */
+spring.application.name=lms
+
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/name_of_your_database
+spring.datasource.username=postgres
+spring.datasource.password=your_password
