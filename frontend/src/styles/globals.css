@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* optional: biến màu của bạn */
+:root {
+  --brand-900: #2d5a27;
+  --brand-600: #3fa337;
+  --brand-200: #d9f2c7;
+}
+
+body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
