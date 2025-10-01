@@ -1,3 +1,55 @@
 @import "tailwindcss";
 
-body { font-family: "Segoe UI", system-ui, sans-serif; }
+/* ---- Brand palette (giữ theme xanh) ---- */
+:root {
+  --brand-900: #2d5a27;
+  --brand-600: #3fa337;
+  --brand-200: #d9f2c7;
+}
+
+/* ---- Background gradient mesh + grid overlay ---- */
+.bg-lms {
+  background:
+    radial-gradient(60rem 60rem at 80% -10%, rgba(63,163,55,.20), transparent 60%),
+    radial-gradient(48rem 48rem at -10% 20%, rgba(45,90,39,.22), transparent 60%),
+    radial-gradient(36rem 36rem at 110% 90%, rgba(217,242,199,.32), transparent 60%),
+    #ffffff;
+}
+
+.grid-overlay {
+  background-image:
+    linear-gradient(to right, rgba(46,125,50,.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46,125,50,.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(closest-side, rgba(0,0,0,.6), transparent);
+}
+
+/* ---- Blobs & motion utilities ---- */
+.blob { filter: blur(40px); opacity: .55; mix-blend-mode: screen; }
+
+@keyframes floaty {
+  0% { transform: translateY(0) }
+  50% { transform: translateY(-10px) }
+  100% { transform: translateY(0) }
+}
+.float-slow   { animation: floaty 6s  ease-in-out infinite; }
+.float-slower { animation: floaty 9s  ease-in-out infinite; }
+
+/* ---- Button glow + shine (rất nhẹ tay) ---- */
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(63,163,55,.35) }
+  50%     { box-shadow: 0 0 32px 4px rgba(63,163,55,.20) }
+}
+.btn-glow { animation: pulseGlow 3.2s ease-in-out infinite; }
+
+.btn-shine { position: relative; overflow: hidden; }
+.btn-shine::before{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.6) 20%, transparent 40%);
+  transform: translateX(-130%);
+}
+.btn-shine:hover::before{ transition: transform .8s ease; transform: translateX(130%); }
+
+/* Font */
+body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
