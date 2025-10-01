@@ -1,0 +1,75 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { gsap } from "gsap";
+
+export default function HeroSection() {
+  const logoRef = useRef<HTMLImageElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const subRef = useRef<HTMLParagraphElement | null>(null);
+  const ctaRef = useRef<HTMLAnchorElement | null>(null);
+
+  useEffect(() => {
+    // set trạng thái ban đầu
+    gsap.set([titleRef.current, subRef.current, ctaRef.current], { opacity: 0, y: 18 });
+
+    const tl = gsap.timeline({ defaults: { ease: "power2.out", duration: 0.8 } });
+    tl.fromTo(
+      logoRef.current,
+      { opacity: 0, scale: 0.88, y: 10 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.9 }
+    )
+      .to(titleRef.current, { opacity: 1, y: 0 }, "-=0.1")
+      .to(subRef.current, { opacity: 1, y: 0 }, "-=0.2")
+      .to(ctaRef.current, { opacity: 1, y: 0, scale: 1 }, "-=0.2");
+
+    // idle floating cho logo (rất nhẹ)
+    gsap.to(logoRef.current, {
+      y: -6,
+      duration: 3,
+      ease: "sine.inOut",
+      repeat: -1,
+      yoyo: true,
+    });
+  }, []);
+
+  return (
+    <section className="relative flex-1 flex flex-col justify-center items-center text-center px-6">
+      <Image
+        ref={logoRef as any}
+        src="/images/lms_logo.png"
+        alt="LMS Logo"
+        width={220}
+        height={220}
+        priority
+        sizes="(max-width: 768px) 160px, 220px"
+      />
+
+      <h1
+        ref={titleRef}
+        className="mt-6 text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900"
+      >
+        LMS
+      </h1>
+
+      <p
+        ref={subRef}
+        className="mt-3 text-green-600 text-base sm:text-lg"
+      >
+        Learning Manager System Online
+      </p>
+
+      <Link
+        ref={ctaRef}
+        href="/courses"
+        className="mt-8 px-8 py-3 text-white text-lg font-semibold rounded-lg
+                   bg-gradient-to-r from-green-700 via-green-500 to-green-300
+                   hover:scale-105 transition btn-glow btn-shine"
+      >
+        Get Started
+      </Link>
+    </section>
+  );
+}
