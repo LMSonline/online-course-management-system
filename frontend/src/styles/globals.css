@@ -7,4 +7,6 @@
   --brand-200: #d9f2c7;
 }
 
-body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
