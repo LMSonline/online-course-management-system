@@ -22,6 +22,16 @@ public class ApiResponse<T> {
     private String code;       // Business code (e.g., SUCCESS, USER_NOT_FOUND)
     private T data;            // Response data (generic)
     private Instant timestamp; // ISO 8601 timestamp for logging/debugging
+    private Meta meta;
 
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Meta {
+        private String author;
+        private String license;
+        private String version;
+    }
 
 }
