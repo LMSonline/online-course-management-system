@@ -1,4 +1,4 @@
-package vn.uit.lms.controller;
+package vn.uit.lms.modules.demo.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
