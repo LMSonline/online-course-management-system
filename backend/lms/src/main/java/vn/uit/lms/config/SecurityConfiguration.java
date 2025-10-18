@@ -23,7 +23,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         String[] whiteList = {"/ping", "/api/v1/auth/**",
                 "/storage/**", "/v3/api-docs/**",
-                "/swagger-ui/**",
+                "/swagger-ui/**", "/api-docs",
                 "/swagger-ui.html"};
         http.csrf(c -> c.disable())
                 .cors(Customizer.withDefaults())

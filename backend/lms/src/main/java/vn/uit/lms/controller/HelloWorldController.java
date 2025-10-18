@@ -1,4 +1,4 @@
-package vn.uit.lms.modules.demo.controller;
+package vn.uit.lms.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
