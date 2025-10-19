@@ -15,3 +15,14 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 # Configure logging level for Spring Security
 logging.level.org.springframework.security=TRACE
+
+# swagger-ui custom path
+springdoc.swagger-ui.path=/swagger-ui.html
+
+# Email config
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=trinhdev.gl@gmail.com
+spring.mail.password=jppqtqjqunbxxsza
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true

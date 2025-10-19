@@ -10,6 +10,7 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import vn.uit.lms.shared.dto.ApiResponse;
+import vn.uit.lms.shared.util.annotation.ApiMessage;
 
 import java.time.Instant;
 
@@ -61,6 +62,8 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
 
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();
+        ApiMessage apiMessage = returnType.getMethodAnnotation(ApiMessage.class);
+        String messageFromAnnotation = apiMessage != null ? apiMessage.value() : null;
 
         // Skip wrapping if already formatted or not suitable (e.g., String or ApiResponse)
         if (body instanceof ApiResponse<?> || body instanceof String) {
@@ -77,7 +80,7 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
                 .success(true)
                 .status(status)
                 .code(resolveCode(status))
-                .message(resolveMessage(status))
+                .message(resolveMessage(status) + ": " + (messageFromAnnotation != null ? messageFromAnnotation : ""))
                 .data(body)
                 .timestamp(Instant.now())
                 .meta(ApiResponse.Meta.builder()
