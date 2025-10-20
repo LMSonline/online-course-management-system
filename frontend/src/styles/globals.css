@@ -1,30 +1,67 @@
+
 @import "tailwindcss";
 
-/* ---- Brand palette (giữ theme xanh) ---- */
+
 :root {
+  /* legacy brand (đang có) */
   --brand-900: #2d5a27;
   --brand-600: #3fa337;
   --brand-200: #d9f2c7;
+
+  /* thêm dạng RGB để pha alpha dễ hơn trong gradient */
+  --brand-900-rgb: 45 90 39;   /* #2d5a27  */
+  --brand-600-rgb: 63 163 55;  /* #3fa337  */
+  --brand-200-rgb: 217 242 199;/* #d9f2c7  */
+
+  /* NEW – neon theo logo (dùng song song, không đụng code cũ) */
+  --brand-primary:  #65D830;   /* neon lime – CTA/nhấn */
+  --brand-secondary:#2B3A4A;   /* xanh than – nền đậm/viền */
+  --brand-accent:   #CFF6B2;   /* lime nhạt – hover/viền sáng */
+
+  /* tiện lợi: rgb của neon */
+  --brand-primary-rgb:   101 216 48;
+  --brand-secondary-rgb: 43 58 74;
+  --brand-accent-rgb:    207 246 178;
+
+  /* nền & chữ (phù hợp dark UI) */
+  --panel: #0B1220;
+  --ink:   #0F172A;
+
+  --primary: #16a34a;          /* green-600 cho CTA */
+  --primary-700: #15803d;
+  --primary-100: #dcfce7;
+
+  --ink: #0f172a;              /* text */
+  --muted: #475569;            /* subtext */
+  --surface: #ffffff;          /* card/nav bg */
+  --surface-2: #f8fafc;        /* page bg */
 }
 
-/* ---- Background gradient mesh + grid overlay ---- */
+
+html { color-scheme: dark; }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--panel);
+  color: white;
+}
+
+
 .bg-lms {
   background:
-    radial-gradient(60rem 60rem at 80% -10%, rgba(63,163,55,.20), transparent 60%),
-    radial-gradient(48rem 48rem at -10% 20%, rgba(45,90,39,.22), transparent 60%),
-    radial-gradient(36rem 36rem at 110% 90%, rgba(217,242,199,.32), transparent 60%),
+    radial-gradient(60rem 60rem at 80% -10%, rgba(var(--brand-600-rgb) / .20), transparent 60%),
+    radial-gradient(48rem 48rem at -10% 20%,  rgba(var(--brand-900-rgb) / .22), transparent 60%),
+    radial-gradient(36rem 36rem at 110% 90%, rgba(var(--brand-200-rgb) / .32), transparent 60%),
     #ffffff;
 }
 
 .grid-overlay {
   background-image:
-    linear-gradient(to right, rgba(46,125,50,.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(46,125,50,.06) 1px, transparent 1px);
+    linear-gradient(to right, rgba(var(--brand-600-rgb) / .06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--brand-600-rgb) / .06) 1px, transparent 1px);
   background-size: 24px 24px;
   mask-image: radial-gradient(closest-side, rgba(0,0,0,.6), transparent);
 }
 
-/* ---- Blobs & motion utilities ---- */
 .blob { filter: blur(40px); opacity: .55; mix-blend-mode: screen; }
 
 @keyframes floaty {
@@ -35,10 +72,11 @@
 .float-slow   { animation: floaty 6s  ease-in-out infinite; }
 .float-slower { animation: floaty 9s  ease-in-out infinite; }
 
-/* ---- Button glow + shine (rất nhẹ tay) ---- */
+
+
 @keyframes pulseGlow {
-  0%,100% { box-shadow: 0 0 0 0 rgba(63,163,55,.35) }
-  50%     { box-shadow: 0 0 32px 4px rgba(63,163,55,.20) }
+  0%,100% { box-shadow: 0 0 0 0 rgba(var(--brand-primary-rgb) / .35) }
+  50%     { box-shadow: 0 0 32px 4px rgba(var(--brand-primary-rgb) / .20) }
 }
 .btn-glow { animation: pulseGlow 3.2s ease-in-out infinite; }
 
@@ -51,5 +89,68 @@
 }
 .btn-shine:hover::before{ transition: transform .8s ease; transform: translateX(130%); }
 
-/* Font */
-body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+/* =========================
+   🔁 Small reusable utilities (optional)
+   ========================= */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-medium transition;
+}
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--ink);
+  box-shadow: 0 0 24px rgba(var(--brand-primary-rgb) / .35);
+}
+.btn-primary:hover { background: color-mix(in srgb, var(--brand-primary) 85%, white); }
+
+.btn-outline {
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 70%, transparent);
+  color: var(--brand-primary);
+}
+.btn-outline:hover { background: color-mix(in srgb, var(--brand-primary) 10%, transparent); }
+
+.pill {
+  @apply rounded-full px-3 py-1 text-sm transition;
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.8);
+}
+.pill:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 70%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+  color: white;
+}
+
+.card {
+  @apply rounded-2xl p-4 transition;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 40%, transparent);
+}
+html { color-scheme: light; }
+body {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* Light variants cho các util có sẵn */
+.btn-primary{
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 6px 20px rgba(22,163,74,.25);
+}
+.btn-primary:hover{ background: var(--primary-700); }
+
+.btn-outline{
+  border: 1px solid rgba(22,163,74,.4);
+  color: var(--primary);
+}
+.pill{
+  border: 1px solid rgba(2,6,23,.08);
+  color: #0f172a;
+  background: white;
+}
+.card{
+  background: var(--surface);
+  border: 1px solid rgba(2,6,23,.08);
+}
