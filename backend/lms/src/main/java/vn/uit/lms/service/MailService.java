@@ -18,6 +18,7 @@ import vn.uit.lms.core.entity.Account;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Service for sending emails asynchronously.
@@ -91,11 +92,11 @@ public class MailService {
     }
 
     @Async
-    public void sendEmailFromTemplate(Account account, String templateName, String titleKey) {
-        sendEmailFromTemplateSync(account, templateName, titleKey);
+    public void sendEmailFromTemplate(Account account, String templateName, String titleKey, String token) {
+        sendEmailFromTemplateSync(account, templateName, titleKey, token);
     }
 
-    private void sendEmailFromTemplateSync(Account account, String templateName, String titleKey) {
+    private void sendEmailFromTemplateSync(Account account, String templateName, String titleKey, String token) {
         if (account.getEmail() == null) {
             LOG.debug("Email doesn't exist for user '{}'", account.getUsername());
             return;
@@ -105,21 +106,22 @@ public class MailService {
         context.setVariable(USER, account);
         context.setVariable(BASE_URL, baseUrl);
         context.setVariable(API_VERSION, apiVersion);
+        context.setVariable("token", token);
         String content = templateEngine.process(templateName, context);
         String subject = messageSource.getMessage(titleKey, null, locale);
         sendEmailSync(account.getEmail(), subject, content, false, true);
     }
 
-//    @Async
-//    public void sendActivationEmail(User user) {
-//        LOG.debug("Sending activation email to '{}'", user.getEmail());
-//        sendEmailFromTemplateSync(user, "mail/activationEmail", "email.activation.title");
-//    }
-//
     @Async
-    public void sendCreationEmail(Account user) {
+    public void sendActivationEmail(Account user, String token) {
+        LOG.debug("Sending activation email to '{}'", user.getEmail());
+        sendEmailFromTemplateSync(user, "mail/activationEmail", "email.activation.title", token);
+    }
+
+    @Async
+    public void sendCreationEmail(Account user, String token) {
         LOG.debug("Sending creation email to '{}'", user.getEmail());
-        sendEmailFromTemplateSync(user, "mail/creationEmail", "email.activation.title");
+        sendEmailFromTemplateSync(user, "mail/creationEmail", "email.activation.title", token);
     }
 //
 //    @Async

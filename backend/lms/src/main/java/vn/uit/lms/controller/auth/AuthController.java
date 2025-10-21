@@ -5,12 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.EmailVerificationService;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.mapper.AccountMapper;
@@ -22,10 +20,12 @@ public class AuthController {
 
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthController(AccountService accountService, PasswordEncoder passwordEncoder) {
+    public AuthController(AccountService accountService, PasswordEncoder passwordEncoder, EmailVerificationService emailVerificationService) {
         this.accountService = accountService;
         this.passwordEncoder = passwordEncoder;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @PostMapping("/register")
@@ -36,6 +36,12 @@ public class AuthController {
         Account accountDB = this.accountService.createNewAccount(account);
         RegisterResponse response = AccountMapper.toResponse(accountDB);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        this.emailVerificationService.verifyToken(token);
+        return ResponseEntity.ok("Your email has been successfully verified!");
     }
 
 }

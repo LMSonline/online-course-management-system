@@ -26,3 +26,12 @@ spring.mail.username=trinhdev.gl@gmail.com
 spring.mail.password=jppqtqjqunbxxsza
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
+
+# i18n
+spring.messages.basename=i18n/messages
+spring.messages.encoding=UTF-8
+spring.messages.fallback-to-system-locale=false
+
+#Base URL
+app.base-url=http://localhost:8080
+app.api-version=api/v1
