@@ -54,7 +54,7 @@ export default function FeaturedSkills() {
   const order = [index, (index + 1) % cards.length, (index + 2) % cards.length];
 
   return (
-    <section className="section py-14">
+<section className="container mx-auto px-4 mt-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* LEFT: heading */}
         <div className="lg:col-span-4">

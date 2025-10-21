@@ -63,8 +63,9 @@ export default function IntroWithStats() {
     { value: "320+", label: "Learning paths" },
   ];
 
-  return (
-    <section className="relative container mx-auto px-4 py-12 md:py-16">
+  return (    
+
+<section className="container mx-auto px-4 mt-6">
       {/* subtle glow background */}
       <div className="pointer-events-none absolute inset-0 -z-10 [background:radial-gradient(60%_40%_at_20%_0%,rgba(152,255,121,.08),transparent_60%),radial-gradient(50%_40%_at_100%_0%,rgba(152,255,121,.05),transparent_60%)]" />
 

@@ -1,9 +1,12 @@
-import Hero from "@/app/components/Hero";
-import CategoryPills from "@/app/components/CategoryPills";
+
 import CourseGrid from "@/app/components/CourseGrid";
 import BannerCarousel, { type BannerSlide } from "@/app/components/BannerCarousel";
 import FeaturedSkills from "@/app/components/FeaturedSkills";
 import IntroWithStats from "@/app/components/IntroWithStats";
+import TopicsSection from "@/app/components/TopicsSection";
+import ReviewsSection from "@/app/components/ReviewsSection";
+
+
 
 const slides: BannerSlide[] = [
   {
@@ -37,14 +40,45 @@ export default function Home() {
       {/* Category Pills */}
       <IntroWithStats />
 
+      {/* Explore by Topics */}
+      <TopicsSection />
+
+
+
       {/* 👇 NEW SECTION – giống Udemy homepage */}
       <FeaturedSkills />
 
+
+      <ReviewsSection />
+
+
       {/* Featured Courses */}
-      <section className="container mx-auto px-4 space-y-6">
+      <section className="container mx-auto px-4 mt-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Khoá học nổi bật</h2>
-          <a href="/courses" className="pill">Xem tất cả</a>
+          <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-body">
+            Featured Courses
+          </h2>
+          <a
+            href="/courses"
+            className="
+    inline-flex items-center gap-1.5 rounded-full border border-white/10 
+    bg-white/5 px-4 py-1.5 text-sm font-medium text-muted-foreground 
+    hover:text-lime-300 hover:border-lime-300/30 hover:bg-lime-400/5 
+    transition-all duration-200
+  "
+          >
+            View all
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
         </div>
         <CourseGrid />
       </section>
