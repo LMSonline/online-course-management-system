@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useHoverFloat } from "@/app/components/hooks/UseHoverFloat";
+import { useHoverFloat } from "@/app/components/hooks/UseHoverFloat"; // <— check your path
 import { useEffect } from "react";
 
 export type CoursePreview = {
@@ -21,15 +21,15 @@ export default function CourseHoverCard({
   preview,
 }: {
   anchorClassName?: string;
-  children: React.ReactNode;     // Thường là <SkillCourseCard />
+  children: React.ReactNode; // Usually your <CourseCard /> / <SkillCourseCard />
   preview: CoursePreview;
 }) {
   const { open, setOpen, placement, ref, panelRef, onEnter, onLeave } = useHoverFloat();
 
-  // đóng panel nếu anchor bị unmount (chuyển tab/slide)
+  // close if anchor unmounts (e.g., tab/slide changes)
   useEffect(() => () => setOpen(false), [setOpen]);
 
-  // tính class vị trí + mũi tên
+  // position + arrow
   const posStyle = (() => {
     switch (placement) {
       case "left":
@@ -72,7 +72,6 @@ export default function CourseHoverCard({
     >
       {children}
 
-      {/* Panel */}
       {open && (
         <div
           ref={panelRef}
@@ -96,9 +95,7 @@ export default function CourseHoverCard({
             </p>
           )}
 
-          {preview.meta && (
-            <p className="mt-1 text-xs text-muted-foreground">{preview.meta}</p>
-          )}
+          {preview.meta && <p className="mt-1 text-xs text-muted-foreground">{preview.meta}</p>}
 
           {preview.summary && (
             <p className="mt-3 text-sm leading-relaxed">{preview.summary}</p>
@@ -116,9 +113,7 @@ export default function CourseHoverCard({
           ) : null}
 
           <div className="mt-4 flex items-center justify-between gap-3">
-            {preview.price && (
-              <div className="text-base font-bold text-white">{preview.price}</div>
-            )}
+            {preview.price && <div className="text-base font-bold">{preview.price}</div>}
             <button
               className="ml-auto inline-flex items-center justify-center px-4 py-2 rounded-lg
                          bg-[#65D830] text-black font-semibold

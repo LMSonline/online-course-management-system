@@ -1,6 +1,6 @@
 "use client";
 import CourseHoverCard from "@/app/components/CourseHoverCard";
-import { previewFromSkillCourse } from "@/app/components/previewAdapters";
+import { previewFromSkillCourse } from "@/app/components/PreviewAdapters";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SkillCourseCard, { type SkillCourse } from "./SkillCourseCard";

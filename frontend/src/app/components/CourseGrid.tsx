@@ -2,33 +2,34 @@
 
 import CourseCard, { type Course } from "./CourseCard";
 import CourseHoverCard from "@/app/components/CourseHoverCard";
-import { previewFromCourse } from "@/app/components/previewAdapters"; // <-- adapter
+import { previewFromCourse } from "@/app/components/PreviewAdapters"; // <-- adapter
 
-const sample = Array.from({ length: 8 }).map((_, i) => ({
+// Sample data (typed as Course so CourseCard gets correct props)
+const sample: Course[] = Array.from({ length: 8 }).map((_, i) => ({
   id: `sample-${i + 1}`,
-
   title: `Sample Course #${i + 1}: Next.js + Tailwind`,
   teacher: "Author",
   price: "₫199,000",
   rating: 4.6,
   image: "/images/lesson_thum.png",
-
+  // optional:
+  // originalPrice: "₫1,299,000",
+  // bestSeller: i % 3 === 0,
+  // href: `/course/${i + 1}`,
 }));
 
 export default function CourseGrid() {
   return (
-    <div className="relative isolate overflow-visible">
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-10">
-        {sample.map((course) => (
-          <CourseHoverCard
-            key={course.id}
-            preview={previewFromCourse(course)}
-            anchorClassName="block h-full"
-          >
-            <CourseCard {...course} />
-          </CourseHoverCard>
-        ))}
-      </div>
+    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 mt-10">
+      {sample.map((course) => (
+        <CourseHoverCard
+          key={course.id ?? course.title}
+          preview={previewFromCourse(course)}   // <-- build preview for hover panel
+          anchorClassName="h-full block"
+        >
+          <CourseCard {...course} />
+        </CourseHoverCard>
+      ))}
     </div>
   );
 }
