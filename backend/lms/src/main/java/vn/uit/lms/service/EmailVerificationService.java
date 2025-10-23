@@ -21,11 +21,10 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @Service
 public class EmailVerificationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmailVerificationService.class);
+    private static final Logger log = LoggerFactory.getLogger(EmailVerificationService.class);
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final StudentCodeGenerator studentCodeGenerator;
@@ -33,98 +32,101 @@ public class EmailVerificationService {
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final AccountRepository accountRepository;
+    private final MailService mailService;
 
     public EmailVerificationService(EmailVerificationRepository emailVerificationRepository,
                                     StudentCodeGenerator studentCodeGenerator,
                                     TeacherCodeGenerator teacherCodeGenerator,
                                     TeacherRepository teacherRepository,
                                     StudentRepository studentRepository,
-                                    AccountRepository accountRepository) {
+                                    AccountRepository accountRepository,
+                                    MailService mailService) {
         this.emailVerificationRepository = emailVerificationRepository;
         this.studentCodeGenerator = studentCodeGenerator;
         this.teacherCodeGenerator = teacherCodeGenerator;
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
         this.accountRepository = accountRepository;
+        this.mailService = mailService;
     }
 
     /**
-     * Xác thực token email và kích hoạt tài khoản tương ứng.
-     * - Nếu tài khoản là STUDENT: kích hoạt và tạo bản ghi Student.
-     * - Nếu tài khoản là TEACHER: chuyển sang trạng thái chờ duyệt và tạo bản ghi Teacher.
-     *
-     * @param token mã token xác thực email
+     * Verify the given email token and activate or update account status accordingly.
+     * @param token unique verification token sent via email
+     * @throws ResourceNotFoundException if token not found
+     * @throws InvalidTokenException     if token is expired, used, or invalid
      */
     @Transactional
     public void verifyToken(String token) {
-        logger.info("Start verifying email token: {}", token);
+        log.info("Start verifying email token: {}", token);
 
-        //Tìm token trong cơ sở dữ liệu
-        EmailVerification verification = emailVerificationRepository
-                .findByToken(token)
+        //Validate token existence
+        EmailVerification verification = emailVerificationRepository.findByToken(token)
                 .orElseThrow(() -> {
-                    logger.warn("Token not found: {}", token);
+                    log.warn("Token not found: {}", token);
                     return new ResourceNotFoundException("Invalid verification token.");
                 });
 
-        //Kiểm tra token đã được sử dụng hay chưa
+        //Check token usage
         if (verification.isUsed()) {
-            logger.warn("Token has already been used: {}", token);
+            log.warn("Token has already been used: {}", token);
             throw new InvalidTokenException("Token has already been used.");
         }
 
-        //Kiểm tra token còn hạn hay không
+        //Check expiration
         if (verification.getExpiresAt().isBefore(Instant.now())) {
-            logger.warn("Token expired: {}", token);
+            log.warn("Token expired: {}", token);
             throw new InvalidTokenException("Token has expired.");
         }
 
+        //Validate token type
         if (verification.getTokenType() != TokenType.VERIFY_EMAIL) {
-            logger.warn("Invalid token type for token: {}", token);
-            throw new InvalidTokenException("Invalid token .");
+            log.warn("Invalid token type: {}", verification.getTokenType());
+            throw new InvalidTokenException("Invalid token type.");
         }
 
-        //Lấy thông tin tài khoản gắn với token
+        //Load associated account
         Account account = verification.getAccount();
-        logger.debug("Verifying account id={}, role={}", account.getId(), account.getRole());
+        log.debug("Processing verification for account id={}, role={}", account.getId(), account.getRole());
 
-        //Kích hoạt hoặc xử lý tài khoản tùy theo vai trò
-        if (account.getRole() == Role.STUDENT) {
-            logger.info("Activating student account id={}", account.getId());
-            account.setStatus(AccountStatus.ACTIVE);
+        //Activate or set pending status based on role
+        switch (account.getRole()) {
+            case STUDENT -> {
+                log.info("Activating student account id={}", account.getId());
+                account.setStatus(AccountStatus.ACTIVE);
 
-            Student student = new Student();
-            student.setAccount(account);
-            student.setFullName("User" + account.getId());
-            student.setStudentCode(studentCodeGenerator.generate());
-            studentRepository.save(student);
+                Student student = new Student();
+                student.setAccount(account);
+                student.setFullName("User" + account.getId());
+                student.setStudentCode(studentCodeGenerator.generate());
+                studentRepository.save(student);
 
-            logger.info("Student created with code={}", student.getStudentCode());
+                log.info("Student entity created with code={}", student.getStudentCode());
+            }
+            case TEACHER -> {
+                log.info("Marking teacher account as pending approval id={}", account.getId());
+                account.setStatus(AccountStatus.PENDING_APPROVAL);
 
-        } else if (account.getRole() == Role.TEACHER) {
-            logger.info("Marking teacher account pending approval id={}", account.getId());
-            account.setStatus(AccountStatus.PENDING_APPROVAL);
+                Teacher teacher = new Teacher();
+                teacher.setAccount(account);
+                teacher.setFullName("User" + account.getId());
+                teacher.setTeacherCode(teacherCodeGenerator.generate());
+                teacher.setApproved(false);
+                teacherRepository.save(teacher);
 
-            Teacher teacher = new Teacher();
-            teacher.setAccount(account);
-            teacher.setFullName("User" + account.getId());
-            teacher.setTeacherCode(teacherCodeGenerator.generate());
-            teacher.setApproved(false);
-            teacherRepository.save(teacher);
-
-            logger.info("Teacher created with code={}", teacher.getTeacherCode());
-        } else {
-            logger.warn("Unsupported role during verification: {}", account.getRole());
+                log.info("Teacher entity created with code={}", teacher.getTeacherCode());
+            }
+            default -> log.warn("Unsupported role during verification: {}", account.getRole());
         }
 
-        //Đánh dấu token đã sử dụng
+        //Mark token as used and persist all updates
         verification.setUsed(true);
         emailVerificationRepository.save(verification);
-
-        //Lưu lại thay đổi của tài khoản
         accountRepository.save(account);
 
-        logger.info("Email verification completed successfully for account id={}", account.getId());
+        //Notify user of activation success
+        mailService.sendActivationSuccessEmail(account);
+
+        log.info("Email verification completed successfully for account id={}", account.getId());
     }
 }
-

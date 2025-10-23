@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title th:text="#{email.activation.title}">Kích hoạt tài khoản LMS</title>
+    <title th:text="#{email.activation_success.title}">Kích hoạt tài khoản thành công</title>
     <style>
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -37,13 +37,25 @@
             margin: 16px 0 0 0;
             font-weight: 600;
         }
-        .email-body { padding: 32px; }
+        .email-body {
+            padding: 32px;
+        }
         .email-body p {
             font-size: 15px;
             line-height: 1.6;
             margin-bottom: 18px;
         }
-        .activation-button {
+        .success-badge {
+            display: inline-block;
+            background-color: #dcfce7;
+            color: #16a34a;
+            font-weight: 600;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .login-button {
             display: inline-block;
             padding: 14px 26px;
             font-size: 16px;
@@ -54,7 +66,7 @@
             font-weight: 600;
             transition: background-color 0.25s ease, transform 0.2s ease;
         }
-        .activation-button:hover {
+        .login-button:hover {
             background-color: #16a34a;
             transform: translateY(-2px);
         }
@@ -75,31 +87,40 @@
 <body>
 <div class="email-container">
     <div class="email-header">
-<!--        <img th:src="@{|${baseUrl}/assets/logo.png|}" alt="Logo LMS" />-->
-        <h1 th:text="#{email.activation.title}">Kích hoạt tài khoản LMS</h1>
+        <!--        <img th:src="@{|${baseUrl}/assets/logo.png|}" alt="Logo LMS" />-->
+        <h1 th:text="#{email.activation_success.title}">Tài khoản đã được kích hoạt</h1>
     </div>
 
     <div class="email-body">
-        <p th:text="#{email.activation.greeting(${user.username})}">Chào bạn,</p>
+        <span class="success-badge">✅ Kích hoạt thành công</span>
 
-        <p th:text="#{email.activation.text1}">
-            Tài khoản LMS của bạn đã được tạo thành công. Vui lòng nhấn vào nút bên dưới để kích hoạt tài khoản:
+        <p th:text="#{email.activation_success.greeting(${user.username})}">
+            Chào bạn,
+        </p>
+
+        <p th:text="#{email.activation_success.text1}">
+            Tài khoản LMS của bạn đã được kích hoạt thành công! Bây giờ bạn có thể đăng nhập và bắt đầu hành trình học tập của mình.
+        </p>
+
+        <p th:text="#{email.activation_success.text2}">
+            Dưới đây là liên kết để truy cập hệ thống LMS:
         </p>
 
         <p style="text-align:center; margin:28px 0;">
-            <a class="activation-button"
-               th:with="url=(@{|${baseUrl}/${apiVersion}/auth/verify-email?token=${token}|})"
+            <a class="login-button"
+               th:with="url=(@{|${baseUrl}/login|})"
                th:href="${url}"
-               th:text="#{email.activation.button}">
-                Kích hoạt ngay
+               th:text="#{email.activation_success.button}">
+                Đăng nhập ngay
             </a>
         </p>
 
-        <p th:text="#{email.activation.text2}">
-            Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.
+        <p th:text="#{email.activation_success.text3}">
+            Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.
         </p>
 
-        <p style="margin-top:32px; white-space:pre-line;" th:text="#{email.activation.signature}">
+        <p style="margin-top:32px; white-space:pre-line;"
+           th:text="#{email.activation_success.signature}">
             Trân trọng,
             Đội ngũ LMS
         </p>

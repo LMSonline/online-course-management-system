@@ -123,6 +123,12 @@ public class MailService {
         LOG.debug("Sending creation email to '{}'", user.getEmail());
         sendEmailFromTemplateSync(user, "mail/creationEmail", "email.activation.title", token);
     }
+
+    @Async
+    public void sendActivationSuccessEmail(Account user) {
+        LOG.debug("Sending activation success email to '{}'", user.getEmail());
+        sendEmailFromTemplateSync(user, "mail/activationSuccessEmail", "email.activation.title", "");
+    }
 //
 //    @Async
 //    public void sendPasswordResetMail(User user) {
