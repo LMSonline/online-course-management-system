@@ -27,7 +27,7 @@ export default function TopicCard({ title, href, Icon, description }: TopicCardP
         transition
       "
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between max-w-2xl">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-lime-400/10 text-lime-400">
             <Icon className="h-5 w-5" />

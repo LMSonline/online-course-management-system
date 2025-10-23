@@ -49,11 +49,11 @@ const reviews: Review[] = [
 
 export default function ReviewsSection() {
   return (
-    <section className="container mx-auto px-4">
+    <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
       <div className="flex items-center justify-between mb-4 md:mb-6">
-        <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-body">
-            Join others transforming their lives through learning
-          </h2>
+        <h2 className="text-[28px] md:text-[36px] font-extrabold leading-tight tracking-tight max-w-[1100px]">
+          Join others transforming their lives through learning
+        </h2>
         <a
           href="/stories"
           className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-lime-300 hover:border-lime-300/30 hover:bg-lime-400/5 transition-all"

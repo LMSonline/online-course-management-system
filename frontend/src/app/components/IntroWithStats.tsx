@@ -63,9 +63,9 @@ export default function IntroWithStats() {
     { value: "320+", label: "Learning paths" },
   ];
 
-  return (    
+  return (
 
-<section className="container mx-auto px-4 mt-6">
+    <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
       {/* subtle glow background */}
       <div className="pointer-events-none absolute inset-0 -z-10 [background:radial-gradient(60%_40%_at_20%_0%,rgba(152,255,121,.08),transparent_60%),radial-gradient(50%_40%_at_100%_0%,rgba(152,255,121,.05),transparent_60%)]" />
 
@@ -110,6 +110,18 @@ export default function IntroWithStats() {
             <span className="text-lime-400 font-semibold">
               Build your future with us, starting today.
             </span>
+          </motion.p>
+          <motion.p
+            variants={fadeUp}
+            className="mt-4 text-base md:text-lg text-muted-foreground/90 max-w-3xl lg:max-w-4xl">
+            <button
+              className="inline-flex items-center px-6 py-3 text-base font-semibold rounded-xl
+               bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(101,216,48,0.4)]
+               hover:shadow-[0_6px_25px_rgba(101,216,48,0.5)] hover:scale-[1.03]
+               active:scale-[0.98] transition-all duration-300 ease-out"
+            >
+              Get Started for Free
+            </button>
           </motion.p>
         </motion.div>
 
@@ -160,15 +172,18 @@ export default function IntroWithStats() {
             onMouseLeave={onLeave}
             variants={fadeUp}
             style={{ backgroundColor: BASE_BG }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 backdrop-blur-sm px-5 py-6 md:py-8 transition-transform duration-300 will-change-transform"
+            className="relative overflow-hidden rounded-2xl border border-white/10 backdrop-blur-sm 
+             flex flex-col items-center justify-center text-center
+             px-5 py-8 md:py-10 transition-transform duration-300 will-change-transform"
           >
-            <div className="text-3xl md:text-4xl font-extrabold text-lime-400">
+            <div className="text-3xl md:text-4xl font-extrabold text-lime-400 leading-none">
               {s.value}
             </div>
-            <div className="mt-1 text-sm md:text-base text-muted-foreground">
+            <div className="mt-2 text-sm md:text-base text-muted-foreground">
               {s.label}
             </div>
           </motion.li>
+
         ))}
       </motion.ul>
     </section>

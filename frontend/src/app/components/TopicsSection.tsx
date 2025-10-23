@@ -13,15 +13,15 @@ const topics = [
   { title: "Mobile Development", Icon: Smartphone },
   { title: "Artificial Intelligence", Icon: Brain },
   { title: "Marketing", Icon: Megaphone },
-  { title: "Product Management", Icon: Boxes },
+  { title: "Management", Icon: Boxes },
   { title: "Languages", Icon: Globe2 },
 ];
 
 export default function TopicsSection() {
   return (
-    <section className="container mx-auto px-4 mt-6">
+  <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
       <div className="mb-4 md:mb-6">
-        <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-body">
+        <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
             Explore by Topics
           </h2>
         

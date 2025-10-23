@@ -24,7 +24,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative flex-1 flex flex-col justify-center items-center text-center px-6">
+  <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
       <Image
         ref={logoRef as any}
         src="/images/lms_logo.png"
