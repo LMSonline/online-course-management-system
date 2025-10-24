@@ -54,11 +54,13 @@ export default function FeaturedSkills() {
   const order = [index, (index + 1) % cards.length, (index + 2) % cards.length];
 
   return (
-<section className="container mx-auto px-4 mt-6">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+  <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT: heading */}
         <div className="lg:col-span-4">
-          <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-body">
+          <br></br>
+          <br></br>
+          <h2 className="text-4xl md:text-4xl font-extrabold mb-3">
             Learn essential <br /> career and life skills
           </h2>
           <p className="mt-4 text-muted max-w-[46ch]">

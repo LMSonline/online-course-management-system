@@ -36,6 +36,7 @@
   --ring: rgba(22,163,74,.35);
 
   color-scheme: dark;
+
 }
 
 /* Light theme (tùy chọn) */
@@ -60,6 +61,7 @@ body {
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  
 }
 
 /* Scrollbar */
@@ -240,3 +242,11 @@ a:hover .i-ch::after{ transform: translateX(2px); opacity: 1; }
 
 /* tinh chỉnh card hover (viền mờ) */
 article:hover > .ring-outer { opacity: .9; }
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+

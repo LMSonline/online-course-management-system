@@ -46,7 +46,7 @@ export default function ReviewCard({
       <Quote className="h-6 w-6 text-lime-400/80" />
 
       {/* quote text */}
-      <p className="mt-4 text-base leading-relaxed text-white/90">
+      <p className="mt-5 text-[15px] md:text-base text-muted-foreground/90 max-w-[900px]">
         {quote}
       </p>
 

@@ -76,12 +76,12 @@ export default function Navbar() {
 
 
           {/* Log in – outline strong (nổi bật) */}
-          <Link href="#">
+          <Link href="/login">
             <button className="btn btn-outline strong">Log in</button>
           </Link>
 
           {/* Sign up – neon cùng màu LMS */}
-          <Link href="#">
+          <Link href="/signup">
             <button className="btn btn-primary neon">Sign up</button>
           </Link>
 

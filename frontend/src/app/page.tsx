@@ -5,6 +5,10 @@ import FeaturedSkills from "@/app/components/FeaturedSkills";
 import IntroWithStats from "@/app/components/IntroWithStats";
 import TopicsSection from "@/app/components/TopicsSection";
 import ReviewsSection from "@/app/components/ReviewsSection";
+import CertificatesSection from "@/app/components/CertificatesSection";
+import SkillsTabCarouselSection from "@/app/components/SkillsTabCarouselSection";
+import PlansSection from "@/app/components/PlansSection";
+
 
 
 
@@ -48,14 +52,17 @@ export default function Home() {
       {/* 👇 NEW SECTION – giống Udemy homepage */}
       <FeaturedSkills />
 
+      <SkillsTabCarouselSection />
 
       <ReviewsSection />
+      <CertificatesSection />
+
 
 
       {/* Featured Courses */}
-      <section className="container mx-auto px-4 mt-6">
+      <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
         <div className="flex items-center justify-between">
-          <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-body">
+        <h2 className="text-[28px] md:text-[36px] font-extrabold leading-tight tracking-tight max-w-[1100px]">
             Featured Courses
           </h2>
           <a
@@ -82,6 +89,8 @@ export default function Home() {
         </div>
         <CourseGrid />
       </section>
+      <PlansSection />
+
     </div>
   );
 }

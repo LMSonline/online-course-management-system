@@ -40,7 +40,7 @@ export default function BannerCarousel({
   }, [index, go, autoPlayMs]);
 
   return (
-    <section className="container mx-auto px-4 mt-6">
+  <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
       <div className="relative overflow-hidden rounded-xl bg-white">
         {/* Track (mỗi slide chiếm 100%) */}
         <div
