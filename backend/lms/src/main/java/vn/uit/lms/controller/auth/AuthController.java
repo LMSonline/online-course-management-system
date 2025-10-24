@@ -9,10 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.AuthService;
 import vn.uit.lms.service.EmailVerificationService;
+import vn.uit.lms.service.RefreshTokenService;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.request.ReqLoginDTO;
+import vn.uit.lms.shared.dto.request.ReqRefreshTokenDTO;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
@@ -24,16 +26,19 @@ public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    private final AccountService accountService;
+    private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthController(AccountService accountService,
+    public AuthController(AuthService authService,
                           PasswordEncoder passwordEncoder,
-                          EmailVerificationService emailVerificationService) {
-        this.accountService = accountService;
+                          EmailVerificationService emailVerificationService,
+                          RefreshTokenService refreshTokenService) {
+        this.authService = authService;
         this.passwordEncoder = passwordEncoder;
         this.emailVerificationService = emailVerificationService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -52,7 +57,7 @@ public class AuthController {
         account.setPasswordHash(this.passwordEncoder.encode(accountRequest.getPassword()));
 
         // Register account and trigger email verification
-        Account accountDB = this.accountService.registerAccount(account);
+        Account accountDB = this.authService.registerAccount(account);
         RegisterResponse response = AccountMapper.toResponse(accountDB);
 
         log.info("Account registered successfully for username: {}", accountDB.getUsername());
@@ -91,9 +96,44 @@ public class AuthController {
 
         reqLoginDTO.setIpAddress(clientIp);
 
-        ResLoginDTO res = this.accountService.login(reqLoginDTO);
+        ResLoginDTO res = this.authService.login(reqLoginDTO);
 
         log.info("Login successful for user: {}", reqLoginDTO.getLogin());
         return ResponseEntity.ok(res);
     }
+
+    /**
+     * Refresh access token using a valid refresh token.
+     *
+     * @param reqRefreshTokenDTO refresh token request payload
+     * @param request HTTP servlet request to extract client IP
+     * @return new access token and related authentication info
+     */
+    @PostMapping("/refresh")
+    @ApiMessage("Refresh access token using refresh token")
+    public ResponseEntity<ResLoginDTO> refreshAccessToken(@Valid @RequestBody ReqRefreshTokenDTO reqRefreshTokenDTO, HttpServletRequest request) {
+
+        String clientIp = request.getHeader("X-Forwarded-For");
+        if (clientIp == null) clientIp = request.getRemoteAddr();
+
+        reqRefreshTokenDTO.setIpAddress(clientIp);
+        ResLoginDTO response = refreshTokenService.refreshAccessToken(reqRefreshTokenDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Logout user by revoking their refresh token.
+     *
+     * @param request refresh token to revoke
+     * @return HTTP 204 No Content response
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody ReqRefreshTokenDTO request) {
+        refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+        return ResponseEntity.noContent().build();
+    }
+
+
+
+
 }

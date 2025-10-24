@@ -21,6 +21,7 @@ public class ReqLoginDTO {
     @NotBlank(message = "Password is required")
     private String password;
 
+    //optional fields
     private String deviceInfo;
     private String ipAddress;
 }

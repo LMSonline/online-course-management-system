@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,15 +35,18 @@ public final class SecurityUtils {
 
     private final JwtEncoder jwtEncoder;
 
+    @Getter
     @Value("${jwt.access-token.expiration}")
     private long accessTokenExpiration;
 
+    @Getter
     @Value("${jwt.refresh-token.expiration}")
     private long refreshTokenExpiration;
 
     private SecurityUtils(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
     }
+
 
     public String createAccessToken(String email, ResLoginDTO dto) {
 

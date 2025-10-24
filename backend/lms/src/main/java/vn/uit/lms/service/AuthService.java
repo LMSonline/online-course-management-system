@@ -5,7 +5,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.*;
@@ -21,6 +20,7 @@ import vn.uit.lms.shared.exception.UserNotActivatedException;
 import vn.uit.lms.shared.exception.UsernameAlreadyUsedException;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.SecurityUtils;
+import vn.uit.lms.shared.util.TokenHashUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -37,7 +37,7 @@ import java.util.UUID;
  * </p>
  */
 @Service
-public class AccountService {
+public class AuthService {
 
     private final AccountRepository accountRepository;
     private final MailService emailService;
@@ -48,23 +48,18 @@ public class AccountService {
     private final TeacherRepository teacherRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    @Value("${jwt.access-token.expiration}")
-    private long accessTokenExpiration;
-
-    @Value("${jwt.refresh-token.expiration}")
-    private long refreshTokenExpiration;
 
     /**
-     * Constructs an {@code AccountService} with all required dependencies.
+     * Constructs an {@code AuthService} with all required dependencies.
      */
-    public AccountService(AccountRepository accountRepository,
-                          MailService emailService,
-                          EmailVerificationRepository emailVerificationRepository,
-                          AuthenticationManagerBuilder authenticationManagerBuilder,
-                          SecurityUtils securityUtils,
-                          StudentRepository studentRepository,
-                          TeacherRepository teacherRepository,
-                          RefreshTokenRepository refreshTokenRepository) {
+    public AuthService(AccountRepository accountRepository,
+                       MailService emailService,
+                       EmailVerificationRepository emailVerificationRepository,
+                       AuthenticationManagerBuilder authenticationManagerBuilder,
+                       SecurityUtils securityUtils,
+                       StudentRepository studentRepository,
+                       TeacherRepository teacherRepository,
+                       RefreshTokenRepository refreshTokenRepository) {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.emailVerificationRepository = emailVerificationRepository;
@@ -190,18 +185,18 @@ public class AccountService {
         String accessToken = securityUtils.createAccessToken(authentication.getName(), resLoginDTO);
         resLoginDTO.setAccessToken(accessToken);
         Instant now = Instant.now();
-        resLoginDTO.setAccessTokenExpiresAt(now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS));
+        resLoginDTO.setAccessTokenExpiresAt(now.plus(securityUtils.getAccessTokenExpiration(), ChronoUnit.SECONDS));
 
         // Generate and save refresh token
         String rawRefreshToken = securityUtils.createRefreshToken(accountDB.getEmail());
-        String hashedRefreshToken = hashToken(rawRefreshToken);
+        String hashedRefreshToken = TokenHashUtil.hashToken(rawRefreshToken);
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setAccount(accountDB);
         refreshToken.setTokenHash(hashedRefreshToken);
         refreshToken.setIpAddress(reqLoginDTO.getIpAddress());
-        refreshToken.setDeviceInfo(reqLoginDTO.getDeviceInfo());
-        refreshToken.setExpiresAt(Instant.now().plus(refreshTokenExpiration, ChronoUnit.SECONDS));
+        refreshToken.setDeviceInfo(reqLoginDTO.getDeviceInfo()!=null? reqLoginDTO.getDeviceInfo() : "Unknown device");
+        refreshToken.setExpiresAt(now.plus(securityUtils.getRefreshTokenExpiration(), ChronoUnit.SECONDS));
 
         refreshTokenRepository.save(refreshToken);
 
@@ -211,20 +206,5 @@ public class AccountService {
         return resLoginDTO;
     }
 
-    /**
-     * Hashes a token using SHA-256 and encodes the result in Base64.
-     *
-     * @param token the raw token string
-     * @return the hashed token string
-     * @throws RuntimeException if hashing fails
-     */
-    public String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashedBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hashedBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to hash token", e);
-        }
-    }
+
 }

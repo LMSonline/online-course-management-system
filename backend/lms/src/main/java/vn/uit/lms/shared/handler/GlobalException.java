@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import vn.uit.lms.shared.constant.ErrorCode;
 import vn.uit.lms.shared.dto.ApiResponse;
-import vn.uit.lms.shared.exception.DuplicateResourceException;
-import vn.uit.lms.shared.exception.EmailAlreadyUsedException;
-import vn.uit.lms.shared.exception.UsernameAlreadyUsedException;
+import vn.uit.lms.shared.exception.*;
 
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -38,7 +36,10 @@ public class GlobalException {
             UsernameNotFoundException.class,
             EmailAlreadyUsedException.class,
             UsernameAlreadyUsedException.class,
-            BadCredentialsException.class
+            BadCredentialsException.class,
+            InvalidTokenException.class,
+            ResourceNotFoundException.class,
+            UserNotActivatedException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBusinessExceptions(Exception ex) {
         log.warn("Business exception: {}", ex.getMessage());
