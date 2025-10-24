@@ -13,6 +13,7 @@ import vn.uit.lms.service.EmailVerificationService;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.request.ReqLoginDTO;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
+import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
 
@@ -81,12 +82,12 @@ public class AuthController {
      */
     @PostMapping("/login")
     @ApiMessage("Login to the system")
-    public ResponseEntity<String> login(@Valid @RequestBody ReqLoginDTO reqLoginDTO) {
+    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO reqLoginDTO) {
         log.info("Login attempt for user: {}", reqLoginDTO.getLogin());
 
-        this.accountService.login(reqLoginDTO);
+        ResLoginDTO res = this.accountService.login(reqLoginDTO);
 
         log.info("Login successful for user: {}", reqLoginDTO.getLogin());
-        return ResponseEntity.ok("Login successful");
+        return ResponseEntity.ok(res);
     }
 }

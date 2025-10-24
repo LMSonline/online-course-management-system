@@ -17,6 +17,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +48,7 @@ public class GlobalException {
         res.setSuccess(false);
         res.setCode(ErrorCode.BAD_REQUEST);
         res.setMessage("Exception occurred: " + ex.getMessage());
+        res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
@@ -70,6 +72,7 @@ public class GlobalException {
         res.setStatus(HttpStatus.BAD_REQUEST.value());
         res.setMessage(String.join("; ", errors));
         res.setCode(ErrorCode.VALIDATION_ERROR);
+        res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
@@ -91,6 +94,7 @@ public class GlobalException {
         res.setStatus(HttpStatus.BAD_REQUEST.value());
         res.setMessage(String.join("; ", errors));
         res.setCode(ErrorCode.VALIDATION_ERROR);
+        res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
@@ -107,6 +111,7 @@ public class GlobalException {
         res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         res.setMessage("Internal server error: " + ex.getMessage());
         res.setCode(ErrorCode.INTERNAL_ERROR);
+        res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
     }

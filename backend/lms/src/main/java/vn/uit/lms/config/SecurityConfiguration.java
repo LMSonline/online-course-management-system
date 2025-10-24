@@ -26,8 +26,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        String[] whiteList = {"/ping", "/api/v1/auth/**",
+    public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+        String[] whiteList = {"/", "/api/v1/auth/**",
                 "/storage/**", "/v3/api-docs/**",
                 "/swagger-ui/**", "/api-docs",
                 "/swagger-ui.html"};
@@ -37,6 +37,10 @@ public class SecurityConfiguration {
                         .requestMatchers(whiteList)
                         .permitAll()
                         .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .jwt(Customizer.withDefaults())
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
