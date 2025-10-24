@@ -57,7 +57,7 @@ export default function SignupPage() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nguyễn Trương Ngọc Hân"
+                placeholder="Enter your name"
                 className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
               />
             </div>
@@ -171,7 +171,7 @@ export default function SignupPage() {
                 Continue with Google
               </button>
               <button type="button" className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition">
-                Continue with Apple
+                Continue with Facebook
               </button>
             </div>
 
