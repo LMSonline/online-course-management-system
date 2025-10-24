@@ -37,6 +37,9 @@ public final class SecurityUtils {
     @Value("${jwt.access-token.expiration}")
     private long accessTokenExpiration;
 
+    @Value("${jwt.refresh-token.expiration}")
+    private long refreshTokenExpiration;
+
     private SecurityUtils(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
     }
@@ -69,6 +72,24 @@ public final class SecurityUtils {
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader,
                 claims)).getTokenValue();
     }
+
+    public String createRefreshToken(String email) {
+        Instant now = Instant.now();
+        Instant validity = now.plus(this.refreshTokenExpiration, ChronoUnit.SECONDS);
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("lms-system")
+                .issuedAt(now)
+                .expiresAt(validity)
+                .subject(email)
+                .claim("token_type", "refresh")
+                .build();
+
+        return jwtEncoder.encode(
+                JwtEncoderParameters.from(JwsHeader.with(JWT_ALGORITHM).build(), claims)
+        ).getTokenValue();
+    }
+
 
     /**
      * Get the login of the current user.

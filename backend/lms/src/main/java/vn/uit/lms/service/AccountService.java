@@ -5,16 +5,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.EmailVerification;
-import vn.uit.lms.core.entity.Student;
-import vn.uit.lms.core.entity.Teacher;
-import vn.uit.lms.core.repository.AccountRepository;
-import vn.uit.lms.core.repository.EmailVerificationRepository;
-import vn.uit.lms.core.repository.StudentRepository;
-import vn.uit.lms.core.repository.TeacherRepository;
+import vn.uit.lms.core.entity.*;
+import vn.uit.lms.core.repository.*;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.TokenType;
@@ -27,10 +22,20 @@ import vn.uit.lms.shared.exception.UsernameAlreadyUsedException;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.SecurityUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.UUID;
 
+/**
+ * Service class for managing user accounts, authentication, and registration.
+ * <p>
+ * Handles registration, login, token generation, and account verification processes.
+ * Integrates with Spring Security for authentication and with email service for activation.
+ * </p>
+ */
 @Service
 public class AccountService {
 
@@ -41,6 +46,7 @@ public class AccountService {
     private final SecurityUtils securityUtils;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${jwt.access-token.expiration}")
     private long accessTokenExpiration;
@@ -48,13 +54,17 @@ public class AccountService {
     @Value("${jwt.refresh-token.expiration}")
     private long refreshTokenExpiration;
 
+    /**
+     * Constructs an {@code AccountService} with all required dependencies.
+     */
     public AccountService(AccountRepository accountRepository,
                           MailService emailService,
                           EmailVerificationRepository emailVerificationRepository,
                           AuthenticationManagerBuilder authenticationManagerBuilder,
                           SecurityUtils securityUtils,
                           StudentRepository studentRepository,
-                          TeacherRepository teacherRepository) {
+                          TeacherRepository teacherRepository,
+                          RefreshTokenRepository refreshTokenRepository) {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.emailVerificationRepository = emailVerificationRepository;
@@ -62,26 +72,40 @@ public class AccountService {
         this.securityUtils = securityUtils;
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
+    /**
+     * Registers a new account and sends an email verification link.
+     * <p>
+     * - Checks for duplicate username or email.
+     * - Deletes non-activated accounts with same credentials.
+     * - Saves the account in {@code PENDING_EMAIL} status and sends verification mail.
+     * </p>
+     *
+     * @param account the account entity to register
+     * @return the saved {@link Account} entity
+     * @throws UsernameAlreadyUsedException if the username is already used
+     * @throws EmailAlreadyUsedException if the email is already used
+     */
     @Transactional
     public Account registerAccount(Account account) {
 
         accountRepository.findOneByUsername(account.getUsername())
-                        .ifPresent(existingAccount -> {
-                            boolean removed = removeNonActivatedAccount(existingAccount);
-                            if (!removed) {
-                                throw new UsernameAlreadyUsedException();
-                            }
-                        });
+                .ifPresent(existingAccount -> {
+                    boolean removed = removeNonActivatedAccount(existingAccount);
+                    if (!removed) {
+                        throw new UsernameAlreadyUsedException();
+                    }
+                });
 
         accountRepository.findOneByEmailIgnoreCase(account.getEmail())
-                        .ifPresent(existingAccount -> {
-                            boolean removed = removeNonActivatedAccount(existingAccount);
-                            if (!removed) {
-                                throw new EmailAlreadyUsedException();
-                            }
-                        });
+                .ifPresent(existingAccount -> {
+                    boolean removed = removeNonActivatedAccount(existingAccount);
+                    if (!removed) {
+                        throw new EmailAlreadyUsedException();
+                    }
+                });
 
         account.setStatus(AccountStatus.PENDING_EMAIL);
 
@@ -100,26 +124,45 @@ public class AccountService {
 
         emailVerificationRepository.save(verification);
 
-        //send activation email
+        // Send activation email
         emailService.sendActivationEmail(saved, token);
 
         return saved;
     }
 
+    /**
+     * Removes an account if it is pending email verification.
+     *
+     * @param existingAccount the account to check
+     * @return {@code true} if removed, {@code false} otherwise
+     */
     public boolean removeNonActivatedAccount(Account existingAccount) {
-
         if (existingAccount.getStatus() == AccountStatus.PENDING_EMAIL) {
             accountRepository.delete(existingAccount);
             accountRepository.flush();
             return true;
         }
         return false;
-
     }
 
+    /**
+     * Authenticates a user and generates access and refresh tokens.
+     * <p>
+     * - Authenticates credentials via Spring Security.
+     * - Builds response with account info and tokens.
+     * - Stores hashed refresh token in database.
+     * </p>
+     *
+     * @param reqLoginDTO the login request containing credentials and device info
+     * @return a {@link ResLoginDTO} with authentication details and tokens
+     * @throws ResourceNotFoundException if the account does not exist
+     * @throws UserNotActivatedException if the account is not yet activated
+     */
     public ResLoginDTO login(ReqLoginDTO reqLoginDTO) {
 
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(reqLoginDTO.getLogin(), reqLoginDTO.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(reqLoginDTO.getLogin(), reqLoginDTO.getPassword());
+
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         // Set the authentication in the security context
@@ -129,30 +172,59 @@ public class AccountService {
         Account accountDB = accountRepository.findOneByEmailIgnoreCase(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
+        // Map account to response DTO depending on role
         if(accountDB.getRole() == Role.STUDENT) {
 
             Student student = studentRepository.findByAccount(accountDB).orElseThrow(
                     () -> new UserNotActivatedException("Account not activated"));
 
             resLoginDTO = AccountMapper.studentToResLoginDTO(student);
-        }else if(accountDB.getRole() == Role.TEACHER) {
+        } else if(accountDB.getRole() == Role.TEACHER) {
             Teacher teacher = teacherRepository.findByAccount(accountDB).orElseThrow(
                     () -> new UserNotActivatedException("Account not activated"));
 
             resLoginDTO = AccountMapper.teacherToResLoginDTO(teacher);
         }
 
+        // Generate access token
         String accessToken = securityUtils.createAccessToken(authentication.getName(), resLoginDTO);
         resLoginDTO.setAccessToken(accessToken);
         Instant now = Instant.now();
         resLoginDTO.setAccessTokenExpiresAt(now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS));
-        resLoginDTO.setRefreshTokenExpiresAt(now.plus(this.refreshTokenExpiration, ChronoUnit.SECONDS));
 
+        // Generate and save refresh token
+        String rawRefreshToken = securityUtils.createRefreshToken(accountDB.getEmail());
+        String hashedRefreshToken = hashToken(rawRefreshToken);
+
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setAccount(accountDB);
+        refreshToken.setTokenHash(hashedRefreshToken);
+        refreshToken.setIpAddress(reqLoginDTO.getIpAddress());
+        refreshToken.setDeviceInfo(reqLoginDTO.getDeviceInfo());
+        refreshToken.setExpiresAt(Instant.now().plus(refreshTokenExpiration, ChronoUnit.SECONDS));
+
+        refreshTokenRepository.save(refreshToken);
+
+        resLoginDTO.setRefreshToken(rawRefreshToken);
+        resLoginDTO.setRefreshTokenExpiresAt(refreshToken.getExpiresAt());
 
         return resLoginDTO;
-
     }
 
-
-
+    /**
+     * Hashes a token using SHA-256 and encodes the result in Base64.
+     *
+     * @param token the raw token string
+     * @return the hashed token string
+     * @throws RuntimeException if hashing fails
+     */
+    public String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hashedBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to hash token", e);
+        }
+    }
 }

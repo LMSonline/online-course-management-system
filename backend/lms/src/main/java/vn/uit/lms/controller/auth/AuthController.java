@@ -1,5 +1,6 @@
 package vn.uit.lms.controller.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,8 +83,13 @@ public class AuthController {
      */
     @PostMapping("/login")
     @ApiMessage("Login to the system")
-    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO reqLoginDTO) {
+    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO reqLoginDTO, HttpServletRequest request) {
         log.info("Login attempt for user: {}", reqLoginDTO.getLogin());
+
+        String clientIp = request.getHeader("X-Forwarded-For");
+        if (clientIp == null) clientIp = request.getRemoteAddr();
+
+        reqLoginDTO.setIpAddress(clientIp);
 
         ResLoginDTO res = this.accountService.login(reqLoginDTO);
 

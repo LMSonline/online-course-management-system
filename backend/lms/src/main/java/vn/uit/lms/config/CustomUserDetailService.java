@@ -12,21 +12,38 @@ import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.shared.constant.AccountStatus;
 
+/**
+ * Custom implementation of {@link UserDetailsService} for Spring Security authentication.
+ * <p>
+ * This service loads user information from the database using either username or email
+ * as the login credential and builds a {@link UserDetails} object used by Spring Security.
+ * </p>
+ */
 @Service
 public class CustomUserDetailService implements UserDetailsService {
 
+    /**
+     * Logger for debugging authentication flow.
+     */
     private static final Logger log = LoggerFactory.getLogger(CustomUserDetailService.class);
 
+    /**
+     * Repository for accessing account data from the database.
+     */
     @Autowired
     private AccountRepository accountRepository;
 
     /**
-     * Load user details from database for Spring Security authentication.
-     * Accepts either username or email as the login identifier.
+     * Loads user-specific data for authentication.
+     * <p>
+     * The method first determines whether the input is an email or a username,
+     * retrieves the corresponding account, checks if it is active, and then
+     * constructs a Spring Security {@link UserDetails} object.
+     * </p>
      *
-     * @param username the login input (username or email)
-     * @return a Spring Security UserDetails object
-     * @throws UsernameNotFoundException if user not found or not activated
+     * @param username the login identifier (username or email)
+     * @return {@link UserDetails} containing user credentials and authorities
+     * @throws UsernameNotFoundException if the user does not exist or is not active
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
