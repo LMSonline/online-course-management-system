@@ -129,10 +129,10 @@ public class MailService {
         LOG.debug("Sending activation success email to '{}'", user.getEmail());
         sendEmailFromTemplateSync(user, "mail/activationSuccessEmail", "email.activation.title", "");
     }
-//
-//    @Async
-//    public void sendPasswordResetMail(User user) {
-//        LOG.debug("Sending password reset email to '{}'", user.getEmail());
-//        sendEmailFromTemplateSync(user, "mail/passwordResetEmail", "email.reset.title");
-//    }
+
+    @Async
+    public void sendPasswordResetMail(Account user, String token) {
+        LOG.debug("Sending password reset email to '{}'", user.getEmail());
+        sendEmailFromTemplateSync(user, "mail/passwordResetEmail", "email.reset.title", token);
+    }
 }

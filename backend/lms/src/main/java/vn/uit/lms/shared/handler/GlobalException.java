@@ -2,6 +2,7 @@ package vn.uit.lms.shared.handler;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -39,7 +40,8 @@ public class GlobalException {
             BadCredentialsException.class,
             InvalidTokenException.class,
             ResourceNotFoundException.class,
-            UserNotActivatedException.class
+            UserNotActivatedException.class,
+            HttpMessageNotReadableException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBusinessExceptions(Exception ex) {
         log.warn("Business exception: {}", ex.getMessage());

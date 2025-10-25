@@ -12,6 +12,7 @@ import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.service.AuthService;
 import vn.uit.lms.service.EmailVerificationService;
 import vn.uit.lms.service.RefreshTokenService;
+import vn.uit.lms.shared.dto.request.ForgotPasswordDTO;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.request.ReqLoginDTO;
 import vn.uit.lms.shared.dto.request.ReqRefreshTokenDTO;
@@ -131,6 +132,17 @@ public class AuthController {
     public ResponseEntity<Void> logout(@Valid @RequestBody ReqRefreshTokenDTO request) {
         refreshTokenService.revokeRefreshToken(request.getRefreshToken());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    @ApiMessage("Reset password for account")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
+        log.info("Received password reset request for email: {}", forgotPasswordDTO.getEmail());
+
+        this.authService.forgotPassword(forgotPasswordDTO.getEmail());
+
+        log.info("Password reset email sent to: {}", forgotPasswordDTO.getEmail());
+        return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
     }
 
 

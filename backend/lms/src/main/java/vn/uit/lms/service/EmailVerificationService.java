@@ -18,6 +18,9 @@ import vn.uit.lms.shared.constant.TokenType;
 import vn.uit.lms.shared.exception.InvalidTokenException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,4 +132,6 @@ public class EmailVerificationService {
 
         log.info("Email verification completed successfully for account id={}", account.getId());
     }
+
+
 }

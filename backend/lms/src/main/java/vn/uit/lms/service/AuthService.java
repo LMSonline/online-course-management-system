@@ -1,5 +1,7 @@
 package vn.uit.lms.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -47,6 +49,8 @@ public class AuthService {
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
 
     /**
@@ -204,6 +208,31 @@ public class AuthService {
         resLoginDTO.setRefreshTokenExpiresAt(refreshToken.getExpiresAt());
 
         return resLoginDTO;
+    }
+
+    public void forgotPassword(String email) {
+
+        Account accountDB = this.accountRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("Forgot password failed: email not found [{}]", email);
+                    return new ResourceNotFoundException("User not found with email: " + email);
+                });
+
+        String token = UUID.randomUUID().toString();
+        Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
+
+        EmailVerification verification = EmailVerification.builder()
+                .account(accountDB)
+                .token(token)
+                .tokenType(TokenType.RESET_PASSWORD)
+                .expiresAt(expiresAt)
+                .isUsed(false)
+                .build();
+
+        emailVerificationRepository.save(verification);
+
+        // Send reset password email
+        emailService.sendPasswordResetMail(accountDB, token);
     }
 
 
