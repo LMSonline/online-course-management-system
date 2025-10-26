@@ -12,10 +12,7 @@ import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.service.AuthService;
 import vn.uit.lms.service.EmailVerificationService;
 import vn.uit.lms.service.RefreshTokenService;
-import vn.uit.lms.shared.dto.request.ForgotPasswordDTO;
-import vn.uit.lms.shared.dto.request.RegisterRequest;
-import vn.uit.lms.shared.dto.request.ReqLoginDTO;
-import vn.uit.lms.shared.dto.request.ReqRefreshTokenDTO;
+import vn.uit.lms.shared.dto.request.*;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
@@ -134,8 +131,7 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/forgot-password")
-    @ApiMessage("Reset password for account")
+    @PostMapping("/password/forgot")
     public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         log.info("Received password reset request for email: {}", forgotPasswordDTO.getEmail());
 
@@ -144,6 +140,22 @@ public class AuthController {
         log.info("Password reset email sent to: {}", forgotPasswordDTO.getEmail());
         return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
     }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(
+            @RequestParam("token") String token,
+            @Valid @RequestBody ResetPasswordDTO resetPasswordDTO
+    ) {
+        log.info("Received password reset submission for token: {}", token);
+
+        this.authService.resetPassword(token, resetPasswordDTO.getNewPassword());
+
+        log.info("Password reset successful for token: {}", token);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    
 
 
 

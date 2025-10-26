@@ -34,6 +34,7 @@ spring.messages.fallback-to-system-locale=false
 
 #Base URL
 app.base-url=http://localhost:8080
+app.frontend-url=http://localhost:3000
 app.api-version=api/v1
 
 # JWT Configuration

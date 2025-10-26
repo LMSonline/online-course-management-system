@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import vn.uit.lms.shared.util.TokenHashUtil;
 
 @Service
 public class EmailVerificationService {
@@ -55,30 +56,31 @@ public class EmailVerificationService {
 
     /**
      * Verify the given email token and activate or update account status accordingly.
-     * @param token unique verification token sent via email
+     * @param rawToken unique verification token sent via email
      * @throws ResourceNotFoundException if token not found
      * @throws InvalidTokenException     if token is expired, used, or invalid
      */
     @Transactional
-    public void verifyToken(String token) {
-        log.info("Start verifying email token: {}", token);
+    public void verifyToken(String rawToken) {
+        log.info("Start verifying email token: {}", rawToken);
+        String hashToken = TokenHashUtil.hashToken(rawToken);
 
         //Validate token existence
-        EmailVerification verification = emailVerificationRepository.findByToken(token)
+        EmailVerification verification = emailVerificationRepository.findByTokenHash(hashToken)
                 .orElseThrow(() -> {
-                    log.warn("Token not found: {}", token);
+                    log.warn("Token not found: {}", rawToken);
                     return new ResourceNotFoundException("Invalid verification token.");
                 });
 
         //Check token usage
         if (verification.isUsed()) {
-            log.warn("Token has already been used: {}", token);
+            log.warn("Token has already been used: {}", rawToken);
             throw new InvalidTokenException("Token has already been used.");
         }
 
         //Check expiration
         if (verification.getExpiresAt().isBefore(Instant.now())) {
-            log.warn("Token expired: {}", token);
+            log.warn("Token expired: {}", rawToken);
             throw new InvalidTokenException("Token has expired.");
         }
 

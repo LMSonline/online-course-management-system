@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.*;
@@ -16,19 +17,13 @@ import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.TokenType;
 import vn.uit.lms.shared.dto.request.ReqLoginDTO;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
-import vn.uit.lms.shared.exception.EmailAlreadyUsedException;
-import vn.uit.lms.shared.exception.ResourceNotFoundException;
-import vn.uit.lms.shared.exception.UserNotActivatedException;
-import vn.uit.lms.shared.exception.UsernameAlreadyUsedException;
+import vn.uit.lms.shared.exception.*;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.SecurityUtils;
 import vn.uit.lms.shared.util.TokenHashUtil;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.UUID;
 
 /**
@@ -49,6 +44,7 @@ public class AuthService {
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
@@ -63,7 +59,8 @@ public class AuthService {
                        SecurityUtils securityUtils,
                        StudentRepository studentRepository,
                        TeacherRepository teacherRepository,
-                       RefreshTokenRepository refreshTokenRepository) {
+                       RefreshTokenRepository refreshTokenRepository,
+                       PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.emailVerificationRepository = emailVerificationRepository;
@@ -72,6 +69,7 @@ public class AuthService {
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -110,12 +108,13 @@ public class AuthService {
 
         Account saved = accountRepository.save(account);
 
-        String token = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
+        String rawToken = UUID.randomUUID().toString();
+        Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
+        String hashedToken = TokenHashUtil.hashToken(rawToken);
 
         EmailVerification verification = EmailVerification.builder()
                 .account(saved)
-                .token(token)
+                .tokenHash(hashedToken)
                 .tokenType(TokenType.VERIFY_EMAIL)
                 .expiresAt(expiresAt)
                 .isUsed(false)
@@ -124,7 +123,7 @@ public class AuthService {
         emailVerificationRepository.save(verification);
 
         // Send activation email
-        emailService.sendActivationEmail(saved, token);
+        emailService.sendActivationEmail(saved, rawToken);
 
         return saved;
     }
@@ -218,12 +217,13 @@ public class AuthService {
                     return new ResourceNotFoundException("User not found with email: " + email);
                 });
 
-        String token = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
+        String rawToken = UUID.randomUUID().toString();
+        Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
+        String hashedToken = TokenHashUtil.hashToken(rawToken);
 
         EmailVerification verification = EmailVerification.builder()
                 .account(accountDB)
-                .token(token)
+                .tokenHash(hashedToken)
                 .tokenType(TokenType.RESET_PASSWORD)
                 .expiresAt(expiresAt)
                 .isUsed(false)
@@ -232,7 +232,52 @@ public class AuthService {
         emailVerificationRepository.save(verification);
 
         // Send reset password email
-        emailService.sendPasswordResetMail(accountDB, token);
+        emailService.sendPasswordResetMail(accountDB, rawToken);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        log.info("Start resetting password with token: {}", token);
+        String hashToken = TokenHashUtil.hashToken(token);
+
+        // Validate token existence
+        EmailVerification verification = emailVerificationRepository.findByTokenHash(hashToken)
+                .orElseThrow(() -> {
+                    log.warn("Token not found: {}", token);
+                    return new InvalidTokenException("Invalid token.");
+                });
+
+        // Check token usage
+        if (verification.isUsed()) {
+            log.warn("Token has already been used: {}", token);
+            throw new InvalidTokenException("Token has already been used.");
+        }
+
+        // Check expiration
+        if (verification.getExpiresAt().isBefore(Instant.now())) {
+            log.warn("Token expired: {}", token);
+            throw new InvalidTokenException("Token has expired.");
+        }
+
+        // Validate token type
+        if (verification.getTokenType() != TokenType.RESET_PASSWORD) {
+            log.warn("Invalid token type: {}", verification.getTokenType());
+            throw new InvalidTokenException("Invalid token type.");
+        }
+
+        // Load associated account
+        Account account = verification.getAccount();
+        log.debug("Resetting password for account id={}, role={}", account.getId(), account.getRole());
+
+        // Update password
+        account.setPasswordHash(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+
+        // Mark token as used
+        verification.setUsed(true);
+        emailVerificationRepository.save(verification);
+
+        log.info("Password reset successfully for account id={}", account.getId());
+
     }
 
 

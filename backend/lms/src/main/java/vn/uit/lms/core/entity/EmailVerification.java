@@ -21,8 +21,8 @@ public class EmailVerification extends BaseEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @Column(nullable = false)
-    private String token;
+    @Column(nullable = false, name = "token_hash")
+    private String tokenHash;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "token_type", length = 30, nullable = false)
