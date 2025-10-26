@@ -20,12 +20,13 @@ public class Student extends BaseEntity {
     @JoinColumn(name = "account_id", nullable = false, unique = true)
     private Account account;
 
-    @Column(length = 50, unique = true)
+    @Column(name = "student_code", length = 50, unique = true)
     private String studentCode;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;
 
+    @Column(name = "birth_date")
     private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
@@ -34,7 +35,7 @@ public class Student extends BaseEntity {
     @Column(length = 30)
     private String phone;
 
-    @Column(length = 512)
+    @Column(name = "avatar_url", length = 512)
     private String avatarUrl;
 
     @Column(columnDefinition = "TEXT")

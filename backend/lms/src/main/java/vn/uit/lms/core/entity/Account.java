@@ -1,8 +1,10 @@
 package vn.uit.lms.core.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import vn.uit.lms.shared.constant.AccountStatus;
+import vn.uit.lms.shared.constant.Language;
 import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.entity.BaseEntity;
 
@@ -32,9 +34,13 @@ public class Account extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private AccountStatus status = AccountStatus.PENDING;
+    private AccountStatus status = AccountStatus.PENDING_EMAIL;
 
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
+
+    @Size(min = 2, max = 10)
+    @Column(name = "lang_key", length = 10)
+    private String langKey = Language.VI.getCode();
 
 }

@@ -2,20 +2,27 @@ package vn.uit.lms.shared.handler;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import vn.uit.lms.shared.constant.ErrorCode;
 import vn.uit.lms.shared.dto.ApiResponse;
-import java.util.List;
+import vn.uit.lms.shared.exception.*;
+
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Instant;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Global exception handler for REST API.
- * All exceptions will be returned as JSON with ApiResponse structure.
+ * Global exception handler for REST APIs.
+ * Converts exceptions into structured ApiResponse JSON format.
  */
 @RestControllerAdvice
 public class GlobalException {
@@ -23,50 +30,58 @@ public class GlobalException {
     private static final Logger log = LoggerFactory.getLogger(GlobalException.class);
 
     /**
-     * Handle validation errors when @Valid/@Validated fails
+     * Handle common business-related exceptions such as duplicate or invalid credentials.
+     */
+    @ExceptionHandler(value = {
+            DuplicateResourceException.class,
+            UsernameNotFoundException.class,
+            EmailAlreadyUsedException.class,
+            UsernameAlreadyUsedException.class,
+            BadCredentialsException.class,
+            InvalidTokenException.class,
+            ResourceNotFoundException.class,
+            UserNotActivatedException.class,
+            HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<ApiResponse<Object>> handleBusinessExceptions(Exception ex) {
+        log.warn("Business exception: {}", ex.getMessage());
+
+        ApiResponse<Object> res = new ApiResponse<>();
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
+        res.setSuccess(false);
+        res.setCode(ErrorCode.BAD_REQUEST);
+        res.setMessage("Exception occurred: " + ex.getMessage());
+        res.setTimestamp(Instant.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    /**
+     * Handle validation errors when @Valid or @Validated fails on request body.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidationError(MethodArgumentNotValidException ex) {
-        // Extract field errors
+        // Collect field-specific validation errors
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.toList());
 
-        // Log validation errors
         log.warn("Validation failed: {}", errors);
 
-        // Build ApiResponse to return
         ApiResponse<Object> res = new ApiResponse<>();
-        res.setSuccess(Boolean.FALSE);
+        res.setSuccess(false);
         res.setStatus(HttpStatus.BAD_REQUEST.value());
         res.setMessage(String.join("; ", errors));
         res.setCode(ErrorCode.VALIDATION_ERROR);
+        res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
     /**
-     * Handle all unhandled exceptions
-     * Return 500 Internal Server Error
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleAllException(Exception ex) {
-        // Log full stack trace for debugging
-        log.error("Unhandled exception occurred", ex);
-
-        ApiResponse<Object> res = new ApiResponse<>();
-        res.setSuccess(Boolean.FALSE);
-        res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        res.setMessage("Internal server error: " + ex.getMessage());
-        res.setCode(ErrorCode.INTERNAL_ERROR);
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-    }
-
-    /**
-     * Handle constraint violations (e.g., @Validated on method parameters)
+     * Handle violations raised by @Validated on method parameters.
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(ConstraintViolationException ex) {
@@ -78,12 +93,29 @@ public class GlobalException {
         log.warn("Constraint violation: {}", errors);
 
         ApiResponse<Object> res = new ApiResponse<>();
-        res.setSuccess(Boolean.FALSE);
+        res.setSuccess(false);
         res.setStatus(HttpStatus.BAD_REQUEST.value());
         res.setMessage(String.join("; ", errors));
         res.setCode(ErrorCode.VALIDATION_ERROR);
+        res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
-}
 
+    /**
+     * Handle unexpected/unhandled exceptions and return HTTP 500.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleAllExceptions(Exception ex) {
+        log.error("Unhandled exception occurred", ex);
+
+        ApiResponse<Object> res = new ApiResponse<>();
+        res.setSuccess(false);
+        res.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        res.setMessage("Internal server error: " + ex.getMessage());
+        res.setCode(ErrorCode.INTERNAL_ERROR);
+        res.setTimestamp(Instant.now());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+    }
+}
