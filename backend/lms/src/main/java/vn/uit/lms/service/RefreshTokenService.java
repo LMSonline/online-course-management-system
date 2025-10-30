@@ -72,16 +72,24 @@ public class RefreshTokenService {
 
         // Map account to response DTO
         ResLoginDTO resLoginDTO;
-        if (accountDB.getRole() == Role.STUDENT) {
-            Student student = studentRepository.findByAccount(accountDB)
-                    .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
-            resLoginDTO = AccountMapper.studentToResLoginDTO(student);
-        } else if (accountDB.getRole() == Role.TEACHER) {
-            Teacher teacher = teacherRepository.findByAccount(accountDB)
-                    .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
-            resLoginDTO = AccountMapper.teacherToResLoginDTO(teacher);
-        } else {
-            throw new InvalidTokenException("Unknown role");
+        switch (accountDB.getRole()) {
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(accountDB)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                resLoginDTO = AccountMapper.studentToResLoginDTO(student);
+            }
+
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(accountDB)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                resLoginDTO = AccountMapper.teacherToResLoginDTO(teacher);
+            }
+
+            case ADMIN -> {
+                resLoginDTO = AccountMapper.adminToResLoginDTO(accountDB);
+            }
+
+            default -> throw new IllegalStateException("Unexpected role: " + accountDB.getRole());
         }
 
         // Generate new access token

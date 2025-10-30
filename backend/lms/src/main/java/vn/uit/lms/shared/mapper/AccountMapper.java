@@ -66,5 +66,17 @@ public class AccountMapper {
                         .build())
                 .build();
     }
+
+    public static ResLoginDTO adminToResLoginDTO( Account admin) {
+        return ResLoginDTO.builder()
+                .user(ResLoginDTO.UserInfo.builder()
+                        .id(admin.getId())
+                        .username(admin.getUsername())
+                        .email(admin.getEmail())
+                        .role(admin.getRole())
+                        .langKey(admin.getLangKey())
+                        .build())
+                .build();
+    }
 }
 

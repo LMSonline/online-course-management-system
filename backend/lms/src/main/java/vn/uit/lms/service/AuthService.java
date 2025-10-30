@@ -175,18 +175,26 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         // Map account to response DTO depending on role
-        if(accountDB.getRole() == Role.STUDENT) {
+        switch (accountDB.getRole()) {
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(accountDB)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                resLoginDTO = AccountMapper.studentToResLoginDTO(student);
+            }
 
-            Student student = studentRepository.findByAccount(accountDB).orElseThrow(
-                    () -> new UserNotActivatedException("Account not activated"));
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(accountDB)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                resLoginDTO = AccountMapper.teacherToResLoginDTO(teacher);
+            }
 
-            resLoginDTO = AccountMapper.studentToResLoginDTO(student);
-        } else if(accountDB.getRole() == Role.TEACHER) {
-            Teacher teacher = teacherRepository.findByAccount(accountDB).orElseThrow(
-                    () -> new UserNotActivatedException("Account not activated"));
+            case ADMIN -> {
+                resLoginDTO = AccountMapper.adminToResLoginDTO(accountDB);
+            }
 
-            resLoginDTO = AccountMapper.teacherToResLoginDTO(teacher);
+            default -> throw new IllegalStateException("Unexpected role: " + accountDB.getRole());
         }
+
 
         // Generate access token
         String accessToken = securityUtils.createAccessToken(authentication.getName(), resLoginDTO);
@@ -242,6 +250,7 @@ public class AuthService {
         emailService.sendPasswordResetMail(accountDB, rawToken);
     }
 
+    @Transactional
     public void resetPassword(String token, String newPassword) {
         log.info("Start resetting password with token: {}", token);
         String hashToken = TokenHashUtil.hashToken(token);

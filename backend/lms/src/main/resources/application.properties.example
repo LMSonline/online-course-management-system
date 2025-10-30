@@ -41,3 +41,8 @@ app.api-version=api/v1
 jwt.secret=your_jwt_secret_key
 jwt.access-token.expiration=86400
 jwt.refresh-token.expiration=100000
+
+#Admin setup
+app.admin.username=admin
+app.admin.password=Admin@123
+app.admin.email=admin@gmail.com
