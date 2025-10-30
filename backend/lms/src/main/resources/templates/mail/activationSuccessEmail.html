@@ -108,7 +108,7 @@
 
         <p style="text-align:center; margin:28px 0;">
             <a class="login-button"
-               th:with="url=(@{|${baseUrl}/login|})"
+               th:with="url=(@{|${frontendURL}/login|})"
                th:href="${url}"
                th:text="#{email.activation_success.button}">
                 Đăng nhập ngay

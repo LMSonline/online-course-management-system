@@ -19,6 +19,7 @@ public class ErrorCode {
     // 404 - Not Found
     public static final String RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND";
     public static final String ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
+    public static final String NOT_FOUND = "NOT_FOUND";
 
     // 500 - Internal Server Error
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";

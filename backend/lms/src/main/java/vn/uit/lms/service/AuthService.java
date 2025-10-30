@@ -3,9 +3,11 @@ package vn.uit.lms.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,8 +16,10 @@ import vn.uit.lms.core.entity.*;
 import vn.uit.lms.core.repository.*;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Role;
+import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.constant.TokenType;
 import vn.uit.lms.shared.dto.request.ReqLoginDTO;
+import vn.uit.lms.shared.dto.response.MeResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.exception.*;
 import vn.uit.lms.shared.mapper.AccountMapper;
@@ -206,6 +210,9 @@ public class AuthService {
         resLoginDTO.setRefreshToken(rawRefreshToken);
         resLoginDTO.setRefreshTokenExpiresAt(refreshToken.getExpiresAt());
 
+        accountDB.setLastLoginAt(Instant.now());
+        accountRepository.save(accountDB);
+
         return resLoginDTO;
     }
 
@@ -279,6 +286,51 @@ public class AuthService {
         log.info("Password reset successfully for account id={}", account.getId());
 
     }
+
+    public MeResponse getCurrentUserInfo() {
+        String email = SecurityUtils.getCurrentUserLogin()
+                .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
+                .orElseThrow(() -> new ResourceNotFoundException("User not authenticated") {
+                });
+
+        Account account = accountRepository.findOneByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        MeResponse meResponse = buildBaseResponse(account);
+
+        BaseProfile profile = switch (account.getRole()) {
+            case STUDENT -> studentRepository.findByAccount(account)
+                    .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+            case TEACHER -> teacherRepository.findByAccount(account)
+                    .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+            default -> null;
+        };
+
+        if (profile != null) fillUserProfile(meResponse, profile);
+
+        return meResponse;
+    }
+
+    private MeResponse buildBaseResponse(Account account) {
+        return MeResponse.builder()
+                .accountId(account.getId())
+                .username(account.getUsername())
+                .email(account.getEmail())
+                .role(account.getRole())
+                .lastLoginAt(account.getLastLoginAt())
+                .status(account.getStatus())
+                .build();
+    }
+
+    private void fillUserProfile(MeResponse meResponse, BaseProfile profile) {
+        meResponse.setAvatarUrl(profile.getAvatarUrl());
+        meResponse.setFullName(profile.getFullName());
+        meResponse.setGender(profile.getGender());
+        meResponse.setBio(profile.getBio());
+        meResponse.setBirthday(profile.getBirthDate());
+    }
+
+
 
 
 }

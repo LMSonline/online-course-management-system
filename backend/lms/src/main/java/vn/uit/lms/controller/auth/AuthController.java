@@ -13,6 +13,7 @@ import vn.uit.lms.service.AuthService;
 import vn.uit.lms.service.EmailVerificationService;
 import vn.uit.lms.service.RefreshTokenService;
 import vn.uit.lms.shared.dto.request.*;
+import vn.uit.lms.shared.dto.response.MeResponse;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
@@ -152,6 +153,13 @@ public class AuthController {
 
         log.info("Password reset successful for token: {}", token);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    @ApiMessage("Get current logged-in user info")
+    ResponseEntity<MeResponse> getCurrentUserInfo() {
+        MeResponse userInfo = authService.getCurrentUserInfo();
+        return ResponseEntity.ok(userInfo);
     }
 
 

@@ -19,13 +19,14 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allowed frontend origins (development and local testing)
+//         Allowed frontend origins (development and local testing)
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:4173",
                 "http://localhost:5173",
                 "http://192.168.1.68:5173"
         ));
+//        config.setAllowedOriginPatterns(Arrays.asList("*"));
 
         // Allowed HTTP methods
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
