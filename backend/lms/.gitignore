@@ -1,11 +1,11 @@
-HELP.md
+# Spring Boot & Gradle
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### STS ###
+# STS / Eclipse
 .apt_generated
 .classpath
 .factorypath
@@ -17,7 +17,7 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA
 .idea
 *.iws
 *.iml
@@ -26,19 +26,39 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
+# NetBeans build folders
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-### Application Properties ###
+# Application Properties / YAML
+# Ignore all real config files
 application.properties
 application.yml
 application-*.yml
 application-*.properties
+# Keep only example files
 !application.properties.example
+!application.yml.example
+
+# Logs
+*.log
+logs/
+*.trace
+*.stacktrace
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Maven / Gradle wrapper binaries
+gradle-wrapper.jar
