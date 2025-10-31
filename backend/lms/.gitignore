@@ -40,7 +40,6 @@ out/
 # Application Properties / YAML
 # Ignore all real config files
 application.properties
-application.yml
 application-*.yml
 application-*.properties
 # Keep only example files
