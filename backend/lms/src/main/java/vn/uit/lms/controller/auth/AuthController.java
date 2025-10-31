@@ -19,6 +19,11 @@ import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
 
+/**
+ * Authentication and authorization controller for user account operations.
+ *
+ * Handles registration, login, password management, and email verification.
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -41,21 +46,19 @@ public class AuthController {
     }
 
     /**
-     * Register a new account and send verification email.
+     * Register a new account (Student/Teacher) and trigger verification email.
      *
-     * @param accountRequest registration payload from client
-     * @return created account information
+     * @param accountRequest registration payload containing email, username, and password
+     * @return newly created account information
      */
     @PostMapping("/register")
     @ApiMessage("Register new account")
     public ResponseEntity<RegisterResponse> registerAccount(@Valid @RequestBody RegisterRequest accountRequest) {
         log.info("Received registration request for email: {}", accountRequest.getEmail());
 
-        // Convert DTO to entity and hash password before saving
         Account account = AccountMapper.toEntity(accountRequest);
         account.setPasswordHash(this.passwordEncoder.encode(accountRequest.getPassword()));
 
-        // Register account and trigger email verification
         Account accountDB = this.authService.registerAccount(account);
         RegisterResponse response = AccountMapper.toResponse(accountDB);
 
@@ -64,26 +67,26 @@ public class AuthController {
     }
 
     /**
-     * Verify user's email using verification token.
+     * Verify a user's email using a verification token sent to their email.
      *
-     * @param token unique verification token sent to user's email
-     * @return success message if verification passes
+     * @param token unique verification token
+     * @return confirmation message if verification is successful
      */
     @GetMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+    @ApiMessage("Verify user email")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         log.debug("Verifying email token: {}", token);
-
         this.emailVerificationService.verifyToken(token);
-
         log.info("Email verification succeeded for token: {}", token);
         return ResponseEntity.ok("Your email has been successfully verified!");
     }
 
     /**
-     * Authenticate user credentials.
+     * Authenticate a user's login credentials and issue JWT + refresh token.
      *
      * @param reqLoginDTO login credentials (username/email + password)
-     * @return success message if authentication passes
+     * @param request HTTP request (used to extract client IP)
+     * @return login response containing tokens and account info
      */
     @PostMapping("/login")
     @ApiMessage("Login to the system")
@@ -94,7 +97,6 @@ public class AuthController {
         if (clientIp == null) clientIp = request.getRemoteAddr();
 
         reqLoginDTO.setIpAddress(clientIp);
-
         ResLoginDTO res = this.authService.login(reqLoginDTO);
 
         log.info("Login successful for user: {}", reqLoginDTO.getLogin());
@@ -102,16 +104,15 @@ public class AuthController {
     }
 
     /**
-     * Refresh access token using a valid refresh token.
+     * Generate a new access token using a valid refresh token.
      *
-     * @param reqRefreshTokenDTO refresh token request payload
-     * @param request HTTP servlet request to extract client IP
-     * @return new access token and related authentication info
+     * @param reqRefreshTokenDTO payload containing the refresh token
+     * @param request HTTP request (used to extract client IP)
+     * @return new access token + refresh token pair
      */
     @PostMapping("/refresh")
     @ApiMessage("Refresh access token using refresh token")
     public ResponseEntity<ResLoginDTO> refreshAccessToken(@Valid @RequestBody ReqRefreshTokenDTO reqRefreshTokenDTO, HttpServletRequest request) {
-
         String clientIp = request.getHeader("X-Forwarded-For");
         if (clientIp == null) clientIp = request.getRemoteAddr();
 
@@ -121,51 +122,76 @@ public class AuthController {
     }
 
     /**
-     * Logout user by revoking their refresh token.
+     * Revoke the user's refresh token to log out of the system.
      *
-     * @param request refresh token to revoke
-     * @return HTTP 204 No Content response
+     * @param request payload containing the refresh token to revoke
+     * @return 204 No Content if logout is successful
      */
     @PostMapping("/logout")
+    @ApiMessage("Logout and revoke refresh token")
     public ResponseEntity<Void> logout(@Valid @RequestBody ReqRefreshTokenDTO request) {
         refreshTokenService.revokeRefreshToken(request.getRefreshToken());
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Request password reset by email. Sends a password reset link to the user's email.
+     *
+     * @param forgotPasswordDTO payload containing user email
+     * @return message confirming that reset email has been sent (if account exists)
+     */
     @PostMapping("/password/forgot")
+    @ApiMessage("Request password reset via email")
     public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         log.info("Received password reset request for email: {}", forgotPasswordDTO.getEmail());
-
         this.authService.forgotPassword(forgotPasswordDTO.getEmail());
-
         log.info("Password reset email sent to: {}", forgotPasswordDTO.getEmail());
         return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
     }
 
+    /**
+     * Reset user password using a valid token from the reset email.
+     *
+     * @param token password reset token
+     * @param resetPasswordDTO payload containing the new password
+     * @return 204 No Content if password reset is successful
+     */
     @PostMapping("/password/reset")
+    @ApiMessage("Reset password using reset token")
     public ResponseEntity<Void> resetPassword(
             @RequestParam("token") String token,
             @Valid @RequestBody ResetPasswordDTO resetPasswordDTO
     ) {
         log.info("Received password reset submission for token: {}", token);
-
         this.authService.resetPassword(token, resetPasswordDTO.getNewPassword());
-
         log.info("Password reset successful for token: {}", token);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Retrieve information about the currently logged-in user.
+     *
+     * @return user information of the currently authenticated account
+     */
     @GetMapping("/me")
     @ApiMessage("Get current logged-in user info")
-    ResponseEntity<MeResponse> getCurrentUserInfo() {
+    public ResponseEntity<MeResponse> getCurrentUserInfo() {
         MeResponse userInfo = authService.getCurrentUserInfo();
         return ResponseEntity.ok(userInfo);
     }
 
-
-    
-
-
-
-
+    /**
+     * Change password for a logged-in user using the old password.
+     *
+     * @param changePasswordDTO payload containing old and new passwords
+     * @return 204 No Content if password change is successful
+     */
+    @PutMapping("/password/change")
+    @ApiMessage("Change password for logged-in user")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
+        log.info("Received password change request for user");
+        this.authService.changePassword(changePasswordDTO);
+        log.info("Password change successful for user");
+        return ResponseEntity.noContent().build();
+    }
 }
