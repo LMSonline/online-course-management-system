@@ -35,9 +35,6 @@ public class Student extends BaseEntity implements BaseProfile{
     @Column(length = 30)
     private String phone;
 
-    @Column(name = "avatar_url", length = 512)
-    private String avatarUrl;
-
     @Column(columnDefinition = "TEXT")
     private String bio;
 }

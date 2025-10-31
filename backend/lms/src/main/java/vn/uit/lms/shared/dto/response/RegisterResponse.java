@@ -19,6 +19,7 @@ public class RegisterResponse {
     private String email;
     private Role role;
     private AccountStatus status;
+    private String avatarUrl;
     private Instant createdAt;
     private String langKey;
 }

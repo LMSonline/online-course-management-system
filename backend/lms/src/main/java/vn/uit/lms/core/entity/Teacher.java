@@ -43,9 +43,6 @@ public class Teacher extends BaseEntity implements BaseProfile{
     @Column(length = 128)
     private String degree;
 
-    @Column(name = "avatar_url", length = 512)
-    private String avatarUrl;
-
     @Column(columnDefinition = "TEXT")
     private String bio;
 

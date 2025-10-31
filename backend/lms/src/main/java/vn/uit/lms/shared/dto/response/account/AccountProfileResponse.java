@@ -33,6 +33,9 @@ public class AccountProfileResponse {
     private AccountStatus status;
 
     @JsonView(Views.Public.class)
+    private String avatarUrl;
+
+    @JsonView(Views.Public.class)
     private Profile profile;
 
     @Data
@@ -57,9 +60,6 @@ public class AccountProfileResponse {
 
         @JsonView(Views.Public.class)
         private LocalDate birthDate;
-
-        @JsonView(Views.Public.class)
-        private String avatarUrl;
 
         @JsonView(Views.Public.class)
         private String bio;

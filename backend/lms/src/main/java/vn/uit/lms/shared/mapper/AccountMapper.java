@@ -34,6 +34,7 @@ public class AccountMapper {
                 .username(account.getUsername())
                 .role(account.getRole())
                 .status(account.getStatus())
+                .avatarUrl(account.getAvatarUrl())
                 .createdAt(account.getCreatedAt())
                 .langKey(account.getLangKey())
                 .build();
@@ -47,7 +48,7 @@ public class AccountMapper {
                         .email(student.getAccount().getEmail())
                         .role(student.getAccount().getRole())
                         .fullName(student.getFullName())
-                        .avatarUrl(student.getAvatarUrl())
+                        .avatarUrl(student.getAccount().getAvatarUrl())
                         .langKey(student.getAccount().getLangKey())
                         .build())
                 .build();
@@ -60,8 +61,8 @@ public class AccountMapper {
                         .username(teacher.getAccount().getUsername())
                         .email(teacher.getAccount().getEmail())
                         .role(teacher.getAccount().getRole())
+                        .avatarUrl(teacher.getAccount().getAvatarUrl())
                         .fullName(teacher.getFullName())
-                        .avatarUrl(teacher.getAvatarUrl())
                         .langKey(teacher.getAccount().getLangKey())
                         .build())
                 .build();
@@ -74,6 +75,7 @@ public class AccountMapper {
                         .username(admin.getUsername())
                         .email(admin.getEmail())
                         .role(admin.getRole())
+                        .avatarUrl(admin.getAvatarUrl())
                         .langKey(admin.getLangKey())
                         .build())
                 .build();

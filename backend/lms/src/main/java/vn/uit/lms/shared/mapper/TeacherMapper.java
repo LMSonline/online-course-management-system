@@ -10,7 +10,6 @@ public class TeacherMapper {
                 .teacherCode(teacher.getTeacherCode())
                 .fullName(teacher.getFullName())
                 .phone(teacher.getPhone())
-                .avatarUrl(teacher.getAvatarUrl())
                 .birthDate(teacher.getBirthDate())
                 .bio(teacher.getBio())
                 .gender(teacher.getGender())

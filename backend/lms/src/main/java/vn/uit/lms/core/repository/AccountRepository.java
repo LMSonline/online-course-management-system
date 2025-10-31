@@ -13,7 +13,6 @@ public interface AccountRepository extends JpaRepository<Account, Long>, JpaSpec
 
     Optional<Account> findOneByEmailIgnoreCase(String email);
     Optional<Account> findOneByUsername(String username);
-    Optional<Account> findByEmailOrUsername(String email, String username);
     Optional<Account> findByEmail(String email);
     boolean existsByRole(Role role);
 }

@@ -327,13 +327,13 @@ public class AuthService {
                 .username(account.getUsername())
                 .email(account.getEmail())
                 .role(account.getRole())
+                .avatarUrl(account.getAvatarUrl())
                 .lastLoginAt(account.getLastLoginAt())
                 .status(account.getStatus())
                 .build();
     }
 
     private void fillUserProfile(MeResponse meResponse, BaseProfile profile) {
-        meResponse.setAvatarUrl(profile.getAvatarUrl());
         meResponse.setFullName(profile.getFullName());
         meResponse.setGender(profile.getGender());
         meResponse.setBio(profile.getBio());

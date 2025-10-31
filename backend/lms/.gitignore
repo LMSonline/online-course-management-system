@@ -38,5 +38,7 @@ out/
 
 ### Application Properties ###
 application.properties
+application.yml
+application-*.yml
 application-*.properties
 !application.properties.example

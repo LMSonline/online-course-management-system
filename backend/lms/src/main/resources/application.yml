@@ -1,0 +1,77 @@
+spring:
+  application:
+    name: lms
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms
+    username: postgres
+    password: 122005
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: trinhdev.gl@gmail.com
+    password: jppqtqjqunbxxsza
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+# Logging
+logging:
+  level:
+    org.springframework.security: TRACE
+
+# Swagger
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+# App custom configs
+app:
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:3000
+  api-version: api/v1
+
+  admin:
+    username: admin
+    password: Admin@123
+    email: admin@gmail.com
+
+  avatar:
+    max-size-bytes: 5242880 # 5MB
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+    folder: avatars
+
+# JWT config
+jwt:
+  secret: Sk9Q3TwckIpyw0YWwfq8ln/7BWAY80oAaChfAbFtL3M=
+  access-token:
+    expiration: 86400
+  refresh-token:
+    expiration: 100000
+
+# Cloudinary config
+cloudinary:
+  cloud-name: dpp4ax5fb
+  api-key: 286254124963581
+  api-secret: ca6E4AKD4giokCQqMYP24MH8fAY
