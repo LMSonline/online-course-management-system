@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import vn.uit.lms.shared.entity.BaseEntity;
 import vn.uit.lms.shared.constant.Gender;
+import vn.uit.lms.shared.entity.PersonBase;
 
 import java.time.LocalDate;
 import java.time.Instant;
@@ -15,7 +16,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Teacher extends BaseEntity implements BaseProfile{
+public class Teacher extends PersonBase implements BaseProfile{
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false, unique = true)
@@ -24,27 +25,11 @@ public class Teacher extends BaseEntity implements BaseProfile{
     @Column(name = "teacher_code", unique = true, length = 50)
     private String teacherCode;
 
-    @Column(name = "full_name", nullable = false, length = 255)
-    private String fullName;
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 10)
-    private Gender gender;
-
-    @Column(name = "birth_date")
-    private LocalDate birthDate;
-
-    @Column(length = 30)
-    private String phone;
-
     @Column(length = 255)
     private String specialty;
 
     @Column(length = 128)
     private String degree;
-
-    @Column(columnDefinition = "TEXT")
-    private String bio;
 
     @Column(nullable = false)
     private boolean approved = false;

@@ -1,5 +1,6 @@
 package vn.uit.lms.shared.mapper;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.entity.Student;
@@ -12,6 +13,7 @@ import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
+import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 
 
 public class AccountMapper {
@@ -78,6 +80,19 @@ public class AccountMapper {
                         .avatarUrl(admin.getAvatarUrl())
                         .langKey(admin.getLangKey())
                         .build())
+                .build();
+    }
+
+    public static AccountProfileResponse toProfileResponse(Account account, AccountProfileResponse.Profile profile) {
+        return AccountProfileResponse.builder()
+                .accountId(account.getId())
+                .lastLoginAt(account.getLastLoginAt())
+                .email(account.getEmail())
+                .username(account.getUsername())
+                .role(account.getRole())
+                .status(account.getStatus())
+                .avatarUrl(account.getAvatarUrl())
+                .profile(profile)
                 .build();
     }
 

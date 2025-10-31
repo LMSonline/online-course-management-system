@@ -1,5 +1,6 @@
 package vn.uit.lms.controller.auth;
 
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.ApiResponse;
+import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.exception.UnauthorizedException;
@@ -72,6 +74,15 @@ public class AccountController {
         UploadAvatarResponse res = accountService.uploadAvatar(file, email);
 
         return ResponseEntity.ok(res);
+    }
+
+    @PutMapping("/me")
+    @ApiMessage("Update profile for authenticated user")
+    public ResponseEntity<AccountProfileResponse> updateProfile(
+         @Valid @RequestBody UpdateProfileRequest profileRequest) {
+        AccountProfileResponse res = accountService.updateProfile(profileRequest);
+        return ResponseEntity.ok(res);
+
     }
 
 

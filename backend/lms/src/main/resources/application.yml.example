@@ -2,16 +2,14 @@
 # Example configuration file for a Spring Boot application.
 # Copy this file as 'application.yml' and update the values as needed.
 
-
 spring:
   application:
     name: lms
 
-  # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/name_of_your_database
+    url: jdbc:postgresql://localhost:5432/lms
     username: postgres
-    password: your_password
+    password: your_database_password_here
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,13 +20,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # Email Configuration
-
   mail:
     host: smtp.gmail.com
     port: 587
-    username: trinhdev.gl@gmail.com
-    password: jppqtqjqunbxxsza
+    username: your_email@gmail.com
+    password: your_app_password_here
     properties:
       mail:
         smtp:
@@ -36,23 +32,24 @@ spring:
           starttls:
             enable: true
 
-  # Internationalization (i18n)
   messages:
     basename: i18n/messages
     encoding: UTF-8
     fallback-to-system-locale: false
 
-# Logging Configuration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 logging:
   level:
     org.springframework.security: TRACE
 
-# Swagger Configuration
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-# Application Settings
 app:
   base-url: http://localhost:8080
   frontend-url: http://localhost:3000
@@ -63,16 +60,33 @@ app:
     password: Admin@123
     email: admin@gmail.com
 
-# JWT Configuration
+  student:
+    username: student
+    password: Student@123
+    email: student@example.com
+
+  teacher:
+    username: teacher
+    password: Teacher@123
+    email: teacher@example.com
+
+  avatar:
+    default-url: https://res.cloudinary.com/your-cloud/image/upload/v1234567890/default-avatar.jpg
+    max-size-bytes: 10485760 # 10MB
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+    folder: avatars
+
 jwt:
-  secret: your_jwt_secret_key
+  secret: your_jwt_secret_here
   access-token:
     expiration: 86400
   refresh-token:
     expiration: 100000
 
-# Cloudinary config
 cloudinary:
-  cloud-name: your_cloud_name
-  api-key: your_api_key
-  api-secret: your_api_secret
+  cloud-name: your_cloud_name_here
+  api-key: your_api_key_here
+  api-secret: your_api_secret_here

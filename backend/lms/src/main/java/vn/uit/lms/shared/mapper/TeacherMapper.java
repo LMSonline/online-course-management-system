@@ -15,6 +15,8 @@ public class TeacherMapper {
                 .gender(teacher.getGender())
                 .specialty(teacher.getSpecialty())
                 .degree(teacher.getDegree())
+                .createdAt(teacher.getCreatedAt())
+                .updatedAt(teacher.getUpdatedAt())
                 .approved(teacher.isApproved())
                 .build();
     }

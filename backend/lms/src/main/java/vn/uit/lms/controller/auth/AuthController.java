@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,9 @@ import vn.uit.lms.shared.util.annotation.ApiMessage;
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    @Value("${app.avatar.default-url}")
+    private String defaultAvatarUrl;
 
     private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
@@ -57,6 +61,7 @@ public class AuthController {
         log.info("Received registration request for email: {}", accountRequest.getEmail());
 
         Account account = AccountMapper.toEntity(accountRequest);
+        account.setAvatarUrl(defaultAvatarUrl);
         account.setPasswordHash(this.passwordEncoder.encode(accountRequest.getPassword()));
 
         Account accountDB = this.authService.registerAccount(account);

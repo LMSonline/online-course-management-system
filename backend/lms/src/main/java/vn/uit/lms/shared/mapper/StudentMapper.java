@@ -13,6 +13,8 @@ public class StudentMapper {
                 .birthDate(student.getBirthDate())
                 .bio(student.getBio())
                 .gender(student.getGender())
+                .createdAt(student.getCreatedAt())
+                .updatedAt(student.getUpdatedAt())
                 .build();
     }
 }
