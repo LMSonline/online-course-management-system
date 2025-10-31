@@ -18,6 +18,7 @@ import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.constant.TokenType;
+import vn.uit.lms.shared.dto.request.ChangePasswordDTO;
 import vn.uit.lms.shared.dto.request.ReqLoginDTO;
 import vn.uit.lms.shared.dto.response.MeResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
@@ -299,7 +300,7 @@ public class AuthService {
     public MeResponse getCurrentUserInfo() {
         String email = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
-                .orElseThrow(() -> new ResourceNotFoundException("User not authenticated") {
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated") {
                 });
 
         Account account = accountRepository.findOneByEmailIgnoreCase(email)
@@ -337,6 +338,30 @@ public class AuthService {
         meResponse.setGender(profile.getGender());
         meResponse.setBio(profile.getBio());
         meResponse.setBirthday(profile.getBirthDate());
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+
+        if (changePasswordDTO.getOldPassword().equals(changePasswordDTO.getNewPassword())) {
+            throw new InvalidPasswordException("New password must be different from old password");
+        }
+
+        String email = SecurityUtils.getCurrentUserLogin()
+                .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+
+        Account account = accountRepository.findOneByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), account.getPasswordHash())) {
+            throw new InvalidPasswordException("Old password does not match");
+        }
+
+
+        account.setPasswordHash(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        accountRepository.save(account);
     }
 
 

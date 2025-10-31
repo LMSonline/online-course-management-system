@@ -41,7 +41,8 @@ public class GlobalException {
             InvalidTokenException.class,
             ResourceNotFoundException.class,
             UserNotActivatedException.class,
-            HttpMessageNotReadableException.class
+            HttpMessageNotReadableException.class,
+            InvalidPasswordException.class,
     })
     public ResponseEntity<ApiResponse<Object>> handleBusinessExceptions(Exception ex) {
         log.warn("Business exception: {}", ex.getMessage());
@@ -117,5 +118,22 @@ public class GlobalException {
         res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+    }
+
+    /**
+     * Handle unauthorized access (401)
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorizedException(UnauthorizedException ex) {
+        log.warn("Unauthorized access: {}", ex.getMessage());
+
+        ApiResponse<Object> res = new ApiResponse<>();
+        res.setSuccess(false);
+        res.setStatus(HttpStatus.UNAUTHORIZED.value());
+        res.setMessage(ex.getMessage());
+        res.setCode(ErrorCode.UNAUTHORIZED);
+        res.setTimestamp(Instant.now());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
     }
 }

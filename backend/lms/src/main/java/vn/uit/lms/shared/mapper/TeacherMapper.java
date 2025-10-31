@@ -1,0 +1,22 @@
+package vn.uit.lms.shared.mapper;
+
+import vn.uit.lms.core.entity.Teacher;
+import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
+
+public class TeacherMapper {
+
+    public static AccountProfileResponse.Profile toProfileResponse(Teacher teacher) {
+        return AccountProfileResponse.Profile.builder()
+                .teacherCode(teacher.getTeacherCode())
+                .fullName(teacher.getFullName())
+                .phone(teacher.getPhone())
+                .avatarUrl(teacher.getAvatarUrl())
+                .birthDate(teacher.getBirthDate())
+                .bio(teacher.getBio())
+                .gender(teacher.getGender())
+                .specialty(teacher.getSpecialty())
+                .degree(teacher.getDegree())
+                .approved(teacher.isApproved())
+                .build();
+    }
+}
