@@ -81,7 +81,7 @@ public class CustomUserDetailService implements UserDetailsService {
 
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + accountDB.getRole().name());
 
-        UserDetails userDetails = new User(accountDB.getUsername(), accountDB.getPasswordHash(), List.of(authority));
+        UserDetails userDetails = new User(accountDB.getEmail(), accountDB.getPasswordHash(), List.of(authority));
 
         log.debug("Successfully loaded user details for [{}]", username);
         return userDetails;

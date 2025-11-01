@@ -172,7 +172,8 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ResLoginDTO resLoginDTO = new ResLoginDTO();
-        Account accountDB = accountRepository.findOneByEmailIgnoreCase(authentication.getName())
+        String email = authentication.getName();
+        Account accountDB = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         // Map account to response DTO depending on role

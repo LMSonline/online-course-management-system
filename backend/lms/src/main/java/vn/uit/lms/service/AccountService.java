@@ -77,21 +77,7 @@ public class AccountService {
         Account account = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        AccountProfileResponse.Profile profile = switch (account.getRole()) {
-            case STUDENT -> {
-                Student student = studentRepository.findByAccount(account)
-                        .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
-                yield StudentMapper.toProfileResponse(student);
-            }
-            case TEACHER -> {
-                Teacher teacher = teacherRepository.findByAccount(account)
-                        .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
-                yield TeacherMapper.toProfileResponse(teacher);
-            }
-            case ADMIN -> new AccountProfileResponse.Profile(); // Admin profile may remain empty
-        };
-
-        return AccountMapper.toProfileResponse(account, profile);
+        return getAccountProfile(account);
     }
 
     /**
@@ -236,5 +222,30 @@ public class AccountService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    public AccountProfileResponse getAccountById(Long id) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        return getAccountProfile(account);
+    }
+
+    public AccountProfileResponse getAccountProfile(Account account) {
+        AccountProfileResponse.Profile profile = switch (account.getRole()) {
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(account)
+                        .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+                yield StudentMapper.toProfileResponse(student);
+            }
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(account)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+                yield TeacherMapper.toProfileResponse(teacher);
+            }
+            case ADMIN -> new AccountProfileResponse.Profile();
+        };
+
+        return AccountMapper.toProfileResponse(account, profile);
     }
 }

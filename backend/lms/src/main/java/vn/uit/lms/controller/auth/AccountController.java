@@ -92,7 +92,6 @@ public class AccountController {
 
     }
 
-
     @GetMapping
     @ApiMessage("Get all accounts (Admin only)")
     @AdminOnly
@@ -101,6 +100,16 @@ public class AccountController {
             Pageable pageable
             ) {
         PageResponse<AccountResponse> res = accountService.getAllAccounts(spec, pageable);
+        return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/{id}")
+    @ApiMessage("Get account by ID (Admin only)")
+    @AdminOnly
+    public ResponseEntity<AccountProfileResponse> getAccountById(
+            @PathVariable Long id
+    ) {
+        AccountProfileResponse res = accountService.getAccountById(id);
         return ResponseEntity.ok(res);
     }
 
