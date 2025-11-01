@@ -1,24 +1,31 @@
 package vn.uit.lms.controller.auth;
 
+import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.ApiResponse;
+import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
+import vn.uit.lms.shared.dto.response.account.AccountResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.util.CloudinaryUtils;
 import vn.uit.lms.shared.util.JsonViewUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
+import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
 import vn.uit.lms.shared.view.Views;
 
@@ -83,6 +90,18 @@ public class AccountController {
         AccountProfileResponse res = accountService.updateProfile(profileRequest);
         return ResponseEntity.ok(res);
 
+    }
+
+
+    @GetMapping
+    @ApiMessage("Get all accounts (Admin only)")
+    @AdminOnly
+    public ResponseEntity<PageResponse<AccountResponse>> getAllAccounts(
+            @Filter Specification<Account> spec,
+            Pageable pageable
+            ) {
+        PageResponse<AccountResponse> res = accountService.getAllAccounts(spec, pageable);
+        return ResponseEntity.ok(res);
     }
 
 

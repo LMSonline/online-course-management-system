@@ -4,6 +4,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,8 +17,10 @@ import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.shared.constant.SecurityConstants;
+import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
+import vn.uit.lms.shared.dto.response.account.AccountResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.entity.PersonBase;
 import vn.uit.lms.shared.exception.InvalidFileException;
@@ -27,6 +32,7 @@ import vn.uit.lms.shared.mapper.TeacherMapper;
 import vn.uit.lms.shared.util.CloudinaryUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -211,5 +217,24 @@ public class AccountService {
         person.setGender(req.getGender());
         person.setBirthDate(req.getBirthDate());
         person.setPhone(req.getPhone());
+    }
+
+    public PageResponse<AccountResponse> getAllAccounts(Specification<Account> spec, Pageable pageable) {
+        Page<Account> page = accountRepository.findAll(spec, pageable);
+
+        List<AccountResponse> items = page.getContent()
+                .stream()
+                .map(AccountMapper::toAccountResponse)
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
     }
 }

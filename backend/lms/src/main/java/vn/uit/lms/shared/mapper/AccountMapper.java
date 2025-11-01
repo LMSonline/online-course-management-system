@@ -14,6 +14,7 @@ import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
+import vn.uit.lms.shared.dto.response.account.AccountResponse;
 
 
 public class AccountMapper {
@@ -93,6 +94,18 @@ public class AccountMapper {
                 .status(account.getStatus())
                 .avatarUrl(account.getAvatarUrl())
                 .profile(profile)
+                .build();
+    }
+
+    public static AccountResponse toAccountResponse(Account account) {
+        return AccountResponse.builder()
+                .accountId(account.getId())
+                .username(account.getUsername())
+                .email(account.getEmail())
+                .role(account.getRole())
+                .status(account.getStatus())
+                .avatarUrl(account.getAvatarUrl())
+                .createdAt(account.getCreatedAt())
                 .build();
     }
 
