@@ -429,7 +429,7 @@ public class AccountService {
         account.setStatus(newStatus);
         accountRepository.save(account);
 
-        AccountActionType actionType = LogMapper.mapStatusToAction(oldStatus, newStatus);
+        AccountActionType actionType = LogMapper.mapStatusToAction(newStatus, oldStatus);
 
         accountActionLogService.logAction(
                 account.getId(),
