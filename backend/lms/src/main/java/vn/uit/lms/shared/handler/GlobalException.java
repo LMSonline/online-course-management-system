@@ -46,6 +46,8 @@ public class GlobalException {
             InvalidPasswordException.class,
             InvalidFileException.class,
             UploadFileException.class,
+            InvalidStatusException.class,
+            InvalidRequestException.class,
     })
     public ResponseEntity<ApiResponse<Object>> handleBusinessExceptions(Exception ex) {
         log.warn("Business exception: {}", ex.getMessage());

@@ -39,4 +39,8 @@ public class Teacher extends PersonBase implements BaseProfile{
 
     @Column(name = "approved_at")
     private Instant approvedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectReason;
+
 }

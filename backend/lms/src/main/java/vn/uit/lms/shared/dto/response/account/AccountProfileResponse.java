@@ -77,6 +77,15 @@ public class AccountProfileResponse {
         @JsonView(Views.Teacher.class)
         private Boolean approved;
 
+        @JsonView(Views.Teacher.class)
+        private Long approvedBy;
+
+        @JsonView(Views.Teacher.class)
+        private Instant approvedAt;
+
+        @JsonView(Views.Teacher.class)
+        private String rejectionReason;
+
         @JsonView(Views.Public.class)
         private Instant createdAt;
 

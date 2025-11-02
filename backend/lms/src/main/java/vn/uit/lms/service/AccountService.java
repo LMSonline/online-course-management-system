@@ -11,27 +11,32 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.entity.AccountActionLog;
 import vn.uit.lms.core.entity.Student;
 import vn.uit.lms.core.entity.Teacher;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
+import vn.uit.lms.shared.constant.AccountActionType;
+import vn.uit.lms.shared.constant.AccountStatus;
+import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 import vn.uit.lms.shared.dto.response.account.AccountResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
+import vn.uit.lms.shared.dto.response.log.AccountActionLogResponse;
 import vn.uit.lms.shared.entity.PersonBase;
-import vn.uit.lms.shared.exception.InvalidFileException;
-import vn.uit.lms.shared.exception.ResourceNotFoundException;
-import vn.uit.lms.shared.exception.UnauthorizedException;
+import vn.uit.lms.shared.exception.*;
 import vn.uit.lms.shared.mapper.AccountMapper;
+import vn.uit.lms.shared.mapper.LogMapper;
 import vn.uit.lms.shared.mapper.StudentMapper;
 import vn.uit.lms.shared.mapper.TeacherMapper;
 import vn.uit.lms.shared.util.CloudinaryUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -46,6 +51,8 @@ public class AccountService {
     private final TeacherRepository teacherRepository;
     private final CloudinaryStorageService cloudinaryStorageService;
     private final CloudinaryUtils cloudinaryUtils;
+    private final AccountActionLogService accountActionLogService;
+    private final MailService mailService;
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
 
@@ -56,12 +63,16 @@ public class AccountService {
                           StudentRepository studentRepository,
                           TeacherRepository teacherRepository,
                           CloudinaryStorageService cloudinaryStorageService,
-                          CloudinaryUtils cloudinaryUtils) {
+                          CloudinaryUtils cloudinaryUtils,
+                          AccountActionLogService accountActionLogService,
+                          MailService mailService) {
+        this.accountActionLogService = accountActionLogService;
         this.accountRepository = accountRepository;
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
         this.cloudinaryUtils = cloudinaryUtils;
+        this.mailService = mailService;
     }
 
     /**
@@ -181,6 +192,7 @@ public class AccountService {
     /**
      * Update Teacher-specific profile information.
      */
+    
     private AccountProfileResponse.Profile updateTeacherProfile(UpdateProfileRequest req, Account account) {
         Teacher teacher = teacherRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
@@ -248,4 +260,191 @@ public class AccountService {
 
         return AccountMapper.toProfileResponse(account, profile);
     }
+
+    /**
+     * Approve a teacher account by admin.
+     *
+     * @param id teacher account ID
+     * @return approved teacher profile
+     */
+    @Transactional
+    public AccountProfileResponse approveTeacherAccount(Long id, String ipAddress) {
+        log.info("Approving teacher account id={}, ip={}", id, ipAddress);
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (account.getRole() != Role.TEACHER) {
+            throw new InvalidRequestException("Only teacher accounts can be approved");
+        }
+
+        if (account.getStatus() != AccountStatus.PENDING_APPROVAL) {
+            throw new InvalidStatusException("Teacher is not pending approval");
+        }
+
+        Teacher teacher = teacherRepository.findByAccount(account)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        teacher.setApproved(true);
+        teacher.setApprovedAt(Instant.now());
+        teacher.setApprovedBy(adminId);
+        teacher.setRejectReason(null);
+
+        account.setStatus(AccountStatus.ACTIVE);
+
+        teacherRepository.save(teacher);
+        accountRepository.save(account);
+
+
+        accountActionLogService.logAction(
+                account.getId(),
+                AccountActionType.APPROVE,
+                "Teacher account approved by: " + adminAccount.getUsername(),
+                adminId,
+                ipAddress,
+                AccountStatus.PENDING_APPROVAL.name(),
+                AccountStatus.ACTIVE.name()
+        );
+
+        mailService.sendTeacherNotification(
+                account.getId(),
+                AccountActionType.APPROVE,
+                null
+        );
+
+        AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
+        AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
+
+        log.info("Teacher account id={} approved successfully by admin={}", id, adminAccount.getUsername());
+        return response;
+    }
+
+    /**
+     * Reject a teacher account by admin.
+     *
+     * @param id teacher account ID
+     * @return rejected teacher profile
+     */
+    @Transactional
+    public AccountProfileResponse rejectTeacherAccount(Long id, String reason, String ipAddress) {
+        log.info("Rejecting teacher account id={}, reason='{}', ip={}", id, reason, ipAddress);
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (account.getRole() != Role.TEACHER) {
+            throw new InvalidRequestException("Only teacher accounts can be rejected");
+        }
+
+        if (account.getStatus() != AccountStatus.PENDING_APPROVAL) {
+            throw new InvalidStatusException("Teacher is not pending approval");
+        }
+
+        Teacher teacher = teacherRepository.findByAccount(account)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        teacher.setApproved(false);
+        teacher.setApprovedAt(Instant.now());
+        teacher.setApprovedBy(adminId);
+        teacher.setRejectReason(reason);
+
+        account.setStatus(AccountStatus.REJECTED);
+
+        teacherRepository.save(teacher);
+        accountRepository.save(account);
+
+        accountActionLogService.logAction(
+                account.getId(),
+                AccountActionType.REJECT,
+                reason,
+                adminId,
+                ipAddress,
+                AccountStatus.PENDING_APPROVAL.name(),
+                AccountStatus.REJECTED.name()
+        );
+
+        mailService.sendTeacherNotification(
+                account.getId(),
+                AccountActionType.REJECT,
+                reason
+        );
+
+        AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
+        AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
+
+        log.info("Teacher account id={} rejected by admin={} successfully", id, adminAccount.getUsername());
+        return response;
+    }
+
+    public PageResponse<AccountActionLogResponse> getAccountActivityLogs(Long accountId, AccountActionType actionType,Pageable pageable){
+        Page<AccountActionLog> page = accountActionLogService.getLogsForAccount(accountId, actionType, pageable);
+
+        List<AccountActionLogResponse> items = page.getContent()
+                .stream()
+                .map(LogMapper::toAccountActionLogResponse)
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Transactional
+    public AccountProfileResponse changeAccountStatus(Long accountId, AccountStatus newStatus, String ip){
+        log.info("Changing account status for accountId={}, newStatus={}, ip={}", accountId, newStatus, ip);
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if(account.getRole() == Role.ADMIN){
+            throw new InvalidRequestException("Cannot change status of ADMIN accounts");
+        }
+
+        AccountStatus oldStatus =  account.getStatus();
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        account.setStatus(newStatus);
+        accountRepository.save(account);
+
+        AccountActionType actionType = LogMapper.mapStatusToAction(oldStatus, newStatus);
+
+        accountActionLogService.logAction(
+                account.getId(),
+                actionType,
+                "Account status changed to: " + newStatus + " by admin: " + adminAccount.getUsername(),
+                adminId,
+                ip,
+                oldStatus.name(),
+                newStatus.name()
+        );
+
+        AccountProfileResponse response = getAccountProfile(account);
+
+        log.info("Account status for accountId={} changed from {} to {} by admin={}", accountId, oldStatus, newStatus, adminAccount.getUsername());
+        return response;
+    }
+
 }

@@ -1,6 +1,7 @@
 package vn.uit.lms.controller.auth;
 
 import com.turkraft.springfilter.boot.Filter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,14 +14,19 @@ import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.entity.AccountActionLog;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.shared.constant.AccountActionType;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.dto.PageResponse;
+import vn.uit.lms.shared.dto.request.account.RejectRequest;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
+import vn.uit.lms.shared.dto.request.account.UpdateStatusRequest;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 import vn.uit.lms.shared.dto.response.account.AccountResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
+import vn.uit.lms.shared.dto.response.log.AccountActionLogResponse;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.util.CloudinaryUtils;
 import vn.uit.lms.shared.util.JsonViewUtils;
@@ -30,6 +36,7 @@ import vn.uit.lms.shared.util.annotation.ApiMessage;
 import vn.uit.lms.shared.view.Views;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
@@ -48,25 +55,7 @@ public class AccountController {
 
         AccountProfileResponse response = accountService.getProfile();
 
-        // Dynamically pick JsonView class based on role
-        Class<?> view = switch (response.getRole()) {
-            case STUDENT -> Views.Student.class;
-            case TEACHER -> Views.Teacher.class;
-            case ADMIN -> Views.Admin.class;
-        };
-
-        // Use JsonViewUtils for clean filtering
-        Object filteredData = JsonViewUtils.applyView(response, view);
-
-        ApiResponse<Object> res = new ApiResponse<>();
-        res.setSuccess(true);
-        res.setStatus(HttpStatus.OK.value());
-        res.setCode("SUCCESS");
-        res.setMessage("Request processed successfully: Get profile of the authenticated user");
-        res.setData(filteredData);
-        res.setTimestamp(Instant.now());
-
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(response));
     }
 
     @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -106,12 +95,65 @@ public class AccountController {
     @GetMapping("/{id}")
     @ApiMessage("Get account by ID (Admin only)")
     @AdminOnly
-    public ResponseEntity<AccountProfileResponse> getAccountById(
+    public ResponseEntity<ApiResponse<Object>> getAccountById(
             @PathVariable Long id
     ) {
         AccountProfileResponse res = accountService.getAccountById(id);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
+    }
+
+    @PatchMapping("/teacher/{id}/approve")
+    @ApiMessage("Approve teacher account (Admin only)")
+    @AdminOnly
+    public ResponseEntity<ApiResponse<Object>> approveTeacherAccount(
+            @PathVariable Long id,
+            HttpServletRequest request
+    ) {
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        AccountProfileResponse res = accountService.approveTeacherAccount(id, ip);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
+    }
+
+    @PatchMapping("/teacher/{id}/reject")
+    @ApiMessage("Reject teacher account (Admin only)")
+    @AdminOnly
+    public ResponseEntity<ApiResponse<Object>> rejectTeacherAccount(
+            @PathVariable Long id,
+            @Valid @RequestBody RejectRequest rejectRequest,
+            HttpServletRequest request
+            ) {
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        AccountProfileResponse result = accountService.rejectTeacherAccount(id, rejectRequest.getReason(), ip);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(result));
+    }
+
+    @PatchMapping("{id}/status")
+    @ApiMessage("Change account status (Admin only)")
+    @AdminOnly
+    public ResponseEntity<ApiResponse<Object>> changeAccountStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateStatusRequest statusRequest,
+            HttpServletRequest request
+            ){
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        AccountProfileResponse res = accountService.changeAccountStatus(id, statusRequest.getStatus(), ip);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
+    }
+
+    @GetMapping("/{id}/logs")
+    @ApiMessage("Get account activity logs by ID (Admin only)")
+    @AdminOnly
+    public ResponseEntity<PageResponse<AccountActionLogResponse>> getAccountActivityLogs(
+            @PathVariable Long id,
+            @RequestParam(required = false)AccountActionType actionType,
+            Pageable pageable
+            ){
+        PageResponse<AccountActionLogResponse> res = accountService.getAccountActivityLogs(id, actionType, pageable);
         return ResponseEntity.ok(res);
     }
+
+
+
 
 
 

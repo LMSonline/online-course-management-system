@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.repository.AccountRepository;
+import vn.uit.lms.shared.constant.AccountActionType;
+import vn.uit.lms.shared.exception.ResourceNotFoundException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
@@ -42,6 +45,9 @@ public class MailService {
     @Value("${app.base-url}")
     private String baseUrl;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     @Value("${app.api-version}")
     private String apiVersion;
 
@@ -51,14 +57,64 @@ public class MailService {
 
     private final SpringTemplateEngine templateEngine;
 
+    private final AccountRepository accountRepository;
+
     public MailService(
             JavaMailSender javaMailSender,
             MessageSource messageSource,
-            SpringTemplateEngine templateEngine
+            SpringTemplateEngine templateEngine,
+            AccountRepository accountRepository
     ) {
         this.javaMailSender = javaMailSender;
         this.messageSource = messageSource;
         this.templateEngine = templateEngine;
+        this.accountRepository = accountRepository;
+    }
+
+    public void sendTeacherNotification(Long teacherAccountId, AccountActionType actionType, String reason) {
+        Account teacher = accountRepository.findById(teacherAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher account not found"));
+
+        String subject;
+        String body;
+
+        switch (actionType) {
+            case REJECT -> {
+                subject = "[UIT LMS] Tài khoản giáo viên của bạn bị từ chối";
+                body = """
+                        Xin chào %s,
+                        Yêu cầu phê duyệt tài khoản của bạn đã bị từ chối.
+                        Lý do: %s
+                        Bạn có thể cập nhật thông tin và gửi lại yêu cầu tại: %s
+                        """.formatted(teacher.getUsername(), reason, frontendUrl + "/profile");
+            }
+            case SUSPEND -> {
+                subject = "[UIT LMS] Tài khoản của bạn bị tạm khóa";
+                body = """
+                        Xin chào %s,
+                        Tài khoản của bạn đã bị tạm khóa bởi quản trị viên.
+                        Lý do: %s
+                        Nếu bạn cần hỗ trợ, vui lòng liên hệ quản trị hệ thống.
+                        """.formatted(teacher.getUsername(), reason);
+            }
+            case APPROVE -> {
+                subject = "[UIT LMS] Tài khoản giáo viên đã được phê duyệt";
+                body = """
+                        Xin chào %s,
+                        Tài khoản giáo viên của bạn đã được phê duyệt thành công.
+                        Bây giờ bạn có thể tạo và quản lý khóa học : %s
+                        """.formatted(teacher.getUsername(), frontendUrl + "/login");
+            }
+            default -> {
+                return;
+            }
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(teacher.getEmail());
+        message.setSubject(subject);
+        message.setText(body);
+        javaMailSender.send(message);
     }
 
     @Async

@@ -65,6 +65,7 @@ public final class SecurityUtils {
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(email)
+                .claim("userId", dto.getUser().getId())
                 .claim("user", userInsideToken)
                 .claim("role", dto.getUser().getRole().name())
                 .build();

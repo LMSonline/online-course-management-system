@@ -18,6 +18,9 @@ public class TeacherMapper {
                 .createdAt(teacher.getCreatedAt())
                 .updatedAt(teacher.getUpdatedAt())
                 .approved(teacher.isApproved())
+                .approvedBy(teacher.getApprovedBy())
+                .approvedAt(teacher.getApprovedAt())
+                .rejectionReason(teacher.getRejectReason())
                 .build();
     }
 }
