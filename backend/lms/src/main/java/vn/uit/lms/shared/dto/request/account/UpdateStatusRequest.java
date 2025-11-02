@@ -14,4 +14,6 @@ public class UpdateStatusRequest {
 
     @NotNull(message = "Status must not be null")
     private AccountStatus status;
+
+    private String reason;
 }

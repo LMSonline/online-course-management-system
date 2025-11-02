@@ -22,22 +22,21 @@ public class LogMapper {
     }
 
     public static AccountActionType mapStatusToAction(AccountStatus newStatus, AccountStatus oldStatus) {
-        if (oldStatus == newStatus) {
+        if (newStatus == null || oldStatus == null || newStatus == oldStatus) {
             return AccountActionType.UNKNOWN;
         }
 
         return switch (newStatus) {
-            case ACTIVE -> {
-                if (oldStatus == AccountStatus.PENDING_APPROVAL)
-                    yield AccountActionType.APPROVE;
-                if (oldStatus == AccountStatus.SUSPENDED)
-                    yield AccountActionType.UNLOCK;
-                yield AccountActionType.UNKNOWN;
-            }
+            case ACTIVE -> switch (oldStatus) {
+                case PENDING_APPROVAL -> AccountActionType.APPROVE;
+                case SUSPENDED -> AccountActionType.UNLOCK;
+                default -> AccountActionType.UNKNOWN;
+            };
             case REJECTED -> AccountActionType.REJECT;
             case SUSPENDED -> AccountActionType.SUSPEND;
             case DEACTIVATED -> AccountActionType.DEACTIVATE;
             default -> AccountActionType.UNKNOWN;
         };
     }
+
 }

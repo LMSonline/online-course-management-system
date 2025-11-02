@@ -136,7 +136,7 @@ public class AccountController {
             HttpServletRequest request
             ){
         String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
-        AccountProfileResponse res = accountService.changeAccountStatus(id, statusRequest.getStatus(), ip);
+        AccountProfileResponse res = accountService.changeAccountStatus(id, statusRequest.getStatus(), statusRequest.getReason(), ip);
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 

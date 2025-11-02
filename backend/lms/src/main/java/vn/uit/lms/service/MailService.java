@@ -17,6 +17,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.shared.constant.AccountActionType;
+import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 
 import java.nio.charset.StandardCharsets;
@@ -71,51 +72,60 @@ public class MailService {
         this.accountRepository = accountRepository;
     }
 
-    public void sendTeacherNotification(Long teacherAccountId, AccountActionType actionType, String reason) {
-        Account teacher = accountRepository.findById(teacherAccountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Teacher account not found"));
+    @Async
+    public void sendAccountActionEmail(Account account, AccountActionType actionType, String reason) {
+        if (account.getEmail() == null) {
+            LOG.warn("Cannot send email: account {} has no email", account.getUsername());
+            return;
+        }
 
-        String subject;
-        String body;
+        Locale locale = Locale.forLanguageTag(account.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable(USER, account);
+        context.setVariable(BASE_URL, baseUrl);
+        context.setVariable("reason", reason != null ? reason : "No reason provided");
+
+        String templateName;
+        String subjectKey;
 
         switch (actionType) {
+            case APPROVE -> {
+                templateName = "mail/accountApprovedEmail";
+                subjectKey = "email.account_approved.title";
+            }
             case REJECT -> {
-                subject = "[UIT LMS] Tài khoản giáo viên của bạn bị từ chối";
-                body = """
-                        Xin chào %s,
-                        Yêu cầu phê duyệt tài khoản của bạn đã bị từ chối.
-                        Lý do: %s
-                        Bạn có thể cập nhật thông tin và gửi lại yêu cầu tại: %s
-                        """.formatted(teacher.getUsername(), reason, frontendUrl + "/profile");
+                templateName = "mail/accountRejectedEmail";
+                subjectKey = "email.account_rejected.title";
             }
             case SUSPEND -> {
-                subject = "[UIT LMS] Tài khoản của bạn bị tạm khóa";
-                body = """
-                        Xin chào %s,
-                        Tài khoản của bạn đã bị tạm khóa bởi quản trị viên.
-                        Lý do: %s
-                        Nếu bạn cần hỗ trợ, vui lòng liên hệ quản trị hệ thống.
-                        """.formatted(teacher.getUsername(), reason);
+                templateName = "mail/accountSuspendedEmail";
+                subjectKey = "email.account_suspended.title";
             }
-            case APPROVE -> {
-                subject = "[UIT LMS] Tài khoản giáo viên đã được phê duyệt";
-                body = """
-                        Xin chào %s,
-                        Tài khoản giáo viên của bạn đã được phê duyệt thành công.
-                        Bây giờ bạn có thể tạo và quản lý khóa học : %s
-                        """.formatted(teacher.getUsername(), frontendUrl + "/login");
+            case UNLOCK -> {
+                templateName = "mail/accountUnlockedEmail";
+                subjectKey = "email.account_unlocked.title";
+            }
+            case DEACTIVATE -> {
+                templateName = "mail/accountDeactivatedEmail";
+                subjectKey = "email.account_deactivated.title";
             }
             default -> {
-                return;
+                templateName = "mail/accountUnknownEmail";
+                subjectKey = "email.account_unknown.title";
             }
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(teacher.getEmail());
-        message.setSubject(subject);
-        message.setText(body);
-        javaMailSender.send(message);
+        String content = templateEngine.process(templateName, context);
+        String subject = messageSource.getMessage(subjectKey, null, locale);
+
+        try {
+            sendEmailSync(account.getEmail(), subject, content, false, true);
+            LOG.info("Sent {} email to {}", actionType, account.getEmail());
+        } catch (Exception e) {
+            LOG.error("Failed to send {} email to {}: {}", actionType, account.getEmail(), e.getMessage());
+        }
     }
+
 
     @Async
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {

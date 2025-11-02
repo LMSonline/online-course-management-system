@@ -278,8 +278,8 @@ public class AccountService {
             throw new InvalidRequestException("Only teacher accounts can be approved");
         }
 
-        if (account.getStatus() != AccountStatus.PENDING_APPROVAL) {
-            throw new InvalidStatusException("Teacher is not pending approval");
+        if (account.getStatus() == AccountStatus.PENDING_EMAIL) {
+            throw new InvalidStatusException("Teacher has not verified email yet");
         }
 
         Teacher teacher = teacherRepository.findByAccount(account)
@@ -312,11 +312,7 @@ public class AccountService {
                 AccountStatus.ACTIVE.name()
         );
 
-        mailService.sendTeacherNotification(
-                account.getId(),
-                AccountActionType.APPROVE,
-                null
-        );
+        mailService.sendAccountActionEmail(account, AccountActionType.APPROVE, "Teacher account approved by: " + adminAccount.getUsername());
 
         AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
         AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
@@ -342,8 +338,8 @@ public class AccountService {
             throw new InvalidRequestException("Only teacher accounts can be rejected");
         }
 
-        if (account.getStatus() != AccountStatus.PENDING_APPROVAL) {
-            throw new InvalidStatusException("Teacher is not pending approval");
+        if (account.getStatus() == AccountStatus.PENDING_EMAIL) {
+            throw new InvalidStatusException("Teacher has not verified email yet");
         }
 
         Teacher teacher = teacherRepository.findByAccount(account)
@@ -375,11 +371,7 @@ public class AccountService {
                 AccountStatus.REJECTED.name()
         );
 
-        mailService.sendTeacherNotification(
-                account.getId(),
-                AccountActionType.REJECT,
-                reason
-        );
+        mailService.sendAccountActionEmail(account, AccountActionType.REJECT, reason);
 
         AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
         AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
@@ -408,17 +400,33 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountProfileResponse changeAccountStatus(Long accountId, AccountStatus newStatus, String ip){
+    public AccountProfileResponse changeAccountStatus(Long accountId, AccountStatus newStatus, String reason, String ip){
         log.info("Changing account status for accountId={}, newStatus={}, ip={}", accountId, newStatus, ip);
+
+        if(newStatus == AccountStatus.PENDING_EMAIL){
+            throw new InvalidRequestException("Cannot change status to PENDING_EMAIL");
+        }
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if(account.getRole() == Role.TEACHER && newStatus == AccountStatus.ACTIVE){
+            return approveTeacherAccount(accountId, ip);
+        }
+
+        if(account.getRole() == Role.TEACHER && newStatus == AccountStatus.REJECTED){
+            return rejectTeacherAccount(accountId, reason != null ? reason : "No reason provided", ip);
+        }
 
         if(account.getRole() == Role.ADMIN){
             throw new InvalidRequestException("Cannot change status of ADMIN accounts");
         }
 
         AccountStatus oldStatus =  account.getStatus();
+
+        if(oldStatus == newStatus){
+            throw new InvalidStatusException("Account is already in status: " + newStatus);
+        }
 
         Long adminId = SecurityUtils.getCurrentUserId()
                 .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
@@ -434,7 +442,7 @@ public class AccountService {
         accountActionLogService.logAction(
                 account.getId(),
                 actionType,
-                "Account status changed to: " + newStatus + " by admin: " + adminAccount.getUsername(),
+                reason != null ? reason:"Account status changed to: " + newStatus + " by admin: " + adminAccount.getUsername(),
                 adminId,
                 ip,
                 oldStatus.name(),
@@ -442,6 +450,9 @@ public class AccountService {
         );
 
         AccountProfileResponse response = getAccountProfile(account);
+
+        mailService.sendAccountActionEmail(account, actionType, reason);
+
 
         log.info("Account status for accountId={} changed from {} to {} by admin={}", accountId, oldStatus, newStatus, adminAccount.getUsername());
         return response;
