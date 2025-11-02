@@ -172,7 +172,8 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ResLoginDTO resLoginDTO = new ResLoginDTO();
-        Account accountDB = accountRepository.findOneByEmailIgnoreCase(authentication.getName())
+        String email = authentication.getName();
+        Account accountDB = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         // Map account to response DTO depending on role
@@ -327,13 +328,13 @@ public class AuthService {
                 .username(account.getUsername())
                 .email(account.getEmail())
                 .role(account.getRole())
+                .avatarUrl(account.getAvatarUrl())
                 .lastLoginAt(account.getLastLoginAt())
                 .status(account.getStatus())
                 .build();
     }
 
     private void fillUserProfile(MeResponse meResponse, BaseProfile profile) {
-        meResponse.setAvatarUrl(profile.getAvatarUrl());
         meResponse.setFullName(profile.getFullName());
         meResponse.setGender(profile.getGender());
         meResponse.setBio(profile.getBio());

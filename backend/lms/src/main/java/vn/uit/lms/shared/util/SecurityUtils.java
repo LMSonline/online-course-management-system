@@ -59,17 +59,15 @@ public final class SecurityUtils {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
-        List<String> listAuthority = new ArrayList<String>();
-        listAuthority.add("ROLE_USER_CREATE");
-        listAuthority.add("ROLE_USER_UPDATE");
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("lms-system")
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(email)
+                .claim("userId", dto.getUser().getId())
                 .claim("user", userInsideToken)
-                .claim("permissions", listAuthority)
+                .claim("role", dto.getUser().getRole().name())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();

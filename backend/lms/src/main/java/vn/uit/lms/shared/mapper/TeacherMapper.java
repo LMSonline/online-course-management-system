@@ -10,13 +10,17 @@ public class TeacherMapper {
                 .teacherCode(teacher.getTeacherCode())
                 .fullName(teacher.getFullName())
                 .phone(teacher.getPhone())
-                .avatarUrl(teacher.getAvatarUrl())
                 .birthDate(teacher.getBirthDate())
                 .bio(teacher.getBio())
                 .gender(teacher.getGender())
                 .specialty(teacher.getSpecialty())
                 .degree(teacher.getDegree())
+                .createdAt(teacher.getCreatedAt())
+                .updatedAt(teacher.getUpdatedAt())
                 .approved(teacher.isApproved())
+                .approvedBy(teacher.getApprovedBy())
+                .approvedAt(teacher.getApprovedAt())
+                .rejectionReason(teacher.getRejectReason())
                 .build();
     }
 }

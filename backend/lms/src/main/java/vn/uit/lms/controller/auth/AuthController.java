@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,9 @@ import vn.uit.lms.shared.util.annotation.ApiMessage;
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    @Value("${app.avatar.default-url}")
+    private String defaultAvatarUrl;
 
     private final AuthService authService;
     private final PasswordEncoder passwordEncoder;
@@ -57,6 +61,7 @@ public class AuthController {
         log.info("Received registration request for email: {}", accountRequest.getEmail());
 
         Account account = AccountMapper.toEntity(accountRequest);
+        account.setAvatarUrl(defaultAvatarUrl);
         account.setPasswordHash(this.passwordEncoder.encode(accountRequest.getPassword()));
 
         Account accountDB = this.authService.registerAccount(account);
@@ -74,11 +79,11 @@ public class AuthController {
      */
     @GetMapping("/verify-email")
     @ApiMessage("Verify user email")
-    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
         log.debug("Verifying email token: {}", token);
         this.emailVerificationService.verifyToken(token);
         log.info("Email verification succeeded for token: {}", token);
-        return ResponseEntity.ok("Your email has been successfully verified!");
+        return ResponseEntity.ok(null);
     }
 
     /**
@@ -131,7 +136,7 @@ public class AuthController {
     @ApiMessage("Logout and revoke refresh token")
     public ResponseEntity<Void> logout(@Valid @RequestBody ReqRefreshTokenDTO request) {
         refreshTokenService.revokeRefreshToken(request.getRefreshToken());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(null);
     }
 
     /**
@@ -142,11 +147,11 @@ public class AuthController {
      */
     @PostMapping("/password/forgot")
     @ApiMessage("Request password reset via email")
-    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         log.info("Received password reset request for email: {}", forgotPasswordDTO.getEmail());
         this.authService.forgotPassword(forgotPasswordDTO.getEmail());
         log.info("Password reset email sent to: {}", forgotPasswordDTO.getEmail());
-        return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
+        return ResponseEntity.ok(null);
     }
 
     /**
@@ -165,7 +170,7 @@ public class AuthController {
         log.info("Received password reset submission for token: {}", token);
         this.authService.resetPassword(token, resetPasswordDTO.getNewPassword());
         log.info("Password reset successful for token: {}", token);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(null);
     }
 
     /**
@@ -192,6 +197,6 @@ public class AuthController {
         log.info("Received password change request for user");
         this.authService.changePassword(changePasswordDTO);
         log.info("Password change successful for user");
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(null);
     }
 }

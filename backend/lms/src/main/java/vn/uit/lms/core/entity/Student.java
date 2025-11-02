@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import vn.uit.lms.shared.constant.Gender;
 import vn.uit.lms.shared.entity.BaseEntity;
+import vn.uit.lms.shared.entity.PersonBase;
 
 import java.time.LocalDate;
 
@@ -14,7 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class Student extends BaseEntity implements BaseProfile{
+public class Student extends PersonBase implements BaseProfile{
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false, unique = true)
@@ -23,21 +24,5 @@ public class Student extends BaseEntity implements BaseProfile{
     @Column(name = "student_code", length = 50, unique = true)
     private String studentCode;
 
-    @Column(name = "full_name", nullable = false, length = 255)
-    private String fullName;
 
-    @Column(name = "birth_date")
-    private LocalDate birthDate;
-
-    @Enumerated(EnumType.STRING)
-    private Gender gender;
-
-    @Column(length = 30)
-    private String phone;
-
-    @Column(name = "avatar_url", length = 512)
-    private String avatarUrl;
-
-    @Column(columnDefinition = "TEXT")
-    private String bio;
 }

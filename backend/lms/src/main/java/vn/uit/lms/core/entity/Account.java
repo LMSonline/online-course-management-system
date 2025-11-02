@@ -36,6 +36,12 @@ public class Account extends BaseEntity {
     @Column(length = 20, nullable = false)
     private AccountStatus status = AccountStatus.PENDING_EMAIL;
 
+    @Column(name = "avatar_url", length = 512)
+    private String avatarUrl;
+
+    @Column(name = "avatar_public_id", length = 255)
+    private String avatarPublicId;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 

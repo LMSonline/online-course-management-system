@@ -3,6 +3,7 @@ package vn.uit.lms.shared.handler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,6 +44,10 @@ public class GlobalException {
             UserNotActivatedException.class,
             HttpMessageNotReadableException.class,
             InvalidPasswordException.class,
+            InvalidFileException.class,
+            UploadFileException.class,
+            InvalidStatusException.class,
+            InvalidRequestException.class,
     })
     public ResponseEntity<ApiResponse<Object>> handleBusinessExceptions(Exception ex) {
         log.warn("Business exception: {}", ex.getMessage());
@@ -136,4 +141,23 @@ public class GlobalException {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
     }
+
+    /**
+     * Handle forbidden access (403)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(AccessDeniedException ex) {
+        log.warn("Forbidden access: {}", ex.getMessage());
+
+        ApiResponse<Object> res = new ApiResponse<>();
+        res.setSuccess(false);
+        res.setStatus(HttpStatus.FORBIDDEN.value());
+        res.setMessage(ex.getMessage());
+        res.setCode(ErrorCode.FORBIDDEN);
+        res.setTimestamp(Instant.now());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
+    }
+
+
 }

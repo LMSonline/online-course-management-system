@@ -33,6 +33,9 @@ public class AccountProfileResponse {
     private AccountStatus status;
 
     @JsonView(Views.Public.class)
+    private String avatarUrl;
+
+    @JsonView(Views.Public.class)
     private Profile profile;
 
     @Data
@@ -59,9 +62,6 @@ public class AccountProfileResponse {
         private LocalDate birthDate;
 
         @JsonView(Views.Public.class)
-        private String avatarUrl;
-
-        @JsonView(Views.Public.class)
         private String bio;
 
         @JsonView(Views.Public.class)
@@ -76,5 +76,22 @@ public class AccountProfileResponse {
 
         @JsonView(Views.Teacher.class)
         private Boolean approved;
+
+        @JsonView(Views.Teacher.class)
+        private Long approvedBy;
+
+        @JsonView(Views.Teacher.class)
+        private Instant approvedAt;
+
+        @JsonView(Views.Teacher.class)
+        private String rejectionReason;
+
+        @JsonView(Views.Public.class)
+        private Instant createdAt;
+
+        @JsonView(Views.Public.class)
+        private Instant updatedAt;
+
+
     }
 }

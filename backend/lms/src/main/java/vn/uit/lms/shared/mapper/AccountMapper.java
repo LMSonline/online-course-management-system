@@ -1,5 +1,6 @@
 package vn.uit.lms.shared.mapper;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.entity.Student;
@@ -12,6 +13,8 @@ import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
+import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
+import vn.uit.lms.shared.dto.response.account.AccountResponse;
 
 
 public class AccountMapper {
@@ -34,6 +37,7 @@ public class AccountMapper {
                 .username(account.getUsername())
                 .role(account.getRole())
                 .status(account.getStatus())
+                .avatarUrl(account.getAvatarUrl())
                 .createdAt(account.getCreatedAt())
                 .langKey(account.getLangKey())
                 .build();
@@ -47,7 +51,7 @@ public class AccountMapper {
                         .email(student.getAccount().getEmail())
                         .role(student.getAccount().getRole())
                         .fullName(student.getFullName())
-                        .avatarUrl(student.getAvatarUrl())
+                        .avatarUrl(student.getAccount().getAvatarUrl())
                         .langKey(student.getAccount().getLangKey())
                         .build())
                 .build();
@@ -60,8 +64,8 @@ public class AccountMapper {
                         .username(teacher.getAccount().getUsername())
                         .email(teacher.getAccount().getEmail())
                         .role(teacher.getAccount().getRole())
+                        .avatarUrl(teacher.getAccount().getAvatarUrl())
                         .fullName(teacher.getFullName())
-                        .avatarUrl(teacher.getAvatarUrl())
                         .langKey(teacher.getAccount().getLangKey())
                         .build())
                 .build();
@@ -74,8 +78,34 @@ public class AccountMapper {
                         .username(admin.getUsername())
                         .email(admin.getEmail())
                         .role(admin.getRole())
+                        .avatarUrl(admin.getAvatarUrl())
                         .langKey(admin.getLangKey())
                         .build())
+                .build();
+    }
+
+    public static AccountProfileResponse toProfileResponse(Account account, AccountProfileResponse.Profile profile) {
+        return AccountProfileResponse.builder()
+                .accountId(account.getId())
+                .lastLoginAt(account.getLastLoginAt())
+                .email(account.getEmail())
+                .username(account.getUsername())
+                .role(account.getRole())
+                .status(account.getStatus())
+                .avatarUrl(account.getAvatarUrl())
+                .profile(profile)
+                .build();
+    }
+
+    public static AccountResponse toAccountResponse(Account account) {
+        return AccountResponse.builder()
+                .accountId(account.getId())
+                .username(account.getUsername())
+                .email(account.getEmail())
+                .role(account.getRole())
+                .status(account.getStatus())
+                .avatarUrl(account.getAvatarUrl())
+                .createdAt(account.getCreatedAt())
                 .build();
     }
 

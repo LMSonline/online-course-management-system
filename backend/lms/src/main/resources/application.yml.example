@@ -1,0 +1,92 @@
+
+# Example configuration file for a Spring Boot application.
+# Copy this file as 'application.yml' and update the values as needed.
+
+spring:
+  application:
+    name: lms
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms
+    username: postgres
+    password: your_database_password_here
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your_email@gmail.com
+    password: your_app_password_here
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    org.springframework.security: TRACE
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:3000
+  api-version: api/v1
+
+  admin:
+    username: admin
+    password: Admin@123
+    email: admin@gmail.com
+
+  student:
+    username: student
+    password: Student@123
+    email: student@example.com
+
+  teacher:
+    username: teacher
+    password: Teacher@123
+    email: teacher@example.com
+
+  avatar:
+    default-url: https://res.cloudinary.com/your-cloud/image/upload/v1234567890/default-avatar.jpg
+    max-size-bytes: 10485760 # 10MB
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+    folder: avatars
+
+jwt:
+  secret: your_jwt_secret_here
+  access-token:
+    expiration: 86400
+  refresh-token:
+    expiration: 100000
+
+cloudinary:
+  cloud-name: your_cloud_name_here
+  api-key: your_api_key_here
+  api-secret: your_api_secret_here

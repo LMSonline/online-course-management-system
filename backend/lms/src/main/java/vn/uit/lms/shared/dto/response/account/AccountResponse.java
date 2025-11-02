@@ -1,4 +1,4 @@
-package vn.uit.lms.shared.dto.response;
+package vn.uit.lms.shared.dto.response.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,16 +10,18 @@ import vn.uit.lms.shared.constant.Role;
 import java.time.Instant;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class RegisterResponse {
-    private Long id;
+public class AccountResponse {
+
+    private Long accountId;
     private String username;
     private String email;
     private Role role;
     private AccountStatus status;
     private String avatarUrl;
+    private Instant lastLoginAt;
     private Instant createdAt;
-    private String langKey;
+
 }

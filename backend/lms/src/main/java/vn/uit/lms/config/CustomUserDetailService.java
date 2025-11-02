@@ -3,6 +3,8 @@ package vn.uit.lms.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Service;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.shared.constant.AccountStatus;
+
+import java.util.List;
 
 /**
  * Custom implementation of {@link UserDetailsService} for Spring Security authentication.
@@ -75,12 +79,9 @@ public class CustomUserDetailService implements UserDetailsService {
             throw new UsernameNotFoundException("User account is not activated: " + username);
         }
 
-        // Build Spring Security user details
-        UserDetails userDetails = User.builder()
-                .username(accountDB.getEmail())
-                .password(accountDB.getPasswordHash())
-                .roles(accountDB.getRole().name())
-                .build();
+        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + accountDB.getRole().name());
+
+        UserDetails userDetails = new User(accountDB.getEmail(), accountDB.getPasswordHash(), List.of(authority));
 
         log.debug("Successfully loaded user details for [{}]", username);
         return userDetails;

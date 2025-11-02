@@ -10,10 +10,11 @@ public class StudentMapper {
                 .studentCode(student.getStudentCode())
                 .fullName(student.getFullName())
                 .phone(student.getPhone())
-                .avatarUrl(student.getAvatarUrl())
                 .birthDate(student.getBirthDate())
                 .bio(student.getBio())
                 .gender(student.getGender())
+                .createdAt(student.getCreatedAt())
+                .updatedAt(student.getUpdatedAt())
                 .build();
     }
 }
