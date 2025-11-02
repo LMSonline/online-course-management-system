@@ -105,6 +105,7 @@ public class AccountMapper {
                 .role(account.getRole())
                 .status(account.getStatus())
                 .avatarUrl(account.getAvatarUrl())
+                .lastLoginAt(account.getLastLoginAt())
                 .createdAt(account.getCreatedAt())
                 .build();
     }
