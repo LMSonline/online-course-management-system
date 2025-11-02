@@ -458,4 +458,36 @@ public class AccountService {
         return response;
     }
 
+    public void deleteAccountById(Long id, String ipAddress) {
+        log.info("Deleting account id={}, ip={}", id, ipAddress);
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        AccountStatus oldStatus = account.getStatus();
+        account.setStatus(AccountStatus.DEACTIVATED);
+        account.setDeletedAt(Instant.now());
+
+        accountActionLogService.logAction(
+                account.getId(),
+                AccountActionType.DEACTIVATE,
+                "Account status changed to: " + AccountStatus.DEACTIVATED + " by admin: " + adminAccount.getUsername(),
+                adminId,
+                ipAddress,
+                oldStatus.name(),
+                AccountStatus.DEACTIVATED.name()
+        );
+
+        mailService.sendAccountActionEmail(account, AccountActionType.DEACTIVATE, "Account status changed to: " + AccountStatus.DEACTIVATED + " by admin: " + adminAccount.getUsername());
+
+
+        log.info("Account id={} deleted successfully", id);
+    }
+
 }

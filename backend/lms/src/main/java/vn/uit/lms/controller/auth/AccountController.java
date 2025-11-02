@@ -153,6 +153,18 @@ public class AccountController {
     }
 
 
+    @DeleteMapping("/{id}" )
+    @ApiMessage("Delete account by ID (Admin only)")
+    @AdminOnly
+    public ResponseEntity<Void> deleteAccountById(
+            @PathVariable Long id,
+            HttpServletRequest request
+    ) {
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        accountService.deleteAccountById(id, ip);
+        return ResponseEntity.ok(null);
+    }
+
 
 
 
