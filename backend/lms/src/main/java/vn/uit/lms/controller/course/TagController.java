@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.core.entity.course.Tag;
 import vn.uit.lms.service.course.TagService;
@@ -30,9 +29,8 @@ public class TagController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<PageResponse<Tag>> getTags(Pageable pageable) {
-        PageResponse<Tag> tagsPage = tagService.getTags(pageable);
+        PageResponse<Tag> tagsPage = tagService.getTagsActive(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
@@ -44,6 +42,7 @@ public class TagController {
     }
 
     @PutMapping("/{id}")
+    @AdminOnly
     public ResponseEntity<Tag> updateTag(@PathVariable Long id, @Valid @RequestBody TagRequest tagRequest) {
         Tag updatedTag = tagService.updateTag(id, tagRequest);
         return ResponseEntity.ok(updatedTag);

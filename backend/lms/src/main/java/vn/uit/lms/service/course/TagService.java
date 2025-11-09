@@ -10,6 +10,7 @@ import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.TagRequest;
 import vn.uit.lms.shared.exception.DuplicateResourceException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
+import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class TagService {
     public TagService(TagRepository tagRepository) {
         this.tagRepository = tagRepository;
     }
+
 
     public boolean isDuplicatedTagName(Tag tag){
         String name = tag.getName();
@@ -46,9 +48,9 @@ public class TagService {
         return tagRepository.save(tag);
     }
 
-    public PageResponse<Tag> getTags(Pageable pageable) {
+    @EnableSoftDeleteFilter
+    public PageResponse<Tag> getTagsActive(Pageable pageable) {
         Page<Tag> page = tagRepository.findAll(pageable);
-
         List<Tag> items = page.getContent();
 
         return  new PageResponse<>(
@@ -63,9 +65,10 @@ public class TagService {
     }
 
     @Transactional
+    @EnableSoftDeleteFilter
     public Tag updateTag(Long id, TagRequest tagRequest) {
 
-        Tag tagDB = tagRepository.findById(id).orElseThrow(
+        Tag tagDB = tagRepository.findByIdAndDeletedAtIsNull(id).orElseThrow(
             () -> new ResourceNotFoundException("Tag with id " + id + " not found")
         );
 
@@ -90,8 +93,7 @@ public class TagService {
     }
 
     public PageResponse<Tag> getAllIncludingDeleted(Pageable pageable) {
-        Page<Tag> page = tagRepository.findAllIncludingDeleted(pageable);
-
+        Page<Tag> page = tagRepository.findAll(pageable);
         List<Tag> items = page.getContent();
 
         return  new PageResponse<>(
@@ -107,22 +109,19 @@ public class TagService {
 
     @Transactional
     public Tag restoreTag(Long id) {
-        Tag tagDB = tagRepository.findByIdIncludingDeleted(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found"));
-
-        if (tagDB.getDeletedAt() == null) {
-            throw new IllegalStateException("Tag is not deleted");
-        }
+        Tag tagDB = tagRepository.findByIdAndDeletedAtIsNotNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag with id " + id + " not found or not deleted"));
 
         if (isDuplicatedTagName(tagDB)) {
             throw new DuplicateResourceException("Cannot restore tag. Duplicate name exists: " + tagDB.getName());
         }
 
-        // Restore
         tagDB.setDeletedAt(null);
 
         return tagRepository.save(tagDB);
     }
+
+
 
 
 

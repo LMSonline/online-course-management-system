@@ -29,9 +29,15 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    @AdminOnly
     public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable Long id) {
         CategoryResponseDto category = categoryService.getCategoryById(id);
+        return ResponseEntity.ok(category);
+    }
+
+    @GetMapping("/{id}/admin")
+    @AdminOnly
+    public ResponseEntity<CategoryResponseDto> getCategoryByIdForAdmin(@PathVariable Long id) {
+        CategoryResponseDto category = categoryService.getCategoryByIdForAdmin(id);
         return ResponseEntity.ok(category);
     }
 

@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course;
 
+import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.course.Category;
@@ -10,6 +11,7 @@ import vn.uit.lms.shared.exception.DuplicateResourceException;
 import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.course.CategoryMapper;
+import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +23,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     public CategoryService(CategoryRepository categoryRepository) {
+
         this.categoryRepository = categoryRepository;
     }
 
@@ -40,6 +43,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @EnableSoftDeleteFilter
     public CategoryResponseDto createCategory(CategoryRequest request) {
         Category category = new Category();
         category.setName(request.getName());
@@ -51,11 +55,8 @@ public class CategoryService {
             if (Objects.equals(request.getParentId(), category.getId())) {
                 throw new InvalidRequestException("Category cannot be its own parent");
             }
-            Category parent = categoryRepository.findById(request.getParentId())
+            Category parent = categoryRepository.findByIdAndDeletedAtIsNull(request.getParentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
-            if (parent.getDeletedAt() != null) {
-                throw new InvalidRequestException("Cannot assign a deleted category as parent");
-            }
             category.setParent(parent);
         }
 
@@ -67,19 +68,27 @@ public class CategoryService {
         return CategoryMapper.toCategoryResponseDto(saved);
     }
 
+    @EnableSoftDeleteFilter
     public CategoryResponseDto getCategoryById(Long id) {
-        Category category = categoryRepository.findByIdIncludingDeleted(id)
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
         return CategoryMapper.toCategoryResponseDto(category);
     }
 
+    public CategoryResponseDto getCategoryByIdForAdmin(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        return CategoryMapper.toCategoryResponseDto(category);
+    }
+
+    @EnableSoftDeleteFilter
     public List<CategoryResponseDto> getCategoryTree() {
-        List<Category> roots = categoryRepository.findAllByParentIsNullAndVisibleTrueOrderByNameAsc();
+        List<Category> roots = categoryRepository.findAllByParentIsNull();
         return roots.stream().map(CategoryMapper::toCategoryResponseDto).collect(Collectors.toList());
     }
 
     public List<CategoryResponseDto> getAllDeletedCategories() {
-        List<Category> deletedCategories = categoryRepository.findAllDeleted();
+        List<Category> deletedCategories = categoryRepository.findAllByParentIsNullAndDeletedAtIsNotNull();
         return deletedCategories.stream()
                 .map(CategoryMapper::toCategoryResponseDto)
                 .collect(Collectors.toList());
@@ -103,7 +112,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponseDto restoreCategory(Long id) {
-        Category category = categoryRepository.findByIdIncludingDeleted(id)
+        Category category = categoryRepository.findByIdAndDeletedAtIsNotNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         if (category.getParent() != null && category.getParent().getDeletedAt() != null) {
@@ -120,8 +129,9 @@ public class CategoryService {
     }
 
     @Transactional
+    @EnableSoftDeleteFilter
     public CategoryResponseDto updateCategory(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findById(id)
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category with id " + id + " not found"));
 
         category.setName(request.getName());
