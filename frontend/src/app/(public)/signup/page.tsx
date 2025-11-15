@@ -2,7 +2,17 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Mail, Lock, User, Eye, EyeOff, Check } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  Check,
+  GraduationCap,
+} from "lucide-react";
+
+type Role = "learner" | "instructor";
 
 export default function SignupPage() {
   const [showPw, setShowPw] = useState(false);
@@ -12,31 +22,54 @@ export default function SignupPage() {
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [agree, setAgree] = useState(false);
+  const [role, setRole] = useState<Role>("learner");
 
-  const pwStrength = useMemo(() => {
+  const pwCheck = useMemo(() => {
+    const hasLength = pw.length >= 8;
+    const hasUpper = /[A-Z]/.test(pw);
+    const hasLower = /[a-z]/.test(pw);
+    const hasNumber = /\d/.test(pw);
+    const hasSymbol = /[^A-Za-z0-9]/.test(pw);
+
     let s = 0;
-    if (pw.length >= 8) s++;
-    if (/[A-Z]/.test(pw)) s++;
-    if (/[a-z]/.test(pw)) s++;
-    if (/\d/.test(pw)) s++;
-    if (/[^A-Za-z0-9]/.test(pw)) s++;
-    return Math.min(s, 4); // 0..4
+    if (hasLength) s++;
+    if (hasUpper) s++;
+    if (hasLower) s++;
+    if (hasNumber) s++;
+    if (hasSymbol) s++;
+
+    return {
+      strength: Math.min(s, 4), // 0..4
+      hasLength,
+      hasUpper,
+      hasLower,
+      hasNumber,
+      hasSymbol,
+    };
   }, [pw]);
 
   const mismatch = pw && pw2 && pw !== pw2;
-  const canSubmit = name && email && pw && !mismatch && agree;
+  const canSubmit = !!(
+    name &&
+    email &&
+    pw &&
+    !mismatch &&
+    agree &&
+    pwCheck.strength >= 3
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    // TODO: call API register
-    alert("Signed up! (hook up API later)");
+    // TODO: call API register với role, name, email, pw
+    // ví dụ: api.register({ name, email, password: pw, role })
+    alert(`Signed up as ${role}! (hook up API later)`);
   }
 
   return (
     <main className="min-h-[72vh]">
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-10 md:py-14">
-        <div className="grid gap-8 md:grid-cols-2 items-center">
+        <div className="grid gap-8 md:grid-cols-2 items-start">
           {/* ==== Left: Sign up card ==== */}
           <form
             onSubmit={handleSubmit}
@@ -50,7 +83,9 @@ export default function SignupPage() {
             </div>
 
             {/* Full name */}
-            <label htmlFor="name" className="block text-sm mb-2">Full name</label>
+            <label htmlFor="name" className="block text-sm mb-2">
+              Full name
+            </label>
             <div className="relative mb-4">
               <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
@@ -63,7 +98,9 @@ export default function SignupPage() {
             </div>
 
             {/* Email */}
-            <label htmlFor="email" className="block text-sm mb-2">Email</label>
+            <label htmlFor="email" className="block text-sm mb-2">
+              Email
+            </label>
             <div className="relative mb-4">
               <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
@@ -76,8 +113,40 @@ export default function SignupPage() {
               />
             </div>
 
+            {/* Role selector */}
+            <p className="block text-sm mb-2">I&apos;m signing up as</p>
+            <div className="mb-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setRole("learner")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "learner"
+                    ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
+                    : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
+                  }`}
+              >
+                <User className="size-4" />
+                Learner
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("instructor")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "instructor"
+                    ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
+                    : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
+                  }`}
+              >
+                <GraduationCap className="size-4" />
+                Instructor
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">
+              You can adjust your role later in your profile settings.
+            </p>
+
             {/* Password */}
-            <label htmlFor="password" className="block text-sm mb-2">Password</label>
+            <label htmlFor="password" className="block text-sm mb-2">
+              Password
+            </label>
             <div className="relative mb-2">
               <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
@@ -91,7 +160,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 aria-label={showPw ? "Hide password" : "Show password"}
-                onClick={() => setShowPw(v => v ? false : true)}
+                onClick={() => setShowPw((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
               >
                 {showPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
@@ -99,15 +168,44 @@ export default function SignupPage() {
             </div>
 
             {/* Strength bar */}
-            <div className="h-1.5 rounded bg-white/10 overflow-hidden mb-4">
+            <div className="h-1.5 rounded bg-white/10 overflow-hidden mb-2">
               <div
                 className="h-full bg-[var(--brand-600)] transition-all"
-                style={{ width: `${(pwStrength / 4) * 100}%` }}
+                style={{ width: `${(pwCheck.strength / 4) * 100}%` }}
               />
             </div>
 
+            {/* Password checklist */}
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-slate-400 mb-4">
+              {[
+                { ok: pwCheck.hasLength, label: "At least 8 characters" },
+                { ok: pwCheck.hasUpper, label: "One uppercase letter" },
+                { ok: pwCheck.hasLower, label: "One lowercase letter" },
+                { ok: pwCheck.hasNumber, label: "One number" },
+                { ok: pwCheck.hasSymbol, label: "One symbol" },
+              ].map((rule, idx) => (
+                <li key={idx} className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${rule.ok
+                        ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
+                        : "border-white/20 text-slate-500"
+                      }`}
+                  >
+                    <Check className="size-3" />
+                  </span>
+                  <span
+                    className={rule.ok ? "text-slate-200" : "text-slate-400"}
+                  >
+                    {rule.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
             {/* Confirm password */}
-            <label htmlFor="password2" className="block text-sm mb-2">Confirm password</label>
+            <label htmlFor="password2" className="block text-sm mb-2">
+              Confirm password
+            </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
@@ -121,14 +219,16 @@ export default function SignupPage() {
               <button
                 type="button"
                 aria-label={showPw2 ? "Hide password" : "Show password"}
-                onClick={() => setShowPw2(v => v ? false : true)}
+                onClick={() => setShowPw2((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
               >
                 {showPw2 ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             </div>
             {mismatch && (
-              <p className="text-xs text-red-400 mt-2">Passwords do not match.</p>
+              <p className="text-xs text-red-400 mt-2">
+                Passwords do not match.
+              </p>
             )}
 
             {/* Terms */}
@@ -139,14 +239,23 @@ export default function SignupPage() {
                 onChange={(e) => setAgree(e.target.checked)}
                 className="h-4 w-4 rounded border-white/20 bg-slate-800/60"
               />
-              I agree to the{" "}
-              <Link href="/terms" className="text-[var(--brand-600)] hover:opacity-90">
-                Terms
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="text-[var(--brand-600)] hover:opacity-90">
-                Privacy Policy
-              </Link>.
+              <span>
+                I agree to the{" "}
+                <Link
+                  href="/terms"
+                  className="text-[var(--brand-600)] hover:opacity-90"
+                >
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  className="text-[var(--brand-600)] hover:opacity-90"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </span>
             </label>
 
             {/* Submit */}
@@ -161,16 +270,24 @@ export default function SignupPage() {
             {/* Divider */}
             <div className="my-6 flex items-center gap-4">
               <div className="h-px flex-1 bg-white/10" />
-              <span className="text-xs uppercase tracking-wider text-slate-400">or</span>
+              <span className="text-xs uppercase tracking-wider text-slate-400">
+                or
+              </span>
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
             {/* Socials */}
             <div className="grid sm:grid-cols-2 gap-3">
-              <button type="button" className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition">
+              <button
+                type="button"
+                className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition"
+              >
                 Continue with Google
               </button>
-              <button type="button" className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition">
+              <button
+                type="button"
+                className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition"
+              >
                 Continue with Facebook
               </button>
             </div>
@@ -178,7 +295,10 @@ export default function SignupPage() {
             {/* Link to login */}
             <p className="text-sm text-slate-400 mt-6 text-center">
               Already have an account?{" "}
-              <Link href="/login" className="text-[var(--brand-600)] hover:opacity-90">
+              <Link
+                href="/login"
+                className="text-[var(--brand-600)] hover:opacity-90"
+              >
                 Log in
               </Link>
             </p>

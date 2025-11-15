@@ -1,5 +1,5 @@
 "use client";
-import { useSplashRedirect } from "./hooks/UseSplashRedirect";
+import { useSplashRedirect } from "@/core/components/hooks/UseSplashRedirect";
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";

@@ -3,10 +3,10 @@ import { useRef, useLayoutEffect } from "react";
 import { gsap } from "gsap";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import SearchBar from "./SearchBar";
-import Button from "@/app/components/Button";
-import { usePrefersReducedMotion } from "@/app/components/hooks/UsePrefersReducedMotion";
-import { useBump } from "@/app/components/hooks/UseBump";
+import SearchBar from "@/core/components/ui/SearchBar";
+import Button from "@/core/components/ui/Button";
+import { usePrefersReducedMotion } from "@/core/components/hooks/UsePrefersReducedMotion";
+import { useBump } from "@/core/components/hooks/UseBump";
 
 /** Presentational Component (View) + Hook animation (Controller) */
 export default function Hero() {

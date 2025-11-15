@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import TopicCard from "./TopicCard";
+import TopicCard from "@/core/components/ui/TopicCard";
 import {
   Code2, Database, PenTool, Smartphone, Brain, Megaphone, Boxes, Globe2,
 } from "lucide-react";

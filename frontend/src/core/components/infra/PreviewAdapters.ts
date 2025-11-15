@@ -1,7 +1,7 @@
 // src/app/components/previewAdapters.ts
-import type { CoursePreview } from "./CourseHoverCard";
-import type { SkillCourse } from "./SkillCourseCard";
-import type { Course } from "./CourseCard"; // type của bạn
+import type { CoursePreview } from "@/core/components/course/CourseHoverCard";
+import type { SkillCourse } from "@/core/components/course/SkillCourseCard";
+import type { Course } from "@/core/components/course/CourseCard"; // type của bạn
 
 export function previewFromSkillCourse(c: SkillCourse): CoursePreview {
     return {

@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useHoverFloat } from "@/app/components/hooks/UseHoverFloat"; // <— check your path
+import { useHoverFloat } from "@/core/components/hooks/UseHoverFloat"; // <— check your path
 import { useEffect } from "react";
 
 export type CoursePreview = {
