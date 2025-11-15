@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingCart, Globe, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, Bot, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -86,9 +86,18 @@ export default function Navbar() {
           </Link>
 
           {/* Globe */}
-          <button className="btn-icon hidden sm:inline-flex" aria-label="Language">
-            <Globe size={18} strokeWidth={1.6} />
-          </button>
+          {/* AI Tutor button – thay cho nút chọn ngôn ngữ */}
+          <Link
+            href="/assistant"  // hoặc /chatbot, /ai-tutor tuỳ route bạn đặt
+            aria-label="Open AI study assistant"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 
+             bg-slate-900/60 text-slate-200 
+             hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
+             transition"
+          >
+            <Bot className="w-5 h-5" />
+          </Link>
+
         </div>
       </div>
 
