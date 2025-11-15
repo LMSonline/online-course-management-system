@@ -1,9 +1,9 @@
 "use client";
-import CourseHoverCard from "@/app/components/CourseHoverCard";
-import { previewFromSkillCourse } from "@/app/components/PreviewAdapters";
+import CourseHoverCard from "@/core/components/course/CourseHoverCard";
+import { previewFromSkillCourse } from "@/core/components/infra/PreviewAdapters";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import SkillCourseCard, { type SkillCourse } from "./SkillCourseCard";
+import SkillCourseCard, { type SkillCourse } from "@/core/components/course/SkillCourseCard";
 
 /* ================= Tabs & mock data ================= */
 const TABS = [

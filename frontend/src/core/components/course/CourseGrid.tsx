@@ -1,8 +1,8 @@
 "use client";
 
 import CourseCard, { type Course } from "./CourseCard";
-import CourseHoverCard from "@/app/components/CourseHoverCard";
-import { previewFromCourse } from "@/app/components/PreviewAdapters"; // <-- adapter
+import CourseHoverCard from "@/core/components/course/CourseHoverCard";
+import { previewFromCourse } from "@/core/components/infra/PreviewAdapters"; // <-- adapter
 
 // Sample data (typed as Course so CourseCard gets correct props)
 const sample: Course[] = Array.from({ length: 8 }).map((_, i) => ({

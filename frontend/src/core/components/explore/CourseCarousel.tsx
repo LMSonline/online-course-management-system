@@ -1,4 +1,4 @@
-import CourseCard from "@/app/components/CourseCard";
+import CourseCard from "@/core/components/course/CourseGrid";
 
 
 type Item = { title: string; teacher: string; price: string; rating: number };

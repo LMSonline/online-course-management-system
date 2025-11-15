@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Button from "@/app/components/Button";
+import Button from "@/core/components/ui/Button";
 import { cn } from "@/lib/cn";
 
 export type BannerSlide = {

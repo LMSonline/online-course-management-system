@@ -1,4 +1,4 @@
-import CourseGrid from "@/app/components/CourseGrid";
+import CourseGrid from "@/core/components/course/CourseGrid"
 
 
 export default function CoursesPage() {
