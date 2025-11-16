@@ -23,7 +23,8 @@ public class Tag extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @ManyToMany(mappedBy = "tags")
-    private List<Course> courses = new ArrayList<>();
+    @Column(unique = true, nullable = false)
+    private String slug;
+
 }
 

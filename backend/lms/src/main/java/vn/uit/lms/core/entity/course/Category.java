@@ -39,6 +39,17 @@ public class Category extends BaseEntity {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Category> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "category")
-    private List<Course> courses = new ArrayList<>();
+    //support for SEO
+    @Column(unique = true, nullable = false)
+    private String slug;
+
+    @Column(name = "meta_title")
+    private String metaTile;
+
+    @Column(name = "meta_description", columnDefinition = "TEXT")
+    private String metaDescription;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
 }

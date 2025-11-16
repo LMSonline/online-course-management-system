@@ -1,6 +1,7 @@
 package vn.uit.lms.shared.util;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +25,13 @@ import java.time.Instant;
  */
 @ControllerAdvice
 public class FormatRestResponse implements ResponseBodyAdvice<Object> {
+
+    @Value("${app.Metadata.author}")
+    private String author;
+    @Value("${app.Metadata.license}")
+    private String license;
+    @Value("${app.Metadata.version}")
+    private String version;
 
     /**
      * Determines whether this advice is applicable to a given controller method.
@@ -84,9 +92,9 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
                 .data(body)
                 .timestamp(Instant.now())
                 .meta(ApiResponse.Meta.builder()
-                        .author("© 2025 Group 5 / VN.UIT.LMS")
-                        .license("Proprietary API – All rights reserved")
-                        .version("v1.0.0")
+                        .author(author)
+                        .license(license)
+                        .version(version)
                         .build())
                 .build();
     }

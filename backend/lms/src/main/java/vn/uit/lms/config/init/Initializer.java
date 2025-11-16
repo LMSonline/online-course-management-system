@@ -82,17 +82,17 @@ public class Initializer implements CommandLineRunner {
         createDefaultAccountIfAbsent(Role.ADMIN, adminUsername, adminEmail, adminPassword);
         createDefaultAccountIfAbsent(Role.STUDENT, studentUsername, studentEmail, studentPassword);
         createDefaultAccountIfAbsent(Role.TEACHER, teacherUsername, teacherEmail, teacherPassword);
-        if (tagRepository.count() == 0) {
-            createDefaultTags();
-        } else {
-            logger.info("[TAG] Tags already exist. Skipping initialization.");
-        }
+//        if (tagRepository.count() == 0) {
+//            createDefaultTags();
+//        } else {
+//            logger.info("[TAG] Tags already exist. Skipping initialization.");
+//        }
 
-        if (categoryRepository.count() == 0) {
-            createDefaultCategories();
-        } else {
-            logger.info("[CATEGORY] Categories already exist. Skipping initialization.");
-        }
+//        if (categoryRepository.count() == 0) {
+//            createDefaultCategories();
+//        } else {
+//            logger.info("[CATEGORY] Categories already exist. Skipping initialization.");
+//        }
     }
 
     /**

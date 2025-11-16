@@ -143,11 +143,8 @@ public class CategoryService {
             if (Objects.equals(request.getParentId(), id)) {
                 throw new InvalidRequestException("Category cannot be its own parent");
             }
-            Category parent = categoryRepository.findById(request.getParentId())
+            Category parent = categoryRepository.findByIdAndDeletedAtIsNull(request.getParentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
-            if (parent.getDeletedAt() != null) {
-                throw new InvalidRequestException("Cannot assign a deleted category as parent");
-            }
             category.setParent(parent);
         } else {
             category.setParent(null);

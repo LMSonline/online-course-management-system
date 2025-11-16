@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course;
 
+import com.github.slugify.Slugify;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,10 @@ import java.util.List;
 public class TagService {
 
     private final TagRepository tagRepository;
+    private final Slugify slugify = Slugify.builder()
+            .customReplacement("đ", "d")
+            .customReplacement("Đ", "D")
+            .build();
 
     public TagService(TagRepository tagRepository) {
         this.tagRepository = tagRepository;
@@ -40,6 +45,11 @@ public class TagService {
 
         Tag tag = new Tag();
         tag.setName(tagRequest.getName());
+
+
+        String Slug = slugify.slugify(tagRequest.getName());
+        tag.setSlug(Slug);
+
 
         if(isDuplicatedTagName(tag)) {
             throw new DuplicateResourceException("Tag with name " + tagRequest.getName() + " already exists");
@@ -73,6 +83,9 @@ public class TagService {
         );
 
         tagDB.setName(tagRequest.getName());
+
+        String Slug = slugify.slugify(tagRequest.getName());
+        tagDB.setSlug(Slug);
 
         if(isDuplicatedTagName(tagDB)) {
             throw new DuplicateResourceException("Tag with name " + tagRequest.getName() + " already exists");
