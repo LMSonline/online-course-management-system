@@ -1,0 +1,53 @@
+package vn.uit.lms.shared.mapper.course;
+
+import vn.uit.lms.core.entity.course.Course;
+import vn.uit.lms.core.entity.course.CourseTag;
+import vn.uit.lms.shared.dto.response.course.CourseDetailResponse;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class CourseMapper {
+
+    public static CourseDetailResponse toCourseDetailResponse(Course course) {
+        if (course == null) return null;
+
+        CourseDetailResponse response = new CourseDetailResponse();
+
+        response.setId(course.getId());
+        response.setTitle(course.getTitle());
+        response.setShortDescription(course.getShortDescription());
+        response.setDifficulty(course.getDifficulty());
+        response.setThumbnailUrl(course.getThumbnailUrl());
+        response.setSlug(course.getSlug());
+        response.setCanonicalUrl(course.getCanonicalUrl());
+
+        // SEO
+        response.setMetaTitle(course.getMetaTitle());
+        response.setMetaDescription(course.getMetaDescription());
+        response.setSeoKeywords(course.getSeoKeywords());
+        response.setIndexed(course.isIndexed());
+
+        // Category
+        if (course.getCategory() != null) {
+            CourseDetailResponse.CategoryDto categoryDto = new CourseDetailResponse.CategoryDto();
+            categoryDto.setId(course.getCategory().getId());
+            categoryDto.setName(course.getCategory().getName());
+            categoryDto.setDescription(course.getCategory().getDescription());
+            categoryDto.setCode(course.getCategory().getCode());
+            response.setCategory(categoryDto);
+        }
+
+        // Teacher
+        response.setTeacherId(course.getTeacher().getId());
+
+        // Tags
+        List<String> tagNames = course.getCourseTags().stream()
+                .map(CourseTag::getTag)
+                .map(tag -> tag.getName())
+                .collect(Collectors.toList());
+        response.setTags(tagNames);
+
+        return response;
+    }
+}

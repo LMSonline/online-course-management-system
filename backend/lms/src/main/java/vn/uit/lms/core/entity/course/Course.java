@@ -22,9 +22,6 @@ import java.util.List;
 @SQLDelete(sql = "UPDATE courses SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Course extends BaseEntity {
 
-    @Column(length = 100)
-    private String code;
-
     @Column(nullable = false, length = 255)
     private String title;
 

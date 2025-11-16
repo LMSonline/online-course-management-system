@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.course.Tag;
 import vn.uit.lms.core.repository.course.TagRepository;
+import vn.uit.lms.service.helper.SEOHelperImpl;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.TagRequest;
 import vn.uit.lms.shared.exception.DuplicateResourceException;
@@ -19,13 +20,12 @@ import java.util.List;
 public class TagService {
 
     private final TagRepository tagRepository;
-    private final Slugify slugify = Slugify.builder()
-            .customReplacement("đ", "d")
-            .customReplacement("Đ", "D")
-            .build();
+    private final SEOHelperImpl seoHelper;
 
-    public TagService(TagRepository tagRepository) {
+    public TagService(TagRepository tagRepository,
+                      SEOHelperImpl seoHelper) {
         this.tagRepository = tagRepository;
+        this.seoHelper = seoHelper;
     }
 
 
@@ -47,7 +47,7 @@ public class TagService {
         tag.setName(tagRequest.getName());
 
 
-        String Slug = slugify.slugify(tagRequest.getName());
+        String Slug = seoHelper.toSlug(tagRequest.getName());
         tag.setSlug(Slug);
 
 
@@ -84,7 +84,7 @@ public class TagService {
 
         tagDB.setName(tagRequest.getName());
 
-        String Slug = slugify.slugify(tagRequest.getName());
+        String Slug = seoHelper.toSlug(tagRequest.getName());
         tagDB.setSlug(Slug);
 
         if(isDuplicatedTagName(tagDB)) {

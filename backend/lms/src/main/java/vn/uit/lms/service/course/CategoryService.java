@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.course.Category;
 import vn.uit.lms.core.repository.course.CategoryRepository;
+import vn.uit.lms.service.helper.SEOHelperImpl;
 import vn.uit.lms.shared.dto.request.course.CategoryRequest;
 import vn.uit.lms.shared.dto.response.course.CategoryResponseDto;
 import vn.uit.lms.shared.exception.DuplicateResourceException;
@@ -21,14 +22,13 @@ import java.util.stream.Collectors;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final Slugify slugify = Slugify.builder()
-            .customReplacement("đ", "d")
-            .customReplacement("Đ", "D")
-            .build();
+    private final SEOHelperImpl seoHelper;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository,
+                           SEOHelperImpl seoHelper) {
 
         this.categoryRepository = categoryRepository;
+        this.seoHelper = seoHelper;
     }
 
     private String normalizeCode(String code) {
@@ -47,7 +47,7 @@ public class CategoryService {
     }
 
     private String createUniqueSlug(Category category) {
-        return slugify.slugify(category.getName());
+        return seoHelper.toSlug(category.getName());
     }
 
     private boolean isDuplicateSlug(Category category){
@@ -59,12 +59,6 @@ public class CategoryService {
             return categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(slug, category.getId());
         }
     }
-
-    private String truncate(String text, int length) {
-        if (text.length() <= length) return text;
-        return text.substring(0, length).trim() + "...";
-    }
-
 
     private void createSEOData(Category category) {
 
@@ -86,7 +80,7 @@ public class CategoryService {
         // metaDescription
         if (category.getMetaDescription() == null || category.getMetaDescription().isBlank()) {
             if (category.getDescription() != null && !category.getDescription().isBlank()) {
-                category.setMetaDescription(truncate(category.getDescription(), 160));
+                category.setMetaDescription(seoHelper.normalizeMetaDescription(category.getDescription()));
             } else {
                 category.setMetaDescription(category.getName());
             }
@@ -240,7 +234,7 @@ public class CategoryService {
         }
 
         else if (!Objects.equals(category.getName(), request.getName())) {
-            String newSlug = slugify.slugify(request.getName());
+            String newSlug = seoHelper.toSlug(request.getName());
             if (categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(newSlug, id)) {
                 throw new DuplicateResourceException("Slug already exists");
             }

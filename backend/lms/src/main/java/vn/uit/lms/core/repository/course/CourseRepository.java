@@ -5,6 +5,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import vn.uit.lms.core.entity.course.Course;
 
+import java.util.Optional;
+
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecificationExecutor<Course> {
+
+    Optional<Course> findBySlugAndDeletedAtIsNull(String slug);
 }

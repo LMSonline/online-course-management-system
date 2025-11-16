@@ -13,6 +13,7 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     boolean existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(String name, Long id);
     Optional<Tag> findByIdAndDeletedAtIsNull(Long id);
     Optional<Tag> findByIdAndDeletedAtIsNotNull(Long id);
+    Optional<Tag> findByNameIgnoreCaseAndDeletedAtIsNull(String name);
 
 
 
