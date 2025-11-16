@@ -22,5 +22,11 @@ public class CategoryResponseDto {
     private Instant deletedAt;
     private List<CategoryResponseDto> children = new ArrayList<>();
 
+    //SEO support
+    private String slug;
+    private String metaTitle;
+    private String metaDescription;
+    private String thumbnailUrl;
+
 
 }

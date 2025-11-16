@@ -70,8 +70,14 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     @AdminOnly
-    public ResponseEntity<CategoryResponseDto> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryRequest categoryRequest) {
+    public ResponseEntity<CategoryResponseDto> updateCategory(@PathVariable("id") Long id, @Valid @RequestBody CategoryRequest categoryRequest) {
         CategoryResponseDto updatedCategory = categoryService.updateCategory(id, categoryRequest);
         return ResponseEntity.ok(updatedCategory);
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<CategoryResponseDto> getCategoryBySlug(@PathVariable("slug") String slug) {
+        CategoryResponseDto category = categoryService.getCategoryBySlug(slug);
+        return ResponseEntity.ok(category);
     }
 }

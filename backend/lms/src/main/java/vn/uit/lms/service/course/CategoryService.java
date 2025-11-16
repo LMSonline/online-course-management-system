@@ -1,6 +1,6 @@
 package vn.uit.lms.service.course;
 
-import jakarta.persistence.EntityManager;
+import com.github.slugify.Slugify;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.course.Category;
@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final Slugify slugify = Slugify.builder()
+            .customReplacement("đ", "d")
+            .customReplacement("Đ", "D")
+            .build();
 
     public CategoryService(CategoryRepository categoryRepository) {
 
@@ -31,7 +35,7 @@ public class CategoryService {
         return code != null ? code.trim().toLowerCase() : null;
     }
 
-    public boolean isDuplicatedCategoryCode(Category category){
+    private boolean isDuplicatedCategoryCode(Category category){
         String code = category.getCode();
         if (code == null || code.isBlank()) return false;
 
@@ -42,6 +46,55 @@ public class CategoryService {
         }
     }
 
+    private String createUniqueSlug(Category category) {
+        return slugify.slugify(category.getName());
+    }
+
+    private boolean isDuplicateSlug(Category category){
+        String slug = category.getSlug();
+        if (slug == null || slug.isBlank()) return false;
+        if (category.getId() == null) {
+            return categoryRepository.existsBySlugAndDeletedAtIsNull(slug);
+        } else {
+            return categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(slug, category.getId());
+        }
+    }
+
+    private String truncate(String text, int length) {
+        if (text.length() <= length) return text;
+        return text.substring(0, length).trim() + "...";
+    }
+
+
+    private void createSEOData(Category category) {
+
+        //create slug
+        if(category.getSlug() != null){
+            if(isDuplicateSlug(category)){
+                throw new DuplicateResourceException("Category slug already exists");
+            }
+        }else{
+            String uniqueSlug = createUniqueSlug(category);
+            category.setSlug(uniqueSlug);
+        }
+
+        //create meta description
+        if (category.getMetaTitle() == null || category.getMetaTitle().isBlank()) {
+            category.setMetaTitle(category.getName());
+        }
+
+        // metaDescription
+        if (category.getMetaDescription() == null || category.getMetaDescription().isBlank()) {
+            if (category.getDescription() != null && !category.getDescription().isBlank()) {
+                category.setMetaDescription(truncate(category.getDescription(), 160));
+            } else {
+                category.setMetaDescription(category.getName());
+            }
+        }
+
+    }
+
+
     @Transactional
     @EnableSoftDeleteFilter
     public CategoryResponseDto createCategory(CategoryRequest request) {
@@ -50,6 +103,11 @@ public class CategoryService {
         category.setCode(normalizeCode(request.getCode()));
         category.setDescription(request.getDescription());
         category.setVisible(request.isVisible());
+        category.setSlug(request.getSlug()!=null ? request.getSlug() : null);
+        category.setMetaTitle(request.getMetaTitle()!=null ? request.getMetaTitle() : null);
+        category.setMetaDescription(request.getMetaDescription()!=null ? request.getMetaDescription() : null);
+        category.setThumbnailUrl(request.getThumbnailUrl()!=null ? request.getThumbnailUrl() : null);
+        createSEOData(category);
 
         if (request.getParentId() != null) {
             if (Objects.equals(request.getParentId(), category.getId())) {
@@ -71,6 +129,13 @@ public class CategoryService {
     @EnableSoftDeleteFilter
     public CategoryResponseDto getCategoryById(Long id) {
         Category category = categoryRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        return CategoryMapper.toCategoryResponseDto(category);
+    }
+
+    @EnableSoftDeleteFilter
+    public CategoryResponseDto getCategoryBySlug(String slug) {
+        Category category = categoryRepository.findBySlugAndDeletedAtIsNull(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
         return CategoryMapper.toCategoryResponseDto(category);
     }
@@ -123,6 +188,10 @@ public class CategoryService {
             throw new DuplicateResourceException("Cannot restore category. Duplicate code exists: " + category.getCode());
         }
 
+        if (isDuplicateSlug(category)) {
+            throw new DuplicateResourceException("Cannot restore category. Duplicate slug exists: " + category.getSlug());
+        }
+
         category.setDeletedAt(null);
         Category restored = categoryRepository.save(category);
         return CategoryMapper.toCategoryResponseDto(restored);
@@ -131,14 +200,26 @@ public class CategoryService {
     @Transactional
     @EnableSoftDeleteFilter
     public CategoryResponseDto updateCategory(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category with id " + id + " not found"));
 
-        category.setName(request.getName());
-        category.setCode(normalizeCode(request.getCode()));
-        category.setDescription(request.getDescription());
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        // Update name
+        if (request.getName() != null) {
+            category.setName(request.getName());
+        }
+
+        // Update code
+        category.setCode(request.getCode() != null ? normalizeCode(request.getCode()) : category.getCode());
+
+        // Update description
+        if (request.getDescription() != null) {
+            category.setDescription(request.getDescription());
+        }
+
         category.setVisible(request.isVisible());
 
+        //check parent
         if (request.getParentId() != null) {
             if (Objects.equals(request.getParentId(), id)) {
                 throw new InvalidRequestException("Category cannot be its own parent");
@@ -150,11 +231,44 @@ public class CategoryService {
             category.setParent(null);
         }
 
+
+        if (request.getSlug() != null && !request.getSlug().isBlank()) {
+            if (categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(request.getSlug(), id)) {
+                throw new DuplicateResourceException("Slug already exists");
+            }
+            category.setSlug(request.getSlug());
+        }
+
+        else if (!Objects.equals(category.getName(), request.getName())) {
+            String newSlug = slugify.slugify(request.getName());
+            if (categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(newSlug, id)) {
+                throw new DuplicateResourceException("Slug already exists");
+            }
+            category.setSlug(newSlug);
+        }
+
+        // metaTitle
+        if (request.getMetaTitle() != null) {
+            category.setMetaTitle(request.getMetaTitle());
+        }
+
+        // metaDescription
+        if (request.getMetaDescription() != null) {
+            category.setMetaDescription(request.getMetaDescription());
+        }
+
+        // thumbnail
+        if (request.getThumbnailUrl() != null) {
+            category.setThumbnailUrl(request.getThumbnailUrl());
+        }
+
+        // Validate code duplicate
         if (isDuplicatedCategoryCode(category)) {
             throw new DuplicateResourceException("Category code already exists");
         }
 
-        Category updated = categoryRepository.save(category);
-        return CategoryMapper.toCategoryResponseDto(updated);
+        Category saved = categoryRepository.save(category);
+        return CategoryMapper.toCategoryResponseDto(saved);
     }
+
 }

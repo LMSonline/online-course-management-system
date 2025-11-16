@@ -16,6 +16,12 @@ public class CategoryMapper {
         dto.setDeletedAt(entity.getDeletedAt());
         dto.setParentId(entity.getParent()!=null ? entity.getParent().getId() : null);
 
+        // SEO fields
+        dto.setSlug(entity.getSlug());
+        dto.setMetaTitle(entity.getMetaTitle());
+        dto.setMetaDescription(entity.getMetaDescription());
+        dto.setThumbnailUrl(entity.getThumbnailUrl());
+
         if (entity.getChildren() != null) {
             entity.getChildren().forEach(child ->
                     dto.getChildren().add(toCategoryResponseDto(child))

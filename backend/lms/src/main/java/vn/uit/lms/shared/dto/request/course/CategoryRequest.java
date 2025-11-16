@@ -1,5 +1,6 @@
 package vn.uit.lms.shared.dto.request.course;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -19,4 +20,17 @@ public class CategoryRequest {
 
     private Long parentId;
     private boolean visible;
+
+    // SEO fields (optional)
+    @Size(max = 255)
+    private String slug;
+
+    @Size(max = 255)
+    private String metaTitle;
+
+    @Size(max = 1000)
+    private String metaDescription;
+
+    @Size(max = 512)
+    private String thumbnailUrl;
 }

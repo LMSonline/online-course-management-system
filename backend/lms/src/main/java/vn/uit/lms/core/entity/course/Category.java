@@ -44,7 +44,7 @@ public class Category extends BaseEntity {
     private String slug;
 
     @Column(name = "meta_title")
-    private String metaTile;
+    private String metaTitle;
 
     @Column(name = "meta_description", columnDefinition = "TEXT")
     private String metaDescription;
