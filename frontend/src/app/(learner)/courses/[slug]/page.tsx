@@ -1,22 +1,49 @@
-export default function CourseDetail() {
-    return (
-        <div className="container mx-auto px-4 py-10">
-            <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-3">
-                    <h1 className="text-3xl font-bold">Next.js từ A‑Z</h1>
-                    <p className="text-slate-300">Build LMS Neon theo phong cách Udemy.</p>
-                    <div className="card h-64" />
-                    <div className="card h-40" />
-                </div>
-                <aside className="space-y-3">
-                    <div className="card">
-                        <div className="text-2xl font-bold text-brand mb-2">₫199,000</div>
-                        <a className="btn btn-primary w-full">Thêm vào giỏ</a>
-                        <a className="btn btn-outline w-full mt-2">Mua ngay</a>
-                    </div>
-                    <div className="card h-56" />
-                </aside>
-            </div>
+// src/app/(learner)/courses/[slug]/page.tsx
+import { notFound } from "next/navigation";
+import { CourseHero } from "@/core/components/learner/course/CourseHero";
+import { CourseWhatYouWillLearn } from "@/core/components/learner/course/CourseWhatYouWillLearn";
+import { CourseIncludes } from "@/core/components/learner/course/CourseIncludes";
+import { CourseContentOutline } from "@/core/components/learner/course/CourseContentOutline";
+import { CourseInstructorCard } from "@/core/components/learner/course/CourseInstructorCard";
+import { CourseStudentFeedback } from "@/core/components/learner/course/CourseStudentFeedback";
+import { MOCK_COURSE } from "@/lib/learner/course/types";
+
+export default function CourseDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  // TODO: fetch from API by slug
+  const course = MOCK_COURSE.slug === params.slug ? MOCK_COURSE : null;
+
+  if (!course) return notFound();
+
+  return (
+    <div className="bg-slate-950 text-slate-50">
+      <CourseHero course={course} />
+
+      <main className="mx-auto flex w-full max-w-6xl xl:max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-10 xl:px-0 py-6 md:py-8 lg:flex-row">
+        {/* Left column */}
+        <div className="flex-1 space-y-5">
+          <CourseWhatYouWillLearn course={course} />
+          <CourseContentOutline course={course} />
+
+          <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5">
+            <h2 className="text-lg md:text-xl font-semibold mb-3">Description</h2>
+            <p className="text-sm md:text-[15px] text-slate-200 leading-relaxed">
+              {course.description}
+            </p>
+          </section>
+
+          <CourseStudentFeedback course={course} />
         </div>
-    );
+
+        {/* Right column */}
+        <aside className="w-full lg:w-80 xl:w-96 space-y-5">
+          <CourseIncludes course={course} />
+          <CourseInstructorCard course={course} />
+        </aside>
+      </main>
+    </div>
+  );
 }
