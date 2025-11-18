@@ -31,7 +31,7 @@ export type CourseDetail = {
 };
 
 export const MOCK_COURSE: CourseDetail = {
-  id: "react-ts-web-apps",
+  id: "d2", 
   slug: "react-typescript-modern-web-apps",
   title: "React & TypeScript for Modern Web Apps",
   subtitle:

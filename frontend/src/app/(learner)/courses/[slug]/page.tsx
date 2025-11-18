@@ -14,7 +14,7 @@ export default function CourseDetailPage({
   params: { slug: string };
 }) {
   // TODO: fetch from API by slug
-  const course = MOCK_COURSE.slug === params.slug ? MOCK_COURSE : null;
+const course = MOCK_COURSE.id === params.slug ? MOCK_COURSE : null;
 
   if (!course) return notFound();
 
