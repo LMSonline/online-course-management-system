@@ -1,14 +1,18 @@
 package vn.uit.lms.shared.dto.response.course;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import vn.uit.lms.shared.constant.Difficulty;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CourseResponse {
 
     private Long id;
-
-    private String code;
 
     private String title;
 
@@ -20,7 +24,7 @@ public class CourseResponse {
 
     private String slug;
 
-    private boolean isClosed;
+    private Boolean isClosed;
 
     private Long categoryId;
     private String categoryName;

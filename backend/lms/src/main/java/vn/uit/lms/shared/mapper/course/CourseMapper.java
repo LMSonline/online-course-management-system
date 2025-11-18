@@ -3,6 +3,7 @@ package vn.uit.lms.shared.mapper.course;
 import vn.uit.lms.core.entity.course.Course;
 import vn.uit.lms.core.entity.course.CourseTag;
 import vn.uit.lms.shared.dto.response.course.CourseDetailResponse;
+import vn.uit.lms.shared.dto.response.course.CourseResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ public class CourseMapper {
         response.setThumbnailUrl(course.getThumbnailUrl());
         response.setSlug(course.getSlug());
         response.setCanonicalUrl(course.getCanonicalUrl());
+        response.setIsClosed(course.getIsClosed());
 
         // SEO
         response.setMetaTitle(course.getMetaTitle());
@@ -49,5 +51,32 @@ public class CourseMapper {
         response.setTags(tagNames);
 
         return response;
+    }
+
+    public static CourseResponse toCourseResponse(Course course) {
+        if (course == null) return null;
+
+        CourseResponse response = new CourseResponse();
+        response.setId(course.getId());
+        response.setTitle(course.getTitle());
+        response.setShortDescription(course.getShortDescription());
+        response.setDifficulty(course.getDifficulty());
+        response.setThumbnailUrl(course.getThumbnailUrl());
+        response.setSlug(course.getSlug());
+        response.setIsClosed(course.getIsClosed());
+
+        if (course.getCategory() != null) {
+            response.setCategoryId(course.getCategory().getId());
+            response.setCategoryName(course.getCategory().getName());
+        }
+
+        if (course.getTeacher() != null) {
+            response.setTeacherId(course.getTeacher().getId());
+            response.setTeacherName(course.getTeacher().getFullName());
+        }
+
+        return response;
+
+
     }
 }

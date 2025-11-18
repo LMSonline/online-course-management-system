@@ -7,6 +7,7 @@ public class StudentMapper {
 
     public static AccountProfileResponse.Profile toProfileResponse(Student student) {
         return AccountProfileResponse.Profile.builder()
+                .studentId(student.getId())
                 .studentCode(student.getStudentCode())
                 .fullName(student.getFullName())
                 .phone(student.getPhone())

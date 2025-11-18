@@ -12,7 +12,7 @@ import vn.uit.lms.shared.dto.request.course.TagRequest;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 
 @RestController
-@RequestMapping("/api/v1/tags")
+@RequestMapping("/api/v1")
 public class TagController {
 
     private final TagService tagService;
@@ -21,41 +21,41 @@ public class TagController {
         this.tagService = tagService;
     }
 
-    @PostMapping
+    @PostMapping("/admin/tags")
     @AdminOnly
     public ResponseEntity<Tag> createTag(@Valid @RequestBody TagRequest tagRequest) {
         Tag createdTag = tagService.createTag(tagRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTag);
     }
 
-    @GetMapping
+    @GetMapping("/tags")
     public ResponseEntity<PageResponse<Tag>> getTags(Pageable pageable) {
         PageResponse<Tag> tagsPage = tagService.getTagsActive(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/tags")
     @AdminOnly
     public ResponseEntity<PageResponse<Tag>> getAllTags(Pageable pageable) {
         PageResponse<Tag> tagsPage = tagService.getAllIncludingDeleted(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/tags/{id}")
     @AdminOnly
     public ResponseEntity<Tag> updateTag(@PathVariable Long id, @Valid @RequestBody TagRequest tagRequest) {
         Tag updatedTag = tagService.updateTag(id, tagRequest);
         return ResponseEntity.ok(updatedTag);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/tags/{id}")
     @AdminOnly
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
         tagService.deleteTag(id);
         return ResponseEntity.ok(null);
     }
 
-    @PatchMapping("/{id}/restore")
+    @PatchMapping("/admin/tags/{id}/restore")
     @AdminOnly
     public ResponseEntity<Tag> restoreTag(@PathVariable Long id) {
         Tag restoredTag = tagService.restoreTag(id);

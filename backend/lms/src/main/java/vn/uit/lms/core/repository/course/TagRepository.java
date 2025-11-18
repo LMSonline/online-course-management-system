@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import vn.uit.lms.core.entity.course.Tag;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,7 +14,7 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     boolean existsByNameIgnoreCaseAndIdNotAndDeletedAtIsNull(String name, Long id);
     Optional<Tag> findByIdAndDeletedAtIsNull(Long id);
     Optional<Tag> findByIdAndDeletedAtIsNotNull(Long id);
-    Optional<Tag> findByNameIgnoreCaseAndDeletedAtIsNull(String name);
+    List<Tag> findAllByNameInIgnoreCase(List<String> names);
 
 
 

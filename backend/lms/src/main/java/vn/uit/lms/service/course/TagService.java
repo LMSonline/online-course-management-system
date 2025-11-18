@@ -84,9 +84,6 @@ public class TagService {
 
         tagDB.setName(tagRequest.getName());
 
-        String Slug = seoHelper.toSlug(tagRequest.getName());
-        tagDB.setSlug(Slug);
-
         if(isDuplicatedTagName(tagDB)) {
             throw new DuplicateResourceException("Tag with name " + tagRequest.getName() + " already exists");
         }

@@ -12,7 +12,7 @@ import vn.uit.lms.shared.util.annotation.AdminOnly;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/api/v1")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -21,61 +21,61 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @PostMapping
+    @PostMapping("/admin/categories")
     @AdminOnly
     public ResponseEntity<CategoryResponseDto> createCategory(@Valid @RequestBody CategoryRequest categoryRequest) {
         CategoryResponseDto createdCategory = categoryService.createCategory(categoryRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCategory);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/categories/{id}")
     public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable Long id) {
         CategoryResponseDto category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
     }
 
-    @GetMapping("/{id}/admin")
+    @GetMapping("/admin/categories/{id}")
     @AdminOnly
     public ResponseEntity<CategoryResponseDto> getCategoryByIdForAdmin(@PathVariable Long id) {
         CategoryResponseDto category = categoryService.getCategoryByIdForAdmin(id);
         return ResponseEntity.ok(category);
     }
 
-    @GetMapping("/tree")
+    @GetMapping("/categories/tree")
     public ResponseEntity<List<CategoryResponseDto>> getCategoryTree() {
         List<CategoryResponseDto> categoryTree = categoryService.getCategoryTree();
         return ResponseEntity.ok(categoryTree);
     }
 
-    @GetMapping("/deleted")
+    @GetMapping("/admin/categories/deleted")
     @AdminOnly
     public ResponseEntity<List<CategoryResponseDto>> getAllDeleted() {
         List<CategoryResponseDto> deletedCategories = categoryService.getAllDeletedCategories();
         return ResponseEntity.ok(deletedCategories);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/categories/{id}")
     @AdminOnly
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.ok(null);
     }
 
-    @PatchMapping("/{id}/restore")
+    @PatchMapping("/admin/categories/{id}/restore")
     @AdminOnly
     public ResponseEntity<CategoryResponseDto> restoreCategory(@PathVariable Long id) {
         CategoryResponseDto category = categoryService.restoreCategory(id);
         return ResponseEntity.ok(category);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/categories/{id}")
     @AdminOnly
     public ResponseEntity<CategoryResponseDto> updateCategory(@PathVariable("id") Long id, @Valid @RequestBody CategoryRequest categoryRequest) {
         CategoryResponseDto updatedCategory = categoryService.updateCategory(id, categoryRequest);
         return ResponseEntity.ok(updatedCategory);
     }
 
-    @GetMapping("/slug/{slug}")
+    @GetMapping("/categories/slug/{slug}")
     public ResponseEntity<CategoryResponseDto> getCategoryBySlug(@PathVariable("slug") String slug) {
         CategoryResponseDto category = categoryService.getCategoryBySlug(slug);
         return ResponseEntity.ok(category);

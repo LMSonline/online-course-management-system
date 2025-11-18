@@ -44,6 +44,12 @@ public class AccountProfileResponse {
     @Builder
     public static class Profile {
 
+        @JsonView(Views.Student.class)
+        private Long studentId;
+
+        @JsonView(Views.Teacher.class)
+        private Long teacherId;
+
         // Student-only
         @JsonView(Views.Student.class)
         private String studentCode;
@@ -86,12 +92,13 @@ public class AccountProfileResponse {
         @JsonView(Views.Teacher.class)
         private String rejectionReason;
 
-        @JsonView(Views.Public.class)
+        @JsonView(Views.Admin.class)
         private Instant createdAt;
 
-        @JsonView(Views.Public.class)
+        @JsonView(Views.Admin.class)
         private Instant updatedAt;
 
 
     }
+
 }

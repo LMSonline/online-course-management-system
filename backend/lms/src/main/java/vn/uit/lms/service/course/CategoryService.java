@@ -225,22 +225,6 @@ public class CategoryService {
             category.setParent(null);
         }
 
-
-        if (request.getSlug() != null && !request.getSlug().isBlank()) {
-            if (categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(request.getSlug(), id)) {
-                throw new DuplicateResourceException("Slug already exists");
-            }
-            category.setSlug(request.getSlug());
-        }
-
-        else if (!Objects.equals(category.getName(), request.getName())) {
-            String newSlug = seoHelper.toSlug(request.getName());
-            if (categoryRepository.existsBySlugAndIdNotAndDeletedAtIsNull(newSlug, id)) {
-                throw new DuplicateResourceException("Slug already exists");
-            }
-            category.setSlug(newSlug);
-        }
-
         // metaTitle
         if (request.getMetaTitle() != null) {
             category.setMetaTitle(request.getMetaTitle());

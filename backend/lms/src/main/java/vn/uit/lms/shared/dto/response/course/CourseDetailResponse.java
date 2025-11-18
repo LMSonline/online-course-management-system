@@ -1,12 +1,18 @@
 package vn.uit.lms.shared.dto.response.course;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import vn.uit.lms.shared.constant.Difficulty;
 import vn.uit.lms.shared.dto.response.account.AccountResponse;
 
 import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CourseDetailResponse {
 
     private Long id;
@@ -28,6 +34,7 @@ public class CourseDetailResponse {
     private String seoKeywords;
 
     private boolean indexed;
+    private Boolean isClosed;
 
     // Relations
     private CategoryDto category;

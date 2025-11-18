@@ -39,7 +39,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/accounts")
+@RequestMapping("/api/v1")
 public class AccountController {
 
     private final AccountService accountService;
@@ -49,7 +49,7 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @GetMapping("/me")
+    @GetMapping("/accounts/me")
     @ApiMessage("Get profile of the authenticated user")
     public ResponseEntity<ApiResponse<Object>> getProfile() {
 
@@ -58,7 +58,7 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(response));
     }
 
-    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/accounts/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload avatar for authenticated user")
     public ResponseEntity<UploadAvatarResponse> uploadAvatar(
             @RequestParam("file") MultipartFile file) {
@@ -72,7 +72,7 @@ public class AccountController {
         return ResponseEntity.ok(res);
     }
 
-    @PutMapping("/me")
+    @PutMapping("/accounts/me")
     @ApiMessage("Update profile for authenticated user")
     public ResponseEntity<AccountProfileResponse> updateProfile(
          @Valid @RequestBody UpdateProfileRequest profileRequest) {
@@ -81,7 +81,7 @@ public class AccountController {
 
     }
 
-    @GetMapping
+    @GetMapping("/admin/accounts")
     @ApiMessage("Get all accounts (Admin only)")
     @AdminOnly
     public ResponseEntity<PageResponse<AccountResponse>> getAllAccounts(
@@ -92,7 +92,7 @@ public class AccountController {
         return ResponseEntity.ok(res);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/accounts/{id}")
     @ApiMessage("Get account by ID (Admin only)")
     @AdminOnly
     public ResponseEntity<ApiResponse<Object>> getAccountById(
@@ -102,7 +102,7 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 
-    @PatchMapping("/teacher/{id}/approve")
+    @PatchMapping("/admin/accounts/{id}/approve")
     @ApiMessage("Approve teacher account (Admin only)")
     @AdminOnly
     public ResponseEntity<ApiResponse<Object>> approveTeacherAccount(
@@ -114,7 +114,7 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 
-    @PatchMapping("/teacher/{id}/reject")
+    @PatchMapping("/admin/accounts/{id}/reject")
     @ApiMessage("Reject teacher account (Admin only)")
     @AdminOnly
     public ResponseEntity<ApiResponse<Object>> rejectTeacherAccount(
@@ -127,7 +127,7 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(result));
     }
 
-    @PatchMapping("{id}/status")
+    @PatchMapping("/admin/accounts/{id}/status")
     @ApiMessage("Change account status (Admin only)")
     @AdminOnly
     public ResponseEntity<ApiResponse<Object>> changeAccountStatus(
@@ -140,7 +140,7 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 
-    @GetMapping("/{id}/logs")
+    @GetMapping("/admin/accounts/{id}/logs")
     @ApiMessage("Get account activity logs by ID (Admin only)")
     @AdminOnly
     public ResponseEntity<PageResponse<AccountActionLogResponse>> getAccountActivityLogs(
@@ -153,7 +153,7 @@ public class AccountController {
     }
 
 
-    @DeleteMapping("/{id}" )
+    @DeleteMapping("/admin/accounts/{id}" )
     @ApiMessage("Delete account by ID (Admin only)")
     @AdminOnly
     public ResponseEntity<Void> deleteAccountById(
