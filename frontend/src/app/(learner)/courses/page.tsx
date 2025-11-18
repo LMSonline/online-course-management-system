@@ -1,4 +1,7 @@
 import CourseGrid from "@/core/components/course/CourseGrid"
+// src/app/(learner)/courses/[slug]/learn/page.tsx
+import { CoursePlayerShell } from "@/core/components/learner/player/CoursePlayerShell";
+import { MOCK_PLAYER_COURSE } from "@/lib/learner/player/types";
 
 
 export default function CoursesPage() {

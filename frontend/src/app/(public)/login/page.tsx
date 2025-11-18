@@ -94,7 +94,7 @@ export default function LoginPage() {
                                 Continue with Google
                             </button>
                             <button className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition">
-                                Continue with Apple
+                                Continue with Facebook
                             </button>
                         </div>
 
