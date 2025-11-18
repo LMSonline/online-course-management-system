@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; // ⬅️ thêm
 
 function NavItem({
   href,
@@ -38,6 +39,9 @@ export default function LearnerNavbar() {
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     function onClick(e: MouseEvent) {
@@ -48,6 +52,17 @@ export default function LearnerNavbar() {
     window.addEventListener("click", onClick);
     return () => window.removeEventListener("click", onClick);
   }, [open]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    function onClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    window.addEventListener("click", onClick);
+    return () => window.removeEventListener("click", onClick);
+  }, [profileOpen]);
 
   return (
     <header className="navbar">
@@ -142,13 +157,18 @@ export default function LearnerNavbar() {
           </Link>
 
           {/* Avatar learner – hiện để static, sau bind user data */}
-          <button
-            className="h-9 w-9 rounded-full bg-slate-900 text-xs font-semibold text-white 
-                       flex items-center justify-center border border-white/10"
-            aria-label="Profile"
-          >
-            TD
-          </button>
+          <div className="relative" ref={profileRef}>
+            <button
+              className="h-9 w-9 rounded-full bg-slate-900 text-xs font-semibold text-white 
+                         flex items-center justify-center border border-white/10"
+              aria-label="Profile"
+              onClick={() => setProfileOpen((v) => !v)}
+            >
+              TD
+            </button>
+
+            {profileOpen && <LearnerProfileMenu onClose={() => setProfileOpen(false)} />}
+          </div>
         </div>
       </div>
 

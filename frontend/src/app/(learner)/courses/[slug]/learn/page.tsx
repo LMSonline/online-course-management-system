@@ -10,13 +10,18 @@ export default function CoursePlayerPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
 
-  const course = MOCK_PLAYER_COURSE.id === slug ? MOCK_PLAYER_COURSE : null;
-
-  useEffect(() => {
-    // TODO: sau này call API lấy nội dung lesson, video URL,...
-  }, [slug]);
+  const course =
+    slug === "d2" || slug === MOCK_PLAYER_COURSE.slug
+      ? MOCK_PLAYER_COURSE
+      : null;
 
   if (!course) return notFound();
+  // 👈 luôn load mock
 
+  useEffect(() => {
+    // call API theo slug ở đây sau này
+  }, [slug]);
+
+  // KHÔNG gọi notFound ở giai đoạn mock nữa
   return <CoursePlayerShell course={course} />;
 }
