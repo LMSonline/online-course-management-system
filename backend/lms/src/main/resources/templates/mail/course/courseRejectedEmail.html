@@ -17,7 +17,7 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>Khóa học bị từ chối</h1>
+        <h1 th:text="#{email.course_rejected.title}">Khóa học bị từ chối</h1>
     </div>
     <div class="body">
         <p th:text="#{email.course_rejected.greeting(${user.username})}">Xin chào,</p>

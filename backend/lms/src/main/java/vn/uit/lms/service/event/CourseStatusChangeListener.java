@@ -15,7 +15,7 @@ public class CourseStatusChangeListener {
     @Async
     @EventListener
     public void handleCourseStatusChange(CourseVersionStatusChangeEvent event) {
-        mailService.sendCourseStatusEmail(event.getCourseVersion(), event.getReason());
+        mailService.sendCourseStatusEmail(event.courseVersion(), event.reason());
 
     }
 }

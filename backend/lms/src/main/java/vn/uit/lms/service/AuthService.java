@@ -3,6 +3,7 @@ package vn.uit.lms.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.*;
 import vn.uit.lms.core.repository.*;
+import vn.uit.lms.service.event.AccountActiveEvent;
+import vn.uit.lms.service.event.PasswordResetEvent;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.SecurityConstants;
@@ -50,6 +53,7 @@ public class AuthService {
     private final TeacherRepository teacherRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
@@ -65,7 +69,8 @@ public class AuthService {
                        StudentRepository studentRepository,
                        TeacherRepository teacherRepository,
                        RefreshTokenRepository refreshTokenRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       ApplicationEventPublisher eventPublisher) {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.emailVerificationRepository = emailVerificationRepository;
@@ -75,6 +80,7 @@ public class AuthService {
         this.teacherRepository = teacherRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -127,8 +133,7 @@ public class AuthService {
 
         emailVerificationRepository.save(verification);
 
-        // Send activation email
-        emailService.sendActivationEmail(saved, rawToken);
+        eventPublisher.publishEvent(new AccountActiveEvent(saved, rawToken));
 
         return saved;
     }
@@ -248,8 +253,7 @@ public class AuthService {
 
         emailVerificationRepository.save(verification);
 
-        // Send reset password email
-        emailService.sendPasswordResetMail(accountDB, rawToken);
+        eventPublisher.publishEvent(new PasswordResetEvent(accountDB, rawToken));
     }
 
     @Transactional

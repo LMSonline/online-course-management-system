@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,6 +18,7 @@ import vn.uit.lms.core.entity.Teacher;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
+import vn.uit.lms.service.event.AccountStatusChangeEvent;
 import vn.uit.lms.shared.constant.AccountActionType;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Role;
@@ -53,6 +55,7 @@ public class AccountService {
     private final CloudinaryUtils cloudinaryUtils;
     private final AccountActionLogService accountActionLogService;
     private final MailService mailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
 
@@ -65,7 +68,8 @@ public class AccountService {
                           CloudinaryStorageService cloudinaryStorageService,
                           CloudinaryUtils cloudinaryUtils,
                           AccountActionLogService accountActionLogService,
-                          MailService mailService) {
+                          MailService mailService,
+                          ApplicationEventPublisher eventPublisher) {
         this.accountActionLogService = accountActionLogService;
         this.accountRepository = accountRepository;
         this.studentRepository = studentRepository;
@@ -73,6 +77,7 @@ public class AccountService {
         this.cloudinaryStorageService = cloudinaryStorageService;
         this.cloudinaryUtils = cloudinaryUtils;
         this.mailService = mailService;
+        this.eventPublisher = eventPublisher;
     }
 
     public void validateCurrentAccount(Role requiredRole) {
@@ -347,7 +352,7 @@ public class AccountService {
                 AccountStatus.ACTIVE.name()
         );
 
-        mailService.sendAccountActionEmail(account, AccountActionType.APPROVE, "Teacher account approved by: " + adminAccount.getUsername());
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(account, AccountActionType.APPROVE, "Teacher account approved by: " + adminAccount.getUsername()));
 
         AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
         AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
@@ -406,7 +411,7 @@ public class AccountService {
                 AccountStatus.REJECTED.name()
         );
 
-        mailService.sendAccountActionEmail(account, AccountActionType.REJECT, reason);
+       eventPublisher.publishEvent(new AccountStatusChangeEvent(account, AccountActionType.REJECT, reason));
 
         AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
         AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
@@ -486,7 +491,7 @@ public class AccountService {
 
         AccountProfileResponse response = getAccountProfile(account);
 
-        mailService.sendAccountActionEmail(account, actionType, reason);
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(account, actionType, reason));
 
 
         log.info("Account status for accountId={} changed from {} to {} by admin={}", accountId, oldStatus, newStatus, adminAccount.getUsername());
@@ -519,8 +524,7 @@ public class AccountService {
                 AccountStatus.DEACTIVATED.name()
         );
 
-        mailService.sendAccountActionEmail(account, AccountActionType.DEACTIVATE, "Account status changed to: " + AccountStatus.DEACTIVATED + " by admin: " + adminAccount.getUsername());
-
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(account, AccountActionType.DEACTIVATE, "Account status changed to: " + AccountStatus.DEACTIVATED + " by admin: " + adminAccount.getUsername()));
 
         log.info("Account id={} deleted successfully", id);
     }

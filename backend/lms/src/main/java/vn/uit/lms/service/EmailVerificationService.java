@@ -1,6 +1,7 @@
 package vn.uit.lms.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.Account;
@@ -11,6 +12,7 @@ import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.EmailVerificationRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
+import vn.uit.lms.service.event.AccountActivatedEvent;
 import vn.uit.lms.service.helper.StudentCodeGenerator;
 import vn.uit.lms.service.helper.TeacherCodeGenerator;
 import vn.uit.lms.shared.constant.AccountStatus;
@@ -37,7 +39,7 @@ public class EmailVerificationService {
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final AccountRepository accountRepository;
-    private final MailService mailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public EmailVerificationService(EmailVerificationRepository emailVerificationRepository,
                                     StudentCodeGenerator studentCodeGenerator,
@@ -45,14 +47,14 @@ public class EmailVerificationService {
                                     TeacherRepository teacherRepository,
                                     StudentRepository studentRepository,
                                     AccountRepository accountRepository,
-                                    MailService mailService) {
+                                    ApplicationEventPublisher eventPublisher) {
         this.emailVerificationRepository = emailVerificationRepository;
         this.studentCodeGenerator = studentCodeGenerator;
         this.teacherCodeGenerator = teacherCodeGenerator;
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
         this.accountRepository = accountRepository;
-        this.mailService = mailService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -131,7 +133,7 @@ public class EmailVerificationService {
         accountRepository.save(account);
 
         //Notify user of activation success
-        mailService.sendActivationSuccessEmail(account);
+        eventPublisher.publishEvent(new AccountActivatedEvent(account));
 
         log.info("Email verification completed successfully for account id={}", account.getId());
     }

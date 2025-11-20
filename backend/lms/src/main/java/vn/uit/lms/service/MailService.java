@@ -225,6 +225,7 @@ public class MailService {
         Context context = new Context(locale);
         context.setVariable(USER, account);
         context.setVariable(BASE_URL, baseUrl);
+        context.setVariable(FRONTEND_URL, frontendUrl);
         context.setVariable(API_VERSION, apiVersion);
         context.setVariable("token", token);
         String content = templateEngine.process(templateName, context);
