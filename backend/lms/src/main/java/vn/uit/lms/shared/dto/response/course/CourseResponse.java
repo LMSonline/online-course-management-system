@@ -31,5 +31,8 @@ public class CourseResponse {
 
     private Long teacherId;
     private String teacherName;
+
+    private Long lastVersionId;
+    private Integer versionNumber;
 }
 

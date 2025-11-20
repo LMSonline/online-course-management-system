@@ -75,6 +75,41 @@ public class AccountService {
         this.mailService = mailService;
     }
 
+    public void validateCurrentAccount(Role requiredRole) {
+
+        String email = SecurityUtils.getCurrentUserLogin()
+                .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account account = accountRepository.findOneByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new UnauthorizedException("Account is not active");
+        }
+
+        // Role-specific validations
+        switch (account.getRole()) {
+            case TEACHER -> validateTeacher(account);
+            case ADMIN -> {} // future: validate admin conditions
+        }
+
+        // Final authorization
+        if (account.getRole() != requiredRole) {
+            throw new UnauthorizedException("Access denied for role: " + account.getRole());
+        }
+    }
+
+    private void validateTeacher(Account account) {
+        Teacher teacher = teacherRepository.findByAccount(account)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+
+        if (!teacher.isApproved()) {
+            throw new UnauthorizedException("Teacher is not approved");
+        }
+    }
+
+
     /**
      * Retrieve the current logged-in user's profile information.
      */

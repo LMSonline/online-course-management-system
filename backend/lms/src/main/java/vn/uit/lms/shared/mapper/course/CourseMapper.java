@@ -2,6 +2,7 @@ package vn.uit.lms.shared.mapper.course;
 
 import vn.uit.lms.core.entity.course.Course;
 import vn.uit.lms.core.entity.course.CourseTag;
+import vn.uit.lms.core.entity.course.CourseVersion;
 import vn.uit.lms.shared.dto.response.course.CourseDetailResponse;
 import vn.uit.lms.shared.dto.response.course.CourseResponse;
 
@@ -50,6 +51,12 @@ public class CourseMapper {
                 .collect(Collectors.toList());
         response.setTags(tagNames);
 
+        //add last version id and version number
+        CourseVersion lastVersion = course.getLastVersion();
+        if (lastVersion != null) {
+            response.setLastVersionId(lastVersion.getId());
+            response.setVersionNumber(lastVersion.getVersionNumber());
+        }
         return response;
     }
 
@@ -73,6 +80,12 @@ public class CourseMapper {
         if (course.getTeacher() != null) {
             response.setTeacherId(course.getTeacher().getId());
             response.setTeacherName(course.getTeacher().getFullName());
+        }
+
+        CourseVersion lastVersion = course.getLastVersion();
+        if (lastVersion != null) {
+            response.setLastVersionId(lastVersion.getId());
+            response.setVersionNumber(lastVersion.getVersionNumber());
         }
 
         return response;

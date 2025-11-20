@@ -40,6 +40,10 @@ public class CourseDetailResponse {
     private CategoryDto category;
     private Long teacherId;
 
+    private Long lastVersionId;
+    private Integer versionNumber;
+
+
     private List<String> tags;
 
 //    private List<CourseVersionResponse> versions;

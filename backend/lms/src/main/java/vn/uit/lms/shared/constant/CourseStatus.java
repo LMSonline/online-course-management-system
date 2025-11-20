@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.constant;
 
 public enum CourseStatus {
-    PENDING, APPROVED, REJECTED, PUBLISHED
+    DRAFT, PENDING, APPROVED, REJECTED, PUBLISHED
 }
 

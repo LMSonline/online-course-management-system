@@ -24,7 +24,7 @@
     <p th:text="#{email.account_rejected.text1}">Yêu cầu phê duyệt tài khoản của bạn đã bị từ chối.</p>
     <p><strong th:text="#{email.account_rejected.reason(${reason})}">Lý do: ...</strong></p>
     <p style="text-align:center; margin:28px 0;">
-      <a class="button" th:href="@{|${BASE_URL}/profile|}" th:text="#{email.account_rejected.button}">Cập nhật thông tin</a>
+      <a class="button" th:href="@{|${frontendUrl}/profile|}" th:text="#{email.account_rejected.button}">Cập nhật thông tin</a>
     </p>
     <p style="white-space: pre-line;" th:text="#{email.account_rejected.signature}">Trân trọng, Đội ngũ LMS</p>
   </div>

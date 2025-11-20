@@ -67,4 +67,16 @@ public class Course extends BaseEntity {
     private String canonicalUrl;
 
     private boolean isIndexed = true;
+
+    public void addVersion(CourseVersion version) {
+        version.setCourse(this);
+        this.versions.add(version);
+    }
+
+    public CourseVersion getLastVersion() {
+        return this.versions.stream()
+                .max((v1, v2) -> v1.getVersionNumber().compareTo(v2.getVersionNumber()))
+                .orElse(null);
+    }
+
 }

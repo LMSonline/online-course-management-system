@@ -54,7 +54,7 @@ public class CourseVersion extends BaseEntity {
     private Integer minProgressPct = 0;
 
     @Enumerated(EnumType.STRING)
-    private CourseStatus status = CourseStatus.PENDING;
+    private CourseStatus status = CourseStatus.DRAFT;
 
     @Column(columnDefinition = "TEXT")
     private String notes;

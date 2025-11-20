@@ -21,7 +21,7 @@
     <p th:text="#{email.account_unlocked.greeting(${user.username})}">Xin chào,</p>
     <p th:text="#{email.account_unlocked.text1}">Tài khoản của bạn đã được mở khóa và có thể sử dụng bình thường.</p>
     <p style="text-align:center; margin:28px 0;">
-      <a class="button" th:href="@{|${BASE_URL}/login|}" th:text="#{email.account_unlocked.button}">Đăng nhập ngay</a>
+      <a class="button" th:href="@{|${frontendUrl}/login|}" th:text="#{email.account_unlocked.button}">Đăng nhập ngay</a>
     </p>
     <p th:text="#{email.account_unlocked.signature}">Chào mừng bạn quay lại!</p>
   </div>

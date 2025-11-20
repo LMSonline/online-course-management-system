@@ -7,17 +7,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.entity.Teacher;
-import vn.uit.lms.core.entity.course.Category;
-import vn.uit.lms.core.entity.course.Course;
-import vn.uit.lms.core.entity.course.CourseTag;
-import vn.uit.lms.core.entity.course.Tag;
+import vn.uit.lms.core.entity.course.*;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.core.repository.course.CategoryRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
+import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.course.TagRepository;
 import vn.uit.lms.service.helper.SEOHelper;
 import vn.uit.lms.shared.constant.AccountStatus;
+import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.CourseRequest;
@@ -45,22 +44,25 @@ public class CourseService {
     private final TeacherRepository teacherRepository;
     private final SEOHelper seoHelper;
     private final AccountRepository accountRepository;
+    private final CourseVersionRepository courseVersionRepository;
 
     public CourseService(CourseRepository courseRepository,
                          CategoryRepository categoryRepository,
                          TagRepository tagRepository,
                          AccountRepository accountRepository,
                          TeacherRepository teacherRepository,
-                         SEOHelper seoHelper) {
+                         SEOHelper seoHelper,
+                         CourseVersionRepository courseVersionRepository) {
         this.seoHelper = seoHelper;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.teacherRepository = teacherRepository;
         this.accountRepository = accountRepository;
+        this.courseVersionRepository = courseVersionRepository;
     }
 
-    private Teacher verifyTeacher(Course course) {
+    public Teacher verifyTeacher(Course course) {
         String emailCurrentLogin = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
                 .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
@@ -162,6 +164,15 @@ public class CourseService {
         newCourse.setIndexed(courseRequest.getIsIndexed());
 
         createSeoData(newCourse);
+
+        //create first version for course
+        CourseVersion firstVersion = new CourseVersion();
+        firstVersion.setVersionNumber(1);
+        firstVersion.setStatus(CourseStatus.DRAFT);
+        firstVersion.setTitle(newCourse.getTitle());
+        firstVersion.setDescription(newCourse.getShortDescription());
+
+        newCourse.addVersion(firstVersion);
 
         Course savedCourse = courseRepository.save(newCourse);
 

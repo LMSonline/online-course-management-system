@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import vn.uit.lms.core.entity.Teacher;
 import vn.uit.lms.core.entity.course.Course;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,4 +18,5 @@ public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecif
     Optional<Course> findBySlugAndDeletedAtIsNull(String slug);
     Optional<Course> findByIdAndDeletedAtIsNull(Long id);
     boolean existsBySlug(String slug);
+
 }
