@@ -13,10 +13,6 @@ import java.time.Instant;
 @Filter(name = "deletedFilter", condition = "deleted_at IS NULL")
 public abstract class BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -42,7 +38,7 @@ public abstract class BaseEntity {
 
     @PreUpdate
     protected void onUpdate() {
-        this.createdBy = SecurityUtils.getCurrentUserLogin().isPresent() ? SecurityUtils.getCurrentUserLogin().get() : "";
+        this.updatedBy = SecurityUtils.getCurrentUserLogin().isPresent() ? SecurityUtils.getCurrentUserLogin().get() : "";
         this.updatedAt = Instant.now();
     }
 }

@@ -19,6 +19,10 @@ import java.util.List;
 @SQLDelete(sql = "UPDATE chapters SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Chapter extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_version_id", nullable = false)
     private CourseVersion courseVersion;

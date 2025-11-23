@@ -58,7 +58,7 @@ public class CategoryController {
     @AdminOnly
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/admin/categories/{id}/restore")

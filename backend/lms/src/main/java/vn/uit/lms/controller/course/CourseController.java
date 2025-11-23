@@ -86,7 +86,7 @@ public class CourseController {
     @TeacherOnly
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/teacher/courses/{id}/restore")

@@ -52,7 +52,7 @@ public class TagController {
     @AdminOnly
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
         tagService.deleteTag(id);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/admin/tags/{id}/restore")

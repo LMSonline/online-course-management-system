@@ -15,6 +15,10 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @SQLDelete(sql = "UPDATE file_storages SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class FileStorage extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(name = "storage_key", nullable = false, length = 512)
     private String storageKey;
 

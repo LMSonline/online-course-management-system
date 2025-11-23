@@ -156,7 +156,7 @@ public class CourseVersionService {
         Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
-        Account account = accountService.validateCurrentAccount(Role.ADMIN);
+        Account account = accountService.validateCurrentAccountByRole(Role.ADMIN);
 
         CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course version not found or has remove with id: " + versionId));
@@ -183,7 +183,7 @@ public class CourseVersionService {
         Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
-        accountService.validateCurrentAccount(Role.ADMIN);
+        accountService.validateCurrentAccountByRole(Role.ADMIN);
 
         CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course version not found or has remove with id: " + versionId));

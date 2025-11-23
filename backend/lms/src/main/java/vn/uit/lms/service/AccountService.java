@@ -80,8 +80,7 @@ public class AccountService {
         this.eventPublisher = eventPublisher;
     }
 
-    public Account validateCurrentAccount(Role requiredRole) {
-
+    public Account verifyCurrentAccount(){
         String email = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
                 .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
@@ -92,6 +91,13 @@ public class AccountService {
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new UnauthorizedException("Account is not active");
         }
+
+        return account;
+    }
+
+    public Account validateCurrentAccountByRole(Role requiredRole) {
+
+       Account account = verifyCurrentAccount();
 
         // Role-specific validations
         switch (account.getRole()) {

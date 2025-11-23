@@ -162,7 +162,7 @@ public class AccountController {
     ) {
         String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
         accountService.deleteAccountById(id, ip);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 
 

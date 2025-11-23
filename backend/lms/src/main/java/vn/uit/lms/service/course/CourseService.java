@@ -6,14 +6,17 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.entity.Student;
 import vn.uit.lms.core.entity.Teacher;
 import vn.uit.lms.core.entity.course.*;
 import vn.uit.lms.core.repository.AccountRepository;
+import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.core.repository.course.CategoryRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.course.TagRepository;
+import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.helper.SEOHelper;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.CourseStatus;
@@ -42,37 +45,30 @@ public class CourseService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
     private final SEOHelper seoHelper;
-    private final AccountRepository accountRepository;
-    private final CourseVersionRepository courseVersionRepository;
+    private final AccountService accountService;
 
     public CourseService(CourseRepository courseRepository,
                          CategoryRepository categoryRepository,
                          TagRepository tagRepository,
-                         AccountRepository accountRepository,
                          TeacherRepository teacherRepository,
                          SEOHelper seoHelper,
-                         CourseVersionRepository courseVersionRepository) {
+                         AccountService accountService,
+                         StudentRepository studentRepository) {
         this.seoHelper = seoHelper;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.teacherRepository = teacherRepository;
-        this.accountRepository = accountRepository;
-        this.courseVersionRepository = courseVersionRepository;
+        this.accountService = accountService;
+        this.studentRepository = studentRepository;
     }
 
+    //verify teacher is owner of course
     public Teacher verifyTeacher(Course course) {
-        String emailCurrentLogin = SecurityUtils.getCurrentUserLogin()
-                .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
-                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
 
-        Account account = accountRepository.findOneByEmailIgnoreCase(emailCurrentLogin)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
-
-        if(account.getStatus() != AccountStatus.ACTIVE) {
-            throw new UnauthorizedException("Account is not active");
-        }
+        Account account = accountService.verifyCurrentAccount();
 
         Teacher teacher = teacherRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
@@ -88,6 +84,19 @@ public class CourseService {
         }
 
         return teacher;
+    }
+
+    //verify student has enrolled course
+    public Student verifyStudent(Course course) {
+
+        Account account = accountService.verifyCurrentAccount();
+
+        Student student = studentRepository.findByAccount(account)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        //miss verify enrollment
+
+        return student;
     }
 
 

@@ -16,6 +16,10 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @SQLDelete(sql = "UPDATE lesson_resources SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class LessonResource extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id", nullable = false)
     private Lesson lesson;

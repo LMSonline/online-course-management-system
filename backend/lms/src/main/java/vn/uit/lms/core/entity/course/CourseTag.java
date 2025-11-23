@@ -15,6 +15,10 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @Builder
 public class CourseTag extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;

@@ -2,12 +2,10 @@ package vn.uit.lms.core.entity.course;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.SQLDelete;
 import vn.uit.lms.core.entity.Student;
 import vn.uit.lms.shared.entity.BaseEntity;
 
-import java.time.Instant;
 
 @Getter
 @Setter
@@ -22,6 +20,10 @@ import java.time.Instant;
         }
 )
 public class CourseReview extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)

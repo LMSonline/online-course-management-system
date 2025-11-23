@@ -14,6 +14,10 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @Builder
 public class AccountActionLog extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account targetAccount;
