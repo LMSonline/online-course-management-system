@@ -176,7 +176,7 @@ public class AuthService {
         // Set the authentication in the security context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        ResLoginDTO resLoginDTO = new ResLoginDTO();
+        ResLoginDTO resLoginDTO;
         String email = authentication.getName();
         Account accountDB = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));

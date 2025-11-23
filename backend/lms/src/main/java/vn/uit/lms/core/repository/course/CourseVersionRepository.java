@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import vn.uit.lms.core.entity.course.Course;
 import vn.uit.lms.core.entity.course.CourseVersion;
 
+
 import java.util.List;
 import java.util.Optional;
 
@@ -14,4 +15,5 @@ public interface CourseVersionRepository extends JpaRepository<CourseVersion, Lo
     List<CourseVersion> findAllByCourseAndDeletedAtIsNull(Course course);
     List<CourseVersion> findAllByCourseAndDeletedAtIsNotNull(Course course);
     Optional<CourseVersion> findByIdAndDeletedAtIsNull(Long id);
+
 }

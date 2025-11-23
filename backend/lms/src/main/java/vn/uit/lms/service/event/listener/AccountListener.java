@@ -1,10 +1,14 @@
-package vn.uit.lms.service.event;
+package vn.uit.lms.service.event.listener;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import vn.uit.lms.service.MailService;
+import vn.uit.lms.service.event.AccountActivatedEvent;
+import vn.uit.lms.service.event.AccountActiveEvent;
+import vn.uit.lms.service.event.AccountStatusChangeEvent;
+import vn.uit.lms.service.event.PasswordResetEvent;
 
 @Component
 @RequiredArgsConstructor

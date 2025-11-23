@@ -1,10 +1,15 @@
 package vn.uit.lms.controller.course;
 
+import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import vn.uit.lms.core.entity.course.CourseVersion;
 import vn.uit.lms.service.course.CourseVersionService;
+import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.RejectRequest;
 import vn.uit.lms.shared.dto.request.course.CourseVersionRequest;
 import vn.uit.lms.shared.dto.response.course.CourseVersionResponse;
@@ -93,8 +98,22 @@ public class CourseVersionController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/courses/versions/pending")
-//    @AdminOnly
+    @PostMapping("/courses/{courseId}/versions/{versionId}/publish")
+    @TeacherOnly
+    public ResponseEntity<CourseVersionResponse> publishCourseVersion(
+            @PathVariable("courseId") Long courseId,
+            @PathVariable("versionId") Long versionId
+    ){
+        CourseVersionResponse response = courseVersionService.publishCourseVersion(courseId, versionId);
+        return ResponseEntity.ok(response);
+    }
 
-
+    @GetMapping("/courses/admin/versions/pending")
+    @AdminOnly
+    public ResponseEntity<PageResponse<CourseVersionResponse>> getAllPendingCourseVersions(
+            @Filter Specification<CourseVersion> spec,
+            Pageable pageable
+    ){
+        return ResponseEntity.ok(courseVersionService.getAllPendingCourseVersion(spec, pageable));
+    }
 }

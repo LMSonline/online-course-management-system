@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import vn.uit.lms.shared.constant.ErrorCode;
 import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.exception.*;
@@ -161,5 +162,15 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
     }
 
+    @ExceptionHandler(value = {
+            NoResourceFoundException.class
+    })
+    public ResponseEntity<ApiResponse<Object>> handleNoResourceFoundException(Exception ex) {
+        ApiResponse<Object> res = new ApiResponse<Object>();
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setMessage("404 Not Found. URL may not exist...:"+ex.getMessage());
+        res.setCode(ErrorCode.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
 
 }

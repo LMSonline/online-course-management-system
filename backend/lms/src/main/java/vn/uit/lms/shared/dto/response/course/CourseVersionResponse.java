@@ -34,7 +34,7 @@ public class CourseVersionResponse {
 
     private String notes;
 
-    private Long approvedBy;
+    private String approvedBy;
     private Instant approvedAt;
 
     private Instant publishedAt;

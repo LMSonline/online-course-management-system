@@ -40,9 +40,7 @@ public class CourseDetailResponse {
     private CategoryDto category;
     private Long teacherId;
 
-    private Long lastVersionId;
-    private Integer versionNumber;
-
+    private Long PublicVersionId;
 
     private List<String> tags;
 

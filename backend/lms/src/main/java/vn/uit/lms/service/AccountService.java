@@ -80,7 +80,7 @@ public class AccountService {
         this.eventPublisher = eventPublisher;
     }
 
-    public void validateCurrentAccount(Role requiredRole) {
+    public Account validateCurrentAccount(Role requiredRole) {
 
         String email = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
@@ -103,6 +103,8 @@ public class AccountService {
         if (account.getRole() != requiredRole) {
             throw new UnauthorizedException("Access denied for role: " + account.getRole());
         }
+
+        return account;
     }
 
     private void validateTeacher(Account account) {

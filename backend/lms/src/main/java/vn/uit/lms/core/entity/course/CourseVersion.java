@@ -60,7 +60,7 @@ public class CourseVersion extends BaseEntity {
     private String notes;
 
     @Column(name = "approved_by")
-    private Long approvedBy;
+    private String approvedBy;
 
     @Column(name = "approved_at")
     private Instant approvedAt;

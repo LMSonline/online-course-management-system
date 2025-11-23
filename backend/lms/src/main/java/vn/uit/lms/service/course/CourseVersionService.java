@@ -1,8 +1,12 @@
 package vn.uit.lms.service.course;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.entity.Teacher;
 import vn.uit.lms.core.entity.course.Course;
 import vn.uit.lms.core.entity.course.CourseVersion;
@@ -12,6 +16,7 @@ import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.event.CourseVersionStatusChangeEvent;
 import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.Role;
+import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.RejectRequest;
 import vn.uit.lms.shared.dto.request.course.CourseVersionRequest;
 import vn.uit.lms.shared.dto.response.course.CourseVersionResponse;
@@ -21,7 +26,9 @@ import vn.uit.lms.shared.mapper.course.CourseVersionMapper;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 
 
+import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseVersionService {
@@ -149,16 +156,18 @@ public class CourseVersionService {
         Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
-        accountService.validateCurrentAccount(Role.ADMIN);
+        Account account = accountService.validateCurrentAccount(Role.ADMIN);
 
         CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course version not found or has remove with id: " + versionId));
 
-        if(version.getStatus()!=CourseStatus.PENDING){
-            throw new InvalidRequestException("Course version is not PENDING");
+        if(version.getStatus()!=CourseStatus.PENDING && version.getStatus()!=CourseStatus.REJECTED){
+            throw new InvalidRequestException("Course status invalid");
         }
 
         version.setStatus(CourseStatus.APPROVED);
+        version.setApprovedBy(account.getEmail());
+        version.setApprovedAt(Instant.now());
 
         courseVersionRepository.save(version);
 
@@ -192,6 +201,69 @@ public class CourseVersionService {
         return CourseVersionMapper.toCourseVersionResponse(version);
     }
 
+    @Transactional
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse publishCourseVersion(Long courseId, Long versionId){
 
+        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
+        courseService.verifyTeacher(course);
+
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course version not found or has remove with id: " + versionId));
+
+        if(version.getStatus()!=CourseStatus.APPROVED){
+            throw new InvalidRequestException("Course version is not APPROVED");
+        }
+
+        version.setStatus(CourseStatus.PUBLISHED);
+        version.setPublishedAt(Instant.now());
+
+        CourseVersion publishedVersion = course.getVersionPublish();
+        if(publishedVersion!=null){
+            publishedVersion.setStatus(CourseStatus.ARCHIVED);
+            courseVersionRepository.save(publishedVersion);
+        }
+
+        courseVersionRepository.save(version);
+
+
+        eventPublisher.publishEvent(new CourseVersionStatusChangeEvent(version, ""));
+        return CourseVersionMapper.toCourseVersionResponse(version);
+    }
+
+    @EnableSoftDeleteFilter
+    public PageResponse<CourseVersionResponse> getAllPendingCourseVersion(Specification<CourseVersion> spec, Pageable pageable){
+        Specification<CourseVersion> pendingSpec =
+                (root, query, cb) -> cb.equal(root.get("status"), CourseStatus.PENDING);
+
+        // merge specification
+        if (spec == null) {
+            spec = pendingSpec;
+        } else {
+            spec = spec.and(pendingSpec);
+        }
+
+        // query
+        Page<CourseVersion> page = courseVersionRepository.findAll(spec, pageable);
+
+        // map items
+        List<CourseVersionResponse> items = page.getContent()
+                .stream()
+                .map(CourseVersionMapper::toCourseVersionResponse)
+                .toList();
+
+        // return page response
+        return new PageResponse<>(
+                items,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
 
 }

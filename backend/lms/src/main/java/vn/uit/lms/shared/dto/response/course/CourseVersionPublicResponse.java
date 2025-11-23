@@ -15,6 +15,5 @@ public class CourseVersionPublicResponse {
 
     private boolean published;
 
-    // course info cơ bản (không để lộ nội bộ)
     private Long courseId;
 }

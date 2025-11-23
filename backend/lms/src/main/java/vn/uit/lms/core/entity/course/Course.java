@@ -6,6 +6,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.*;
 import vn.uit.lms.core.entity.Teacher;
+import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.Difficulty;
 import vn.uit.lms.shared.entity.BaseEntity;
 
@@ -78,5 +79,14 @@ public class Course extends BaseEntity {
                 .max((v1, v2) -> v1.getVersionNumber().compareTo(v2.getVersionNumber()))
                 .orElse(null);
     }
+
+    public CourseVersion getVersionPublish(){
+        return  this.versions.stream()
+                .filter(version -> version.getStatus() == CourseStatus.PUBLISHED)
+                .findFirst()
+                .orElse(null);
+    }
+
+
 
 }

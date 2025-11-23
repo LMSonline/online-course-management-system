@@ -50,12 +50,11 @@ public class CourseMapper {
                 .map(tag -> tag.getName())
                 .collect(Collectors.toList());
         response.setTags(tagNames);
+        
+        CourseVersion publicVersion = course.getVersionPublish();
+        if (publicVersion != null) {
+            response.setPublicVersionId(publicVersion.getId());
 
-        //add last version id and version number
-        CourseVersion lastVersion = course.getLastVersion();
-        if (lastVersion != null) {
-            response.setLastVersionId(lastVersion.getId());
-            response.setVersionNumber(lastVersion.getVersionNumber());
         }
         return response;
     }
@@ -82,10 +81,10 @@ public class CourseMapper {
             response.setTeacherName(course.getTeacher().getFullName());
         }
 
-        CourseVersion lastVersion = course.getLastVersion();
-        if (lastVersion != null) {
-            response.setLastVersionId(lastVersion.getId());
-            response.setVersionNumber(lastVersion.getVersionNumber());
+        CourseVersion publicVersion = course.getVersionPublish();
+        if (publicVersion != null) {
+            response.setPublicVersionId(publicVersion.getId());
+
         }
 
         return response;

@@ -164,6 +164,13 @@ public class MailService {
                 templateName = "mail/course/courseSubmittedEmail";
                 subjectKey = "email.course_submitted.title";
             }
+
+            case PUBLISHED -> {
+                {
+                    templateName = "mail/course/coursePublishedEmail";
+                    subjectKey = "email.course_published.title";
+                }
+            }
             default -> {
                 templateName = "mail/course/courseUnknownStatusEmail";
                 subjectKey = "email.course_unknown.title";

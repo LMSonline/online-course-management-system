@@ -103,7 +103,6 @@ public class CourseController {
             Pageable pageable
     ) {
         PageResponse<CourseResponse> myCourses = courseService.getMyCourses(specification, pageable);
-
         return ResponseEntity.ok(myCourses);
     }
 }
