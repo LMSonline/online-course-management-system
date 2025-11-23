@@ -88,8 +88,7 @@
 
         <p style="text-align:center; margin:28px 0;">
             <a class="activation-button"
-               th:with="url=(@{|${fontendURL}/verify-email?token=${token}|})"
-               th:href="${url}"
+               th:href="@{|${frontendUrl}/verify-email?token=${token}|}"
                th:text="#{email.activation.button}">
                 Kích hoạt ngay
             </a>

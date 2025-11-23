@@ -9,6 +9,8 @@ import java.util.Base64;
  */
 public final class TokenHashUtil {
 
+    private static final String HASH_ALGORITHM = "SHA-256";
+
     private TokenHashUtil() {}
 
     /**
@@ -20,7 +22,7 @@ public final class TokenHashUtil {
      */
     public static String hashToken(String token) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] hashedBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hashedBytes);
         } catch (Exception e) {

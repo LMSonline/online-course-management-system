@@ -15,9 +15,11 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.entity.course.CourseVersion;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.shared.constant.AccountActionType;
 import vn.uit.lms.shared.constant.AccountStatus;
+import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 
 import java.nio.charset.StandardCharsets;
@@ -37,6 +39,8 @@ public class MailService {
     private static final String USER = "user";
 
     private static final String BASE_URL = "baseUrl";
+
+    private static final String FRONTEND_URL = "frontendUrl";
 
     private static final String API_VERSION = "apiVersion";
 
@@ -58,18 +62,17 @@ public class MailService {
 
     private final SpringTemplateEngine templateEngine;
 
-    private final AccountRepository accountRepository;
 
     public MailService(
             JavaMailSender javaMailSender,
             MessageSource messageSource,
-            SpringTemplateEngine templateEngine,
-            AccountRepository accountRepository
+            SpringTemplateEngine templateEngine
+
     ) {
         this.javaMailSender = javaMailSender;
         this.messageSource = messageSource;
         this.templateEngine = templateEngine;
-        this.accountRepository = accountRepository;
+
     }
 
     @Async
@@ -83,6 +86,7 @@ public class MailService {
         Context context = new Context(locale);
         context.setVariable(USER, account);
         context.setVariable(BASE_URL, baseUrl);
+        context.setVariable(FRONTEND_URL, frontendUrl);
         context.setVariable("reason", reason != null ? reason : "No reason provided");
 
         String templateName;
@@ -126,6 +130,63 @@ public class MailService {
         }
     }
 
+    @Async
+    public void sendCourseStatusEmail(CourseVersion courseVersion, String reason) {
+        if (courseVersion.getCourse() == null || courseVersion.getCourse().getTeacher() == null) {
+            LOG.warn("Cannot send email: teacher/account or email missing");
+            return;
+        }
+
+        Account account = courseVersion.getCourse().getTeacher().getAccount();
+        CourseStatus status = courseVersion.getStatus();
+
+        Locale locale = Locale.forLanguageTag(account.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable("courseVersion", courseVersion);
+        context.setVariable("status", status);
+        context.setVariable(USER, account);
+        context.setVariable(FRONTEND_URL, frontendUrl);
+        context.setVariable("reason", reason != null ? reason : "");
+
+        String templateName;
+        String subjectKey;
+
+        switch (status) {
+            case APPROVED -> {
+                templateName = "mail/course/courseApprovedEmail";
+                subjectKey = "email.course_approved.title";
+            }
+            case REJECTED -> {
+                templateName = "mail/course/courseRejectedEmail";
+                subjectKey = "email.course_rejected.title";
+            }
+            case PENDING -> {
+                templateName = "mail/course/courseSubmittedEmail";
+                subjectKey = "email.course_submitted.title";
+            }
+
+            case PUBLISHED -> {
+                {
+                    templateName = "mail/course/coursePublishedEmail";
+                    subjectKey = "email.course_published.title";
+                }
+            }
+            default -> {
+                templateName = "mail/course/courseUnknownStatusEmail";
+                subjectKey = "email.course_unknown.title";
+            }
+        }
+
+        String content = templateEngine.process(templateName, context);
+        String subject = messageSource.getMessage(subjectKey, null, locale);
+
+        try {
+            sendEmailSync(account.getEmail(), subject, content, false, true);
+            LOG.info("Sent email to {}", account.getEmail());
+        } catch (Exception e) {
+            LOG.error("Failed to send email to {}: {}", account.getEmail(), e.getMessage());
+        }
+    }
 
     @Async
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
@@ -171,6 +232,7 @@ public class MailService {
         Context context = new Context(locale);
         context.setVariable(USER, account);
         context.setVariable(BASE_URL, baseUrl);
+        context.setVariable(FRONTEND_URL, frontendUrl);
         context.setVariable(API_VERSION, apiVersion);
         context.setVariable("token", token);
         String content = templateEngine.process(templateName, context);

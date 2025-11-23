@@ -18,6 +18,10 @@ import java.time.Instant;
 @Builder
 public class Teacher extends PersonBase implements BaseProfile{
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false, unique = true)
     private Account account;

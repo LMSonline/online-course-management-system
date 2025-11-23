@@ -17,6 +17,10 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = true)
 public class Student extends PersonBase implements BaseProfile{
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false, unique = true)
     private Account account;

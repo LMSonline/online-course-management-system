@@ -19,6 +19,10 @@ import java.time.Instant;
 @EqualsAndHashCode(callSuper = true)
 public class Account extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(length = 150, nullable = false, unique = true)
     private String username;
 
