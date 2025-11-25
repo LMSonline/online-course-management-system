@@ -73,6 +73,15 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
         ApiMessage apiMessage = returnType.getMethodAnnotation(ApiMessage.class);
         String messageFromAnnotation = apiMessage != null ? apiMessage.value() : null;
 
+        String path = request.getURI().getPath();
+
+        // Skip Swagger/OpenAPI
+        if (path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/swagger-ui.html")) {
+            return body;
+        }
+
         // Skip wrapping if already formatted or not suitable (e.g., String or ApiResponse)
         if (body instanceof ApiResponse<?> || body instanceof String) {
             return body;

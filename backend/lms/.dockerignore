@@ -1,0 +1,49 @@
+# Build output
+build/
+target/
+*.jar
+*.war
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README.md
+docs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+application-local.yml
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+test-results/
+coverage/
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore

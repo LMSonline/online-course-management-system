@@ -13,7 +13,7 @@ import vn.uit.lms.shared.util.annotation.AdminOnly;
 
 @RestController
 @RequestMapping("/api/v1")
-public class TagController {
+public class  TagController {
 
     private final TagService tagService;
 
