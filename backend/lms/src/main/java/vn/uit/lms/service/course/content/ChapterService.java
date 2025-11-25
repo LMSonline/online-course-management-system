@@ -149,7 +149,21 @@ public class ChapterService {
             throw new ResourceNotFoundException("Chapter does not belong to this version");
         }
 
-        this.chapterRepository.delete(chapter);
+        int deletedIndex = chapter.getOrderIndex();
+
+        chapterRepository.delete(chapter);
+
+        List<Chapter> chapters = chapterRepository.findChaptersForReorder(courseVersion);
+
+        List<Chapter> chaptersToUpdate = chapters.stream()
+                .filter(c -> c.getOrderIndex() > deletedIndex)
+                .collect(Collectors.toList());
+
+        for (Chapter c : chaptersToUpdate) {
+            c.setOrderIndex(c.getOrderIndex() - 1);
+        }
+
+        chapterRepository.saveAll(chaptersToUpdate);
     }
 
 
