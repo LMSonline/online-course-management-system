@@ -376,6 +376,7 @@ public class CourseService {
     @Transactional
     @EnableSoftDeleteFilter
     public void deleteCourse(Long id) {
+        //miss check has student enrollment
         Course course = courseRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
 

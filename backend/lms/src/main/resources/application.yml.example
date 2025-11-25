@@ -1,30 +1,26 @@
-
-# Example configuration file for a Spring Boot application.
-# Copy this file as 'application.yml' and update the values as needed.
-
 spring:
   application:
     name: lms
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/lms
-    username: postgres
-    password: your_database_password_here
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lms}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:CHANGE_ME}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: your_email@gmail.com
-    password: your_app_password_here
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:CHANGE_ME}
+    password: ${SPRING_MAIL_PASSWORD:CHANGE_ME}
     properties:
       mail:
         smtp:
@@ -42,57 +38,58 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-   task:
-       execution:
-         pool:
-           core-size: 4
-           max-size: 8
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 8
 
 logging:
   level:
     org.springframework.security: TRACE
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-
 app:
-  base-url: http://localhost:8080
-  frontend-url: http://localhost:3000
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:3000}
   api-version: api/v1
 
   admin:
     username: admin
-    password: Admin@123
-    email: admin@gmail.com
+    password: CHANGE_ME
+    email: admin@example.com
 
   student:
     username: student
-    password: Student@123
+    password: CHANGE_ME
     email: student@example.com
 
   teacher:
     username: teacher
-    password: Teacher@123
+    password: CHANGE_ME
     email: teacher@example.com
 
   avatar:
-    default-url: https://res.cloudinary.com/your-cloud/image/upload/v1234567890/default-avatar.jpg
-    max-size-bytes: 10485760 # 10MB
+    default-url: https://example.com/default-avatar.png
+    max-size-bytes: 10485760
     allowed-content-types:
       - image/jpeg
       - image/png
       - image/webp
     folder: avatars
 
+  Metadata:
+    author: "© 2024 Group 5 / VN.UIT.LMS"
+    license: "Proprietary API – All rights reserved"
+    version: "v1.0.0"
+
 jwt:
-  secret: your_jwt_secret_here
+  secret: ${JWT_SECRET:CHANGE_ME}
   access-token:
-    expiration: 86400
+    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:86400}
   refresh-token:
-    expiration: 100000
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:100000}
 
 cloudinary:
-  cloud-name: your_cloud_name_here
-  api-key: your_api_key_here
-  api-secret: your_api_secret_here
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:CHANGE_ME}
+  api-key: ${CLOUDINARY_API_KEY:CHANGE_ME}
+  api-secret: ${CLOUDINARY_API_SECRET:CHANGE_ME}

@@ -62,3 +62,7 @@ Thumbs.db
 
 # Maven / Gradle wrapper binaries
 gradle-wrapper.jar
+
+# Environment files
+.env
+.env.*
