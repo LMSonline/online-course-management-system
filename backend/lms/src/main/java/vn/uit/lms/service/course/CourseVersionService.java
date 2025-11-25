@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +50,17 @@ public class CourseVersionService {
         this.courseService = courseService;
         this.accountService = accountService;
         this.eventPublisher = eventPublisher;
+    }
+
+    public CourseVersion validateVersionEditable(Long versionId){
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        if (!version.isDraft() && !version.isRejected()) {
+            throw new InvalidRequestException("Only draft or rejected versions can be modified.");
+        }
+
+        return version;
     }
 
     @Transactional

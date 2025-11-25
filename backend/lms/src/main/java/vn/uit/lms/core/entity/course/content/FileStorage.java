@@ -12,7 +12,6 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE file_storages SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class FileStorage extends BaseEntity {
 
     @Id

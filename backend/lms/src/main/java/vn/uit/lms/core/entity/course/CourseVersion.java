@@ -74,4 +74,16 @@ public class CourseVersion extends BaseEntity {
 
     @OneToMany(mappedBy = "courseVersion", cascade = CascadeType.ALL)
     private List<Chapter> chapters = new ArrayList<>();
+
+    public int getAmountChapter(){
+        return chapters.size();
+    }
+
+    public boolean isRejected() {
+        return this.status == CourseStatus.REJECTED;
+    }
+
+    public boolean isDraft() {
+        return this.status == CourseStatus.DRAFT;
+    }
 }

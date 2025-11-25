@@ -16,7 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE chapters SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Chapter extends BaseEntity {
 
     @Id

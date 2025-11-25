@@ -241,6 +241,7 @@ public class CourseService {
 
         verifyTeacher(course);
 
+        //missing check student active waiting for complete enrollment service
         course.setIsClosed(true);
         Course savedCourse = courseRepository.save(course);
         return CourseMapper.toCourseDetailResponse(savedCourse);
@@ -381,6 +382,11 @@ public class CourseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
 
         verifyTeacher(course);
+
+        //check course had closed
+        if(course.getIsClosed().equals(Boolean.FALSE)) {
+            throw new InvalidRequestException("Course is must closed before delete");
+        }
 
         courseRepository.delete(course);
     }
