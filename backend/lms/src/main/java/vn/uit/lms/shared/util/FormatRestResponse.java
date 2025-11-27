@@ -26,11 +26,11 @@ import java.time.Instant;
 @ControllerAdvice
 public class FormatRestResponse implements ResponseBodyAdvice<Object> {
 
-    @Value("${app.Metadata.author}")
+    @Value("${app.metadata.author}")
     private String author;
-    @Value("${app.Metadata.license}")
+    @Value("${app.metadata.license}")
     private String license;
-    @Value("${app.Metadata.version}")
+    @Value("${app.metadata.version}")
     private String version;
 
     /**

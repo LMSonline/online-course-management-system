@@ -1,5 +1,4 @@
 services:
-  # PostgreSQL Database
   postgres:
     image: ${POSTGRES_IMAGE}
     container_name: ${POSTGRES_CONTAINER_NAME}
@@ -20,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Spring Boot Application
   app:
     build:
       context: .
@@ -29,37 +27,38 @@ services:
     ports:
       - "${APP_PORT}:8080"
     environment:
-      # Database
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
 
-      # JPA
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
       SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
 
-      # Mail Configuration
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
 
-      # Application URLs
       APP_BASE_URL: ${APP_BASE_URL}
       APP_FRONTEND_URL: ${APP_FRONTEND_URL}
 
-      # JWT
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
       JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
 
-      # Cloudinary
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
 
+      MINIO_URL: http://minio:9000
+      MINIO_BUCKET: lms-videos
+      MINIO_USERNAME: ${MINIO_ROOT_USER}
+      MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     networks:
       - lms-network
@@ -71,7 +70,6 @@ services:
       retries: 5
       start_period: 60s
 
-  # PgAdmin (Optional)
   pgadmin:
     image: ${PGADMIN_IMAGE}
     container_name: ${PGADMIN_CONTAINER_NAME}
@@ -86,11 +84,33 @@ services:
     depends_on:
       - postgres
 
+  minio:
+    image: ${MINIO_IMAGE}
+    container_name: ${MINIO_CONTAINER_NAME}
+    restart: unless-stopped
+    networks:
+      - lms-network
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_UI_PORT}:9090"
+    command: minio server /data --console-address ":9090"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
+    driver: local
+  minio-data:
     driver: local
 
 networks:
   lms-network:
     driver: bridge
-
