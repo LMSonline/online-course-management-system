@@ -34,4 +34,8 @@ public class Chapter extends BaseEntity {
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL)
     private List<Lesson> lessons = new ArrayList<>();
+
+    public int getTotalLessons() {
+        return lessons.size();
+    }
 }

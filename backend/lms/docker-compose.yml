@@ -55,10 +55,17 @@ services:
       MINIO_USERNAME: ${MINIO_ROOT_USER}
       MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
 
+      RABBITMQ_HOST: ${RABBITMQ_CONTAINER_NAME}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+
     depends_on:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - lms-network
@@ -93,6 +100,9 @@ services:
     volumes:
       - minio-data:/data
     environment:
+      MINIO_BUCKET_VIDEOS: ${MINIO_BUCKET_VIDEOS}
+      MINIO_BUCKET_IMAGES: ${MINIO_BUCKET_IMAGES}
+      MINIO_BUCKET_DOCUMENTS: ${MINIO_BUCKET_DOCUMENTS}
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
@@ -105,10 +115,32 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: ${RABBITMQ_IMAGE:-rabbitmq:3-management}
+    container_name: ${RABBITMQ_CONTAINER_NAME:-rabbitmq}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_UI_PORT:-15672}:15672" # management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - lms-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmqctl -q status || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   postgres_data:
     driver: local
   minio-data:
+    driver: local
+  rabbitmq-data:
     driver: local
 
 networks:

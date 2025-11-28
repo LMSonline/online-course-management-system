@@ -1,4 +1,4 @@
-package vn.uit.lms.service;
+package vn.uit.lms.service.storage;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;

@@ -42,6 +42,31 @@ public class ChapterService {
         this.courseVersionService = courseVersionService;
     }
 
+    public Chapter validateChapterEditable(Long chapterId) {
+        Chapter chapter = this.chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found"));
+
+        CourseVersion courseVersion = chapter.getCourseVersion();
+        if (courseVersion == null) {
+            throw new ResourceNotFoundException("CourseVersion not found for chapter");
+        }
+
+        // ensure version is editable
+        courseVersion = this.courseVersionService.validateVersionEditable(courseVersion.getId());
+
+        Course course = courseVersion.getCourse();
+        if (course == null) {
+            throw new ResourceNotFoundException("Course not found for chapter's version");
+        }
+
+        courseService.validateCourse(course.getId());
+        courseService.verifyTeacher(course);
+
+        return chapter;
+
+    }
+
+
     @Transactional
     @EnableSoftDeleteFilter
     public ChapterDto createNewChapter(ChapterRequest chapterRequest, Long courseId, Long courseVersionId) {

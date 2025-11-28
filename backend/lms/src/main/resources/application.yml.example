@@ -97,5 +97,5 @@ cloudinary:
 minio:
   url: ${MINIO_URL:http://localhost:9000}
   bucket: ${MINIO_BUCKET:lms-videos}
-  username: ${MINIO_USERNAME:minioadmin}
-  password: ${MINIO_PASSWORD:minioadmin123}
+  username: ${MINIO_ROOT_USER:minioadmin}
+  password: ${MINIO_ROOT_PASSWORD:minioadmin123}

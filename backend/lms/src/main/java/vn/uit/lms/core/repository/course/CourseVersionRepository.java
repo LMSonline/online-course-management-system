@@ -15,5 +15,6 @@ public interface CourseVersionRepository extends JpaRepository<CourseVersion, Lo
     List<CourseVersion> findAllByCourseAndDeletedAtIsNull(Course course);
     List<CourseVersion> findAllByCourseAndDeletedAtIsNotNull(Course course);
     Optional<CourseVersion> findByIdAndDeletedAtIsNull(Long id);
+    boolean existsByIdAndDeletedAtIsNull(Long id);
 
 }
