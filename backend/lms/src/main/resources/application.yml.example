@@ -35,8 +35,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 2GB
+      max-request-size: 2GB
 
   task:
     execution:
@@ -77,8 +77,8 @@ app:
       - image/webp
     folder: avatars
 
-  Metadata:
-    author: "© 2024 Group 5 / VN.UIT.LMS"
+  metadata:
+    author: "© 2025 Group 5 / VN.UIT.LMS"
     license: "Proprietary API – All rights reserved"
     version: "v1.0.0"
 
@@ -93,3 +93,9 @@ cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:CHANGE_ME}
   api-key: ${CLOUDINARY_API_KEY:CHANGE_ME}
   api-secret: ${CLOUDINARY_API_SECRET:CHANGE_ME}
+
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  bucket: ${MINIO_BUCKET:lms-videos}
+  username: ${MINIO_ROOT_USER:minioadmin}
+  password: ${MINIO_ROOT_PASSWORD:minioadmin123}

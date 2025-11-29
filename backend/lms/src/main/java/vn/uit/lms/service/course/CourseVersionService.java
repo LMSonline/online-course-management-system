@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,28 +35,39 @@ import java.util.stream.Collectors;
 public class CourseVersionService {
 
     private final CourseVersionRepository courseVersionRepository;
-    private final CourseRepository courseRepository;
     private final CourseService courseService;
     private final AccountService accountService;
     private final ApplicationEventPublisher eventPublisher;
 
     public CourseVersionService(CourseVersionRepository courseVersionRepository,
-                                CourseRepository courseRepository,
                                 CourseService courseService,
                                 AccountService accountService,
                                 ApplicationEventPublisher eventPublisher) {
         this.courseVersionRepository = courseVersionRepository;
-        this.courseRepository = courseRepository;
         this.courseService = courseService;
         this.accountService = accountService;
         this.eventPublisher = eventPublisher;
     }
 
+    public CourseVersion validateVersionEditable(Long versionId){
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        if (!version.isDraft() && !version.isRejected()) {
+            throw new InvalidRequestException("Only draft or rejected versions can be modified.");
+        }
+
+        return version;
+    }
+
+    public boolean isAvailableVersion(Long versionId){
+        return courseVersionRepository.existsByIdAndDeletedAtIsNull(versionId);
+    }
+
     @Transactional
     public CourseVersionResponse createCourseVersion(Long courseId, CourseVersionRequest request) {
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course = courseService.validateCourse(courseId);
 
         courseService.verifyTeacher(course);
 
@@ -92,8 +104,7 @@ public class CourseVersionService {
 
     @EnableSoftDeleteFilter
     public List<CourseVersionResponse> getCourseVersions(Long courseId){
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course = courseService.validateCourse(courseId);
 
         courseService.verifyTeacher(course);
 
@@ -103,8 +114,7 @@ public class CourseVersionService {
     }
 
     public List<CourseVersionResponse> getDeletedCourseVersions(Long courseId){
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course = courseService.validateCourse(courseId);
 
         courseService.verifyTeacher(course);
 
@@ -116,8 +126,7 @@ public class CourseVersionService {
     @EnableSoftDeleteFilter
     public CourseVersionResponse getCourseVersionById(Long courseId, Long versionId){
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course = courseService.validateCourse(courseId);
 
         courseService.verifyTeacher(course);
 
@@ -129,8 +138,7 @@ public class CourseVersionService {
     @Transactional
     @EnableSoftDeleteFilter
     public CourseVersionResponse submitCourseVersionToApprove(Long courseId, Long versionId) {
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course =  courseService.validateCourse(courseId);
 
         courseService.verifyTeacher(course);
 
@@ -153,8 +161,7 @@ public class CourseVersionService {
     @EnableSoftDeleteFilter
     public CourseVersionResponse approveCourseVersion(Long courseId, Long versionId){
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course =  courseService.validateCourse(courseId);
 
         Account account = accountService.validateCurrentAccountByRole(Role.ADMIN);
 
@@ -180,8 +187,7 @@ public class CourseVersionService {
     @EnableSoftDeleteFilter
     public CourseVersionResponse rejectCourseVersion(Long courseId, Long versionId, RejectRequest rejectRequest){
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course =  courseService.validateCourse(courseId);
 
         accountService.validateCurrentAccountByRole(Role.ADMIN);
 
@@ -205,8 +211,7 @@ public class CourseVersionService {
     @EnableSoftDeleteFilter
     public CourseVersionResponse publishCourseVersion(Long courseId, Long versionId){
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        Course course =  courseService.validateCourse(courseId);
 
         courseService.verifyTeacher(course);
 

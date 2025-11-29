@@ -64,6 +64,11 @@ public class CourseService {
         this.accountService = accountService;
         this.studentRepository = studentRepository;
     }
+    public Course validateCourse(Long courseId) {
+        return courseRepository.findByIdAndDeletedAtIsNull(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
+    }
 
     //verify teacher is owner of course
     public Teacher verifyTeacher(Course course) {
@@ -236,11 +241,11 @@ public class CourseService {
     @Transactional
     @EnableSoftDeleteFilter
     public CourseDetailResponse closeCourse(Long id) {
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+        Course course = validateCourse(id);
 
         verifyTeacher(course);
 
+        //missing check student active waiting for complete enrollment service
         course.setIsClosed(true);
         Course savedCourse = courseRepository.save(course);
         return CourseMapper.toCourseDetailResponse(savedCourse);
@@ -249,8 +254,7 @@ public class CourseService {
     @Transactional
     @EnableSoftDeleteFilter
     public CourseDetailResponse openCourse(Long id) {
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+        Course course = validateCourse(id);
 
         verifyTeacher(course);
 
@@ -263,8 +267,7 @@ public class CourseService {
     @EnableSoftDeleteFilter
     public CourseDetailResponse updateCourse(Long id, CourseUpdateRequest courseUpdateRequest) {
 
-        Course oldCourse = courseRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+        Course oldCourse = validateCourse(id);
 
         verifyTeacher(oldCourse);
 
@@ -377,10 +380,20 @@ public class CourseService {
     @EnableSoftDeleteFilter
     public void deleteCourse(Long id) {
         //miss check has student enrollment
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+        Course course = validateCourse(id);
+
+        if(course.getVersionPublish() != null) {
+            throw new InvalidRequestException("Course has published version, cannot delete");
+        }
+
+//*        //miss check student has enrollment
 
         verifyTeacher(course);
+
+        //check course had closed
+        if(course.getIsClosed().equals(Boolean.FALSE)) {
+            throw new InvalidRequestException("Course is must closed before delete");
+        }
 
         courseRepository.delete(course);
     }

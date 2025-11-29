@@ -16,7 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE chapters SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Chapter extends BaseEntity {
 
     @Id
@@ -35,4 +34,8 @@ public class Chapter extends BaseEntity {
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL)
     private List<Lesson> lessons = new ArrayList<>();
+
+    public int getTotalLessons() {
+        return lessons.size();
+    }
 }

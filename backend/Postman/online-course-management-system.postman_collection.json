@@ -1,0 +1,2517 @@
+{
+	"info": {
+		"_postman_id": "255af814-ddb2-446e-8640-9e09ca57c1ae",
+		"name": "online-course-management-system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39937345",
+		"_collection_link": "https://appmobileteam.postman.co/workspace/AppMobileTeam-Workspace~9aa01397-a977-40e3-b599-2c94ca452696/collection/45796574-255af814-ddb2-446e-8640-9e09ca57c1ae?action=share&source=collection_link&creator=39937345"
+	},
+	"item": [
+		{
+			"name": "Module Auth",
+			"item": [
+				{
+					"name": "register new account (ALL)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"trinhhoa\",\r\n    \"email\": \"trinhhoa.gl2005@gmail.com\",\r\n    \"password\": \"123456\",\r\n    \"role\": \"teacher\",\r\n    \"langKey\": \"vi\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/register",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify email (ALL)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/verify-email?token",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-email"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login (ALL)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "// {\r\n//     // email or username\r\n//     \"login\": \"admin\",\r\n//     \"password\": \"Admin@123\",\r\n//     \"deviceInfo\": \"Windows 10 Chrome 142.0\"\r\n// }\r\n\r\n// {\r\n//     // email or username\r\n//     \"login\": \"teacher\",\r\n//     \"password\": \"Teacher@123\",\r\n//     \"deviceInfo\": \"Windows 10 Chrome 142.0\"\r\n// }\r\n\r\n{\r\n    // email or username\r\n    \"login\": \"student\",\r\n    \"password\": \"Student@123\",\r\n    \"deviceInfo\": \"Windows 10 Chrome 142.0\"\r\n}\r\n\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout (ALL)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsbXMtc3lzdGVtIiwic3ViIjoidHJpbmhob2EuZ2wyMDA1QGdtYWlsLmNvbSIsImV4cCI6MTc2MTQxMTY2MywidG9rZW5fdHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NjEzMTE2NjN9.L2rBcLT6BPbV6By6eB23nk6aw9obUl4kREqvY2pBdcA\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/logout",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh token (ALL)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsbXMtc3lzdGVtIiwic3ViIjoidHJpbmhob2EuZ2wyMDA1QGdtYWlsLmNvbSIsImV4cCI6MTc2MTQxMTY2MywidG9rZW5fdHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NjEzMTE2NjN9.L2rBcLT6BPbV6By6eB23nk6aw9obUl4kREqvY2pBdcA\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/refresh",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "forgot password (ALL)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"trinhhoa.gl2005@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/password/forgot",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"password",
+								"forgot"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset password (ALL)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/password/reset?token",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"password",
+								"reset"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get current user login info (ALL)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/me",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "change password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"oldPassword\": \"12345678\",\r\n    \"newPassword\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/auth/password/change",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"password",
+								"change"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Module Account",
+			"item": [
+				{
+					"name": "account action log",
+					"item": [
+						{
+							"name": "get account action logs (ADMIN)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/api/v1/admin/accounts/3/logs",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"accounts",
+										"3",
+										"logs"
+									],
+									"query": [
+										{
+											"key": "actionType",
+											"value": "APPROVE",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "get profile (ALL)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/accounts/me",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "upload avatar (ALL)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "-NI0Y-ICX/pexels-eberhardgross-1612351.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/accounts/me/avatar",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"me",
+								"avatar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update profile (ALL)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"fullName\": \"Nguyen Van A\",\r\n  \"birthDate\": \"2000-05-12\",\r\n  \"phone\": \"0901234567\",\r\n  \"bio\": \"A passionate developer who loves teaching and sharing knowledge.\",\r\n  \"gender\": \"MALE\",\r\n\r\n  // Teacher-only fields\r\n  \"specialty\": \"Artificial Intelligence\",\r\n  \"degree\": \"Master of Computer Science\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/accounts/me",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all account (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts?filter=deletedAt is not null",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "size",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "id,desc",
+									"disabled": true
+								},
+								{
+									"key": "filter",
+									"value": "deletedAt is not null"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get account profile by id (ADMIN)\\",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts/3",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "approve teacher account (ADMIN)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts/3/approve",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts",
+								"3",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update status account (ADMIN)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\":\"ACTIVE\",\r\n    \"reason\":\"tha cho đấy\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts/3/status",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts",
+								"3",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reject teacher account (ADMIN)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reason\": \"fake degree\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts/3/reject",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts",
+								"3",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "soft delete account (ADMIN)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts/2",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts",
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Module Course",
+			"item": [
+				{
+					"name": "Tag",
+					"item": [
+						{
+							"name": "create new tag (ADMIN)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\":\"blockchain\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/tags",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"tags"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all tags (ALL)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/tags",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"tags"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update tag (ADMIN)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"java\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/tags/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"tags",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "soft delete tag (ADMIN)",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/tags/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"tags",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all tags include deleted (ADMIN)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/tags",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"tags"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "restore tag had deleted (ADMIN))",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/tags/1/restore",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"tags",
+										"1",
+										"restore"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Category",
+					"item": [
+						{
+							"name": "create new category (ADMIN))",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Long Description Category\",\r\n  \"description\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce elementum, ipsum a facilisis lacinia, metus erat hendrerit nisl, nec consectetur tortor justo et risus. Integer vehicula cursus diam, vitae semper felis blandit sit amet. Phasellus pharetra, quam ac suscipit bibendum.\",\r\n  \"visible\": true\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/categories",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get category by id (ADMIN)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/categories/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"categories",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get category tree (ALL)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/categories/tree",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"categories",
+										"tree"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all category had deleted(ADMIN)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/categories/deleted",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"categories",
+										"deleted"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "soft delete category (ADMIN)",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/categories/3",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"categories",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "restore category had deleted (ADMIN)",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/categories/3/restore",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"categories",
+										"3",
+										"restore"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update category (ADMIN)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"React\",\r\n  \"code\": \"REACT\",\r\n  \"description\": \"Learn React.js and build modern web apps\",\r\n  \"parentId\": 1,\r\n  \"visible\": true\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/admin/categories/3",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"categories",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get category by id (ALL)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/categories/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"categories",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get category by slug (ALL)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/categories/slug/ui-ux-design",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"categories",
+										"slug",
+										"ui-ux-design"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Vesion",
+					"item": [
+						{
+							"name": "create new version",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{TEACHER_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"courseId\": 1,\r\n  \"title\": \"Introduction to Artificial Intelligence\",\r\n  \"description\": \"This course provides a comprehensive introduction to AI, covering machine learning, neural networks, and natural language processing.\",\r\n  \"price\": 199.99,\r\n  \"durationDays\": 30,\r\n  \"passScore\": 7.5,\r\n  \"finalWeight\": 0.4,\r\n  \"minProgressPct\": 50,\r\n  \"notes\": \"Recommended for beginners. No prior AI knowledge required.\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get list version of course",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{TEACHER_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get list version has deleted",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{TEACHER_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/deleted",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions",
+										"deleted"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get detail version",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": ""
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "submit version to approve",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/submit-approval",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions",
+										"1",
+										"submit-approval"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "approve version",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/approve",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions",
+										"1",
+										"approve"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "reject version",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/reject",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions",
+										"1",
+										"reject"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "publish version",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/publish",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"versions",
+										"1",
+										"publish"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get list course version pending",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": ""
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Module Course Content",
+					"item": []
+				},
+				{
+					"name": "Course Review",
+					"item": [
+						{
+							"name": "write review course",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"rating\": 1,\r\n    \"title\":\"heheh\",\r\n    \"content\": \"huhsus\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/reviews",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"reviews"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get list reviews of course",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/reviews",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"reviews"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update review",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/reviews/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"reviews",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete review",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/reviews/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"reviews",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get summary review",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/courses/1/rating-summary",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"1",
+										"rating-summary"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "create new course (TEACHER)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TEACHER_JWT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Blockchain cơ bản cho developer\",\r\n    \"shortDescription\": \"Khóa học giới thiệu blockchain, smart contract, và dApps.\",\r\n    \"categoryId\": 1,\r\n    \"teacherId\": 1,\r\n    \"isClosed\": false,\r\n    \"difficulty\": \"ADVANCED\",\r\n    \"metaTitle\": \"Blockchain cơ bản\",\r\n    \"metaDescription\": \"Học blockchain cơ bản và cách xây dựng ứng dụng phân tán.\",\r\n    \"seoKeywords\": \"Blockchain, Smart Contract, dApps, Developer\",\r\n    \"thumbnailUrl\": \"https://example.com/thumbnails/blockchain.png\",\r\n    \"isIndexed\": true,\r\n    \"tags\": [\"java\", \"Spring boot\", \"Backend\"]\r\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get courses active (ALL)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/courses",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all courses iclude deleted (ADMIN, TEACHER)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/admin/courses",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"courses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "open course (TEACHER)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses/1/open",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses",
+								"1",
+								"open"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "close course (TEACHER)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses/1/close",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses",
+								"1",
+								"close"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update course by id (TEACHER))",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Blockchain cơ bản cho developer\",\r\n    \"shortDescription\": \"Khóa học giới thiệu blockchain, smart contract, và dApps.\",\r\n    \"categoryId\": 1,\r\n    \"teacherId\": 1,\r\n    \"isClosed\": false,\r\n    \"difficulty\": \"ADVANCED\",\r\n    \"metaTitle\": \"Blockchain cơ bản\",\r\n    \"metaDescription\": \"Học blockchain cơ bản và cách xây dựng ứng dụng phân tán.\",\r\n    \"seoKeywords\": \"Blockchain, Smart Contract, dApps, Developer\",\r\n    \"thumbnailUrl\": \"https://example.com/thumbnails/blockchain.png\",\r\n    \"isIndexed\": true,\r\n    \"tags\": [\"blockchain\", \"spring boot\", \"Backend\"]\r\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses/1",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get course by slug (ALL)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/courses/lap-trinh-java-spring-boot-tu-a-z",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"courses",
+								"lap-trinh-java-spring-boot-tu-a-z"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "soft delete course (TEACHER))",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses/1",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "restore course (TEACHER)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses/1/restore",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses",
+								"1",
+								"restore"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get my courses (TEACHER)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/teacher/courses",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"teacher",
+								"courses"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Module Assessment",
+			"item": [
+				{
+					"name": "Question Bank",
+					"item": [
+						{
+							"name": "create question bank",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Java Basics\",\n  \"description\": \"Basic Java questions\",\n  \"isPublic\": true,\n  \"tags\": [\"java\", \"basics\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/teachers/1/question-banks",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"teachers",
+										"1",
+										"question-banks"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get question bank by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/question-banks/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"question-banks",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update question bank",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Java Basics Updated\",\n  \"description\": \"Updated description\",\n  \"isPublic\": false,\n  \"tags\": [\"java\", \"core\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/question-banks/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"question-banks",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete question bank",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/question-banks/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"question-banks",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all question banks",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/teachers/1/question-banks",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"teachers",
+										"1",
+										"question-banks"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Question",
+					"item": [
+						{
+							"name": "create question",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"questionBankId\": 1,\n  \"content\": \"What is Java?\",\n  \"type\": \"MULTIPLE_CHOICE\",\n  \"difficulty\": \"EASY\",\n  \"defaultMark\": 1.0,\n  \"explanation\": \"Java is a programming language.\",\n  \"answers\": [\n    {\"content\": \"A car\", \"isCorrect\": false},\n    {\"content\": \"A language\", \"isCorrect\": true}\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/question-banks/1/questions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"question-banks",
+										"1",
+										"questions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get question by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/questions/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update question",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"questionBankId\": 1,\n  \"content\": \"What is Java? Updated\",\n  \"type\": \"MULTIPLE_CHOICE\",\n  \"difficulty\": \"MEDIUM\",\n  \"defaultMark\": 2.0,\n  \"explanation\": \"Updated explanation.\",\n  \"answers\": [\n    {\"content\": \"A car\", \"isCorrect\": false},\n    {\"content\": \"A programming language\", \"isCorrect\": true}\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/questions/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete question",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/questions/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get questions by bank",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/question-banks/1/questions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"question-banks",
+										"1",
+										"questions"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Quiz",
+					"item": [
+						{
+							"name": "create quiz",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lessonId\": 1,\n  \"title\": \"Java Quiz 1\",\n  \"description\": \"First quiz\",\n  \"timeLimitMinutes\": 30,\n  \"passScore\": 5.0,\n  \"maxAttempts\": 3,\n  \"shuffleQuestions\": true,\n  \"questions\": [\n    {\"questionId\": 1, \"mark\": 1.0, \"orderIndex\": 0}\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/lessons/1/quizzes",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"lessons",
+										"1",
+										"quizzes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get quiz by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quizzes/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quizzes",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update quiz",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lessonId\": 1,\n  \"title\": \"Java Quiz 1 Updated\",\n  \"description\": \"Updated description\",\n  \"timeLimitMinutes\": 45,\n  \"passScore\": 6.0,\n  \"maxAttempts\": 5,\n  \"shuffleQuestions\": false,\n  \"questions\": [\n    {\"questionId\": 1, \"mark\": 2.0, \"orderIndex\": 0}\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quizzes/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quizzes",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete quiz",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quizzes/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quizzes",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get quizzes by lesson",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/lessons/1/quizzes",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"lessons",
+										"1",
+										"quizzes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Quiz Attempt",
+					"item": [
+						{
+							"name": "start quiz attempt",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quiz-attempts/start/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quiz-attempts",
+										"start",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "submit quiz attempt",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"answers\": [\n    {\"questionId\": 1, \"selectedOptionIds\": [1]}\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quiz-attempts/1/submit",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quiz-attempts",
+										"1",
+										"submit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get quiz attempt by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quiz-attempts/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quiz-attempts",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get quiz attempts by student",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quiz-attempts/student/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quiz-attempts",
+										"student",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get quiz attempts by quiz",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/quiz-attempts/quiz/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"quiz-attempts",
+										"quiz",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{TEACHER_JWT}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Module Assignment",
+			"item": [
+				{
+					"name": "Assignment",
+					"item": [
+						{
+							"name": "create assignment",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"chapterId\": 1,\n  \"title\": \"Assignment 1\",\n  \"description\": \"First assignment\",\n  \"type\": \"VIDEO\",\n  \"durationSeconds\": 3600,\n  \"contentUrl\": \"http://example.com/video.mp4\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/lessons/1/assignments",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"lessons",
+										"1",
+										"assignments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get assignment by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/assignments/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"assignments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update assignment",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"chapterId\": 1,\n  \"title\": \"Assignment 1 Updated\",\n  \"description\": \"Updated description\",\n  \"type\": \"READING\",\n  \"durationSeconds\": 1800,\n  \"contentUrl\": \"http://example.com/article.pdf\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/assignments/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"assignments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete assignment",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/assignments/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"assignments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get assignments by chapter",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/chapters/1/assignments",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"chapters",
+										"1",
+										"assignments"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Submission",
+					"item": [
+						{
+							"name": "create submission",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"assignmentId\": 1,\n  \"content\": \"My submission content\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/assignments/{assignmentId}/submit",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"assignments",
+										"{assignmentId}",
+										"submit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get submission by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/submissions/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"submissions",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "grade submission",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"grade\": 8.5,\n  \"feedback\": \"Good job!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/submissions/1/grade",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"submissions",
+										"1",
+										"grade"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get submissions by assignment",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/assignments/{assignmentId}/submissions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"assignments",
+										"{assignmentId}",
+										"submissions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get submissions by student",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/{studentId}/submissions",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"{studentId}",
+										"submissions"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Submission File",
+					"item": [
+						{
+							"name": "create submission file",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"submissionId\": 1,\n  \"fileId\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/submissions/{submissionId}/files/upload",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"submissions",
+										"{submissionId}",
+										"files",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete submission file",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/submissions/{submissionId}/files/{fileId}",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"submissions",
+										"{submissionId}",
+										"files",
+										"{fileId}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get submission files by submission",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/submissions/{submissionId}/files",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"submissions",
+										"{submissionId}",
+										"files"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{TEACHER_JWT}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "HelloWorld",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmluaGhvYS5nbDIwMDVAZ21haWwuY29tIiwicGVybWlzc2lvbnMiOlsiUk9MRV9VU0VSX0NSRUFURSIsIlJPTEVfVVNFUl9VUERBVEUiXSwiaXNzIjoibG1zLXN5c3RlbSIsImV4cCI6MTc2MTM5Nzk1NSwiaWF0IjoxNzYxMzExNTU1LCJ1c2VyIjp7ImFjY291bnRJZCI6MSwidXNlcm5hbWUiOiJ0cmluaGhvYSIsImVtYWlsIjoidHJpbmhob2EuZ2wyMDA1QGdtYWlsLmNvbSIsInJvbGUiOiJURUFDSEVSIn19.IDK-S7KkIiqKijVAa7YbE4LVJ0QglbHbEb9dTftPivg",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/ping",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"ping"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{ADMIN_JWT}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": ""
+		},
+		{
+			"key": "TEACHER_JWT",
+			"value": ""
+		},
+		{
+			"key": "ADMIN_JWT",
+			"value": ""
+		},
+		{
+			"key": "STUDENT_JWT",
+			"value": ""
+		}
+	]
+}

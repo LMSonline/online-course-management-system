@@ -1,9 +1,78 @@
 package vn.uit.lms.controller.course.content;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import vn.uit.lms.service.course.content.LessonService;
+import vn.uit.lms.shared.dto.request.course.content.CreateLessonRequest;
+import vn.uit.lms.shared.dto.request.course.content.UpdateVideoRequest;
+import vn.uit.lms.shared.dto.response.course.content.LessonDTO;
+import vn.uit.lms.shared.dto.response.course.content.RequestUploadUrlResponse;
+import vn.uit.lms.shared.util.annotation.TeacherOnly;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
+@Tag(name = "Lesson Management", description = "APIs for managing lessons and video uploads")
 public class LessonController {
+
+    private final LessonService lessonService;
+
+    @PostMapping("/chapters/{chapterId}/lessons")
+    @Operation(summary = "Create new lesson without video")
+    @TeacherOnly
+    public ResponseEntity<LessonDTO> createLesson(
+            @Valid @RequestBody CreateLessonRequest request,
+            @PathVariable("chapterId") Long chapterId
+    ) {
+        LessonDTO response = lessonService.createLesson(request, chapterId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/lessons/{lessonId}/request-upload-url")
+    @Operation(summary = "Request presigned URL for video upload")
+    @TeacherOnly
+    public ResponseEntity<RequestUploadUrlResponse> requestUploadUrl(
+            @PathVariable("lessonId") Long lessonId
+    ) {
+        RequestUploadUrlResponse response = lessonService.requestUploadUrl(lessonId);
+        return ResponseEntity.ok(response);
+    }
+
+//    @GetMapping("/lessons/{lessonId}/request-stream-url")
+//    @Operation(summary = "Request presigned URL for video streaming")
+//    @TeacherOnly
+//    public ResponseEntity<RequestUploadUrlResponse> requestStreamUrl(
+//            @PathVariable("lessonId") Long lessonId
+//    ) {
+//        RequestUploadUrlResponse response = lessonService.requestStreamUrl(lessonId);
+//        return ResponseEntity.ok(response);
+//    }
+
+
+    @GetMapping("/chapters/{chapterId}/lessons")
+    @Operation(summary = "Get all lessons of a chapter")
+    public ResponseEntity<List<LessonDTO>> getLessonsByChapter(
+            @PathVariable("chapterId") Long chapterId
+    ){
+        List<LessonDTO> lessons = lessonService.getLessonsByChapter(chapterId);
+        return ResponseEntity.ok(lessons);
+    }
+
+    @PostMapping ("/lessons/{lessonId}/upload-complete")
+    @Operation(summary = "Notify server of completed video upload")
+    @TeacherOnly
+    public ResponseEntity<LessonDTO> uploadComplete(
+            @PathVariable("lessonId") Long lessonId,
+            @Valid @RequestBody UpdateVideoRequest request
+    ) {
+        LessonDTO lessonDTO = lessonService.uploadVideoLessonComplete(lessonId, request);
+        return ResponseEntity.ok(lessonDTO);
+    }
 }

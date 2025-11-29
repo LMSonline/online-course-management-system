@@ -13,7 +13,6 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE lesson_resources SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class LessonResource extends BaseEntity {
 
     @Id
