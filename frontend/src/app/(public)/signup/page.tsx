@@ -1,4 +1,7 @@
 "use client";
+import { registerUser } from "@/services/public/auth.services";
+import { useRouter } from "next/navigation";
+import Popup from "@/core/components/public/Popup";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -12,7 +15,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 
-type Role = "learner" | "instructor";
+type Role = "student" | "teacher";
 
 export default function SignupPage() {
   const [showPw, setShowPw] = useState(false);
@@ -22,7 +25,14 @@ export default function SignupPage() {
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [agree, setAgree] = useState(false);
-  const [role, setRole] = useState<Role>("learner");
+  const [role, setRole] = useState<Role>("student");
+  const [popup, setPopup] = useState<null | {
+    title: string;
+    message: string;
+    actions?: React.ReactNode;
+  }>(null);
+
+  const router = useRouter();
 
   const pwCheck = useMemo(() => {
     const hasLength = pw.length >= 8;
@@ -58,13 +68,24 @@ export default function SignupPage() {
     pwCheck.strength >= 3
   );
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    // TODO: call API register với role, name, email, pw
-    // ví dụ: api.register({ name, email, password: pw, role })
-    alert(`Signed up as ${role}! (hook up API later)`);
+
+    try {
+      await registerUser({
+        name,
+        email,
+        password: pw,
+        role,
+      });
+
+      alert("Signup success! Check your email to verify.");
+    } catch (err: any) {
+      alert(err.message || "Signup failed");
+    }
   }
+
 
   return (
     <main className="min-h-[72vh]">
@@ -118,25 +139,25 @@ export default function SignupPage() {
             <div className="mb-5 flex gap-3">
               <button
                 type="button"
-                onClick={() => setRole("learner")}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "learner"
-                    ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
-                    : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
+                onClick={() => setRole("student")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "student"
+                  ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
+                  : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}
               >
                 <User className="size-4" />
-                Learner
+                Student
               </button>
               <button
                 type="button"
-                onClick={() => setRole("instructor")}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "instructor"
-                    ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
-                    : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
+                onClick={() => setRole("teacher")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "teacher"
+                  ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
+                  : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}
               >
                 <GraduationCap className="size-4" />
-                Instructor
+                Teacher
               </button>
             </div>
             <p className="text-xs text-slate-400 mb-4">
@@ -187,8 +208,8 @@ export default function SignupPage() {
                 <li key={idx} className="flex items-center gap-2">
                   <span
                     className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${rule.ok
-                        ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
-                        : "border-white/20 text-slate-500"
+                      ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
+                      : "border-white/20 text-slate-500"
                       }`}
                   >
                     <Check className="size-3" />
