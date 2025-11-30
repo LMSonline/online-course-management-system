@@ -1,5 +1,9 @@
 package vn.uit.lms.controller.course;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -14,6 +18,7 @@ import vn.uit.lms.shared.util.annotation.StudentOnly;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "Course Review Management", description = "APIs for managing course reviews and ratings")
 public class CourseReviewController {
 
     private CourseReviewService courseReviewService;
@@ -22,48 +27,57 @@ public class CourseReviewController {
         this.courseReviewService = courseReviewService;
     }
 
+    @Operation(summary = "Create a new review")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/reviews")
     @StudentOnly
     public ResponseEntity<CourseReviewResponse> createNewReview(
-            @PathVariable("courseId") Long courseId,
-            @Valid @RequestBody CourseReviewRequest courseReviewRequest
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Review details") @Valid @RequestBody CourseReviewRequest courseReviewRequest
     ) {
         CourseReviewResponse courseReviewResponse = courseReviewService.createNewReview(courseReviewRequest, courseId);
         return ResponseEntity.status(HttpStatus.CREATED).body(courseReviewResponse);
     }
 
+    @Operation(summary = "Get course reviews")
     @GetMapping("/courses/{courseId}/reviews")
     public ResponseEntity<PageResponse<CourseReviewResponse>> getCourseReviews(
-            @PathVariable("courseId") Long courseId,
-            Pageable pageable
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Pagination parameters") Pageable pageable
     ){
         PageResponse<CourseReviewResponse> response = courseReviewService.getCourseReviews(courseId, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @Operation(summary = "Update a review")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/courses/{courseId}/reviews/{reviewId}")
     @StudentOnly
     public ResponseEntity<CourseReviewResponse> updateReview(
-            @PathVariable Long courseId,
-            @PathVariable Long reviewId,
-            @Valid @RequestBody CourseReviewRequest request
+            @Parameter(description = "Course ID") @PathVariable Long courseId,
+            @Parameter(description = "Review ID") @PathVariable Long reviewId,
+            @Parameter(description = "Updated review details") @Valid @RequestBody CourseReviewRequest request
     ) {
         CourseReviewResponse updated = courseReviewService.updateReview(courseId, reviewId, request);
         return ResponseEntity.ok(updated);
     }
 
+    @Operation(summary = "Delete a review")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/courses/{courseId}/reviews/{reviewId}")
     @StudentOnly
     public ResponseEntity<Void> deleteReview(
-            @PathVariable Long courseId,
-            @PathVariable Long reviewId
+            @Parameter(description = "Course ID") @PathVariable Long courseId,
+            @Parameter(description = "Review ID") @PathVariable Long reviewId
     ) {
         courseReviewService.deleteReview(courseId, reviewId);
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get course rating summary")
     @GetMapping("/courses/{courseId}/rating-summary")
-    public ResponseEntity<RatingSummaryResponse> getRatingSummary(@PathVariable Long courseId) {
+    public ResponseEntity<RatingSummaryResponse> getRatingSummary(
+            @Parameter(description = "Course ID") @PathVariable Long courseId) {
         RatingSummaryResponse summary = courseReviewService.getRatingSummary(courseId);
         return ResponseEntity.ok(summary);
     }
