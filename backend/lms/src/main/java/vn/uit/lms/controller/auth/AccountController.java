@@ -1,24 +1,28 @@
 package vn.uit.lms.controller.auth;
 
 import com.turkraft.springfilter.boot.Filter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.AccountActionLog;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.shared.constant.AccountActionType;
 import vn.uit.lms.shared.constant.SecurityConstants;
-import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.RejectRequest;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
@@ -28,18 +32,17 @@ import vn.uit.lms.shared.dto.response.account.AccountResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.dto.response.log.AccountActionLogResponse;
 import vn.uit.lms.shared.exception.UnauthorizedException;
-import vn.uit.lms.shared.util.CloudinaryUtils;
 import vn.uit.lms.shared.util.JsonViewUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.view.Views;
 
-import java.time.Instant;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "Account Management", description = "APIs for managing user accounts and profiles")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 
     private final AccountService accountService;
@@ -49,18 +52,27 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+    @Operation(
+            summary = "Get current user profile",
+            description = "Retrieve the profile information of the currently authenticated user"
+    )
     @GetMapping("/accounts/me")
     @ApiMessage("Get profile of the authenticated user")
-    public ResponseEntity<ApiResponse<Object>> getProfile() {
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> getProfile() {
 
         AccountProfileResponse response = accountService.getProfile();
 
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(response));
     }
 
+    @Operation(
+            summary = "Upload user avatar",
+            description = "Upload a new avatar image for the authenticated user. Accepts JPG, PNG, and WEBP formats."
+    )
     @PostMapping(value = "/accounts/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload avatar for authenticated user")
     public ResponseEntity<UploadAvatarResponse> uploadAvatar(
+            @Parameter(description = "Avatar image file (JPG, PNG, WEBP)", required = true)
             @RequestParam("file") MultipartFile file) {
 
         String email = SecurityUtils.getCurrentUserLogin()
@@ -72,40 +84,61 @@ public class AccountController {
         return ResponseEntity.ok(res);
     }
 
+    @Operation(
+            summary = "Update user profile",
+            description = "Update profile information for the currently authenticated user"
+    )
     @PutMapping("/accounts/me")
     @ApiMessage("Update profile for authenticated user")
     public ResponseEntity<AccountProfileResponse> updateProfile(
-         @Valid @RequestBody UpdateProfileRequest profileRequest) {
+            @Parameter(description = "Updated profile information", required = true)
+            @Valid @RequestBody UpdateProfileRequest profileRequest) {
         AccountProfileResponse res = accountService.updateProfile(profileRequest);
         return ResponseEntity.ok(res);
 
     }
 
+    @Operation(
+            summary = "Get all accounts (Admin only)",
+            description = "Retrieve a paginated list of all user accounts with filtering support. Only accessible by administrators."
+    )
     @GetMapping("/admin/accounts")
     @ApiMessage("Get all accounts (Admin only)")
     @AdminOnly
     public ResponseEntity<PageResponse<AccountResponse>> getAllAccounts(
+            @Parameter(description = "Filter specification for accounts", hidden = true)
             @Filter Specification<Account> spec,
+            @Parameter(description = "Pagination parameters")
             Pageable pageable
             ) {
         PageResponse<AccountResponse> res = accountService.getAllAccounts(spec, pageable);
         return ResponseEntity.ok(res);
     }
 
+    @Operation(
+            summary = "Get account by ID (Admin only)",
+            description = "Retrieve detailed information about a specific account by its ID. Only accessible by administrators."
+    )
     @GetMapping("/admin/accounts/{id}")
     @ApiMessage("Get account by ID (Admin only)")
     @AdminOnly
-    public ResponseEntity<ApiResponse<Object>> getAccountById(
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> getAccountById(
+            @Parameter(description = "ID of the account to retrieve", required = true)
             @PathVariable Long id
     ) {
         AccountProfileResponse res = accountService.getAccountById(id);
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 
+    @Operation(
+            summary = "Approve teacher account (Admin only)",
+            description = "Approve a pending teacher account and activate it. Only accessible by administrators."
+    )
     @PatchMapping("/admin/accounts/{id}/approve")
     @ApiMessage("Approve teacher account (Admin only)")
     @AdminOnly
-    public ResponseEntity<ApiResponse<Object>> approveTeacherAccount(
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> approveTeacherAccount(
+            @Parameter(description = "ID of the teacher account to approve", required = true)
             @PathVariable Long id,
             HttpServletRequest request
     ) {
@@ -114,11 +147,18 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 
+    @Operation(
+            summary = "Reject teacher account (Admin only)",
+            description = "Reject a pending teacher account with a reason. Only accessible by administrators."
+    )
+
     @PatchMapping("/admin/accounts/{id}/reject")
     @ApiMessage("Reject teacher account (Admin only)")
     @AdminOnly
-    public ResponseEntity<ApiResponse<Object>> rejectTeacherAccount(
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> rejectTeacherAccount(
+            @Parameter(description = "ID of the teacher account to reject", required = true)
             @PathVariable Long id,
+            @Parameter(description = "Rejection details including reason", required = true)
             @Valid @RequestBody RejectRequest rejectRequest,
             HttpServletRequest request
             ) {
@@ -127,11 +167,17 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(result));
     }
 
+    @Operation(
+            summary = "Change account status (Admin only)",
+            description = "Update the status of an account (e.g., ACTIVE, SUSPENDED, DEACTIVATED). Only accessible by administrators."
+    )
     @PatchMapping("/admin/accounts/{id}/status")
     @ApiMessage("Change account status (Admin only)")
     @AdminOnly
-    public ResponseEntity<ApiResponse<Object>> changeAccountStatus(
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> changeAccountStatus(
+            @Parameter(description = "ID of the account to update", required = true)
             @PathVariable Long id,
+            @Parameter(description = "New status and reason for change", required = true)
             @Valid @RequestBody UpdateStatusRequest statusRequest,
             HttpServletRequest request
             ){
@@ -140,12 +186,19 @@ public class AccountController {
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 
+    @Operation(
+            summary = "Get account activity logs (Admin only)",
+            description = "Retrieve paginated activity logs for a specific account with optional filtering by action type. Only accessible by administrators."
+    )
     @GetMapping("/admin/accounts/{id}/logs")
     @ApiMessage("Get account activity logs by ID (Admin only)")
     @AdminOnly
     public ResponseEntity<PageResponse<AccountActionLogResponse>> getAccountActivityLogs(
+            @Parameter(description = "ID of the account", required = true)
             @PathVariable Long id,
-            @RequestParam(required = false)AccountActionType actionType,
+            @Parameter(description = "Filter by action type (optional)")
+            @RequestParam(required = false) AccountActionType actionType,
+            @Parameter(description = "Pagination parameters")
             Pageable pageable
             ){
         PageResponse<AccountActionLogResponse> res = accountService.getAccountActivityLogs(id, actionType, pageable);
@@ -153,10 +206,15 @@ public class AccountController {
     }
 
 
+    @Operation(
+            summary = "Delete account (Admin only)",
+            description = "Permanently delete an account by its ID. This action is irreversible. Only accessible by administrators."
+    )
     @DeleteMapping("/admin/accounts/{id}" )
     @ApiMessage("Delete account by ID (Admin only)")
     @AdminOnly
     public ResponseEntity<Void> deleteAccountById(
+            @Parameter(description = "ID of the account to delete", required = true)
             @PathVariable Long id,
             HttpServletRequest request
     ) {

@@ -1,11 +1,14 @@
 package vn.uit.lms.controller.course;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.uit.lms.core.entity.course.Tag;
 import vn.uit.lms.service.course.TagService;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.TagRequest;
@@ -13,7 +16,8 @@ import vn.uit.lms.shared.util.annotation.AdminOnly;
 
 @RestController
 @RequestMapping("/api/v1")
-public class  TagController {
+@Tag(name = "Tag Management", description = "APIs for managing course tags")
+public class TagController {
 
     private final TagService tagService;
 
@@ -21,44 +25,62 @@ public class  TagController {
         this.tagService = tagService;
     }
 
+    @Operation(summary = "Create a new tag")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/admin/tags")
     @AdminOnly
-    public ResponseEntity<Tag> createTag(@Valid @RequestBody TagRequest tagRequest) {
-        Tag createdTag = tagService.createTag(tagRequest);
+    public ResponseEntity<vn.uit.lms.core.entity.course.Tag> createTag(
+            @Parameter(description = "Tag details") @Valid @RequestBody TagRequest tagRequest) {
+        vn.uit.lms.core.entity.course.Tag createdTag = tagService.createTag(tagRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTag);
     }
 
+    @Operation(summary = "Get all active tags")
     @GetMapping("/tags")
-    public ResponseEntity<PageResponse<Tag>> getTags(Pageable pageable) {
-        PageResponse<Tag> tagsPage = tagService.getTagsActive(pageable);
+    public ResponseEntity<PageResponse<vn.uit.lms.core.entity.course.Tag>> getTags(
+            @Parameter(description = "Pagination parameters") Pageable pageable) {
+        PageResponse<vn.uit.lms.core.entity.course.Tag> tagsPage = tagService.getTagsActive(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
+    @Operation(summary = "Get all tags including deleted")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/admin/tags")
     @AdminOnly
-    public ResponseEntity<PageResponse<Tag>> getAllTags(Pageable pageable) {
-        PageResponse<Tag> tagsPage = tagService.getAllIncludingDeleted(pageable);
+    public ResponseEntity<PageResponse<vn.uit.lms.core.entity.course.Tag>> getAllTags(
+            @Parameter(description = "Pagination parameters") Pageable pageable) {
+        PageResponse<vn.uit.lms.core.entity.course.Tag> tagsPage = tagService.getAllIncludingDeleted(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
+    @Operation(summary = "Update a tag")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/admin/tags/{id}")
     @AdminOnly
-    public ResponseEntity<Tag> updateTag(@PathVariable Long id, @Valid @RequestBody TagRequest tagRequest) {
-        Tag updatedTag = tagService.updateTag(id, tagRequest);
+    public ResponseEntity<vn.uit.lms.core.entity.course.Tag> updateTag(
+            @Parameter(description = "Tag ID") @PathVariable Long id,
+            @Parameter(description = "Updated tag details") @Valid @RequestBody TagRequest tagRequest) {
+        vn.uit.lms.core.entity.course.Tag updatedTag = tagService.updateTag(id, tagRequest);
         return ResponseEntity.ok(updatedTag);
     }
 
+    @Operation(summary = "Delete a tag")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/admin/tags/{id}")
     @AdminOnly
-    public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTag(
+            @Parameter(description = "Tag ID") @PathVariable Long id) {
         tagService.deleteTag(id);
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Restore a deleted tag")
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/admin/tags/{id}/restore")
     @AdminOnly
-    public ResponseEntity<Tag> restoreTag(@PathVariable Long id) {
-        Tag restoredTag = tagService.restoreTag(id);
+    public ResponseEntity<vn.uit.lms.core.entity.course.Tag> restoreTag(
+            @Parameter(description = "Tag ID") @PathVariable Long id) {
+        vn.uit.lms.core.entity.course.Tag restoredTag = tagService.restoreTag(id);
         return ResponseEntity.ok(restoredTag);
     }
 }

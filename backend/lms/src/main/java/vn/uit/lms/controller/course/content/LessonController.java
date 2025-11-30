@@ -1,6 +1,8 @@
 package vn.uit.lms.controller.course.content;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,53 +26,45 @@ public class LessonController {
 
     private final LessonService lessonService;
 
+    @Operation(summary = "Create new lesson")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/chapters/{chapterId}/lessons")
-    @Operation(summary = "Create new lesson without video")
     @TeacherOnly
     public ResponseEntity<LessonDTO> createLesson(
-            @Valid @RequestBody CreateLessonRequest request,
-            @PathVariable("chapterId") Long chapterId
+            @Parameter(description = "Lesson details") @Valid @RequestBody CreateLessonRequest request,
+            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId
     ) {
         LessonDTO response = lessonService.createLesson(request, chapterId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/lessons/{lessonId}/request-upload-url")
     @Operation(summary = "Request presigned URL for video upload")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/lessons/{lessonId}/request-upload-url")
     @TeacherOnly
     public ResponseEntity<RequestUploadUrlResponse> requestUploadUrl(
-            @PathVariable("lessonId") Long lessonId
+            @Parameter(description = "Lesson ID") @PathVariable("lessonId") Long lessonId
     ) {
         RequestUploadUrlResponse response = lessonService.requestUploadUrl(lessonId);
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/lessons/{lessonId}/request-stream-url")
-//    @Operation(summary = "Request presigned URL for video streaming")
-//    @TeacherOnly
-//    public ResponseEntity<RequestUploadUrlResponse> requestStreamUrl(
-//            @PathVariable("lessonId") Long lessonId
-//    ) {
-//        RequestUploadUrlResponse response = lessonService.requestStreamUrl(lessonId);
-//        return ResponseEntity.ok(response);
-//    }
-
-
-    @GetMapping("/chapters/{chapterId}/lessons")
     @Operation(summary = "Get all lessons of a chapter")
+    @GetMapping("/chapters/{chapterId}/lessons")
     public ResponseEntity<List<LessonDTO>> getLessonsByChapter(
-            @PathVariable("chapterId") Long chapterId
+            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId
     ){
         List<LessonDTO> lessons = lessonService.getLessonsByChapter(chapterId);
         return ResponseEntity.ok(lessons);
     }
 
-    @PostMapping ("/lessons/{lessonId}/upload-complete")
     @Operation(summary = "Notify server of completed video upload")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/lessons/{lessonId}/upload-complete")
     @TeacherOnly
     public ResponseEntity<LessonDTO> uploadComplete(
-            @PathVariable("lessonId") Long lessonId,
-            @Valid @RequestBody UpdateVideoRequest request
+            @Parameter(description = "Lesson ID") @PathVariable("lessonId") Long lessonId,
+            @Parameter(description = "Video upload details") @Valid @RequestBody UpdateVideoRequest request
     ) {
         LessonDTO lessonDTO = lessonService.uploadVideoLessonComplete(lessonId, request);
         return ResponseEntity.ok(lessonDTO);
