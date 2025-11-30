@@ -2,6 +2,7 @@
 import "../styles/globals.css";
 import { ThemeProvider } from "next-themes";
 import type { Metadata } from "next";
+import AssistantWidget from "@/core/components/public/AssistantWidget";
 
 import Footer from "@/core/components/layout/Footer";
 
@@ -25,6 +26,7 @@ export default function RootLayout({
         >
           {/* Header sẽ do từng layout con (public/learner/...) quyết định */}
           {children}
+          <AssistantWidget />
           {/* Footer dùng chung cho toàn bộ app */}
           <Footer />
         </ThemeProvider>
