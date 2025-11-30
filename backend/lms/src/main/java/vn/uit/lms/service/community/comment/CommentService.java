@@ -11,11 +11,13 @@ import vn.uit.lms.core.repository.community.comment.CommentRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.dto.request.community.comment.CommentCreateRequest;
 import vn.uit.lms.shared.dto.response.community.comment.CommentResponse;
 import vn.uit.lms.shared.mapper.community.CommentMapper;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -110,7 +112,7 @@ public class CommentService {
     public List<CommentResponse> getCourseComments(Long courseId) {
 
         List<Comment> comments =
-                commentRepository.findByCourseIdAndParentIsNull(courseId);
+                commentRepository.findByCourseIdAndParentIsNullAndDeletedAtIsNull(courseId);
 
         return comments.stream()
                 .map(c -> CommentMapper.toResponse(c, getRepliesList(c.getId())))
@@ -123,7 +125,7 @@ public class CommentService {
     public List<CommentResponse> getLessonComments(Long lessonId) {
 
         List<Comment> comments =
-                commentRepository.findByLessonIdAndParentIsNull(lessonId);
+                commentRepository.findByLessonIdAndParentIsNullAndDeletedAtIsNull(lessonId);
 
         return comments.stream()
                 .map(c -> CommentMapper.toResponse(c, getRepliesList(c.getId())))
@@ -138,9 +140,63 @@ public class CommentService {
     }
 
     private List<CommentResponse> getRepliesList(Long parentId) {
-        return commentRepository.findByParentId(parentId)
+        return commentRepository.findByParentIdAndDeletedAtIsNull(parentId)
                 .stream()
                 .map(r -> CommentMapper.toResponse(r, List.of()))
                 .toList();
     }
+
+    // ---------------------------------------------------------
+// UPDATE COMMENT
+// ---------------------------------------------------------
+    @Transactional
+    public CommentResponse updateComment(Long id, CommentCreateRequest req) {
+
+        Account user = accountService.verifyCurrentAccount();
+
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+
+        boolean isOwner = comment.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Permission denied");
+        }
+
+
+        comment.setContent(req.getContent());
+
+        commentRepository.save(comment);
+
+        return CommentMapper.toResponse(comment, getRepliesList(id));
+    }
+
+    // ---------------------------------------------------------
+// DELETE COMMENT (SOFT DELETE - dùng BaseEntity.deleted_at)
+// ---------------------------------------------------------
+    @Transactional
+    public void deleteComment(Long id) {
+
+        Account user = accountService.verifyCurrentAccount();
+
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+
+        // Check permission
+        boolean isOwner = comment.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Permission denied");
+        }
+
+
+        commentRepository.delete(comment);
+
+    }
+
+
+
+
 }
