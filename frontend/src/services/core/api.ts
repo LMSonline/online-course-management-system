@@ -5,14 +5,19 @@ export async function apiClient(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {})
-    }
+      ...(options.headers || {}),
+    },
   });
 
-  const data = await res.json().catch(() => ({}));
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = {};
+  }
 
   if (!res.ok) {
-    throw new Error(data.message || "Request failed");
+    throw new Error(data?.message || "Request failed");
   }
 
   return data;

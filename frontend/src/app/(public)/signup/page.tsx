@@ -1,23 +1,19 @@
 "use client";
-import { registerUser } from "@/services/public/auth.services";
-import { useRouter } from "next/navigation";
-import Popup from "@/core/components/public/Popup";
 
-import { useMemo, useState } from "react";
+import { registerUser } from "@/services/public/auth.services";
+import Popup from "@/core/components/public/Popup";
+import { useRouter } from "next/navigation";
+
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import {
-  Mail,
-  Lock,
-  User,
-  Eye,
-  EyeOff,
-  Check,
-  GraduationCap,
-} from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Check, GraduationCap } from "lucide-react";
 
 type Role = "student" | "teacher";
 
 export default function SignupPage() {
+  const router = useRouter();
+
+  // States
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [name, setName] = useState("");
@@ -26,14 +22,10 @@ export default function SignupPage() {
   const [pw2, setPw2] = useState("");
   const [agree, setAgree] = useState(false);
   const [role, setRole] = useState<Role>("student");
-  const [popup, setPopup] = useState<null | {
-    title: string;
-    message: string;
-    actions?: React.ReactNode;
-  }>(null);
 
-  const router = useRouter();
+  const [popup, setPopup] = useState<null | any>(null);
 
+  // Password strength logic
   const pwCheck = useMemo(() => {
     const hasLength = pw.length >= 8;
     const hasUpper = /[A-Z]/.test(pw);
@@ -41,50 +33,84 @@ export default function SignupPage() {
     const hasNumber = /\d/.test(pw);
     const hasSymbol = /[^A-Za-z0-9]/.test(pw);
 
-    let s = 0;
-    if (hasLength) s++;
-    if (hasUpper) s++;
-    if (hasLower) s++;
-    if (hasNumber) s++;
-    if (hasSymbol) s++;
+    const score = [hasLength, hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
 
-    return {
-      strength: Math.min(s, 4), // 0..4
-      hasLength,
-      hasUpper,
-      hasLower,
-      hasNumber,
-      hasSymbol,
-    };
+    return { hasLength, hasUpper, hasLower, hasNumber, hasSymbol, strength: Math.min(score, 4) };
   }, [pw]);
 
   const mismatch = pw && pw2 && pw !== pw2;
-  const canSubmit = !!(
-    name &&
-    email &&
-    pw &&
-    !mismatch &&
-    agree &&
-    pwCheck.strength >= 3
-  );
 
-  async function handleSubmit(e: React.FormEvent) {
+  const canSubmit =
+    !!name &&
+    !!email &&
+    !!pw &&
+    pwCheck.strength >= 3 &&
+    !mismatch &&
+    agree;
+
+  // SUBMIT
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
     try {
       await registerUser({
-        name,
+        username: name,
         email,
         password: pw,
-        role,
+        role: role,
+        langKey: "vi",
       });
 
-      alert("Signup success! Check your email to verify.");
+      // SUCCESS POPUP
+      setPopup({
+        type: "success", // thêm dòng này để popup dùng icon success
+        title: "Account created",
+        message: "We've sent you a verification email. Please check your inbox.",
+        actions: (
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/login")}
+              className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
+            >
+              Go to Login
+            </button>
+
+            <button
+              onClick={() => setPopup(null)}
+              className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
+            >
+              Close
+            </button>
+          </div>
+        ),
+        onClose: () => setPopup(null),
+      });
+
+
     } catch (err: any) {
-      alert(err.message || "Signup failed");
+      let msg = "Đăng ký thất bại. Vui lòng thử lại.";
+
+      if (err.message.includes("constraint") || err.message.includes("email"))
+        msg = "Email đã tồn tại. Hãy dùng email khác.";
+
+      setPopup({
+        type: "error",
+        title: "Registration failed",
+        message: "Email already exists. Please try another one.",
+        actions: (
+          <button
+            onClick={() => setPopup(null)}
+            className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
+          >
+            Close
+          </button>
+        ),
+        onClose: () => setPopup(null),
+      });
+
     }
-  }
+  };
 
 
   return (
@@ -103,9 +129,9 @@ export default function SignupPage() {
               </p>
             </div>
 
-            {/* Full name */}
+            {/* User name */}
             <label htmlFor="name" className="block text-sm mb-2">
-              Full name
+              User name
             </label>
             <div className="relative mb-4">
               <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
@@ -113,7 +139,7 @@ export default function SignupPage() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder="Enter your username"
                 className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
               />
             </div>
@@ -361,6 +387,17 @@ export default function SignupPage() {
           </aside>
         </div>
       </section>
+      {/* POPUP RENDER */}
+      {popup && (
+        <Popup
+          type={popup.type}
+          title={popup.title}
+          message={popup.message}
+          actions={popup.actions}
+          open={true}
+          onClose={popup.onClose}
+        />
+      )}
     </main>
   );
 }
