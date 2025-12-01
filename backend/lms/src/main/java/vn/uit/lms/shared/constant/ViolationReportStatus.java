@@ -1,4 +1,8 @@
 package vn.uit.lms.shared.constant;
 
-public class ViolationReportStatus {
+public enum ViolationReportStatus {
+    PENDING,
+    IN_REVIEW,
+    DISMISSED,
+    ACTION_TAKEN
 }
