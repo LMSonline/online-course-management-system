@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.core.entity.community.comment.Comment;
@@ -15,7 +16,7 @@ import vn.uit.lms.shared.entity.BaseEntity;
 @Setter
 @Table(name = "violation_report")
 @SQLDelete(sql = "UPDATE violation_report SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-@Where(clause = "deleted_at IS NULL")
+@SQLRestriction("deleted_at IS NULL")
 public class ViolationReport extends BaseEntity {
 
     @Id
@@ -42,10 +43,11 @@ public class ViolationReport extends BaseEntity {
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
-    @JoinColumn(name = "report_type")
+    @Column(name = "report_type")
     private String reportType;
 
-    @Column(columnDefinition = "description")
+
+    @Column(name = "description" , columnDefinition = "TEXT")
     private String description;
 
 
