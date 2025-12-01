@@ -1,4 +1,5 @@
 package vn.uit.lms.controller.community;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class ViolationReportController {
     public ResponseEntity<ViolationReportDetailResponse> create(
             @RequestBody ViolationReportCreateRequest req
     ) {
+        System.out.println("=== DEBUG REQUEST ===");
+        System.out.println("Request received: " + req);
+        System.out.println("====================");
         return ResponseEntity.ok(vrService.create(req));
     }
 
