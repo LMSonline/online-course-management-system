@@ -41,7 +41,7 @@ public class ViolationReport extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "comment_id")
     private Comment comment;
-    @ManyToOne
+
     @JoinColumn(name = "report_type")
     private String reportType;
 
