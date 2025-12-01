@@ -66,3 +66,6 @@ gradle-wrapper.jar
 # Environment files
 .env
 .env.*
+
+# txt file
+tree.txt
