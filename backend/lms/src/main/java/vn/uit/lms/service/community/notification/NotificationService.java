@@ -66,7 +66,7 @@ public class NotificationService {
 
     public void delete(Long id, Long accountId) {
         Notification noti = get(id, accountId);
-        noti.setDeletedAt(Instant.from(LocalDateTime.now()));
+        noti.setDeletedAt(Instant.now());
         notificationRepository.save(noti);
     }
 
