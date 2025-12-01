@@ -369,6 +369,34 @@ public class AuthService {
         accountRepository.save(account);
     }
 
+    public void resendVerificationEmail(String email) {
+        Account accountDB = this.accountRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("Resend verification email failed: email not found [{}]", email);
+                    return new ResourceNotFoundException("User not found with email: " + email);
+                });
+
+        if (accountDB.getStatus() != AccountStatus.PENDING_EMAIL) {
+            log.warn("Resend verification email failed: account already activated [{}]", email);
+            throw new IllegalStateException("Account is already activated.");
+        }
+
+        String rawToken = UUID.randomUUID().toString();
+        Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
+        String hashedToken = TokenHashUtil.hashToken(rawToken);
+
+        EmailVerification verification = EmailVerification.builder()
+                .account(accountDB)
+                .tokenHash(hashedToken)
+                .tokenType(TokenType.VERIFY_EMAIL)
+                .expiresAt(expiresAt)
+                .isUsed(false)
+                .build();
+
+        emailVerificationRepository.save(verification);
+
+        eventPublisher.publishEvent(new AccountActiveEvent(accountDB, rawToken));
+    }
 
 
 

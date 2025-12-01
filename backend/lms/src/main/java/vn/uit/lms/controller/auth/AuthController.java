@@ -264,4 +264,21 @@ public class AuthController {
         log.info("Password change successful for user");
         return ResponseEntity.ok(null);
     }
+
+    @Operation(
+            summary = "Resend email verification link",
+            description = "Resend the email verification link to the specified email address."
+    )
+    @PostMapping("/resend-verification")
+    @ApiMessage("Resend email verification link")
+    public ResponseEntity<Void> resendVerificationEmail(
+            @Parameter(description = "Email address to resend verification link", required = true)
+            @Valid @RequestBody ResendVerifyEmailRequest request) {
+
+        String email = request.getEmail();
+        log.info("Resend verification email request for: {}", email);
+        this.authService.resendVerificationEmail(email);
+        log.info("Verification email resent to: {}", email);
+        return ResponseEntity.ok(null);
+    }
 }
