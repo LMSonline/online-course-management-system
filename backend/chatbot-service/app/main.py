@@ -16,6 +16,7 @@ from app.api.v1 import (
 )
 from app.core import logging as core_logging
 from app.core.settings import settings
+from app.core.exceptions import ChatbotException
 from app.services.context_manager import ensure_schema_initialized
 
 logger = core_logging.logger
@@ -83,6 +84,25 @@ app.include_router(admin_router.router, prefix="/api/v1", tags=["admin"])
 app.include_router(analytics_router.router, prefix="/api/v1/chat", tags=["analytics"])
 
 
+@app.exception_handler(ChatbotException)
+async def chatbot_exception_handler(request: Request, exc: ChatbotException):
+    """Handler for custom chatbot exceptions."""
+    request_id = getattr(request.state, "request_id", None)
+    core_logging.log_error(exc, context={"path": request.url.path, "error_code": exc.error_code})
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "error_code": exc.error_code,
+                "message": exc.message,
+                "details": exc.details,
+                "request_id": request_id,
+            }
+        },
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler for unhandled errors."""
@@ -93,8 +113,9 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": {
-                "type": "InternalServerError",
+                "error_code": "INTERNAL_SERVER_ERROR",
                 "message": "An internal error occurred. Please try again later.",
+                "details": {},
                 "request_id": request_id,
             }
         },
