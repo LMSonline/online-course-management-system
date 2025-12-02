@@ -7,6 +7,8 @@ import vn.uit.lms.shared.constant.ChannelStatus;
 import vn.uit.lms.shared.constant.ChannelType;
 import vn.uit.lms.shared.entity.BaseEntity;
 
+import java.time.Instant;
+
 @Entity
 @Getter
 @Setter
@@ -29,7 +31,7 @@ public class NotificationChannel extends BaseEntity {
     @Column(nullable = false)
     private ChannelStatus status = ChannelStatus.PENDING;
 
-    private java.time.LocalDateTime sentAt;
+    private Instant sentAt;
 
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
