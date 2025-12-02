@@ -135,6 +135,33 @@ services:
       timeout: 10s
       retries: 5
 
+  rs:
+    build:
+      context: ../recommendation-service         
+      dockerfile: Dockerfile  
+    container_name: rs-service
+    ports:
+      - "8002:8002"           
+    networks:
+      - lms-network          
+    restart: unless-stopped
+
+  chatbot:
+    build:
+      context: ../chatbot-service   
+      dockerfile: Dockerfile
+    container_name: chatbot-service
+    ports:
+      - "8003:8003"
+    environment:
+      RS_BASE_URL: http://rs-service:8002
+    depends_on:
+      - rs                     
+    networks:
+      - lms-network
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
     driver: local
@@ -147,13 +174,3 @@ networks:
   lms-network:
     driver: bridge
 
-rs:
-    build:
-      context: ../recommendation-service         
-      dockerfile: Dockerfile  
-    container_name: rs-service
-    ports:
-      - "8002:8002"           
-    networks:
-      - lms-network          
-    restart: unless-stopped
