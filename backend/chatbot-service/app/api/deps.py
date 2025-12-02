@@ -13,6 +13,7 @@ from app.infra.vector_store import (
 )
 from app.infra.llm_client import DummyLLMClient, LLMClient, Llama3Client
 from app.infra.rs_client import RecommendationClient
+from app.infra.chat_repositories import ChatMessageRepository, ChatSessionRepository
 
 
 @lru_cache
@@ -70,6 +71,16 @@ def get_rs_client() -> RecommendationClient:
 @lru_cache
 def get_retrieval_service() -> RetrievalService:
     return RetrievalService(store=get_vector_store())
+
+
+@lru_cache
+def get_session_repo() -> ChatSessionRepository:
+    return ChatSessionRepository()
+
+
+@lru_cache
+def get_message_repo() -> ChatMessageRepository:
+    return ChatMessageRepository()
 
 
 @lru_cache

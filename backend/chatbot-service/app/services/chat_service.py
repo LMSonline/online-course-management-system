@@ -1,6 +1,6 @@
 from typing import Optional
 import logging
-from app.domain.enums import Intent
+from app.domain.enums import Intent, Sender
 from app.domain.models import ChatSession
 from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
@@ -45,36 +45,64 @@ class ChatService:
         if current_course_id:
             session.current_course_id = current_course_id
 
+        # Save user message to DB
+        await self.context_manager.add_message(
+            session_id=session.id, sender=Sender.USER, text=text
+        )
+
+        # Load recent conversation history for context
+        history = await self.context_manager.get_recent_messages(session.id, limit=10)
+        history_context = self._build_history_context(history)
+
         intent = self.nlu.detect_intent(text)
 
         if intent == Intent.ASK_COURSE_QA:
-            reply = await self._handle_course_qa(session, text)
+            reply = await self._handle_course_qa(session, text, history_context)
         elif intent == Intent.ASK_GENERAL_QA:
-            reply = await self._handle_general_qa(text)
+            reply = await self._handle_general_qa(text, history_context)
         elif intent == Intent.ASK_RECOMMEND:
-            reply = await self._handle_recommend(user_id, text)
+            reply = await self._handle_recommend(user_id, text, history_context)
         elif intent == Intent.ASK_STUDY_PLAN:
-            reply = await self._handle_study_plan(session, text)
+            reply = await self._handle_study_plan(session, text, history_context)
         else:
             reply = await self._safe_generate(
-                f"Answer in a friendly way: {text}",
+                f"{history_context}\n\nUser: {text}\n\nAssistant:",
                 system_prompt="You are a helpful tutor for online courses.",
             )
+
+        # Save bot reply to DB
+        await self.context_manager.add_message(
+            session_id=session.id, sender=Sender.BOT, text=reply
+        )
 
         session.last_intent = intent.value
         await self.context_manager.update_session(session)
         return reply
+
+    def _build_history_context(self, history: list) -> str:
+        """Build a conversation history string from recent messages."""
+        if not history:
+            return ""
+        lines = []
+        for msg in history[-10:]:  # Last 10 messages
+            role = "User" if msg.sender == Sender.USER else "Assistant"
+            lines.append(f"{role}: {msg.text}")
+        return "\n".join(lines)
     
-    async def _handle_course_qa(self, session: ChatSession, question: str) -> str:
+    async def _handle_course_qa(
+        self, session: ChatSession, question: str, history_context: str = ""
+    ) -> str:
         if not session.current_course_id:
             return "Which course are you asking about? Please provide a course_id."
         params = RetrievalParams(course_ids=[session.current_course_id], top_k=5)
         docs = await self.retrieval_service.retrieve(question=question, params=params)
         context = "\n".join(d.content for d in docs)
         prompt = (
-            "You are a teaching assistant. Use the context below to answer the question.\n\n"
-            f"Context:\n{context}\n\nQuestion: {question}\n\n"
-            "Answer in a short, clear way."
+            f"{history_context}\n\n"
+            "Use the course content below to answer the question.\n\n"
+            f"Course content:\n{context}\n\n"
+            f"User question: {question}\n\n"
+            "Assistant:"
         )
         return await self._safe_generate(
             prompt,
@@ -84,17 +112,21 @@ class ChatService:
             ),
         )
     
-    async def _handle_general_qa(self, question: str) -> str:
+    async def _handle_general_qa(self, question: str, history_context: str = "") -> str:
         prompt = (
+            f"{history_context}\n\n"
             "Explain the following concept to a beginner student:\n\n"
-            f"{question}\n\nUse simple language."
+            f"User: {question}\n\n"
+            "Assistant:"
         )
         return await self._safe_generate(
             prompt,
             system_prompt="You explain technical concepts to beginners in a concise way.",
         )
     
-    async def _handle_recommend(self, user_id: str, text: str) -> str:
+    async def _handle_recommend(
+        self, user_id: str, text: str, history_context: str = ""
+    ) -> str:
         courses = await self.rs_client.get_home_recommendations(user_id)
         if not courses:
             return "I don't have any courses to recommend yet."
@@ -103,9 +135,11 @@ class ChatService:
             f"- {c.title}: {c.description}" for c in courses
         )
         prompt = (
-            "You are a course advisor. Based on the recommended courses below, "
-            "suggest 2–3 options and explain briefly why they are suitable.\n\n"
-            f"{summary}"
+            f"{history_context}\n\n"
+            "Based on the recommended courses below, suggest 2–3 options and explain briefly why they are suitable.\n\n"
+            f"Recommended courses:\n{summary}\n\n"
+            f"User: {text}\n\n"
+            "Assistant:"
         )
         return await self._safe_generate(
             prompt,
@@ -114,7 +148,9 @@ class ChatService:
             ),
         )
     
-    async def _handle_study_plan(self, session: ChatSession, text: str) -> str:
+    async def _handle_study_plan(
+        self, session: ChatSession, text: str, history_context: str = ""
+    ) -> str:
         if not session.current_course_id:
             return "To create a study plan, please tell me which course you want to study (course_id)."
         plan = await self.study_plan_service.generate_plan(
@@ -124,8 +160,10 @@ class ChatService:
             f"Day {item.day}: {', '.join(item.lessons)}" for item in plan
         )
         prompt = (
+            f"{history_context}\n\n"
             "Turn the following rough plan into a friendly study plan for the student:\n\n"
-            f"{raw}"
+            f"{raw}\n\n"
+            "Assistant:"
         )
         return await self._safe_generate(
             prompt,

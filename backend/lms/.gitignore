@@ -69,3 +69,24 @@ gradle-wrapper.jar
 
 # txt file
 tree.txt
+
+# IDE
+.idea/
+*.iml
+*.iws
+out/
+.vscode/
+
+# Gradle
+.gradle/
+build/
+
+# Hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Config local
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml
