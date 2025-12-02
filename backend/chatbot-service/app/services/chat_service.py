@@ -4,7 +4,7 @@ from app.domain.models import ChatSession
 from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
 from app.services.study_plan_service import StudyPlanService
-from app.infra.vector_store import InMemoryVectorStore
+from app.infra.vector_store import VectorStore
 from app.infra.llm_client import LLMClient
 from app.infra.rs_client import RecommendationClient
 
@@ -14,7 +14,7 @@ class ChatService:
         self,
         nlu: NLUService,
         context_manager: ContextManager,
-        vector_store: InMemoryVectorStore,
+        vector_store: VectorStore,
         llm: LLMClient,
         rs_client: RecommendationClient,
         study_plan_service: StudyPlanService,
