@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Union
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 
-from app.domain.models import Course
+from app.domain.models import Course, RecommendedCourse, RecommendationResponse
 from app.services.recommendation_service import RecommendationService
 from app.api.deps import get_recommendation_service
 
@@ -11,17 +11,25 @@ router = APIRouter()
 
 @router.get(
     "/recommendations/home",
-    response_model=List[Course],
+    response_model=Union[List[Course], RecommendationResponse],
     summary="Get home-page course recommendations for a user",
 )
 async def get_home_recommendations(
     user_id: str = Query(..., description="LMS user id"),
+    explain: bool = Query(False, description="Include explainable reasons"),
     service: RecommendationService = Depends(get_recommendation_service),
 ):
     """
     Trả về danh sách khóa học gợi ý cho user trên trang Home.
+
+    If explain=True, returns RecommendedCourse objects with human-readable reasons.
     """
-    return await service.get_home_recommendations(user_id=user_id)
+    result = await service.get_home_recommendations(
+        user_id=user_id, top_k=5, explain=explain
+    )
+    if explain:
+        return RecommendationResponse(recommendations=result)
+    return result
 
 
 @router.get(
