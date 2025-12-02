@@ -19,10 +19,8 @@ import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.service.event.AccountStatusChangeEvent;
-import vn.uit.lms.shared.constant.AccountActionType;
-import vn.uit.lms.shared.constant.AccountStatus;
-import vn.uit.lms.shared.constant.Role;
-import vn.uit.lms.shared.constant.SecurityConstants;
+import vn.uit.lms.shared.annotation.Audit;
+import vn.uit.lms.shared.constant.*;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
@@ -196,6 +194,7 @@ public class AccountService {
      * Update the profile details of the currently logged-in user.
      */
     @Transactional
+    @Audit(table = "accounts", action = AuditAction.UPDATE)
     public AccountProfileResponse updateProfile(@Valid UpdateProfileRequest req) {
         String email = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))

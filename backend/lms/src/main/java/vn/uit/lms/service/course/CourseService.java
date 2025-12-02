@@ -18,7 +18,9 @@ import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.course.TagRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.helper.SEOHelper;
+import vn.uit.lms.shared.annotation.Audit;
 import vn.uit.lms.shared.constant.AccountStatus;
+import vn.uit.lms.shared.constant.AuditAction;
 import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.PageResponse;
@@ -131,6 +133,7 @@ public class CourseService {
 
     @Transactional
     @EnableSoftDeleteFilter
+    @Audit(table = "course", action = AuditAction.INSERT)
     public CourseDetailResponse createCourse(CourseRequest courseRequest) {
 
         Course newCourse = new Course();
@@ -261,6 +264,7 @@ public class CourseService {
 
     @Transactional
     @EnableSoftDeleteFilter
+    @Audit(table = "courses", action = AuditAction.UPDATE)
     public CourseDetailResponse updateCourse(Long id, CourseUpdateRequest courseUpdateRequest) {
 
         Course oldCourse = courseRepository.findByIdAndDeletedAtIsNull(id)
@@ -375,6 +379,7 @@ public class CourseService {
 
     @Transactional
     @EnableSoftDeleteFilter
+    @Audit(table = "courses", action = AuditAction.DELETE)
     public void deleteCourse(Long id) {
         //miss check has student enrollment
         Course course = courseRepository.findByIdAndDeletedAtIsNull(id)
@@ -386,6 +391,7 @@ public class CourseService {
     }
 
     @Transactional
+    @Audit(table = "courses", action = AuditAction.RESTORE)
     public CourseDetailResponse restoreCourse(Long id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
@@ -425,6 +431,5 @@ public class CourseService {
                 coursePage.hasPrevious()
         );
     }
-
 
 }

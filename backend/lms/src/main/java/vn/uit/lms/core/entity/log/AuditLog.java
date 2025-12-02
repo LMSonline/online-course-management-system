@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import vn.uit.lms.shared.constant.AuditAction;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -21,11 +25,12 @@ public class AuditLog {
     @Enumerated(EnumType.STRING)
     private AuditAction action;
 
-    @Column(columnDefinition = "JSON")
+    @Column(name = "changed_data")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String changedData;
 
     private Long userAccountId;
     private String ipAddress;
 
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 }

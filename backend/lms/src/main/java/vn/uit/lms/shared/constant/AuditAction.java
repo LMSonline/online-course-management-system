@@ -1,5 +1,5 @@
 package vn.uit.lms.shared.constant;
 
 public enum AuditAction {
-    INSERT, UPDATE, DELETE, CREATE, RESTORE;
+    INSERT, UPDATE, DELETE, RESTORE;
 }

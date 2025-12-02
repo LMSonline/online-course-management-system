@@ -3,7 +3,7 @@ package vn.uit.lms.shared.aop;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.*;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
@@ -35,28 +35,52 @@ public class AuditAspect {
         String table = audit.table();
         AuditAction action = audit.action();
 
+        // GET REQUEST BODY (DTO)
+        Object requestBody = extractRequestBody(joinPoint.getArgs());
+
         Object result = joinPoint.proceed();
 
+        // GET RECORD ID FROM RESULT
         String recordId = extractRecordId(result);
+
         String ip = request.getRemoteAddr();
         Optional<Long> userId = SecurityUtils.getCurrentUserId();
 
         AuditLog logEntry = new AuditLog();
         logEntry.setAction(action);
         logEntry.setIpAddress(ip);
-        logEntry.setRecordId(recordId);
         logEntry.setTableName(table);
+        logEntry.setRecordId(recordId);
         logEntry.setUserAccountId(userId.orElse(null));
-
-        // changedData = đối tượng mới (JSON)
-        logEntry.setChangedData(helper.toJson(result));
         logEntry.setCreatedAt(LocalDateTime.now());
+
+        // SAVE JSON FOR REQUEST BODY ONLY
+        logEntry.setChangedData(helper.toJson(requestBody));
 
         auditRepo.save(logEntry);
 
         return result;
     }
 
+    // ----------- REQUEST BODY CHỈ NHẬN DTO -------------
+    private Object extractRequestBody(Object[] args) {
+        if (args.length == 0) return null;
+
+        Object first = args[0];
+
+        if (first == null) return null;
+
+        String pkg = first.getClass().getPackageName();
+
+        // CHỈ LOG request DTO (tránh Pageable, Specification)
+        if (pkg.contains(".dto.request")) {
+            return first;
+        }
+
+        return null;
+    }
+
+    // ----------- LẤY recordId từ RESPONSE -------------
     private String extractRecordId(Object result) {
         if (result == null) return null;
 
