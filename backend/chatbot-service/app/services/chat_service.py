@@ -26,4 +26,32 @@ class ChatService:
         self.rs_client = rs_client
         self.study_plan_service = study_plan_service
 
+    async def handle_message(
+        self,
+        session_id: str,
+        user_id: str,
+        text: str,
+        current_course_id: Optional[str] = None,
+    ) -> str:
+        session = await self.context_manager.get_session(session_id, user_id)
+        if current_course_id:
+            session.current_course_id = current_course_id
+
+        intent = self.nlu.detect_intent(text)
+
+        if intent == Intent.ASK_COURSE_QA:
+            reply = await self._handle_course_qa(session, text)
+        elif intent == Intent.ASK_GENERAL_QA:
+            reply = await self._handle_general_qa(text)
+        elif intent == Intent.ASK_RECOMMEND:
+            reply = await self._handle_recommend(user_id, text)
+        elif intent == Intent.ASK_STUDY_PLAN:
+            reply = await self._handle_study_plan(session, text)
+        else:
+            reply = await self.llm.generate(f"Answer in a friendly way: {text}")
+
+        session.last_intent = intent.value
+        await self.context_manager.update_session(session)
+        return reply
+
 
