@@ -53,5 +53,19 @@ class ChatService:
         session.last_intent = intent.value
         await self.context_manager.update_session(session)
         return reply
+    
+    async def _handle_course_qa(self, session: ChatSession, question: str) -> str:
+        if not session.current_course_id:
+            return "Which course are you asking about? Please provide a course_id."
+        docs = await self.vector_store.retrieve_for_course(
+            session.current_course_id, question, k=5
+        )
+        context = "\n".join(d.content for d in docs)
+        prompt = (
+            "You are a teaching assistant. Use the context below to answer the question.\n\n"
+            f"Context:\n{context}\n\nQuestion: {question}\n\n"
+            "Answer in a short, clear way."
+        )
+        return await self.llm.generate(prompt)
 
 
