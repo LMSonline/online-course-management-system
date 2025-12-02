@@ -5,6 +5,7 @@ from app.domain.models import ChatSession
 from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
 from app.services.study_plan_service import StudyPlanService
+from app.services.retrieval_service import RetrievalParams, RetrievalService
 from app.infra.vector_store import VectorStore
 from app.infra.llm_client import LLMClient
 from app.infra.rs_client import RecommendationClient
@@ -27,6 +28,7 @@ class ChatService:
         self.nlu = nlu
         self.context_manager = context_manager
         self.vector_store = vector_store
+        self.retrieval_service = RetrievalService(store=vector_store)
         self.llm_primary = llm_primary
         self.llm_fallback = llm_fallback
         self.rs_client = rs_client
@@ -66,9 +68,8 @@ class ChatService:
     async def _handle_course_qa(self, session: ChatSession, question: str) -> str:
         if not session.current_course_id:
             return "Which course are you asking about? Please provide a course_id."
-        docs = await self.vector_store.retrieve_for_course(
-            session.current_course_id, question, k=5
-        )
+        params = RetrievalParams(course_ids=[session.current_course_id], top_k=5)
+        docs = await self.retrieval_service.retrieve(question=question, params=params)
         context = "\n".join(d.content for d in docs)
         prompt = (
             "You are a teaching assistant. Use the context below to answer the question.\n\n"

@@ -5,6 +5,7 @@ from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
 from app.services.study_plan_service import StudyPlanService
 from app.services.chat_service import ChatService
+from app.services.retrieval_service import RetrievalService
 from app.infra.vector_store import (
     InMemoryVectorStore,
     VectorStore,
@@ -64,6 +65,11 @@ def get_llm_clients() -> tuple[LLMClient, LLMClient]:
 @lru_cache
 def get_rs_client() -> RecommendationClient:
     return RecommendationClient()
+
+
+@lru_cache
+def get_retrieval_service() -> RetrievalService:
+    return RetrievalService(store=get_vector_store())
 
 
 @lru_cache
