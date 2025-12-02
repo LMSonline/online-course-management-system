@@ -30,7 +30,12 @@ from typing import List
 import asyncpg
 
 from app.infra.embeddings import EmbeddingModel
-from app.infra.vector_store import DocumentChunk, InMemoryEmbeddingVectorStore, VectorStore
+from app.infra.vector_store import (
+    DocumentChunk,
+    InMemoryEmbeddingVectorStore,
+    FaissVectorStore,
+    VectorStore,
+)
 
 
 def build_lms_dsn() -> str:
@@ -111,7 +116,13 @@ async def async_main() -> None:
     print(f"Fetched {len(course_texts)} courses. Chunking & embedding...")
     embedding_model = EmbeddingModel()
 
-    store: VectorStore = InMemoryEmbeddingVectorStore()
+    backend = os.getenv("VECTOR_STORE_BACKEND", "inmemory").lower()
+    store: VectorStore
+    if backend == "faiss":
+        store = FaissVectorStore()
+    else:
+        # Default: in-memory embedding store (non-persistent)
+        store = InMemoryEmbeddingVectorStore()
 
     all_chunks: List[DocumentChunk] = []
     all_texts: List[str] = []
@@ -123,6 +134,11 @@ async def async_main() -> None:
                 id=f"{course.id}_{idx}",
                 course_id=course.id,
                 content=chunk_text,
+                # For now we don't split by lesson/section in this script;
+                # those can be added once the LMS schema is mapped in detail.
+                lesson_id=None,
+                section=None,
+                language=None,
             )
             all_chunks.append(chunk)
             all_texts.append(chunk_text)

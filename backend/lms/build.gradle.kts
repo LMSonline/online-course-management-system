@@ -10,7 +10,7 @@ description = "Online Learning Management System backend"
 
 java {
 	toolchain {
-		languageVersion.set(JavaLanguageVersion.of(21))
+		languageVersion.set(JavaLanguageVersion.of(17))
 	}
 }
 
