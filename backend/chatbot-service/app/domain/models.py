@@ -25,3 +25,8 @@ class Course(BaseModel):
     description: str
     level: str
     tags: List[str] = []
+
+
+class StudyPlanItem(BaseModel):
+    day: int
+    lessons: List[str]
