@@ -134,6 +134,11 @@ async def async_main() -> None:
                 id=f"{course.id}_{idx}",
                 course_id=course.id,
                 content=chunk_text,
+                # For now we don't split by lesson/section in this script;
+                # those can be added once the LMS schema is mapped in detail.
+                lesson_id=None,
+                section=None,
+                language=None,
             )
             all_chunks.append(chunk)
             all_texts.append(chunk_text)

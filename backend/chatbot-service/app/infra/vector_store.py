@@ -23,6 +23,10 @@ class DocumentChunk(BaseModel):
     id: str
     course_id: str
     content: str
+    lesson_id: Optional[str] = None
+    section: Optional[str] = None
+    language: Optional[str] = None
+    score: Optional[float] = None  # filled at query time (vector/BM25/hybrid)
 
 
 class VectorStore(ABC):
@@ -249,16 +253,18 @@ class FaissVectorStore(VectorStore):
         # Search top N globally, then filter by course_id
         top_n = min(len(self.docs), max(k * 5, k))
         scores, indices = self.index.search(q_vec, top_n)
+        scores = scores[0]
         indices = indices[0]
 
         results: List[DocumentChunk] = []
-        for idx in indices:
+        for idx, score in zip(indices, scores):
             if idx < 0 or idx >= len(self.docs):
                 continue
             doc = self.docs[idx]
             if doc.course_id != course_id:
                 continue
-            results.append(doc)
+            # Attach score for downstream hybrid ranking / debugging.
+            results.append(doc.copy(update={"score": float(score)}))
             if len(results) >= k:
                 break
 
