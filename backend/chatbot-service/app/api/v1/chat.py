@@ -12,6 +12,13 @@ class ChatRequest(BaseModel):
     text: str
     current_course_id: str | None = None
     debug: bool = False  # If True, include debug info (chunks used for RAG)
+    language: str | None = None  # Language hint (vi, en)
+    lesson_id: str | None = None  # Specific lesson ID
+    exam_date: str | None = None  # ISO format date for study plan
+    free_days_per_week: int | None = None  # For study plan
+    completed_lessons: list[str] | None = None  # For study plan
+    top_k: int | None = None  # Number of chunks to retrieve
+    score_threshold: float | None = None  # Minimum score threshold
 
 
 class ChunkDebugInfo(BaseModel):
@@ -38,12 +45,20 @@ async def post_message(
     req: ChatRequest,
     chat_service: ChatService = Depends(get_chat_service),
 ):
+    """Handle a chat message with optional parameters for enhanced features."""
     reply, debug_info = await chat_service.handle_message(
         session_id=req.session_id,
         user_id=req.user_id,
         text=req.text,
         current_course_id=req.current_course_id,
         debug=req.debug,
+        language=req.language,
+        lesson_id=req.lesson_id,
+        exam_date=req.exam_date,
+        free_days_per_week=req.free_days_per_week,
+        completed_lessons=req.completed_lessons,
+        top_k=req.top_k,
+        score_threshold=req.score_threshold,
     )
 
     response = ChatResponse(reply=reply)
