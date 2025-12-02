@@ -7,6 +7,8 @@ import lombok.Setter;
 import vn.uit.lms.core.entity.Account;
 import vn.uit.lms.shared.entity.BaseEntity;
 
+import java.time.Instant;
+
 @Entity
 @Getter
 @Setter
@@ -40,5 +42,6 @@ public class Notification extends BaseEntity {
     private Boolean isRead = false;
 
     @Column(name = "delivered_at")
-    private java.time.LocalDateTime deliveredAt;
+    private Instant deliveredAt;
+
 }
