@@ -146,3 +146,14 @@ volumes:
 networks:
   lms-network:
     driver: bridge
+
+rs:
+    build:
+      context: ../recommendation-service         
+      dockerfile: Dockerfile  
+    container_name: rs-service
+    ports:
+      - "8002:8002"           
+    networks:
+      - lms-network          
+    restart: unless-stopped
