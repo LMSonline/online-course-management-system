@@ -1,91 +1,70 @@
 """
 Offline training script for the two-tower recommendation model.
 
-Usage (from repo root or recommendation-service folder):
+Usage:
+    python -m app.scripts.train_two_tower --config configs/two_tower.yaml
 
+Or use default config:
     python -m app.scripts.train_two_tower
 
 This script:
-- Connects to Postgres using env vars:
-    RS_DB_HOST, RS_DB_PORT, RS_DB_NAME, RS_DB_USER, RS_DB_PASSWORD
-  (you can point these to the same LMS database or a dedicated RS DB).
-- Reads interaction events from a table assumed to be:
-    user_course_events(user_id TEXT, course_id TEXT, event_type TEXT, timestamp TIMESTAMPTZ)
-  You can adjust the loader if your schema is different.
-- Builds simple user & item feature vectors via UserFeatureEncoder / ItemFeatureEncoder.
-- Trains a very small two-tower model in PyTorch on CPU.
-- Saves model weights and item embeddings under `models/` by default.
+- Loads config from YAML file
+- Connects to Postgres using env vars or config
+- Reads interaction events from user_course_events table
+- Trains PyTorch two-tower model
+- Saves model weights and item embeddings
 """
 
 from __future__ import annotations
 
 import asyncio
 import os
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import yaml
 from torch.utils.data import DataLoader, Dataset
 
+# Add parent to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from app.domain.models import Course
+from app.encoders import ItemFeatureEncoder, UserFeatureEncoder
 from app.infra.datasets import PostgresInteractionLoader
-from app.infra.feature_encoders import ItemFeatureEncoder, UserFeatureEncoder
 from app.infra.repositories import InMemoryCourseRepository
+from app.models.two_tower import TwoTowerTorchModel
 
 
-MODELS_DIR = Path(os.getenv("RS_MODELS_DIR", "models"))
-MODELS_DIR.mkdir(parents=True, exist_ok=True)
+def load_config(config_path: str | None = None) -> dict:
+    """Load YAML config file."""
+    if config_path is None:
+        config_path = Path(__file__).parent.parent.parent / "configs" / "two_tower.yaml"
+    else:
+        config_path = Path(config_path)
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 
-def build_postgres_dsn() -> str:
-    host = os.getenv("RS_DB_HOST", "localhost")
-    port = os.getenv("RS_DB_PORT", "5432")
-    name = os.getenv("RS_DB_NAME", "lms")
-    user = os.getenv("RS_DB_USER", "postgres")
-    password = os.getenv("RS_DB_PASSWORD", "postgres")
+def build_postgres_dsn(config: dict) -> str:
+    """Build Postgres DSN from config or env vars."""
+    host = config.get("db_host") or os.getenv("RS_DB_HOST", "localhost")
+    port = config.get("db_port") or os.getenv("RS_DB_PORT", "5432")
+    name = config.get("db_name") or os.getenv("RS_DB_NAME", "lms")
+    user = config.get("db_user") or os.getenv("RS_DB_USER", "postgres")
+    password = config.get("db_password") or os.getenv("RS_DB_PASSWORD", "postgres")
     return f"postgresql://{user}:{password}@{host}:{port}/{name}"
 
 
-class TwoTowerTorchModel(nn.Module):
-    """
-    Minimal two-tower PyTorch model.
-
-    - user tower: simple MLP over user feature vector
-    - item tower: simple MLP over item feature vector
-    - training objective: dot-product similarity with negative sampling
-    """
-
-    def __init__(self, user_dim: int, item_dim: int, hidden_dim: int = 64, emb_dim: int = 32):
-        super().__init__()
-        self.user_tower = nn.Sequential(
-            nn.Linear(user_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, emb_dim),
-        )
-        self.item_tower = nn.Sequential(
-            nn.Linear(item_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, emb_dim),
-        )
-
-    def forward(self, user_x: torch.Tensor, pos_item_x: torch.Tensor, neg_item_x: torch.Tensor):
-        user_emb = self.user_tower(user_x)
-        pos_emb = self.item_tower(pos_item_x)
-        neg_emb = self.item_tower(neg_item_x)
-
-        pos_scores = (user_emb * pos_emb).sum(dim=-1)
-        neg_scores = (user_emb * neg_emb).sum(dim=-1)
-        return pos_scores, neg_scores
-
-
 class InteractionDataset(Dataset):
-    """
-    Simple dataset of (user_id, positive_course_id).
-
-    Negative items are sampled on the fly in the collate_fn.
-    """
+    """Dataset of (user_id, positive_course_id) pairs."""
 
     def __init__(self, pairs: List[Tuple[str, str]], all_course_ids: List[str]):
         self.pairs = pairs
@@ -104,6 +83,7 @@ def build_collate_fn(
     courses_by_id: Dict[str, Course],
     all_course_ids: List[str],
 ):
+    """Build collate function for DataLoader with negative sampling."""
     import random
 
     def collate(batch: List[Tuple[str, str]]):
@@ -112,16 +92,14 @@ def build_collate_fn(
         neg_feats: List[List[float]] = []
 
         for user_id, pos_cid in batch:
-            # Encode user
             user_feats.append(user_encoder.encode(user_id))
 
-            # Positive item
             pos_course = courses_by_id.get(pos_cid)
             if not pos_course:
                 continue
             pos_feats.append(item_encoder.encode(pos_course))
 
-            # Negative item sampling: random course != pos
+            # Negative sampling: random course != pos
             neg_cid = pos_cid
             while neg_cid == pos_cid:
                 neg_cid = random.choice(all_course_ids)
@@ -137,8 +115,20 @@ def build_collate_fn(
     return collate
 
 
-async def async_main(epochs: int = 5, batch_size: int = 64) -> None:
-    # 1) Load courses from repo (for now still in-memory; later this can be a DB-backed repo)
+async def async_main(config_path: str | None = None) -> None:
+    """Main training loop."""
+    config = load_config(config_path)
+    model_cfg = config["model"]
+    train_cfg = config["training"]
+    data_cfg = config.get("data", {})
+    output_cfg = config.get("output", {})
+
+    models_dir = Path(
+        os.getenv("RS_MODELS_DIR", output_cfg.get("models_dir", "models"))
+    )
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1) Load courses
     course_repo = InMemoryCourseRepository()
     courses: List[Course] = course_repo.list_courses()
     courses_by_id: Dict[str, Course] = {c.id: c for c in courses}
@@ -149,14 +139,19 @@ async def async_main(epochs: int = 5, batch_size: int = 64) -> None:
         return
 
     # 2) Load interactions from Postgres
-    dsn = build_postgres_dsn()
+    dsn = build_postgres_dsn(data_cfg)
     loader = PostgresInteractionLoader(dsn=dsn)
     interactions = await loader.fetch_interactions()
+
+    # Filter by event types if specified
+    event_types = data_cfg.get("event_types", ["view", "click", "enroll"])
+    interactions = [ev for ev in interactions if ev.event_type in event_types]
+
     if not interactions:
-        print("No interaction data found in user_course_events – aborting training.")
+        print("No interaction data found – aborting training.")
         return
 
-    # Build (user_id, course_id) pairs; ignore events for unknown courses
+    # Build (user_id, course_id) pairs
     pairs: List[Tuple[str, str]] = []
     for ev in interactions:
         if ev.course_id in courses_by_id:
@@ -172,20 +167,35 @@ async def async_main(epochs: int = 5, batch_size: int = 64) -> None:
     user_encoder = UserFeatureEncoder()
     item_encoder = ItemFeatureEncoder()
 
-    user_dim = user_encoder.feature_dim
-    item_dim = item_encoder.feature_dim
+    # 4) Model
+    model = TwoTowerTorchModel(
+        user_input_dim=model_cfg["user_input_dim"],
+        item_input_dim=model_cfg["item_input_dim"],
+        embedding_dim=model_cfg["embedding_dim"],
+        hidden_dims=model_cfg["hidden_dims"],
+    )
 
-    # 4) Model, loss, optimizer
-    model = TwoTowerTorchModel(user_dim=user_dim, item_dim=item_dim)
-    criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    # 5) Loss & optimizer
+    loss_type = train_cfg.get("loss_type", "bce")
+    if loss_type == "bce":
+        criterion = nn.BCEWithLogitsLoss()
+    else:
+        raise ValueError(f"Unsupported loss_type: {loss_type}")
 
-    # 5) Dataset & DataLoader
+    optimizer = optim.Adam(model.parameters(), lr=train_cfg["learning_rate"])
+
+    # 6) Dataset & DataLoader
     dataset = InteractionDataset(pairs=pairs, all_course_ids=all_course_ids)
     collate_fn = build_collate_fn(user_encoder, item_encoder, courses_by_id, all_course_ids)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=train_cfg["batch_size"],
+        shuffle=True,
+        collate_fn=collate_fn,
+    )
 
-    # 6) Training loop
+    # 7) Training loop
+    epochs = train_cfg["epochs"]
     model.train()
     for epoch in range(epochs):
         total_loss = 0.0
@@ -196,7 +206,6 @@ async def async_main(epochs: int = 5, batch_size: int = 64) -> None:
                 continue
 
             pos_scores, neg_scores = model(user_x, pos_x, neg_x)
-            # Labels: 1 for positive, 0 for negative
             y_pos = torch.ones_like(pos_scores)
             y_neg = torch.zeros_like(neg_scores)
 
@@ -212,38 +221,40 @@ async def async_main(epochs: int = 5, batch_size: int = 64) -> None:
         avg_loss = total_loss / max(num_batches, 1)
         print(f"Epoch {epoch + 1}/{epochs} - loss={avg_loss:.4f}")
 
-    # 7) Save model weights
-    model_path = MODELS_DIR / "two_tower_model.pt"
+    # 8) Save model weights
+    model_path = models_dir / "two_tower_model.pt"
     torch.save(model.state_dict(), model_path)
     print(f"Saved model weights to {model_path}")
 
-    # 8) Precompute and save item embeddings
+    # 9) Precompute and save item embeddings
     model.eval()
+    import numpy as np
+
     with torch.no_grad():
         item_matrix = []
         item_ids = []
         for cid, course in courses_by_id.items():
             feats = torch.tensor([item_encoder.encode(course)], dtype=torch.float32)
-            emb = model.item_tower(feats)[0]
+            emb = model.encode_item(feats)[0]
             item_matrix.append(emb.numpy())
             item_ids.append(cid)
 
-    import numpy as np
-
     item_matrix_np = np.stack(item_matrix, axis=0)
-    np.save(MODELS_DIR / "item_embeddings.npy", item_matrix_np)
-    with open(MODELS_DIR / "item_ids.txt", "w", encoding="utf-8") as f:
+    np.save(models_dir / "item_embeddings.npy", item_matrix_np)
+    with open(models_dir / "item_ids.txt", "w", encoding="utf-8") as f:
         for cid in item_ids:
             f.write(cid + "\n")
 
-    print(f"Saved item embeddings to {MODELS_DIR}")
+    print(f"Saved item embeddings to {models_dir}")
 
 
 def main() -> None:
-    asyncio.run(async_main())
+    """CLI entry point."""
+    import sys
+
+    config_path = sys.argv[1] if len(sys.argv) > 1 else None
+    asyncio.run(async_main(config_path))
 
 
 if __name__ == "__main__":
     main()
-
-

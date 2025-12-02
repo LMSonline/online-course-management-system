@@ -55,6 +55,26 @@ class VectorStore(ABC):
         Retrieve the top-k relevant chunks for a specific course and question.
         """
 
+    async def list_chunks_by_course(self, course_id: str) -> List[DocumentChunk]:
+        """
+        List all chunks for a given course_id (for admin/debug purposes).
+
+        Default implementation: filter by course_id. Subclasses can override
+        for more efficient implementations.
+        """
+        # This is a default implementation that subclasses can override
+        raise NotImplementedError("Subclass must implement list_chunks_by_course")
+
+    async def delete_chunks_by_course(self, course_id: str) -> int:
+        """
+        Delete all chunks for a given course_id.
+
+        Returns the number of chunks deleted.
+
+        Default implementation: not supported. Subclasses must override.
+        """
+        raise NotImplementedError("Subclass must implement delete_chunks_by_course")
+
 
 class InMemoryVectorStore(VectorStore):
     """
@@ -98,6 +118,16 @@ class InMemoryVectorStore(VectorStore):
         # For now we ignore the question and only filter by course_id.
         return [d for d in self.docs if d.course_id == course_id][:k]
 
+    async def list_chunks_by_course(self, course_id: str) -> List[DocumentChunk]:
+        """List all chunks for a course."""
+        return [d for d in self.docs if d.course_id == course_id]
+
+    async def delete_chunks_by_course(self, course_id: str) -> int:
+        """Delete all chunks for a course."""
+        before = len(self.docs)
+        self.docs = [d for d in self.docs if d.course_id != course_id]
+        return before - len(self.docs)
+
 
 class InMemoryEmbeddingVectorStore(VectorStore):
     """
@@ -133,6 +163,24 @@ class InMemoryEmbeddingVectorStore(VectorStore):
         # Fallback: if no embeddings yet, behave like simple filter
         filtered = [d for d in self.docs if d.course_id == course_id]
         return filtered[:k]
+
+    async def list_chunks_by_course(self, course_id: str) -> List[DocumentChunk]:
+        """List all chunks for a course."""
+        return [d for d in self.docs if d.course_id == course_id]
+
+    async def delete_chunks_by_course(self, course_id: str) -> int:
+        """Delete all chunks for a course, and remove corresponding embeddings."""
+        indices_to_keep = [
+            i for i, d in enumerate(self.docs) if d.course_id != course_id
+        ]
+        deleted_count = len(self.docs) - len(indices_to_keep)
+
+        if deleted_count > 0:
+            self.docs = [self.docs[i] for i in indices_to_keep]
+            if self.embeddings is not None:
+                self.embeddings = self.embeddings[indices_to_keep]
+
+        return deleted_count
 
 
 try:
@@ -269,6 +317,40 @@ class FaissVectorStore(VectorStore):
                 break
 
         return results
+
+    async def list_chunks_by_course(self, course_id: str) -> List[DocumentChunk]:
+        """List all chunks for a course."""
+        return [d for d in self.docs if d.course_id == course_id]
+
+    async def delete_chunks_by_course(self, course_id: str) -> int:
+        """
+        Delete all chunks for a course, rebuild index, and persist.
+
+        This is a simple implementation: reload from metadata excluding the course,
+        rebuild embeddings/index, and overwrite files.
+        """
+        indices_to_keep = [
+            i for i, d in enumerate(self.docs) if d.course_id != course_id
+        ]
+        deleted_count = len(self.docs) - len(indices_to_keep)
+
+        if deleted_count > 0:
+            self.docs = [self.docs[i] for i in indices_to_keep]
+            if self.embeddings is not None:
+                self.embeddings = self.embeddings[indices_to_keep]
+                # Rebuild FAISS index
+                if len(self.embeddings) > 0:
+                    dim = self.embeddings.shape[1]
+                    self.index = faiss.IndexFlatIP(dim)
+                    self.index.add(self.embeddings.astype("float32"))
+                else:
+                    self.index = None
+                    self.embeddings = None
+
+            # Persist changes
+            self._save()
+
+        return deleted_count
 
 
 # NOTE: Real vector store implementations (e.g. Chroma / FAISS) will live here too,
