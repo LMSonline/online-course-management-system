@@ -76,7 +76,11 @@ class InteractionLogger:
             self._pool = None
 
     async def log_recommendations(
-        self, user_id: str, courses: List[Course], source: str = "home"
+        self,
+        user_id: str,
+        courses: List[Course],
+        source: str = "home",
+        metadata: Optional[dict] = None,
     ) -> None:
         """
         Log that recommendations were shown to a user.
@@ -85,19 +89,30 @@ class InteractionLogger:
             user_id: LMS user ID
             courses: List of recommended courses
             source: Where the recommendations came from (home, chatbot, etc.)
+            metadata: Optional metadata (e.g., strategy used)
         """
         pool = await self._get_pool()
         async with pool.acquire() as conn:
+            # Ensure table has metadata column
+            try:
+                await conn.execute("""
+                    ALTER TABLE user_course_events
+                    ADD COLUMN IF NOT EXISTS metadata JSONB
+                """)
+            except Exception:
+                pass  # Column might already exist
+            
             for course in courses:
                 await conn.execute(
                     """
-                    INSERT INTO user_course_events (user_id, course_id, event_type, source)
-                    VALUES ($1, $2, $3, $4)
+                    INSERT INTO user_course_events (user_id, course_id, event_type, source, metadata)
+                    VALUES ($1, $2, $3, $4, $5)
                     """,
                     user_id,
                     course.id,
                     "view",
                     source,
+                    metadata,
                 )
 
     async def log_click(self, user_id: str, course_id: str, source: str = "home") -> None:

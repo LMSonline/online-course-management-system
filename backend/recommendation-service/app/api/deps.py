@@ -7,6 +7,7 @@ from app.candidate import CandidateGenerator
 from app.ranking import RankingService
 from app.logging import InteractionLogger
 from app.services.recommendation_service import RecommendationService
+from app.online.update import OnlineUpdateService
 
 
 @lru_cache
@@ -59,6 +60,11 @@ def get_interaction_logger() -> InteractionLogger:
 
 
 @lru_cache
+def get_online_update_service() -> OnlineUpdateService:
+    return OnlineUpdateService()
+
+
+@lru_cache
 def get_recommendation_service() -> RecommendationService:
     return RecommendationService(
         course_repo=get_course_repo(),
@@ -68,4 +74,5 @@ def get_recommendation_service() -> RecommendationService:
         candidate_generator=get_candidate_generator(),
         ranking_service=get_ranking_service(),
         interaction_logger=get_interaction_logger(),
+        online_update_service=get_online_update_service(),
     )
