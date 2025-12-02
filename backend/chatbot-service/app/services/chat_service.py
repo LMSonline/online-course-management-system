@@ -67,5 +67,12 @@ class ChatService:
             "Answer in a short, clear way."
         )
         return await self.llm.generate(prompt)
+    
+    async def _handle_general_qa(self, question: str) -> str:
+        prompt = (
+            "Explain the following concept to a beginner student:\n\n"
+            f"{question}\n\nUse simple language."
+        )
+        return await self.llm.generate(prompt)
 
 
