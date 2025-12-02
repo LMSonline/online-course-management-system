@@ -5,9 +5,39 @@ Supports multiple environments via .env files:
 - .env.dev
 - .env.test
 - .env.prod
+
+Environment is determined by ENV variable or defaults to 'dev'.
+For tests, automatically uses 'test' profile with safe defaults.
 """
 
+import os
+from functools import lru_cache
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_env_file() -> str | None:
+    """
+    Determine which .env file to load based on ENV variable.
+    
+    Returns:
+        Path to .env file or None to use default .env
+    """
+    env = os.getenv("ENV", "dev").lower()
+    
+    # For tests, always use test profile
+    if "pytest" in os.environ.get("_", ""):
+        env = "test"
+    
+    env_file = f".env.{env}"
+    if Path(env_file).exists():
+        return env_file
+    
+    # Fallback to .env if profile-specific file doesn't exist
+    if Path(".env").exists():
+        return ".env"
+    
+    return None
 
 
 class Settings(BaseSettings):
@@ -61,13 +91,38 @@ class Settings(BaseSettings):
     LOG_FORMAT: str = "json"  # json | text
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=get_env_file(),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
+    def __init__(self, **kwargs):
+        """Initialize settings with environment-aware defaults."""
+        super().__init__(**kwargs)
+        
+        # Override defaults for test environment
+        if self.ENV.lower() == "test":
+            self.VECTOR_STORE_BACKEND = "inmemory"
+            self.LLM_PROVIDER = "dummy"
+            # Use in-memory or test DB defaults
+            if not self.CHAT_DB_NAME:
+                self.CHAT_DB_NAME = "test_chatbot"
+            if not self.LMS_DB_NAME:
+                self.LMS_DB_NAME = "test_lms"
 
-# Global settings instance
-settings = Settings()
+
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Get settings instance (cached).
+    
+    Returns:
+        Settings instance
+    """
+    return Settings()
+
+
+# Global settings instance (for backward compatibility)
+settings = get_settings()
 
