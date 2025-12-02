@@ -74,5 +74,20 @@ class ChatService:
             f"{question}\n\nUse simple language."
         )
         return await self.llm.generate(prompt)
+    
+    async def _handle_recommend(self, user_id: str, text: str) -> str:
+        courses = await self.rs_client.get_home_recommendations(user_id)
+        if not courses:
+            return "I don't have any courses to recommend yet."
+
+        summary = "\n".join(
+            f"- {c.title}: {c.description}" for c in courses
+        )
+        prompt = (
+            "You are a course advisor. Based on the recommended courses below, "
+            "suggest 2–3 options and explain briefly why they are suitable.\n\n"
+            f"{summary}"
+        )
+        return await self.llm.generate(prompt)
 
 
