@@ -53,7 +53,14 @@ class TestLoaders:
                     return mock_lessons
                 return []
             
-            mock_conn.fetch = AsyncMock(side_effect=mock_fetch_courses)
+            async def mock_fetch(query, *args):
+                if "SELECT id, title, description FROM course" in query:
+                    return mock_rows
+                elif "SELECT id, course_id, content, title FROM lesson" in query:
+                    return mock_lessons
+                return []
+            
+            mock_conn.fetch = AsyncMock(side_effect=mock_fetch)
             mock_conn.close = AsyncMock()
             
             docs = await loader.load("all")

@@ -54,14 +54,9 @@ def sample_vector_store():
 @pytest.fixture
 async def chat_service(sample_vector_store):
     """Chat service with test dependencies."""
-    store, chunks, embeddings = sample_vector_store
-    
-    # Add documents to store
-    await store.add_documents(chunks, embeddings=embeddings)
-    
     nlu = NLUService()
     context_manager = ContextManager()
-    vector_store = store
+    vector_store = sample_vector_store
     llm_primary = DummyLLMClient()
     llm_fallback = DummyLLMClient()
     rs_client = RecommendationClient(base_url="http://test")
