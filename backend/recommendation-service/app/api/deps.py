@@ -28,10 +28,13 @@ def get_item_encoder() -> ItemFeatureEncoder:
 
 @lru_cache
 def get_two_tower_model() -> TwoTowerModel:
-    return TwoTowerModel(
+    model = TwoTowerModel(
         user_encoder=get_user_encoder(),
         item_encoder=get_item_encoder(),
     )
+    # Try to load trained item embeddings if they exist on disk.
+    model.load_artifacts_if_available()
+    return model
 
 
 @lru_cache

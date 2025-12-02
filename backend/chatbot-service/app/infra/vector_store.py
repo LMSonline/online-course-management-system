@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
+import numpy as np
 from pydantic import BaseModel
 
 
@@ -84,6 +85,40 @@ class InMemoryVectorStore(VectorStore):
     ) -> List[DocumentChunk]:
         # For now we ignore the question and only filter by course_id.
         return [d for d in self.docs if d.course_id == course_id][:k]
+
+
+class InMemoryEmbeddingVectorStore(VectorStore):
+    """
+    Simple in-memory vector store with real embeddings (for small demos/tests).
+
+    It keeps all embeddings in RAM and does brute-force similarity search.
+    """
+
+    def __init__(self):
+        self.docs: List[DocumentChunk] = []
+        self.embeddings: Optional[np.ndarray] = None  # shape [N, D]
+
+    async def add_documents(self, chunks: List[DocumentChunk], embeddings: np.ndarray | None = None) -> None:
+        """
+        Add documents with precomputed embeddings. If embeddings is None, the
+        caller is expected to have encoded them elsewhere; in this simple
+        implementation we only support the (chunks, embeddings) pair.
+        """
+        if embeddings is None:
+            raise ValueError("InMemoryEmbeddingVectorStore requires embeddings array")
+
+        if self.embeddings is None:
+            self.embeddings = embeddings
+        else:
+            self.embeddings = np.concatenate([self.embeddings, embeddings], axis=0)
+        self.docs.extend(chunks)
+
+    async def retrieve_for_course(
+        self, course_id: str, question: str, k: int = 5
+    ) -> List[DocumentChunk]:
+        # Fallback: if no embeddings yet, behave like simple filter
+        filtered = [d for d in self.docs if d.course_id == course_id]
+        return filtered[:k]
 
 
 # NOTE: Real vector store implementations (e.g. Chroma / FAISS) will live here too,
