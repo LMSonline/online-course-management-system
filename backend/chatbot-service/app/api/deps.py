@@ -1,6 +1,6 @@
-import os
 from functools import lru_cache
 
+from app.core.settings import settings
 from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
 from app.services.study_plan_service import StudyPlanService
@@ -29,17 +29,17 @@ def get_context_manager() -> ContextManager:
 @lru_cache
 def get_vector_store() -> VectorStore:
     """
-    Select vector store backend via env:
+    Select vector store backend via settings:
     - VECTOR_STORE_BACKEND=inmemory (default)
     - VECTOR_STORE_BACKEND=faiss (FAISS + on-disk persistence)
     """
-    backend = os.getenv("VECTOR_STORE_BACKEND", "inmemory").lower()
+    backend = settings.VECTOR_STORE_BACKEND.lower()
 
     if backend == "inmemory":
         return InMemoryVectorStore()
 
     if backend == "faiss":
-        return FaissVectorStore()
+        return FaissVectorStore(persist_dir=settings.VECTOR_STORE_DIR)
 
     raise ValueError(f"Unsupported VECTOR_STORE_BACKEND: {backend}")
 
@@ -47,25 +47,33 @@ def get_vector_store() -> VectorStore:
 @lru_cache
 def get_llm_clients() -> tuple[LLMClient, LLMClient]:
     """
-    Select primary + fallback LLM clients via env:
+    Select primary + fallback LLM clients via settings:
     - LLM_PROVIDER=dummy  -> (Dummy, Dummy)
     - LLM_PROVIDER=llama3 -> (Llama3, Dummy)
     """
-    provider = os.getenv("LLM_PROVIDER", "dummy").lower()
+    provider = settings.LLM_PROVIDER.lower()
 
     dummy = DummyLLMClient()
 
     if provider == "dummy":
         return dummy, dummy
     if provider == "llama3":
-        return Llama3Client(), dummy
+        return (
+            Llama3Client(
+                api_base=settings.LLAMA3_API_BASE,
+                api_key=settings.LLAMA3_API_KEY,
+                model_name=settings.LLAMA3_MODEL_NAME,
+                timeout=settings.LLAMA3_TIMEOUT,
+            ),
+            dummy,
+        )
 
     raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
 
 
 @lru_cache
 def get_rs_client() -> RecommendationClient:
-    return RecommendationClient()
+    return RecommendationClient(base_url=settings.RS_BASE_URL)
 
 
 @lru_cache

@@ -1,9 +1,11 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic-settings
 asyncpg
 torch
 numpy
 pyyaml
 typer
 faiss-cpu
+loguru

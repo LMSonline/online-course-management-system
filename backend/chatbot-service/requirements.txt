@@ -1,9 +1,11 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic-settings
 httpx
 asyncpg
 sentence-transformers
 numpy
 faiss-cpu
 rank-bm25
+loguru
