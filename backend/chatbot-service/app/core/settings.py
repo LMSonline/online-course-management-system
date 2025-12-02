@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     SEARCH_MODE: str = "vector"  # vector | bm25 | hybrid
     HYBRID_ALPHA: float = 0.6  # Weight for vector vs BM25 in hybrid mode
     CHAT_HISTORY_LIMIT: int = 10
+    
+    # Ingestion Configuration
+    CHUNK_SIZE: int = 1000  # Characters or tokens per chunk
+    CHUNK_OVERLAP: int = 200  # Overlap between chunks
+    INGESTION_BATCH_SIZE: int = 100  # Batch size for embedding generation
 
     # Recommendation Service
     RS_BASE_URL: str = "http://localhost:8002"

@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     EMBEDDING_DIM: int = 64
     USER_FEATURE_DIM: int = 16
     ITEM_FEATURE_DIM: int = 32
+    
+    # Recommender Configuration
+    DEFAULT_RECOMMENDER: str = "hybrid"  # two_tower | popularity | content | hybrid
+    HYBRID_WEIGHTS_TWO_TOWER: float = 0.5
+    HYBRID_WEIGHTS_POPULARITY: float = 0.3
+    HYBRID_WEIGHTS_CONTENT: float = 0.2
 
     # Service Configuration
     SERVICE_NAME: str = "recommendation-service"

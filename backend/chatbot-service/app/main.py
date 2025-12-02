@@ -12,6 +12,7 @@ from app.api.v1 import (
     chat as chat_router,
     sessions as sessions_router,
     admin as admin_router,
+    analytics as analytics_router,
 )
 from app.core import logging as core_logging
 from app.core.settings import settings
@@ -79,6 +80,7 @@ app.add_middleware(
 app.include_router(chat_router.router, prefix="/api/v1", tags=["chatbot"])
 app.include_router(sessions_router.router, prefix="/api/v1", tags=["sessions"])
 app.include_router(admin_router.router, prefix="/api/v1", tags=["admin"])
+app.include_router(analytics_router.router, prefix="/api/v1/chat", tags=["analytics"])
 
 
 @app.exception_handler(Exception)

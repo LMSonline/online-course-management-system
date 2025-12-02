@@ -9,3 +9,6 @@ numpy
 faiss-cpu
 rank-bm25
 loguru
+beautifulsoup4
+pymupdf
+pyyaml
