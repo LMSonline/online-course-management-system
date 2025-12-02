@@ -10,7 +10,6 @@ import vn.uit.lms.shared.dto.response.recommendation.RecommendationLogDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class RecommendationService {
@@ -20,22 +19,41 @@ public class RecommendationService {
 
     public List<RecommendationLogDto> getRecommendations(Long studentId) {
         return logRepo.findByStudentId(studentId)
-                .stream().map(log -> new RecommendationLogDto(
+                .stream()
+                .map(log -> new RecommendationLogDto(
                         log.getId(),
                         log.getStudentId(),
                         log.getRecommendedCourseId(),
                         log.getScore(),
                         log.getAlgorithmVersion()
-                )).toList();
+                ))
+                .toList();
     }
 
     public void addFeedback(Long id, RecommendationFeedbackRequest req, Long studentId) {
+
+        // 1. Check recommendation có tồn tại không
+        var log = logRepo.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Recommendation not found with id: " + id)
+                );
+
+        // 2. Check recommendation có đúng student không
+        if (!log.getStudentId().equals(studentId)) {
+            throw new RuntimeException("You cannot give feedback for another student's recommendation");
+        }
+
+        // 3. Tạo feedback
         RecommendationFeedback fb = new RecommendationFeedback();
         fb.setRecommendationId(id);
         fb.setStudentId(studentId);
         fb.setFeedbackType(req.getFeedbackType());
-        fb.setMetadata(req.getMetadata());
+
+        // 4. Metadata phải là JSON string
+        fb.setMetadata(req.getMetadata() != null ? req.getMetadata() : "{}");
+
         fb.setCreatedAt(LocalDateTime.now());
+
         feedbackRepo.save(fb);
     }
 }

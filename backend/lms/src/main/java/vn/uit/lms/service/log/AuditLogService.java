@@ -71,7 +71,7 @@ public class AuditLogService {
                     safe(log.getTableName()),
                     safe(log.getRecordId()),
                     log.getAction().name(),
-                    safe(log.getChangedData()),
+                    safe(String.valueOf(log.getChangedData())),
                     log.getUserAccountId(),
                     safe(log.getIpAddress()),
                     log.getCreatedAt()

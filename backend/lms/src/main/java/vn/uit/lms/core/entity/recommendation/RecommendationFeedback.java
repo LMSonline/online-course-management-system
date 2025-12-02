@@ -3,6 +3,8 @@ package vn.uit.lms.core.entity.recommendation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import vn.uit.lms.shared.constant.FeedbackType;
 
 @Getter
@@ -21,8 +23,10 @@ public class RecommendationFeedback {
     @Enumerated(EnumType.STRING)
     private FeedbackType feedbackType;
 
-    @Column(columnDefinition = "JSON")
+    @Column(name = "metadata")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String metadata;
+
 
     private java.time.LocalDateTime createdAt;
 }
