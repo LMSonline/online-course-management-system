@@ -3,6 +3,8 @@ package vn.uit.lms.core.entity.recommendation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -22,8 +24,10 @@ public class RecommendationLog {
     private String algorithmVersion;
     private Float score;
 
-    @Column(columnDefinition = "JSON")
+    @Column(name = "context")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String context;
+
 
     private java.time.LocalDateTime createdAt;
 }
