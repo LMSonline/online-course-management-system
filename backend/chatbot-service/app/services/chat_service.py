@@ -40,7 +40,8 @@ class ChatService:
         user_id: str,
         text: str,
         current_course_id: Optional[str] = None,
-    ) -> str:
+        debug: bool = False,
+    ) -> tuple[str, Optional[dict]]:
         session = await self.context_manager.get_session(session_id, user_id)
         if current_course_id:
             session.current_course_id = current_course_id
@@ -56,8 +57,11 @@ class ChatService:
 
         intent = self.nlu.detect_intent(text)
 
+        debug_info = None
         if intent == Intent.ASK_COURSE_QA:
-            reply = await self._handle_course_qa(session, text, history_context)
+            reply, debug_info = await self._handle_course_qa(
+                session, text, history_context, debug=debug
+            )
         elif intent == Intent.ASK_GENERAL_QA:
             reply = await self._handle_general_qa(text, history_context)
         elif intent == Intent.ASK_RECOMMEND:
@@ -77,7 +81,7 @@ class ChatService:
 
         session.last_intent = intent.value
         await self.context_manager.update_session(session)
-        return reply
+        return reply, debug_info
 
     def _build_history_context(self, history: list) -> str:
         """Build a conversation history string from recent messages."""
@@ -90,10 +94,17 @@ class ChatService:
         return "\n".join(lines)
     
     async def _handle_course_qa(
-        self, session: ChatSession, question: str, history_context: str = ""
-    ) -> str:
+        self,
+        session: ChatSession,
+        question: str,
+        history_context: str = "",
+        debug: bool = False,
+    ) -> tuple[str, Optional[dict]]:
         if not session.current_course_id:
-            return "Which course are you asking about? Please provide a course_id."
+            return (
+                "Which course are you asking about? Please provide a course_id.",
+                None,
+            )
         params = RetrievalParams(course_ids=[session.current_course_id], top_k=5)
         docs = await self.retrieval_service.retrieve(question=question, params=params)
         context = "\n".join(d.content for d in docs)
@@ -104,13 +115,30 @@ class ChatService:
             f"User question: {question}\n\n"
             "Assistant:"
         )
-        return await self._safe_generate(
+        reply = await self._safe_generate(
             prompt,
             system_prompt=(
                 "You are an LMS teaching assistant. Only answer using the provided context. "
                 "If the answer is not in the context, say you are not sure."
             ),
         )
+
+        debug_info = None
+        if debug:
+            debug_info = {
+                "chunks": [
+                    {
+                        "course_id": d.course_id,
+                        "lesson_id": d.lesson_id,
+                        "section": d.section,
+                        "score": d.score,
+                        "text_preview": d.content[:200] + "..." if len(d.content) > 200 else d.content,
+                    }
+                    for d in docs
+                ]
+            }
+
+        return reply, debug_info
     
     async def _handle_general_qa(self, question: str, history_context: str = "") -> str:
         prompt = (
