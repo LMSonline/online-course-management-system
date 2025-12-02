@@ -1,13 +1,11 @@
 from functools import lru_cache
 
-from app.infra.feature_encoders import ItemFeatureEncoder, UserFeatureEncoder
+from app.encoders import ItemFeatureEncoder, UserFeatureEncoder
 from app.infra.repositories import InMemoryCourseRepository
-from app.infra.two_tower_model import TwoTowerModel
-from app.services.candidate_ranking import (
-    CandidateGenerator,
-    InteractionLogger,
-    RankingService,
-)
+from app.models.two_tower import TwoTowerModel
+from app.candidate import CandidateGenerator
+from app.ranking import RankingService
+from app.logging import InteractionLogger
 from app.services.recommendation_service import RecommendationService
 
 

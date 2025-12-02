@@ -2,13 +2,11 @@ from typing import List
 
 from app.domain.models import Course
 from app.infra.repositories import InMemoryCourseRepository
-from app.infra.two_tower_model import TwoTowerModel
-from app.infra.feature_encoders import UserFeatureEncoder, ItemFeatureEncoder
-from app.services.candidate_ranking import (
-    CandidateGenerator,
-    InteractionLogger,
-    RankingService,
-)
+from app.models.two_tower import TwoTowerModel
+from app.encoders import UserFeatureEncoder, ItemFeatureEncoder
+from app.candidate import CandidateGenerator
+from app.ranking import RankingService
+from app.logging import InteractionLogger
 
 
 class RecommendationService:
@@ -52,7 +50,9 @@ class RecommendationService:
         ranked = await self.ranking_service.rank_for_home(
             user_id=user_id, candidates=candidates, top_k=top_k
         )
-        self.interaction_logger.log_recommendations(user_id=user_id, courses=ranked)
+        await self.interaction_logger.log_recommendations(
+            user_id=user_id, courses=ranked, source="home"
+        )
         return ranked
 
     async def get_similar_courses(
