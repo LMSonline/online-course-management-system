@@ -17,7 +17,7 @@ public class ResLoginDTO {
 
     private String accessToken;
     private String refreshToken;
-    private Instant accessTokenExpiresAt;
+    private Instant accessTokenExpire
     private Instant refreshTokenExpiresAt;
 
     private UserInfo user;
