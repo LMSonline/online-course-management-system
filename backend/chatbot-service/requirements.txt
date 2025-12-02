@@ -2,3 +2,6 @@ fastapi
 uvicorn[standard]
 pydantic
 httpx
+asyncpg
+sentence-transformers
+numpy
