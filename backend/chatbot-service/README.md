@@ -6,16 +6,21 @@ NLP chatbot service for LMS with RAG (Retrieval-Augmented Generation), LLM integ
 
 This service provides an intelligent chatbot that can:
 - Answer questions about course content using RAG (vector search + LLM)
+- Generate quiz questions from course content
+- Summarize lessons with structured summaries
+- Explain code snippets line-by-line
 - Provide general educational explanations
 - Recommend courses based on user preferences
-- Generate personalized study plans
+- Generate personalized study plans (with constraints: exam dates, free days, completed lessons)
 
 ## Architecture
 
 - **RAG Pipeline**: FAISS vector store + hybrid search (vector + BM25) + Llama 3 LLM
 - **LLM Abstraction**: Configurable LLM providers (Dummy for dev, Llama3 for production) with automatic fallback
 - **Conversation Management**: Postgres-backed session and message storage
-- **Intent Routing**: NLU-based intent detection with handler-based architecture
+- **Intent Routing**: NLU-based intent detection with handler-based architecture (Strategy pattern)
+- **Multi-Source Ingestion**: Support for LMS DB, Markdown, HTML, PDF, and transcript files
+- **Analytics**: User stats, global stats, and session search capabilities
 
 ## Setup
 
@@ -77,23 +82,42 @@ API documentation: `http://localhost:8003/docs`
 
 ## Ingesting Course Content
 
-Before using the chatbot, you need to ingest course content into the vector store:
+Before using the chatbot, you need to ingest course content into the vector store.
+
+### From LMS Database
 
 ```bash
-# Set LMS DB connection env vars
-export LMS_DB_HOST=localhost
-export LMS_DB_PORT=5432
-export LMS_DB_NAME=lms
-export LMS_DB_USER=postgres
-export LMS_DB_PASSWORD=postgres
+# Using CLI
+python -m app.cli ingest-lms [course_id]
 
-# Run ingestion
-python -m app.scripts.ingest_courses
+# Or using script directly
+python -m app.scripts.ingest_from_lms [course_id]
 ```
 
+### From Files/Folders
+
+The service supports multiple file formats:
+- **Markdown** (`.md`, `.markdown`)
+- **HTML** (`.html`, `.htm`)
+- **PDF** (`.pdf`)
+- **Transcripts** (`.srt`, `.vtt`, `.txt`)
+
+```bash
+# Using CLI
+python -m app.cli ingest-folder --path ./data/courses --course-id course_python --chunking-strategy semantic
+
+# Or using script directly
+python -m app.scripts.ingest_from_folder --path ./data/courses --course-id course_python
+```
+
+### Chunking Strategies
+
+- **Fixed-size**: Chunks by character/token count with overlap
+- **Semantic**: Chunks by headings/sections (best for Markdown/HTML)
+
 This will:
-1. Fetch courses and lessons from LMS Postgres
-2. Chunk the content
+1. Load content from source (DB or files)
+2. Chunk the content using selected strategy
 3. Generate embeddings
 4. Store in the configured vector store backend
 
