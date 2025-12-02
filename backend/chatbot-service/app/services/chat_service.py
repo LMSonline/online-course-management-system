@@ -89,5 +89,20 @@ class ChatService:
             f"{summary}"
         )
         return await self.llm.generate(prompt)
+    
+    async def _handle_study_plan(self, session: ChatSession, text: str) -> str:
+        if not session.current_course_id:
+            return "To create a study plan, please tell me which course you want to study (course_id)."
+        plan = await self.study_plan_service.generate_plan(
+            course_id=session.current_course_id, days=7, hours_per_day=1
+        )
+        raw = "\n".join(
+            f"Day {item.day}: {', '.join(item.lessons)}" for item in plan
+        )
+        prompt = (
+            "Turn the following rough plan into a friendly study plan for the student:\n\n"
+            f"{raw}"
+        )
+        return await self.llm.generate(prompt)
 
 
