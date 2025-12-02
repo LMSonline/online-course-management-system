@@ -53,7 +53,7 @@ class TestLoaders:
                     return mock_lessons
                 return []
             
-            mock_conn.fetch = mock_fetch_courses
+            mock_conn.fetch = AsyncMock(side_effect=mock_fetch_courses)
             mock_conn.close = AsyncMock()
             
             docs = await loader.load("all")

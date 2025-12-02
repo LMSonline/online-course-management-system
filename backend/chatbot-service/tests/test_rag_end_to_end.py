@@ -48,19 +48,20 @@ def sample_vector_store():
     texts = [chunk.content for chunk in chunks]
     embeddings = embedding_model.encode(texts)
     
-    # Add to store (synchronously for test)
-    import asyncio
-    asyncio.run(store.add_documents(chunks, embeddings=embeddings))
-    
-    return store
+    return store, chunks, embeddings
 
 
 @pytest.fixture
-def chat_service(sample_vector_store):
+async def chat_service(sample_vector_store):
     """Chat service with test dependencies."""
+    store, chunks, embeddings = sample_vector_store
+    
+    # Add documents to store
+    await store.add_documents(chunks, embeddings=embeddings)
+    
     nlu = NLUService()
     context_manager = ContextManager()
-    vector_store = sample_vector_store
+    vector_store = store
     llm_primary = DummyLLMClient()
     llm_fallback = DummyLLMClient()
     rs_client = RecommendationClient(base_url="http://test")
