@@ -20,11 +20,12 @@ from app.services.study_plan_service import StudyPlanService
 def mock_context_manager():
     """Mock context manager."""
     manager = AsyncMock(spec=ContextManager)
+    from datetime import datetime
     session = ChatSession(
         id="test-session",
         user_id="user1",
         current_course_id="course1",
-        created_at=None,
+        created_at=datetime.utcnow(),
     )
     manager.get_session = AsyncMock(return_value=session)
     manager.get_recent_messages = AsyncMock(return_value=[])
