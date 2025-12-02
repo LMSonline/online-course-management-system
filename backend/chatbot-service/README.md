@@ -144,6 +144,24 @@ python -m app.eval.rag_eval
 
 This computes Recall@K and MRR metrics on the test dataset.
 
+## CLI Tools
+
+The service includes a CLI tool for common operations:
+
+```bash
+# Ingest from LMS database
+python -m app.cli ingest-lms [course_id]
+
+# Ingest from folder
+python -m app.cli ingest-folder --path ./data/courses --course-id course_python
+
+# Evaluate RAG
+python -m app.cli eval-rag
+
+# Show configuration
+python -m app.cli show-config
+```
+
 ## API Examples
 
 ### Send a chat message
@@ -160,10 +178,84 @@ curl -X POST "http://localhost:8003/api/v1/chat/messages" \
   }'
 ```
 
+### Generate quiz
+
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "session-123",
+    "user_id": "user1",
+    "text": "Tạo cho em 5 câu trắc nghiệm về Python",
+    "current_course_id": "course_python_basic"
+  }'
+```
+
+### Summarize lesson
+
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "session-123",
+    "user_id": "user1",
+    "text": "Tóm tắt bài học này",
+    "current_course_id": "course_python_basic",
+    "lesson_id": "lesson_1"
+  }'
+```
+
+### Explain code
+
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "session-123",
+    "user_id": "user1",
+    "text": "Giải thích code này:\n```python\ndef hello():\n    print(\"Hello\")\n```",
+    "language": "python"
+  }'
+```
+
+### Study plan with constraints
+
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "session-123",
+    "user_id": "user1",
+    "text": "Tạo kế hoạch học tập",
+    "current_course_id": "course_python_basic",
+    "exam_date": "2024-12-31T00:00:00Z",
+    "free_days_per_week": 5,
+    "completed_lessons": ["lesson_1", "lesson_2"]
+  }'
+```
+
 ### Get chat sessions
 
 ```bash
 curl "http://localhost:8003/api/v1/chat/sessions?user_id=user1"
+```
+
+### Get user analytics
+
+```bash
+curl "http://localhost:8003/api/v1/chat/stats/user/user1"
+```
+
+### Get global analytics
+
+```bash
+curl "http://localhost:8003/api/v1/chat/stats/global"
+```
+
+### Search sessions
+
+```bash
+curl "http://localhost:8003/api/v1/chat/sessions/search?user_id=user1&q=Python"
 ```
 
 ### Re-index course content (admin)
@@ -177,12 +269,26 @@ curl -X POST "http://localhost:8003/api/v1/admin/courses/course_python_basic/rei
 ```
 app/
 ├── api/           # FastAPI routes and dependencies
+│   └── v1/
+│       ├── chat.py          # Chat endpoints
+│       ├── sessions.py      # Session management
+│       ├── analytics.py     # Analytics endpoints
+│       └── admin.py         # Admin endpoints
 ├── core/          # Settings, logging, error handling
 ├── domain/        # Domain models and enums
 ├── infra/         # Infrastructure (vector store, LLM client, DB repos)
-├── services/       # Business logic (chat service, retrieval, NLU)
+├── ingestion/     # Multi-source ingestion pipeline
+│   ├── loaders/   # Content loaders (DB, Markdown, HTML, PDF, transcripts)
+│   └── chunkers/  # Chunking strategies (fixed-size, semantic)
+├── services/       # Business logic
+│   ├── handlers/  # Intent handlers (Strategy pattern)
+│   ├── chat_service.py
+│   ├── retrieval_service.py
+│   ├── analytics_service.py
+│   └── ...
 ├── scripts/       # CLI scripts (ingestion)
-└── eval/          # Evaluation scripts
+├── eval/          # Evaluation scripts
+└── cli.py         # Typer CLI tool
 ```
 
 ## Development
