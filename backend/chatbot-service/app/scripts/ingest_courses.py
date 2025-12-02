@@ -30,7 +30,12 @@ from typing import List
 import asyncpg
 
 from app.infra.embeddings import EmbeddingModel
-from app.infra.vector_store import DocumentChunk, InMemoryEmbeddingVectorStore, VectorStore
+from app.infra.vector_store import (
+    DocumentChunk,
+    InMemoryEmbeddingVectorStore,
+    FaissVectorStore,
+    VectorStore,
+)
 
 
 def build_lms_dsn() -> str:
@@ -111,7 +116,13 @@ async def async_main() -> None:
     print(f"Fetched {len(course_texts)} courses. Chunking & embedding...")
     embedding_model = EmbeddingModel()
 
-    store: VectorStore = InMemoryEmbeddingVectorStore()
+    backend = os.getenv("VECTOR_STORE_BACKEND", "inmemory").lower()
+    store: VectorStore
+    if backend == "faiss":
+        store = FaissVectorStore()
+    else:
+        # Default: in-memory embedding store (non-persistent)
+        store = InMemoryEmbeddingVectorStore()
 
     all_chunks: List[DocumentChunk] = []
     all_texts: List[str] = []

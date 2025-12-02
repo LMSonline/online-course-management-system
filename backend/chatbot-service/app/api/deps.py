@@ -5,7 +5,11 @@ from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
 from app.services.study_plan_service import StudyPlanService
 from app.services.chat_service import ChatService
-from app.infra.vector_store import InMemoryVectorStore, VectorStore
+from app.infra.vector_store import (
+    InMemoryVectorStore,
+    VectorStore,
+    FaissVectorStore,
+)
 from app.infra.llm_client import DummyLLMClient, LLMClient, Llama3Client
 from app.infra.rs_client import RecommendationClient
 
@@ -25,30 +29,34 @@ def get_vector_store() -> VectorStore:
     """
     Select vector store backend via env:
     - VECTOR_STORE_BACKEND=inmemory (default)
-    In the future, additional backends (e.g. chroma, faiss) can be plugged in here.
+    - VECTOR_STORE_BACKEND=faiss (FAISS + on-disk persistence)
     """
     backend = os.getenv("VECTOR_STORE_BACKEND", "inmemory").lower()
 
     if backend == "inmemory":
         return InMemoryVectorStore()
 
-    # Placeholder for future implementations such as Chroma / FAISS.
+    if backend == "faiss":
+        return FaissVectorStore()
+
     raise ValueError(f"Unsupported VECTOR_STORE_BACKEND: {backend}")
 
 
 @lru_cache
-def get_llm_client() -> LLMClient:
+def get_llm_clients() -> tuple[LLMClient, LLMClient]:
     """
-    Select LLM provider via env:
-    - LLM_PROVIDER=dummy  (default, echo client)
-    - LLM_PROVIDER=llama3 (real remote Llama 3 API)
+    Select primary + fallback LLM clients via env:
+    - LLM_PROVIDER=dummy  -> (Dummy, Dummy)
+    - LLM_PROVIDER=llama3 -> (Llama3, Dummy)
     """
     provider = os.getenv("LLM_PROVIDER", "dummy").lower()
 
+    dummy = DummyLLMClient()
+
     if provider == "dummy":
-        return DummyLLMClient()
+        return dummy, dummy
     if provider == "llama3":
-        return Llama3Client()
+        return Llama3Client(), dummy
 
     raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
 
@@ -60,11 +68,13 @@ def get_rs_client() -> RecommendationClient:
 
 @lru_cache
 def get_chat_service() -> ChatService:
+    llm_primary, llm_fallback = get_llm_clients()
     return ChatService(
         nlu=get_nlu(),
         context_manager=get_context_manager(),
         vector_store=get_vector_store(),
-        llm=get_llm_client(),
+        llm_primary=llm_primary,
+        llm_fallback=llm_fallback,
         rs_client=get_rs_client(),
         study_plan_service=StudyPlanService(),
     )

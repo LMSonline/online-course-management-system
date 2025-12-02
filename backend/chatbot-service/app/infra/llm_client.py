@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -16,7 +16,14 @@ class LLMClient(ABC):
     """
 
     @abstractmethod
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        max_tokens: int = 512,
+    ) -> str:
         ...
 
 
@@ -25,7 +32,15 @@ class DummyLLMClient(LLMClient):
     Very small echo client used for local development and tests.
     """
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        max_tokens: int = 512,
+    ) -> str:
+        # Ignore extra params, just echo a trimmed prompt for demo.
         return f"[LLM demo response]\n\n{prompt[:1000]}"
 
 
@@ -58,7 +73,14 @@ class Llama3Client(LLMClient):
         if not self.model_name:
             raise ValueError("LLAMA3_MODEL_NAME must be set for Llama3Client.")
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        max_tokens: int = 512,
+    ) -> str:
         """
         Call the remote Llama 3 API using the OpenAI-compatible /chat/completions route.
         """
@@ -67,16 +89,16 @@ class Llama3Client(LLMClient):
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         payload: Dict[str, Any] = {
             "model": self.model_name,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            "temperature": 0.2,
-            "max_tokens": 512,
+            "messages": messages,
+            "temperature": float(temperature),
+            "max_tokens": int(max_tokens),
         }
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:

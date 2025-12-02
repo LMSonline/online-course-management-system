@@ -5,3 +5,4 @@ httpx
 asyncpg
 sentence-transformers
 numpy
+faiss-cpu
