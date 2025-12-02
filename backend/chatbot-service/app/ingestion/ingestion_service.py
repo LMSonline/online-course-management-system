@@ -55,6 +55,7 @@ class IngestionService:
             HTMLLoader(),
             PDFLoader(),
             TranscriptLoader(),
+            JSONLLoader(),
         ]
 
     def _select_loader(self, source: str) -> Optional[BaseLoader]:
