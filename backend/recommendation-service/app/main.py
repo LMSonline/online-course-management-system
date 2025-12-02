@@ -7,7 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api.v1 import recommendations as recommendations_router
+from app.api.v1 import (
+    recommendations as recommendations_router,
+    analytics as analytics_router,
+    admin as admin_router,
+)
 from app.core import logging as core_logging
 from app.core.settings import settings
 
@@ -70,11 +74,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount router
+# Mount routers
 app.include_router(
     recommendations_router.router,
     prefix="/api/v1",
     tags=["recommendations"],
+)
+app.include_router(
+    analytics_router.router,
+    prefix="/api/v1/recommendations",
+    tags=["analytics"],
+)
+app.include_router(
+    admin_router.router,
+    prefix="/admin/recommendations",
+    tags=["admin"],
 )
 
 
