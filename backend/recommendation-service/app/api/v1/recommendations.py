@@ -17,6 +17,7 @@ router = APIRouter()
 async def get_home_recommendations(
     user_id: str = Query(..., description="LMS user id"),
     explain: bool = Query(False, description="Include explainable reasons"),
+    strategy: str | None = Query(None, description="Recommender strategy (two_tower|popularity|content|hybrid)"),
     service: RecommendationService = Depends(get_recommendation_service),
 ):
     """
@@ -25,7 +26,7 @@ async def get_home_recommendations(
     If explain=True, returns RecommendedCourse objects with human-readable reasons.
     """
     result = await service.get_home_recommendations(
-        user_id=user_id, top_k=5, explain=explain
+        user_id=user_id, top_k=5, explain=explain, strategy=strategy
     )
     if explain:
         return RecommendationResponse(recommendations=result)
