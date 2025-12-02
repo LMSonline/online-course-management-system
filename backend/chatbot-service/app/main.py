@@ -80,6 +80,7 @@ app.add_middleware(
 app.include_router(chat_router.router, prefix="/api/v1", tags=["chatbot"])
 app.include_router(sessions_router.router, prefix="/api/v1", tags=["sessions"])
 app.include_router(admin_router.router, prefix="/api/v1", tags=["admin"])
+app.include_router(analytics_router.router, prefix="/api/v1/chat", tags=["analytics"])
 
 
 @app.exception_handler(Exception)
