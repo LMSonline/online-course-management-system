@@ -1,7 +1,13 @@
 from functools import lru_cache
 
+from app.infra.feature_encoders import ItemFeatureEncoder, UserFeatureEncoder
 from app.infra.repositories import InMemoryCourseRepository
 from app.infra.two_tower_model import TwoTowerModel
+from app.services.candidate_ranking import (
+    CandidateGenerator,
+    InteractionLogger,
+    RankingService,
+)
 from app.services.recommendation_service import RecommendationService
 
 
@@ -11,8 +17,44 @@ def get_course_repo() -> InMemoryCourseRepository:
 
 
 @lru_cache
+def get_user_encoder() -> UserFeatureEncoder:
+    return UserFeatureEncoder()
+
+
+@lru_cache
+def get_item_encoder() -> ItemFeatureEncoder:
+    return ItemFeatureEncoder()
+
+
+@lru_cache
 def get_two_tower_model() -> TwoTowerModel:
-    return TwoTowerModel()
+    return TwoTowerModel(
+        user_encoder=get_user_encoder(),
+        item_encoder=get_item_encoder(),
+    )
+
+
+@lru_cache
+def get_candidate_generator() -> CandidateGenerator:
+    return CandidateGenerator(
+        model=get_two_tower_model(),
+        user_encoder=get_user_encoder(),
+        item_encoder=get_item_encoder(),
+    )
+
+
+@lru_cache
+def get_ranking_service() -> RankingService:
+    return RankingService(
+        model=get_two_tower_model(),
+        user_encoder=get_user_encoder(),
+        item_encoder=get_item_encoder(),
+    )
+
+
+@lru_cache
+def get_interaction_logger() -> InteractionLogger:
+    return InteractionLogger()
 
 
 @lru_cache
@@ -20,4 +62,9 @@ def get_recommendation_service() -> RecommendationService:
     return RecommendationService(
         course_repo=get_course_repo(),
         model=get_two_tower_model(),
+        user_encoder=get_user_encoder(),
+        item_encoder=get_item_encoder(),
+        candidate_generator=get_candidate_generator(),
+        ranking_service=get_ranking_service(),
+        interaction_logger=get_interaction_logger(),
     )

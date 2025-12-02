@@ -3,16 +3,41 @@ from typing import List
 from app.domain.models import Course
 from app.infra.repositories import InMemoryCourseRepository
 from app.infra.two_tower_model import TwoTowerModel
+from app.infra.feature_encoders import UserFeatureEncoder, ItemFeatureEncoder
+from app.services.candidate_ranking import (
+    CandidateGenerator,
+    InteractionLogger,
+    RankingService,
+)
 
 
 class RecommendationService:
     """
     Entry point cho business logic của Recommendation System.
+
+    Lớp này chủ yếu orchestrate các component con:
+    - CandidateGenerator: sinh danh sách ứng viên
+    - RankingService: xếp hạng
+    - InteractionLogger: ghi log tương tác (sau này dùng cho training)
     """
 
-    def __init__(self, course_repo: InMemoryCourseRepository, model: TwoTowerModel):
+    def __init__(
+        self,
+        course_repo: InMemoryCourseRepository,
+        model: TwoTowerModel,
+        user_encoder: UserFeatureEncoder,
+        item_encoder: ItemFeatureEncoder,
+        candidate_generator: CandidateGenerator,
+        ranking_service: RankingService,
+        interaction_logger: InteractionLogger,
+    ) -> None:
         self.course_repo = course_repo
         self.model = model
+        self.user_encoder = user_encoder
+        self.item_encoder = item_encoder
+        self.candidate_generator = candidate_generator
+        self.ranking_service = ranking_service
+        self.interaction_logger = interaction_logger
 
     async def get_home_recommendations(
         self, user_id: str, top_k: int = 5
@@ -21,8 +46,14 @@ class RecommendationService:
         Gợi ý khóa học cho trang Home.
         """
         all_courses = self.course_repo.list_courses()
-        ordered = await self.model.get_home_recommendations(user_id, all_courses)
-        return ordered[:top_k]
+        candidates = await self.candidate_generator.generate_for_home(
+            user_id=user_id, all_courses=all_courses
+        )
+        ranked = await self.ranking_service.rank_for_home(
+            user_id=user_id, candidates=candidates, top_k=top_k
+        )
+        self.interaction_logger.log_recommendations(user_id=user_id, courses=ranked)
+        return ranked
 
     async def get_similar_courses(
         self, course_id: str, top_k: int = 5
@@ -35,5 +66,11 @@ class RecommendationService:
             return []
 
         all_courses = self.course_repo.list_courses()
-        similar = await self.model.get_similar_courses(target, all_courses)
-        return similar[:top_k]
+        candidates = await self.candidate_generator.generate_similar(
+            target=target, all_courses=all_courses
+        )
+        ranked = await self.ranking_service.rank_similar(
+            target=target, candidates=candidates, top_k=top_k
+        )
+        self.interaction_logger.log_similar_view(course_id=course_id, courses=ranked)
+        return ranked
