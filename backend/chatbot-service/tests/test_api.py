@@ -126,3 +126,89 @@ async def test_get_session_detail(async_client):
     # Should have at least 2 messages (user + bot)
     assert len(data["messages"]) >= 2
 
+
+@pytest.mark.asyncio
+async def test_analytics_user_stats(async_client):
+    """Test GET /api/v1/chat/stats/user/{user_id} endpoint."""
+    user_id = "user1"
+    
+    # Create some sessions first
+    for i in range(3):
+        await async_client.post(
+            "/api/v1/chat/messages",
+            json={
+                "session_id": f"test-session-analytics-{i}",
+                "user_id": user_id,
+                "text": f"Message {i}",
+            },
+        )
+    
+    response = await async_client.get(f"/api/v1/chat/stats/user/{user_id}")
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert "user_id" in data
+    assert "num_sessions" in data
+    assert "num_messages" in data
+    assert "intent_distribution" in data
+    assert data["user_id"] == user_id
+    assert data["num_sessions"] >= 3
+
+
+@pytest.mark.asyncio
+async def test_analytics_global_stats(async_client):
+    """Test GET /api/v1/chat/stats/global endpoint."""
+    response = await async_client.get("/api/v1/chat/stats/global")
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert "total_sessions" in data
+    assert "total_messages" in data
+    assert "top_intents" in data
+    assert "most_asked_courses" in data
+    assert "time_series" in data
+
+
+@pytest.mark.asyncio
+async def test_session_search(async_client):
+    """Test GET /api/v1/chat/sessions/search endpoint."""
+    user_id = "user1"
+    session_id = "test-session-search"
+    
+    # Create session with specific content
+    await async_client.post(
+        "/api/v1/chat/messages",
+        json={
+            "session_id": session_id,
+            "user_id": user_id,
+            "text": "What is machine learning?",
+        },
+    )
+    
+    # Search for "machine learning"
+    response = await async_client.get(
+        f"/api/v1/chat/sessions/search?user_id={user_id}&q=machine"
+    )
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert isinstance(data, list)
+    # Should find the session with "machine learning"
+    assert len(data) > 0
+    assert any("machine" in str(msg.get("text", "")).lower() for result in data for msg in result.get("matching_messages", []))
+
+
+@pytest.mark.asyncio
+async def test_error_response_format(async_client):
+    """Test that error responses follow standardized format."""
+    # Try to get non-existent session
+    response = await async_client.get("/api/v1/chat/sessions/nonexistent")
+    
+    # Should return error in standardized format
+    if response.status_code >= 400:
+        data = response.json()
+        assert "error" in data
+        assert "error_code" in data["error"]
+        assert "message" in data["error"]
+        assert "request_id" in data["error"]
+
