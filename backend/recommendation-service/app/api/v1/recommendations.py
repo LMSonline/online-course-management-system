@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from app.domain.models import Course, RecommendedCourse, RecommendationResponse
 from app.services.recommendation_service import RecommendationService
 from app.api.deps import get_recommendation_service
+from app.core.settings import settings
+from app.demo.recommendation_demo_responses import get_demo_home_recommendations, get_demo_similar_courses
 
 router = APIRouter()
 
@@ -25,6 +27,14 @@ async def get_home_recommendations(
 
     If explain=True, returns RecommendedCourse objects with human-readable reasons.
     """
+    # DEMO_MODE: Return hardcoded recommendations
+    if settings.DEMO_MODE:
+        result = get_demo_home_recommendations(user_id, explain=explain, strategy=strategy)
+        if explain:
+            return RecommendationResponse(recommendations=result)
+        return result
+    
+    # Normal mode: Use real recommendation service
     result = await service.get_home_recommendations(
         user_id=user_id, top_k=5, explain=explain, strategy=strategy
     )
@@ -40,11 +50,19 @@ async def get_home_recommendations(
 )
 async def get_similar_courses(
     course_id: str,
+    limit: int = Query(5, ge=1, le=10, description="Maximum number of similar courses to return"),
     service: RecommendationService = Depends(get_recommendation_service),
 ):
     """
     Trả về danh sách khóa học tương tự `course_id`.
     """
+    # DEMO_MODE: Return hardcoded similar courses
+    if settings.DEMO_MODE:
+        courses = get_demo_similar_courses(course_id)
+        # Respect limit parameter
+        return courses[:limit]
+    
+    # Normal mode: Use real recommendation service
     courses = await service.get_similar_courses(course_id=course_id)
     if courses is None:
         raise HTTPException(status_code=404, detail="Course not found")

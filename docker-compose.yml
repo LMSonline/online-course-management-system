@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lms-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lms}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-lms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chatbot:
+    build:
+      context: ./backend/chatbot-service
+      dockerfile: Dockerfile
+    container_name: chatbot-service
+    ports:
+      - "8003:8003"
+    environment:
+      ENV: ${ENV:-dev}
+      # Database
+      CHAT_DB_HOST: postgres
+      CHAT_DB_PORT: 5432
+      CHAT_DB_NAME: ${POSTGRES_DB:-lms}
+      CHAT_DB_USER: ${POSTGRES_USER:-postgres}
+      CHAT_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      LMS_DB_HOST: postgres
+      LMS_DB_PORT: 5432
+      LMS_DB_NAME: ${POSTGRES_DB:-lms}
+      LMS_DB_USER: ${POSTGRES_USER:-postgres}
+      LMS_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # LLM
+      LLM_PROVIDER: ${LLM_PROVIDER:-dummy}
+      LLAMA3_API_BASE: ${LLAMA3_API_BASE:-}
+      LLAMA3_API_KEY: ${LLAMA3_API_KEY:-}
+      LLAMA3_MODEL_NAME: ${LLAMA3_MODEL_NAME:-llama-3-8b-instruct}
+      # Vector Store
+      VECTOR_STORE_BACKEND: ${VECTOR_STORE_BACKEND:-faiss}
+      VECTOR_STORE_DIR: /vector_store
+      # Recommendation Service
+      RS_BASE_URL: http://recommendation:8002
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+    volumes:
+      - chatbot-vectors:/vector_store
+      - chatbot-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      recommendation:
+        condition: service_started
+    networks:
+      - lms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8003/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  recommendation:
+    build:
+      context: ./backend/recommendation-service
+      dockerfile: Dockerfile
+    container_name: recommendation-service
+    ports:
+      - "8002:8002"
+    environment:
+      ENV: ${ENV:-dev}
+      # Database
+      RS_DB_HOST: postgres
+      RS_DB_PORT: 5432
+      RS_DB_NAME: ${POSTGRES_DB:-lms}
+      RS_DB_USER: ${POSTGRES_USER:-postgres}
+      RS_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      LMS_DB_HOST: postgres
+      LMS_DB_PORT: 5432
+      LMS_DB_NAME: ${POSTGRES_DB:-lms}
+      LMS_DB_USER: ${POSTGRES_USER:-postgres}
+      LMS_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Model
+      RS_MODELS_DIR: /models
+      EMBEDDING_DIM: ${EMBEDDING_DIM:-64}
+      # Recommender
+      DEFAULT_RECOMMENDER: ${DEFAULT_RECOMMENDER:-hybrid}
+      HYBRID_WEIGHTS_TWO_TOWER: ${HYBRID_WEIGHTS_TWO_TOWER:-0.5}
+      HYBRID_WEIGHTS_POPULARITY: ${HYBRID_WEIGHTS_POPULARITY:-0.3}
+      HYBRID_WEIGHTS_CONTENT: ${HYBRID_WEIGHTS_CONTENT:-0.2}
+      BANDIT_EPSILON: ${BANDIT_EPSILON:-0.1}
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+    volumes:
+      - rs-models:/models
+      - rs-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8002/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+  chatbot-vectors:
+    driver: local
+  chatbot-logs:
+    driver: local
+  rs-models:
+    driver: local
+  rs-logs:
+    driver: local
+
+networks:
+  lms-network:
+    driver: bridge
+

@@ -101,6 +101,7 @@ The service supports multiple file formats:
 - **HTML** (`.html`, `.htm`)
 - **PDF** (`.pdf`)
 - **Transcripts** (`.srt`, `.vtt`, `.txt`)
+- **JSONL** (`.jsonl`) - Course video datasets
 
 ```bash
 # Using CLI
@@ -108,6 +109,32 @@ python -m app.cli ingest-folder --path ./data/courses --course-id course_python 
 
 # Or using script directly
 python -m app.scripts.ingest_from_folder --path ./data/courses --course-id course_python
+```
+
+### Embedding Backends
+
+The ingestion pipeline supports two embedding backends:
+
+**1. Dummy Embeddings (Offline Mode - Default in Dev)**
+- No network required
+- Deterministic, hash-based embeddings
+- Suitable for demos and offline development
+- Set via: `EMBEDDING_BACKEND=dummy`
+
+**2. Sentence Transformers (Requires Network)**
+- Uses sentence-transformers library
+- Downloads models from HuggingFace on first use
+- Better quality embeddings for production
+- Set via: `EMBEDDING_BACKEND=sentence_transformers`
+
+**Example:**
+```bash
+# Offline mode (default in dev)
+python -m app.cli ingest-folder ../../data/course_videos.jsonl --course-id course_python_basic
+
+# With real embeddings (requires network)
+export EMBEDDING_BACKEND=sentence_transformers
+python -m app.cli ingest-folder ../../data/course_videos.jsonl --course-id course_python_basic
 ```
 
 ### Chunking Strategies

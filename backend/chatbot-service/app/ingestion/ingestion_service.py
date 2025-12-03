@@ -8,6 +8,7 @@ from app.ingestion.loaders import (
     HTMLLoader,
     PDFLoader,
     TranscriptLoader,
+    JSONLLoader,
 )
 from app.ingestion.chunkers import BaseChunker, FixedSizeChunker, SemanticChunker
 from app.ingestion.loaders.base import ContentDocument

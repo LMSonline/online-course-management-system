@@ -77,6 +77,7 @@ def show_config():
     """Display current configuration."""
     typer.echo("Recommendation Service Configuration:\n")
     typer.echo(f"  Environment: {settings.ENV}")
+    typer.echo(f"  DEMO_MODE: {settings.DEMO_MODE}")
     typer.echo(f"  Models Directory: {settings.RS_MODELS_DIR}")
     typer.echo(f"  Embedding Dimension: {settings.EMBEDDING_DIM}")
     typer.echo(f"  User Feature Dim: {settings.USER_FEATURE_DIM}")

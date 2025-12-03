@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.services.analytics_service import AnalyticsService
 from app.api.deps import get_session_repo, get_message_repo
+from app.core.settings import settings
+from app.demo.chatbot_demo_responses import get_demo_user_stats, get_demo_global_stats
 
 
 router = APIRouter()
@@ -50,6 +52,12 @@ async def get_user_stats(
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Get statistics for a specific user."""
+    # DEMO_MODE: Return hardcoded stats
+    if settings.DEMO_MODE:
+        stats = get_demo_user_stats(user_id)
+        return UserStatsResponse(**stats)
+    
+    # Normal mode: Use real analytics service
     stats = await analytics_service.get_user_stats(user_id)
     return UserStatsResponse(**stats)
 
@@ -59,6 +67,12 @@ async def get_global_stats(
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Get global statistics across all users."""
+    # DEMO_MODE: Return hardcoded stats
+    if settings.DEMO_MODE:
+        stats = get_demo_global_stats()
+        return GlobalStatsResponse(**stats)
+    
+    # Normal mode: Use real analytics service
     stats = await analytics_service.get_global_stats()
     return GlobalStatsResponse(**stats)
 

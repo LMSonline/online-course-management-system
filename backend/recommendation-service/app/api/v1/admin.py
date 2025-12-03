@@ -7,6 +7,7 @@ from pathlib import Path
 from app.core.settings import settings
 from app.models.two_tower import TwoTowerModel
 from app.infra.repositories import InMemoryCourseRepository
+from app.demo.recommendation_demo_responses import get_demo_model_info
 
 
 router = APIRouter()
@@ -69,6 +70,12 @@ def get_model_info() -> Dict[str, Any]:
 @router.get("/models", response_model=ModelInfoResponse)
 async def get_models_info():
     """Get information about loaded models and checkpoints."""
+    # DEMO_MODE: Return hardcoded model info
+    if settings.DEMO_MODE:
+        info = get_demo_model_info()
+        return ModelInfoResponse(**info)
+    
+    # Normal mode: Check actual model files
     info = get_model_info()
     return ModelInfoResponse(**info)
 
