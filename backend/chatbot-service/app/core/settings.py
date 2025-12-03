@@ -70,7 +70,11 @@ class Settings(BaseSettings):
     # Vector Store
     VECTOR_STORE_BACKEND: str = "inmemory"  # inmemory | faiss
     VECTOR_STORE_DIR: str = "./vector_store"
-    CHATBOT_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    
+    # Embedding Configuration
+    EMBEDDING_BACKEND: str = "dummy"  # dummy | sentence_transformers
+    CHATBOT_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"  # Only used when EMBEDDING_BACKEND=sentence_transformers
+    EMBEDDING_DIM: int = 384  # Dimension for dummy embeddings (matches all-MiniLM-L6-v2)
 
     # Search Configuration
     SEARCH_MODE: str = "vector"  # vector | bm25 | hybrid
@@ -89,6 +93,9 @@ class Settings(BaseSettings):
     SERVICE_NAME: str = "chatbot-service"
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"  # json | text
+    
+    # Demo Mode
+    DEMO_MODE: bool = True  # If True, return hardcoded responses without external dependencies
 
     model_config = SettingsConfigDict(
         env_file=get_env_file(),
@@ -105,11 +112,16 @@ class Settings(BaseSettings):
         if self.ENV.lower() == "test":
             self.VECTOR_STORE_BACKEND = "inmemory"
             self.LLM_PROVIDER = "dummy"
+            self.EMBEDDING_BACKEND = "dummy"
             # Use in-memory or test DB defaults
             if not self.CHAT_DB_NAME:
                 self.CHAT_DB_NAME = "test_chatbot"
             if not self.LMS_DB_NAME:
                 self.LMS_DB_NAME = "test_lms"
+        
+        # Default to dummy embeddings in dev mode if not explicitly set
+        if self.ENV.lower() == "dev" and not os.getenv("EMBEDDING_BACKEND"):
+            self.EMBEDDING_BACKEND = "dummy"
 
 
 @lru_cache()

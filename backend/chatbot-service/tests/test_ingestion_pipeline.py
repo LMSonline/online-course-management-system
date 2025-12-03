@@ -16,6 +16,7 @@ from app.ingestion.loaders import (
     HTMLLoader,
     PDFLoader,
     TranscriptLoader,
+    JSONLLoader,
 )
 from app.ingestion.chunkers import FixedSizeChunker, SemanticChunker
 from app.ingestion.ingestion_service import IngestionService
@@ -167,6 +168,78 @@ Today we will learn about Python.
         assert "Hello, welcome" in docs[0].content
         assert "WEBVTT" not in docs[0].content  # Header should be removed
 
+    @pytest.mark.asyncio
+    async def test_jsonl_loader(self, tmp_path):
+        """Test JSONL loader with sample JSONL file."""
+        loader = JSONLLoader()
+        
+        # Create test JSONL file
+        jsonl_file = tmp_path / "test.jsonl"
+        jsonl_file.write_text(
+            """{"id": "video_001", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_001", "lesson_title": "Introduction", "video_id": "video_001", "video_title": "What is Python?", "text": "Welcome to Python Basics! Python is a high-level programming language.", "tags": ["python", "programming"], "skills": ["programming"], "topics": ["basics"], "language": "en", "difficulty": "BEGINNER"}
+{"id": "video_002", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_002", "lesson_title": "Variables", "video_id": "video_002", "video_title": "Understanding Variables", "text": "Variables in Python are containers for storing data values.", "tags": ["python", "variables"], "skills": ["programming"], "topics": ["variables"], "language": "en", "difficulty": "BEGINNER"}
+"""
+        )
+        
+        docs = await loader.load(str(jsonl_file), course_id="course_python_basic")
+        
+        assert len(docs) == 2
+        assert all(isinstance(doc, ContentDocument) for doc in docs)
+        assert all(doc.metadata["course_id"] == "course_python_basic" for doc in docs)
+        assert all(doc.metadata["source_type"] == "jsonl" for doc in docs)
+        assert "Welcome to Python Basics" in docs[0].content
+        assert "Variables in Python" in docs[1].content
+        assert docs[0].metadata["lesson_id"] == "lesson_001"
+        assert docs[0].metadata["tags"] == ["python", "programming"]
+
+    @pytest.mark.asyncio
+    async def test_jsonl_loader_with_course_id_override(self, tmp_path):
+        """Test JSONL loader with course_id override from kwargs."""
+        loader = JSONLLoader()
+        
+        # Create test JSONL file with different course_id
+        jsonl_file = tmp_path / "test.jsonl"
+        jsonl_file.write_text(
+            """{"id": "video_001", "course_id": "original_course", "text": "Test content", "tags": ["test"]}
+"""
+        )
+        
+        # Override course_id via kwargs
+        docs = await loader.load(str(jsonl_file), course_id="new_course_id")
+        
+        assert len(docs) == 1
+        assert docs[0].metadata["course_id"] == "new_course_id"  # Should be overridden
+
+    @pytest.mark.asyncio
+    async def test_jsonl_loader_filters_by_course_id(self, tmp_path):
+        """Test JSONL loader filters by course_id when provided."""
+        loader = JSONLLoader()
+        
+        # Create test JSONL file with multiple courses
+        jsonl_file = tmp_path / "test.jsonl"
+        jsonl_file.write_text(
+            """{"id": "video_001", "course_id": "course_python", "text": "Python content", "tags": []}
+{"id": "video_002", "course_id": "course_java", "text": "Java content", "tags": []}
+{"id": "video_003", "course_id": "course_python", "text": "More Python content", "tags": []}
+"""
+        )
+        
+        # Filter by course_id
+        docs = await loader.load(str(jsonl_file), course_id="course_python")
+        
+        assert len(docs) == 2
+        assert all(doc.metadata["course_id"] == "course_python" for doc in docs)
+        assert "Java content" not in [doc.content for doc in docs]
+
+    def test_jsonl_loader_supports(self):
+        """Test JSONL loader's supports method."""
+        loader = JSONLLoader()
+        
+        assert loader.supports("/path/to/file.jsonl") is True
+        assert loader.supports("/path/to/file.JSONL") is True
+        assert loader.supports("/path/to/file.txt") is False
+        assert loader.supports("/path/to/dir") is False
+
 
 class TestChunkers:
     """Tests for chunking strategies."""
@@ -304,4 +377,29 @@ More content here.
         assert result["documents_loaded"] >= 3
         assert result["chunks_created"] > 0
         assert result["chunks_ingested"] == result["chunks_created"]
+
+    @pytest.mark.asyncio
+    async def test_ingestion_service_with_jsonl(self, tmp_path):
+        """Test full ingestion pipeline with JSONL file."""
+        # Create test JSONL file
+        jsonl_file = tmp_path / "course_videos.jsonl"
+        jsonl_file.write_text(
+            """{"id": "video_001", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_001", "text": "Welcome to Python Basics! Python is a high-level programming language.", "tags": ["python"], "language": "en"}
+{"id": "video_002", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_002", "text": "Variables in Python are containers for storing data values.", "tags": ["python"], "language": "en"}
+"""
+        )
+        
+        vector_store = InMemoryVectorStore()
+        service = IngestionService(vector_store=vector_store)
+        
+        result = await service.ingest(
+            source=str(jsonl_file),
+            chunking_strategy="fixed",
+            course_id="course_python_basic",
+        )
+        
+        assert result["documents_loaded"] == 2
+        assert result["chunks_created"] > 0
+        assert result["chunks_ingested"] > 0
+        assert result["source"] == str(jsonl_file)
 

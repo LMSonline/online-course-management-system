@@ -15,18 +15,14 @@ from app.ingestion.loaders.base import BaseLoader, ContentDocument
 class JSONLLoader(BaseLoader):
     """Loads content from JSONL files (one JSON object per line)."""
 
-    async def load(
-        self,
-        source: str,
-        course_id: Optional[str] = None,
-        **kwargs,
-    ) -> List[ContentDocument]:
+    async def load(self, source: str, **kwargs) -> List[ContentDocument]:
         """
         Load content from a JSONL file.
 
         Args:
             source: Path to JSONL file
-            course_id: Optional course ID filter (if None, loads all)
+            **kwargs:
+                - course_id: Optional course ID to filter or override
 
         Returns:
             List of ContentDocument objects
@@ -34,6 +30,9 @@ class JSONLLoader(BaseLoader):
         source_path = Path(source)
         if not source_path.exists():
             raise FileNotFoundError(f"JSONL file not found: {source}")
+
+        # Get course_id from kwargs (can be used for filtering or overriding)
+        course_id_from_kwargs = kwargs.get("course_id")
 
         documents = []
         with open(source_path, "r", encoding="utf-8") as f:
@@ -45,8 +44,8 @@ class JSONLLoader(BaseLoader):
                 try:
                     data = json.loads(line)
                     
-                    # Filter by course_id if specified
-                    if course_id and data.get("course_id") != course_id:
+                    # Filter by course_id if specified in kwargs
+                    if course_id_from_kwargs and data.get("course_id") != course_id_from_kwargs:
                         continue
 
                     # Extract text content (transcript)
@@ -55,8 +54,9 @@ class JSONLLoader(BaseLoader):
                         continue  # Skip entries without text
 
                     # Build metadata from JSONL fields
+                    # Override course_id if provided in kwargs
                     metadata = {
-                        "course_id": data.get("course_id"),
+                        "course_id": course_id_from_kwargs or data.get("course_id"),
                         "lesson_id": data.get("lesson_id"),
                         "video_id": data.get("video_id"),
                         "course_title": data.get("course_title"),
@@ -71,6 +71,7 @@ class JSONLLoader(BaseLoader):
                         "skills": data.get("skills", []),
                         "topics": data.get("topics", []),
                         "source": data.get("source", "jsonl"),
+                        "source_type": "jsonl",
                         "source_file": str(source_path),
                         "line_number": line_num,
                     }

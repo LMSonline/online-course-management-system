@@ -79,6 +79,9 @@ class Settings(BaseSettings):
     
     # Bandit Configuration
     BANDIT_EPSILON: float = 0.1  # Exploration rate for epsilon-greedy bandit
+    
+    # Demo Mode
+    DEMO_MODE: bool = True  # If True, return hardcoded responses without external dependencies
 
     model_config = SettingsConfigDict(
         env_file=get_env_file(),

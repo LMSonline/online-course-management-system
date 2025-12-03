@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from app.services.chat_service import ChatService
 from app.api.deps import get_chat_service
+from app.core.settings import settings
+from app.demo.chatbot_demo_responses import get_demo_chat_response
 
 router = APIRouter()
 
@@ -46,6 +48,25 @@ async def post_message(
     chat_service: ChatService = Depends(get_chat_service),
 ):
     """Handle a chat message with optional parameters for enhanced features."""
+    # DEMO_MODE: Return hardcoded responses without external dependencies
+    if settings.DEMO_MODE:
+        reply, debug_info = get_demo_chat_response(
+            req.text, 
+            debug=req.debug,
+            exam_date=req.exam_date,
+            free_days_per_week=req.free_days_per_week,
+            completed_lessons=req.completed_lessons,
+        )
+        response = ChatResponse(reply=reply)
+        if debug_info and req.debug:
+            response.debug = DebugInfo(
+                chunks=[
+                    ChunkDebugInfo(**chunk) for chunk in debug_info["chunks"]
+                ]
+            )
+        return response
+    
+    # Normal mode: Use real chat service
     reply, debug_info = await chat_service.handle_message(
         session_id=req.session_id,
         user_id=req.user_id,
