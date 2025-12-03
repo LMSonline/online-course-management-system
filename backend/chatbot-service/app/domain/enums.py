@@ -1,0 +1,17 @@
+from enum import Enum
+
+
+class Intent(str, Enum):
+    ASK_COURSE_QA = "ASK_COURSE_QA"
+    ASK_GENERAL_QA = "ASK_GENERAL_QA"
+    ASK_RECOMMEND = "ASK_RECOMMEND"
+    ASK_STUDY_PLAN = "ASK_STUDY_PLAN"
+    ASK_GENERATE_QUIZ = "ASK_GENERATE_QUIZ"
+    ASK_SUMMARY = "ASK_SUMMARY"
+    ASK_EXPLAIN_CODE = "ASK_EXPLAIN_CODE"
+    UNKNOWN = "UNKNOWN"
+
+
+class Sender(str, Enum):
+    USER = "USER"
+    BOT = "BOT"

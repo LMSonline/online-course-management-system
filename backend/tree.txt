@@ -1,0 +1,1027 @@
+Folder PATH listing for volume New Volume
+Volume serial number is 1AC9-19A2
+D:.
+|   tree.txt
+|   
+\---lms
+    |   .dockerignore
+    |   .gitattributes
+    |   .gitignore
+    |   build.gradle.kts
+    |   docker-compose.yml
+    |   Dockerfile
+    |   gradlew
+    |   gradlew.bat
+    |   HELP.md
+    |   README-BACKEND.md
+    |   settings.gradle.kts
+    |   
+    +---.gradle
+    |   |   file-system.probe
+    |   |   
+    |   +---8.14.3
+    |   |   |   gc.properties
+    |   |   |   
+    |   |   +---checksums
+    |   |   |       checksums.lock
+    |   |   |       
+    |   |   +---executionHistory
+    |   |   |       executionHistory.bin
+    |   |   |       executionHistory.lock
+    |   |   |       
+    |   |   +---expanded
+    |   |   +---fileChanges
+    |   |   |       last-build.bin
+    |   |   |       
+    |   |   +---fileHashes
+    |   |   |       fileHashes.bin
+    |   |   |       fileHashes.lock
+    |   |   |       resourceHashesCache.bin
+    |   |   |       
+    |   |   \---vcsMetadata
+    |   +---buildOutputCleanup
+    |   |       buildOutputCleanup.lock
+    |   |       cache.properties
+    |   |       outputFiles.bin
+    |   |       
+    |   \---vcs-1
+    |           gc.properties
+    |           
+    +---build
+    |   +---classes
+    |   |   \---java
+    |   |       \---main
+    |   |           \---vn
+    |   |               \---uit
+    |   |                   \---lms
+    |   |                       |   LmsApplication.class
+    |   |                       |   
+    |   |                       +---config
+    |   |                       |   |   CloudinaryConfig.class
+    |   |                       |   |   CorsConfig.class
+    |   |                       |   |   CustomAuthenticationEntryPoint.class
+    |   |                       |   |   CustomUserDetailService.class
+    |   |                       |   |   DateTimeFormatConfiguration.class
+    |   |                       |   |   MessageConfig.class
+    |   |                       |   |   SecurityConfiguration.class
+    |   |                       |   |   SecurityJwtConfiguration.class
+    |   |                       |   |   
+    |   |                       |   \---init
+    |   |                       |           Initializer$1.class
+    |   |                       |           Initializer.class
+    |   |                       |           
+    |   |                       +---controller
+    |   |                       |   |   HelloWorldController.class
+    |   |                       |   |   
+    |   |                       |   +---admin
+    |   |                       |   |       AuditLogController.class
+    |   |                       |   |       DashboardController.class
+    |   |                       |   |       SystemSettingController.class
+    |   |                       |   |       
+    |   |                       |   +---auth
+    |   |                       |   |       AccountController.class
+    |   |                       |   |       AuthController.class
+    |   |                       |   |       
+    |   |                       |   +---community
+    |   |                       |   |   |   CommentController.class
+    |   |                       |   |   |   ViolationReportController.class
+    |   |                       |   |   |   
+    |   |                       |   |   \---notification
+    |   |                       |   |           NotificationAdminController.class
+    |   |                       |   |           NotificationChannelController.class
+    |   |                       |   |           NotificationController.class
+    |   |                       |   |           
+    |   |                       |   +---course
+    |   |                       |   |   |   CategoryController.class
+    |   |                       |   |   |   CourseController.class
+    |   |                       |   |   |   CourseReviewController.class
+    |   |                       |   |   |   CourseVersionController.class
+    |   |                       |   |   |   TagController.class
+    |   |                       |   |   |   
+    |   |                       |   |   \---content
+    |   |                       |   |           ChapterController.class
+    |   |                       |   |           FileStorageController.class
+    |   |                       |   |           LessonController.class
+    |   |                       |   |           LessonResourceController.class
+    |   |                       |   |           
+    |   |                       |   \---recommendation
+    |   |                       |           RecommendationController.class
+    |   |                       |           
+    |   |                       +---core
+    |   |                       |   +---entity
+    |   |                       |   |   |   Account$AccountBuilder.class
+    |   |                       |   |   |   Account.class
+    |   |                       |   |   |   AccountActionLog$AccountActionLogBuilder.class
+    |   |                       |   |   |   AccountActionLog.class
+    |   |                       |   |   |   BaseProfile.class
+    |   |                       |   |   |   EmailVerification$EmailVerificationBuilder.class
+    |   |                       |   |   |   EmailVerification.class
+    |   |                       |   |   |   RefreshToken$RefreshTokenBuilder.class
+    |   |                       |   |   |   RefreshToken.class
+    |   |                       |   |   |   Student$StudentBuilder.class
+    |   |                       |   |   |   Student.class
+    |   |                       |   |   |   Teacher$TeacherBuilder.class
+    |   |                       |   |   |   Teacher.class
+    |   |                       |   |   |   
+    |   |                       |   |   +---community
+    |   |                       |   |   |   +---comment
+    |   |                       |   |   |   |       Comment.class
+    |   |                       |   |   |   |       
+    |   |                       |   |   |   +---notification
+    |   |                       |   |   |   |       Notification.class
+    |   |                       |   |   |   |       NotificationChannel.class
+    |   |                       |   |   |   |       
+    |   |                       |   |   |   \---report
+    |   |                       |   |   |           ViolationReport.class
+    |   |                       |   |   |           
+    |   |                       |   |   +---course
+    |   |                       |   |   |   |   Category$CategoryBuilder.class
+    |   |                       |   |   |   |   Category.class
+    |   |                       |   |   |   |   Course$CourseBuilder.class
+    |   |                       |   |   |   |   Course.class
+    |   |                       |   |   |   |   CourseReview$CourseReviewBuilder.class
+    |   |                       |   |   |   |   CourseReview.class
+    |   |                       |   |   |   |   CourseTag$CourseTagBuilder.class
+    |   |                       |   |   |   |   CourseTag.class
+    |   |                       |   |   |   |   CourseVersion$CourseVersionBuilder.class
+    |   |                       |   |   |   |   CourseVersion.class
+    |   |                       |   |   |   |   Tag$TagBuilder.class
+    |   |                       |   |   |   |   Tag.class
+    |   |                       |   |   |   |   
+    |   |                       |   |   |   \---content
+    |   |                       |   |   |           Chapter$ChapterBuilder.class
+    |   |                       |   |   |           Chapter.class
+    |   |                       |   |   |           FileStorage$FileStorageBuilder.class
+    |   |                       |   |   |           FileStorage.class
+    |   |                       |   |   |           Lesson$LessonBuilder.class
+    |   |                       |   |   |           Lesson.class
+    |   |                       |   |   |           LessonResource$LessonResourceBuilder.class
+    |   |                       |   |   |           LessonResource.class
+    |   |                       |   |   |           
+    |   |                       |   |   +---log
+    |   |                       |   |   |       AuditLog.class
+    |   |                       |   |   |       UserActivityLog.class
+    |   |                       |   |   |       
+    |   |                       |   |   +---recommendation
+    |   |                       |   |   |       RecommendationFeedback.class
+    |   |                       |   |   |       RecommendationLog.class
+    |   |                       |   |   |       
+    |   |                       |   |   \---system
+    |   |                       |   |           SystemSetting.class
+    |   |                       |   |           
+    |   |                       |   \---repository
+    |   |                       |       |   AccountActionLogRepository.class
+    |   |                       |       |   AccountRepository.class
+    |   |                       |       |   EmailVerificationRepository.class
+    |   |                       |       |   RefreshTokenRepository.class
+    |   |                       |       |   StudentRepository.class
+    |   |                       |       |   TeacherRepository.class
+    |   |                       |       |   TestRepository.class
+    |   |                       |       |   
+    |   |                       |       +---community
+    |   |                       |       |   +---comment
+    |   |                       |       |   |       CommentRepository.class
+    |   |                       |       |   |       
+    |   |                       |       |   +---notification
+    |   |                       |       |   |       NotificationChannelRepository.class
+    |   |                       |       |   |       NotificationRepository.class
+    |   |                       |       |   |       
+    |   |                       |       |   \---report
+    |   |                       |       |           ViolationReportRepository.class
+    |   |                       |       |           
+    |   |                       |       +---course
+    |   |                       |       |   |   CategoryRepository.class
+    |   |                       |       |   |   CourseRepository.class
+    |   |                       |       |   |   CourseReviewRepository.class
+    |   |                       |       |   |   CourseVersionRepository.class
+    |   |                       |       |   |   TagRepository.class
+    |   |                       |       |   |   
+    |   |                       |       |   \---content
+    |   |                       |       |           ChapterRepository.class
+    |   |                       |       |           FileStorageRepository.class
+    |   |                       |       |           LessonRepository.class
+    |   |                       |       |           LessonResourceRepository.class
+    |   |                       |       |           
+    |   |                       |       +---log
+    |   |                       |       |       AuditLogRepository.class
+    |   |                       |       |       UserActivityLogRepository.class
+    |   |                       |       |       
+    |   |                       |       +---recommendation
+    |   |                       |       |       RecommendationFeedbackRepository.class
+    |   |                       |       |       RecommendationLogRepository.class
+    |   |                       |       |       
+    |   |                       |       \---system
+    |   |                       |               SystemSettingRepository.class
+    |   |                       |               
+    |   |                       +---service
+    |   |                       |   |   AccountActionLogService.class
+    |   |                       |   |   AccountService$1.class
+    |   |                       |   |   AccountService.class
+    |   |                       |   |   AuthService$1.class
+    |   |                       |   |   AuthService$2.class
+    |   |                       |   |   AuthService.class
+    |   |                       |   |   CloudinaryStorageService$UploadResult.class
+    |   |                       |   |   CloudinaryStorageService.class
+    |   |                       |   |   EmailVerificationService$1.class
+    |   |                       |   |   EmailVerificationService.class
+    |   |                       |   |   MailService$1.class
+    |   |                       |   |   MailService.class
+    |   |                       |   |   RefreshTokenService$1.class
+    |   |                       |   |   RefreshTokenService.class
+    |   |                       |   |   StudentService.class
+    |   |                       |   |   TeacherService.class
+    |   |                       |   |   
+    |   |                       |   +---community
+    |   |                       |   |   +---comment
+    |   |                       |   |   |       CommentService.class
+    |   |                       |   |   |       
+    |   |                       |   |   +---notification
+    |   |                       |   |   |       NotificationService.class
+    |   |                       |   |   |       
+    |   |                       |   |   \---report
+    |   |                       |   |           ViolationReportService.class
+    |   |                       |   |           
+    |   |                       |   +---course
+    |   |                       |   |   |   CategoryService.class
+    |   |                       |   |   |   CourseReviewService.class
+    |   |                       |   |   |   CourseService.class
+    |   |                       |   |   |   CourseVersionService.class
+    |   |                       |   |   |   TagService.class
+    |   |                       |   |   |   
+    |   |                       |   |   \---content
+    |   |                       |   |           ChapterService.class
+    |   |                       |   |           FileStorageService.class
+    |   |                       |   |           LessonResourceService.class
+    |   |                       |   |           LessonService.class
+    |   |                       |   |           
+    |   |                       |   +---event
+    |   |                       |   |   |   AccountActivatedEvent.class
+    |   |                       |   |   |   AccountActiveEvent.class
+    |   |                       |   |   |   AccountStatusChangeEvent.class
+    |   |                       |   |   |   CourseVersionStatusChangeEvent.class
+    |   |                       |   |   |   PasswordResetEvent.class
+    |   |                       |   |   |   
+    |   |                       |   |   \---listener
+    |   |                       |   |           AccountListener.class
+    |   |                       |   |           CourseStatusChangeListener.class
+    |   |                       |   |           
+    |   |                       |   +---helper
+    |   |                       |   |       CodeGenerator.class
+    |   |                       |   |       SEOHelper.class
+    |   |                       |   |       SEOHelperImpl.class
+    |   |                       |   |       StudentCodeGenerator.class
+    |   |                       |   |       TeacherCodeGenerator.class
+    |   |                       |   |       
+    |   |                       |   +---log
+    |   |                       |   |       AuditLogService.class
+    |   |                       |   |       
+    |   |                       |   +---recommendation
+    |   |                       |   |       RecommendationService.class
+    |   |                       |   |       
+    |   |                       |   +---schedule
+    |   |                       |   |       RefreshTokenCleanupService.class
+    |   |                       |   |       
+    |   |                       |   \---system
+    |   |                       |           SystemSettingService.class
+    |   |                       |           
+    |   |                       \---shared
+    |   |                           +---annotation
+    |   |                           |       Audit.class
+    |   |                           |       
+    |   |                           +---aop
+    |   |                           |       AuditAspect.class
+    |   |                           |       AuditHelper.class
+    |   |                           |       HibernateFilterAspect.class
+    |   |                           |       
+    |   |                           +---constant
+    |   |                           |       AccountActionType.class
+    |   |                           |       AccountStatus.class
+    |   |                           |       AuditAction.class
+    |   |                           |       ChannelStatus.class
+    |   |                           |       ChannelType.class
+    |   |                           |       CourseStatus.class
+    |   |                           |       Difficulty.class
+    |   |                           |       ErrorCode.class
+    |   |                           |       FeedbackType.class
+    |   |                           |       Gender.class
+    |   |                           |       Language.class
+    |   |                           |       LessonType.class
+    |   |                           |       ResourceType.class
+    |   |                           |       Role.class
+    |   |                           |       SecurityConstants.class
+    |   |                           |       SuccessCode.class
+    |   |                           |       TokenType.class
+    |   |                           |       ViolationReportStatus.class
+    |   |                           |       
+    |   |                           +---dto
+    |   |                           |   |   ApiResponse$ApiResponseBuilder.class
+    |   |                           |   |   ApiResponse$Meta$MetaBuilder.class
+    |   |                           |   |   ApiResponse$Meta.class
+    |   |                           |   |   ApiResponse.class
+    |   |                           |   |   PageResponse$PageResponseBuilder.class
+    |   |                           |   |   PageResponse.class
+    |   |                           |   |   
+    |   |                           |   +---request
+    |   |                           |   |   |   ChangePasswordDTO.class
+    |   |                           |   |   |   ForgotPasswordDTO.class
+    |   |                           |   |   |   RegisterRequest.class
+    |   |                           |   |   |   ReqLoginDTO.class
+    |   |                           |   |   |   ReqRefreshTokenDTO.class
+    |   |                           |   |   |   ResetPasswordDTO.class
+    |   |                           |   |   |   
+    |   |                           |   |   +---account
+    |   |                           |   |   |       RejectRequest.class
+    |   |                           |   |   |       UpdateProfileRequest.class
+    |   |                           |   |   |       UpdateStatusRequest.class
+    |   |                           |   |   |       
+    |   |                           |   |   +---community
+    |   |                           |   |   |   +---comment
+    |   |                           |   |   |   |       CommentCreateRequest.class
+    |   |                           |   |   |   |       
+    |   |                           |   |   |   +---notification
+    |   |                           |   |   |   |       NotificationChannelCreateRequest.class
+    |   |                           |   |   |   |       SendBulkNotificationRequest.class
+    |   |                           |   |   |   |       
+    |   |                           |   |   |   \---report
+    |   |                           |   |   |           ViolationReportCreateRequest.class
+    |   |                           |   |   |           ViolationReportDismissRequest.class
+    |   |                           |   |   |           ViolationReportReviewRequest.class
+    |   |                           |   |   |           ViolationReportTakeActionRequest.class
+    |   |                           |   |   |           
+    |   |                           |   |   +---course
+    |   |                           |   |   |       CategoryRequest.class
+    |   |                           |   |   |       CourseRequest.class
+    |   |                           |   |   |       CourseReviewRequest$CourseReviewRequestBuilder.class
+    |   |                           |   |   |       CourseReviewRequest.class
+    |   |                           |   |   |       CourseUpdateRequest.class
+    |   |                           |   |   |       CourseVersionRequest.class
+    |   |                           |   |   |       TagRequest.class
+    |   |                           |   |   |       
+    |   |                           |   |   +---recommendation
+    |   |                           |   |   |       RecommendationFeedbackRequest.class
+    |   |                           |   |   |       
+    |   |                           |   |   \---system
+    |   |                           |   |           SystemSettingRequest.class
+    |   |                           |   |           
+    |   |                           |   \---response
+    |   |                           |       |   MeResponse$MeResponseBuilder.class
+    |   |                           |       |   MeResponse.class
+    |   |                           |       |   RegisterResponse$RegisterResponseBuilder.class
+    |   |                           |       |   RegisterResponse.class
+    |   |                           |       |   ResLoginDTO$ResLoginDTOBuilder.class
+    |   |                           |       |   ResLoginDTO$UserInfo$UserInfoBuilder.class
+    |   |                           |       |   ResLoginDTO$UserInfo.class
+    |   |                           |       |   ResLoginDTO$UserInsideToken$UserInsideTokenBuilder.class
+    |   |                           |       |   ResLoginDTO$UserInsideToken.class
+    |   |                           |       |   ResLoginDTO.class
+    |   |                           |       |   
+    |   |                           |       +---account
+    |   |                           |       |       AccountProfileResponse$AccountProfileResponseBuilder.class
+    |   |                           |       |       AccountProfileResponse$Profile$ProfileBuilder.class
+    |   |                           |       |       AccountProfileResponse$Profile.class
+    |   |                           |       |       AccountProfileResponse.class
+    |   |                           |       |       AccountResponse$AccountResponseBuilder.class
+    |   |                           |       |       AccountResponse.class
+    |   |                           |       |       UploadAvatarResponse$UploadAvatarResponseBuilder.class
+    |   |                           |       |       UploadAvatarResponse.class
+    |   |                           |       |       
+    |   |                           |       +---community
+    |   |                           |       |   +---comment
+    |   |                           |       |   |       CommentResponse$UserDto.class
+    |   |                           |       |   |       CommentResponse.class
+    |   |                           |       |   |       
+    |   |                           |       |   +---notification
+    |   |                           |       |   |       NotificationResponse$NotificationResponseBuilder.class
+    |   |                           |       |   |       NotificationResponse.class
+    |   |                           |       |   |       
+    |   |                           |       |   \---report
+    |   |                           |       |           ViolationReportDetailResponse.class
+    |   |                           |       |           ViolationReportResponse$SimpleCommentDto.class
+    |   |                           |       |           ViolationReportResponse$SimpleCourseDto.class
+    |   |                           |       |           ViolationReportResponse$SimpleLessonDto.class
+    |   |                           |       |           ViolationReportResponse$SimpleUserDto.class
+    |   |                           |       |           ViolationReportResponse.class
+    |   |                           |       |           
+    |   |                           |       +---course
+    |   |                           |       |       CategoryResponseDto.class
+    |   |                           |       |       CourseDetailResponse$CategoryDto.class
+    |   |                           |       |       CourseDetailResponse$CourseDetailResponseBuilder.class
+    |   |                           |       |       CourseDetailResponse.class
+    |   |                           |       |       CourseResponse$CourseResponseBuilder.class
+    |   |                           |       |       CourseResponse.class
+    |   |                           |       |       CourseReviewResponse$CourseReviewResponseBuilder.class
+    |   |                           |       |       CourseReviewResponse.class
+    |   |                           |       |       CourseVersionPublicResponse.class
+    |   |                           |       |       CourseVersionResponse$CourseVersionResponseBuilder.class
+    |   |                           |       |       CourseVersionResponse.class
+    |   |                           |       |       RatingSummaryResponse$RatingSummaryResponseBuilder.class
+    |   |                           |       |       RatingSummaryResponse.class
+    |   |                           |       |       
+    |   |                           |       +---log
+    |   |                           |       |       AccountActionLogResponse$AccountActionLogResponseBuilder.class
+    |   |                           |       |       AccountActionLogResponse.class
+    |   |                           |       |       AuditLogResponse.class
+    |   |                           |       |       
+    |   |                           |       +---recommendation
+    |   |                           |       |       RecommendationLogDto.class
+    |   |                           |       |       
+    |   |                           |       \---system
+    |   |                           |               SystemSettingResponse.class
+    |   |                           |               
+    |   |                           +---entity
+    |   |                           |       BaseEntity.class
+    |   |                           |       PersonBase.class
+    |   |                           |       TestEntity.class
+    |   |                           |       
+    |   |                           +---exception
+    |   |                           |       DuplicateResourceException.class
+    |   |                           |       EmailAlreadyUsedException.class
+    |   |                           |       InvalidFileException.class
+    |   |                           |       InvalidPasswordException.class
+    |   |                           |       InvalidRequestException.class
+    |   |                           |       InvalidStatusException.class
+    |   |                           |       InvalidTokenException.class
+    |   |                           |       ResourceNotFoundException.class
+    |   |                           |       UnauthorizedException.class
+    |   |                           |       UploadFileException.class
+    |   |                           |       UsernameAlreadyUsedException.class
+    |   |                           |       UserNotActivatedException.class
+    |   |                           |       
+    |   |                           +---handler
+    |   |                           |       GlobalException.class
+    |   |                           |       
+    |   |                           +---mapper
+    |   |                           |   |   AccountMapper.class
+    |   |                           |   |   LogMapper$1.class
+    |   |                           |   |   LogMapper.class
+    |   |                           |   |   StudentMapper.class
+    |   |                           |   |   TeacherMapper.class
+    |   |                           |   |   
+    |   |                           |   +---community
+    |   |                           |   |       CommentMapper.class
+    |   |                           |   |       NotificationMapper.class
+    |   |                           |   |       ViolationReportMapper.class
+    |   |                           |   |       
+    |   |                           |   +---course
+    |   |                           |   |       CategoryMapper.class
+    |   |                           |   |       CourseMapper.class
+    |   |                           |   |       CourseReviewMapper.class
+    |   |                           |   |       CourseVersionMapper.class
+    |   |                           |   |       
+    |   |                           |   +---log
+    |   |                           |   |       AuditLogMapper.class
+    |   |                           |   |       AuditLogMapperImpl.class
+    |   |                           |   |       
+    |   |                           |   +---recommendation
+    |   |                           |   |       RecommendationMapper.class
+    |   |                           |   |       RecommendationMapperImpl.class
+    |   |                           |   |       
+    |   |                           |   \---system
+    |   |                           |           SystemSettingMapper.class
+    |   |                           |           SystemSettingMapperImpl.class
+    |   |                           |           
+    |   |                           +---util
+    |   |                           |   |   CloudinaryUtils.class
+    |   |                           |   |   FormatRestResponse$1.class
+    |   |                           |   |   FormatRestResponse.class
+    |   |                           |   |   HibernateFilterUtils.class
+    |   |                           |   |   JsonViewUtils$1.class
+    |   |                           |   |   JsonViewUtils.class
+    |   |                           |   |   SecurityUtils.class
+    |   |                           |   |   TokenHashUtil.class
+    |   |                           |   |   
+    |   |                           |   \---annotation
+    |   |                           |           AdminOnly.class
+    |   |                           |           ApiMessage.class
+    |   |                           |           EnableSoftDeleteFilter.class
+    |   |                           |           StudentOnly.class
+    |   |                           |           TeacherOnly.class
+    |   |                           |           
+    |   |                           \---view
+    |   |                                   Views$Admin.class
+    |   |                                   Views$Public.class
+    |   |                                   Views$Student.class
+    |   |                                   Views$Teacher.class
+    |   |                                   Views.class
+    |   |                                   
+    |   +---generated
+    |   |   \---sources
+    |   |       +---annotationProcessor
+    |   |       |   \---java
+    |   |       |       \---main
+    |   |       |           \---vn
+    |   |       |               \---uit
+    |   |       |                   \---lms
+    |   |       |                       \---shared
+    |   |       |                           \---mapper
+    |   |       |                               +---log
+    |   |       |                               |       AuditLogMapperImpl.java
+    |   |       |                               |       
+    |   |       |                               +---recommendation
+    |   |       |                               |       RecommendationMapperImpl.java
+    |   |       |                               |       
+    |   |       |                               \---system
+    |   |       |                                       SystemSettingMapperImpl.java
+    |   |       |                                       
+    |   |       \---headers
+    |   |           \---java
+    |   |               \---main
+    |   +---reports
+    |   |   \---problems
+    |   |           problems-report.html
+    |   |           
+    |   +---resources
+    |   |   \---main
+    |   |       |   application.yml
+    |   |       |   application.yml.example
+    |   |       |   
+    |   |       +---i18n
+    |   |       |       messages_en.properties
+    |   |       |       messages_vi.properties
+    |   |       |       
+    |   |       \---templates
+    |   |           |   error.html
+    |   |           |   
+    |   |           \---mail
+    |   |               |   accountApprovedEmail.html
+    |   |               |   accountDeactivatedEmail.html
+    |   |               |   accountRejectedEmail.html
+    |   |               |   accountSuspendedEmail.html
+    |   |               |   accountUnknownEmail.html
+    |   |               |   accountUnlockedEmail.html
+    |   |               |   activationEmail.html
+    |   |               |   activationSuccessEmail.html
+    |   |               |   creationEmail.html
+    |   |               |   passwordResetEmail.html
+    |   |               |   
+    |   |               \---course
+    |   |                       courseApprovedEmail.html
+    |   |                       coursePublishedEmail.html
+    |   |                       courseRejectedEmail.html
+    |   |                       courseSubmittedEmail.html
+    |   |                       
+    |   \---tmp
+    |       \---compileJava
+    |           |   previous-compilation-data.bin
+    |           |   
+    |           \---compileTransaction
+    |               +---backup-dir
+    |               \---stash-dir
+    |                       AccountController.class.uniqueId0
+    |                       AccountService$1.class.uniqueId1
+    |                       AccountService.class.uniqueId8
+    |                       CommentController.class.uniqueId6
+    |                       CommentService.class.uniqueId11
+    |                       CourseController.class.uniqueId10
+    |                       CourseReviewController.class.uniqueId9
+    |                       CourseReviewService.class.uniqueId2
+    |                       CourseService.class.uniqueId12
+    |                       CourseVersionController.class.uniqueId7
+    |                       CourseVersionService.class.uniqueId3
+    |                       ViolationReportController.class.uniqueId5
+    |                       ViolationReportService.class.uniqueId4
+    |                       
+    +---gradle
+    |   \---wrapper
+    |           gradle-wrapper.jar
+    |           gradle-wrapper.properties
+    |           
+    \---src
+        +---main
+        |   +---java
+        |   |   \---vn
+        |   |       \---uit
+        |   |           \---lms
+        |   |               |   LmsApplication.java
+        |   |               |   
+        |   |               +---config
+        |   |               |   |   CloudinaryConfig.java
+        |   |               |   |   CorsConfig.java
+        |   |               |   |   CustomAuthenticationEntryPoint.java
+        |   |               |   |   CustomUserDetailService.java
+        |   |               |   |   DateTimeFormatConfiguration.java
+        |   |               |   |   MessageConfig.java
+        |   |               |   |   SecurityConfiguration.java
+        |   |               |   |   SecurityJwtConfiguration.java
+        |   |               |   |   text.txt
+        |   |               |   |   
+        |   |               |   \---init
+        |   |               |           Initializer.java
+        |   |               |           
+        |   |               +---controller
+        |   |               |   |   HelloWorldController.java
+        |   |               |   |   
+        |   |               |   +---admin
+        |   |               |   |       AuditLogController.java
+        |   |               |   |       DashboardController.java
+        |   |               |   |       SystemSettingController.java
+        |   |               |   |       
+        |   |               |   +---auth
+        |   |               |   |       AccountController.java
+        |   |               |   |       AuthController.java
+        |   |               |   |       
+        |   |               |   +---community
+        |   |               |   |   |   CommentController.java
+        |   |               |   |   |   ViolationReportController.java
+        |   |               |   |   |   
+        |   |               |   |   \---notification
+        |   |               |   |           NotificationAdminController.java
+        |   |               |   |           NotificationChannelController.java
+        |   |               |   |           NotificationController.java
+        |   |               |   |           
+        |   |               |   +---course
+        |   |               |   |   |   CategoryController.java
+        |   |               |   |   |   CourseController.java
+        |   |               |   |   |   CourseReviewController.java
+        |   |               |   |   |   CourseVersionController.java
+        |   |               |   |   |   TagController.java
+        |   |               |   |   |   
+        |   |               |   |   \---content
+        |   |               |   |           ChapterController.java
+        |   |               |   |           FileStorageController.java
+        |   |               |   |           LessonController.java
+        |   |               |   |           LessonResourceController.java
+        |   |               |   |           
+        |   |               |   \---recommendation
+        |   |               |           RecommendationController.java
+        |   |               |           
+        |   |               +---core
+        |   |               |   +---entity
+        |   |               |   |   |   Account.java
+        |   |               |   |   |   AccountActionLog.java
+        |   |               |   |   |   BaseProfile.java
+        |   |               |   |   |   EmailVerification.java
+        |   |               |   |   |   RefreshToken.java
+        |   |               |   |   |   Student.java
+        |   |               |   |   |   Teacher.java
+        |   |               |   |   |   text.txt
+        |   |               |   |   |   
+        |   |               |   |   +---community
+        |   |               |   |   |   +---comment
+        |   |               |   |   |   |       Comment.java
+        |   |               |   |   |   |       
+        |   |               |   |   |   +---notification
+        |   |               |   |   |   |       Notification.java
+        |   |               |   |   |   |       NotificationChannel.java
+        |   |               |   |   |   |       
+        |   |               |   |   |   \---report
+        |   |               |   |   |           ViolationReport.java
+        |   |               |   |   |           
+        |   |               |   |   +---course
+        |   |               |   |   |   |   Category.java
+        |   |               |   |   |   |   Course.java
+        |   |               |   |   |   |   CourseReview.java
+        |   |               |   |   |   |   CourseTag.java
+        |   |               |   |   |   |   CourseVersion.java
+        |   |               |   |   |   |   Tag.java
+        |   |               |   |   |   |   
+        |   |               |   |   |   \---content
+        |   |               |   |   |           Chapter.java
+        |   |               |   |   |           FileStorage.java
+        |   |               |   |   |           Lesson.java
+        |   |               |   |   |           LessonResource.java
+        |   |               |   |   |           
+        |   |               |   |   +---log
+        |   |               |   |   |       AuditLog.java
+        |   |               |   |   |       UserActivityLog.java
+        |   |               |   |   |       
+        |   |               |   |   +---recommendation
+        |   |               |   |   |       RecommendationFeedback.java
+        |   |               |   |   |       RecommendationLog.java
+        |   |               |   |   |       
+        |   |               |   |   \---system
+        |   |               |   |           SystemSetting.java
+        |   |               |   |           
+        |   |               |   \---repository
+        |   |               |       |   AccountActionLogRepository.java
+        |   |               |       |   AccountRepository.java
+        |   |               |       |   EmailVerificationRepository.java
+        |   |               |       |   RefreshTokenRepository.java
+        |   |               |       |   StudentRepository.java
+        |   |               |       |   TeacherRepository.java
+        |   |               |       |   TestRepository.java
+        |   |               |       |   text.txt
+        |   |               |       |   
+        |   |               |       +---community
+        |   |               |       |   +---comment
+        |   |               |       |   |       CommentRepository.java
+        |   |               |       |   |       
+        |   |               |       |   +---notification
+        |   |               |       |   |       NotificationChannelRepository.java
+        |   |               |       |   |       NotificationRepository.java
+        |   |               |       |   |       
+        |   |               |       |   \---report
+        |   |               |       |           ViolationReportRepository.java
+        |   |               |       |           
+        |   |               |       +---course
+        |   |               |       |   |   CategoryRepository.java
+        |   |               |       |   |   CourseRepository.java
+        |   |               |       |   |   CourseReviewRepository.java
+        |   |               |       |   |   CourseVersionRepository.java
+        |   |               |       |   |   TagRepository.java
+        |   |               |       |   |   
+        |   |               |       |   \---content
+        |   |               |       |           ChapterRepository.java
+        |   |               |       |           FileStorageRepository.java
+        |   |               |       |           LessonRepository.java
+        |   |               |       |           LessonResourceRepository.java
+        |   |               |       |           
+        |   |               |       +---log
+        |   |               |       |       AuditLogRepository.java
+        |   |               |       |       UserActivityLogRepository.java
+        |   |               |       |       
+        |   |               |       +---recommendation
+        |   |               |       |       RecommendationFeedbackRepository.java
+        |   |               |       |       RecommendationLogRepository.java
+        |   |               |       |       
+        |   |               |       \---system
+        |   |               |               SystemSettingRepository.java
+        |   |               |               
+        |   |               +---service
+        |   |               |   |   AccountActionLogService.java
+        |   |               |   |   AccountService.java
+        |   |               |   |   AuthService.java
+        |   |               |   |   CloudinaryStorageService.java
+        |   |               |   |   EmailVerificationService.java
+        |   |               |   |   MailService.java
+        |   |               |   |   RefreshTokenService.java
+        |   |               |   |   StudentService.java
+        |   |               |   |   TeacherService.java
+        |   |               |   |   text
+        |   |               |   |   
+        |   |               |   +---community
+        |   |               |   |   +---comment
+        |   |               |   |   |       CommentService.java
+        |   |               |   |   |       
+        |   |               |   |   +---notification
+        |   |               |   |   |       NotificationService.java
+        |   |               |   |   |       
+        |   |               |   |   \---report
+        |   |               |   |           ViolationReportService.java
+        |   |               |   |           
+        |   |               |   +---course
+        |   |               |   |   |   CategoryService.java
+        |   |               |   |   |   CourseReviewService.java
+        |   |               |   |   |   CourseService.java
+        |   |               |   |   |   CourseVersionService.java
+        |   |               |   |   |   TagService.java
+        |   |               |   |   |   
+        |   |               |   |   \---content
+        |   |               |   |           ChapterService.java
+        |   |               |   |           FileStorageService.java
+        |   |               |   |           LessonResourceService.java
+        |   |               |   |           LessonService.java
+        |   |               |   |           
+        |   |               |   +---event
+        |   |               |   |   |   AccountActivatedEvent.java
+        |   |               |   |   |   AccountActiveEvent.java
+        |   |               |   |   |   AccountStatusChangeEvent.java
+        |   |               |   |   |   CourseVersionStatusChangeEvent.java
+        |   |               |   |   |   PasswordResetEvent.java
+        |   |               |   |   |   
+        |   |               |   |   \---listener
+        |   |               |   |           AccountListener.java
+        |   |               |   |           CourseStatusChangeListener.java
+        |   |               |   |           
+        |   |               |   +---helper
+        |   |               |   |       CodeGenerator.java
+        |   |               |   |       SEOHelper.java
+        |   |               |   |       SEOHelperImpl.java
+        |   |               |   |       StudentCodeGenerator.java
+        |   |               |   |       TeacherCodeGenerator.java
+        |   |               |   |       
+        |   |               |   +---log
+        |   |               |   |       AuditLogService.java
+        |   |               |   |       
+        |   |               |   +---recommendation
+        |   |               |   |       RecommendationService.java
+        |   |               |   |       
+        |   |               |   +---schedule
+        |   |               |   |       RefreshTokenCleanupService.java
+        |   |               |   |       
+        |   |               |   \---system
+        |   |               |           SystemSettingService.java
+        |   |               |           
+        |   |               \---shared
+        |   |                   +---annotation
+        |   |                   |       Audit.java
+        |   |                   |       
+        |   |                   +---aop
+        |   |                   |       AuditAspect.java
+        |   |                   |       AuditHelper.java
+        |   |                   |       HibernateFilterAspect.java
+        |   |                   |       
+        |   |                   +---constant
+        |   |                   |       AccountActionType.java
+        |   |                   |       AccountStatus.java
+        |   |                   |       AuditAction.java
+        |   |                   |       ChannelStatus.java
+        |   |                   |       ChannelType.java
+        |   |                   |       CourseStatus.java
+        |   |                   |       Difficulty.java
+        |   |                   |       ErrorCode.java
+        |   |                   |       FeedbackType.java
+        |   |                   |       Gender.java
+        |   |                   |       Language.java
+        |   |                   |       LessonType.java
+        |   |                   |       ResourceType.java
+        |   |                   |       Role.java
+        |   |                   |       SecurityConstants.java
+        |   |                   |       SuccessCode.java
+        |   |                   |       text
+        |   |                   |       TokenType.java
+        |   |                   |       ViolationReportStatus.java
+        |   |                   |       
+        |   |                   +---dto
+        |   |                   |   |   ApiResponse.java
+        |   |                   |   |   PageResponse.java
+        |   |                   |   |   text
+        |   |                   |   |   
+        |   |                   |   +---request
+        |   |                   |   |   |   ChangePasswordDTO.java
+        |   |                   |   |   |   ForgotPasswordDTO.java
+        |   |                   |   |   |   RegisterRequest.java
+        |   |                   |   |   |   ReqLoginDTO.java
+        |   |                   |   |   |   ReqRefreshTokenDTO.java
+        |   |                   |   |   |   ResetPasswordDTO.java
+        |   |                   |   |   |   
+        |   |                   |   |   +---account
+        |   |                   |   |   |       RejectRequest.java
+        |   |                   |   |   |       UpdateProfileRequest.java
+        |   |                   |   |   |       UpdateStatusRequest.java
+        |   |                   |   |   |       
+        |   |                   |   |   +---community
+        |   |                   |   |   |   +---comment
+        |   |                   |   |   |   |       CommentCreateRequest.java
+        |   |                   |   |   |   |       
+        |   |                   |   |   |   +---notification
+        |   |                   |   |   |   |       NotificationChannelCreateRequest.java
+        |   |                   |   |   |   |       SendBulkNotificationRequest.java
+        |   |                   |   |   |   |       
+        |   |                   |   |   |   \---report
+        |   |                   |   |   |           ViolationReportCreateRequest.java
+        |   |                   |   |   |           ViolationReportDismissRequest.java
+        |   |                   |   |   |           ViolationReportReviewRequest.java
+        |   |                   |   |   |           ViolationReportTakeActionRequest.java
+        |   |                   |   |   |           
+        |   |                   |   |   +---course
+        |   |                   |   |   |       CategoryRequest.java
+        |   |                   |   |   |       CourseRequest.java
+        |   |                   |   |   |       CourseReviewRequest.java
+        |   |                   |   |   |       CourseUpdateRequest.java
+        |   |                   |   |   |       CourseVersionRequest.java
+        |   |                   |   |   |       TagRequest.java
+        |   |                   |   |   |       
+        |   |                   |   |   +---recommendation
+        |   |                   |   |   |       RecommendationFeedbackRequest.java
+        |   |                   |   |   |       
+        |   |                   |   |   \---system
+        |   |                   |   |           SystemSettingRequest.java
+        |   |                   |   |           
+        |   |                   |   \---response
+        |   |                   |       |   MeResponse.java
+        |   |                   |       |   RegisterResponse.java
+        |   |                   |       |   ResLoginDTO.java
+        |   |                   |       |   
+        |   |                   |       +---account
+        |   |                   |       |       AccountProfileResponse.java
+        |   |                   |       |       AccountResponse.java
+        |   |                   |       |       UploadAvatarResponse.java
+        |   |                   |       |       
+        |   |                   |       +---community
+        |   |                   |       |   +---comment
+        |   |                   |       |   |       CommentResponse.java
+        |   |                   |       |   |       
+        |   |                   |       |   +---notification
+        |   |                   |       |   |       NotificationResponse.java
+        |   |                   |       |   |       
+        |   |                   |       |   \---report
+        |   |                   |       |           ViolationReportDetailResponse.java
+        |   |                   |       |           ViolationReportResponse.java
+        |   |                   |       |           
+        |   |                   |       +---course
+        |   |                   |       |       CategoryResponseDto.java
+        |   |                   |       |       CourseDetailResponse.java
+        |   |                   |       |       CourseResponse.java
+        |   |                   |       |       CourseReviewResponse.java
+        |   |                   |       |       CourseVersionPublicResponse.java
+        |   |                   |       |       CourseVersionResponse.java
+        |   |                   |       |       RatingSummaryResponse.java
+        |   |                   |       |       
+        |   |                   |       +---log
+        |   |                   |       |       AccountActionLogResponse.java
+        |   |                   |       |       AuditLogResponse.java
+        |   |                   |       |       
+        |   |                   |       +---recommendation
+        |   |                   |       |       RecommendationLogDto.java
+        |   |                   |       |       
+        |   |                   |       \---system
+        |   |                   |               SystemSettingResponse.java
+        |   |                   |               
+        |   |                   +---entity
+        |   |                   |       BaseEntity.java
+        |   |                   |       PersonBase.java
+        |   |                   |       TestEntity.java
+        |   |                   |       text
+        |   |                   |       
+        |   |                   +---exception
+        |   |                   |       DuplicateResourceException.java
+        |   |                   |       EmailAlreadyUsedException.java
+        |   |                   |       InvalidFileException.java
+        |   |                   |       InvalidPasswordException.java
+        |   |                   |       InvalidRequestException.java
+        |   |                   |       InvalidStatusException.java
+        |   |                   |       InvalidTokenException.java
+        |   |                   |       ResourceNotFoundException.java
+        |   |                   |       text
+        |   |                   |       UnauthorizedException.java
+        |   |                   |       UploadFileException.java
+        |   |                   |       UsernameAlreadyUsedException.java
+        |   |                   |       UserNotActivatedException.java
+        |   |                   |       
+        |   |                   +---handler
+        |   |                   |       GlobalException.java
+        |   |                   |       text
+        |   |                   |       
+        |   |                   +---mapper
+        |   |                   |   |   AccountMapper.java
+        |   |                   |   |   LogMapper.java
+        |   |                   |   |   StudentMapper.java
+        |   |                   |   |   TeacherMapper.java
+        |   |                   |   |   text
+        |   |                   |   |   
+        |   |                   |   +---community
+        |   |                   |   |       CommentMapper.java
+        |   |                   |   |       NotificationMapper.java
+        |   |                   |   |       ViolationReportMapper.java
+        |   |                   |   |       
+        |   |                   |   +---course
+        |   |                   |   |       CategoryMapper.java
+        |   |                   |   |       CourseMapper.java
+        |   |                   |   |       CourseReviewMapper.java
+        |   |                   |   |       CourseVersionMapper.java
+        |   |                   |   |       
+        |   |                   |   +---log
+        |   |                   |   |       AuditLogMapper.java
+        |   |                   |   |       
+        |   |                   |   +---recommendation
+        |   |                   |   |       RecommendationMapper.java
+        |   |                   |   |       
+        |   |                   |   \---system
+        |   |                   |           SystemSettingMapper.java
+        |   |                   |           
+        |   |                   +---util
+        |   |                   |   |   CloudinaryUtils.java
+        |   |                   |   |   FormatRestResponse.java
+        |   |                   |   |   HibernateFilterUtils.java
+        |   |                   |   |   JsonViewUtils.java
+        |   |                   |   |   SecurityUtils.java
+        |   |                   |   |   text
+        |   |                   |   |   TokenHashUtil.java
+        |   |                   |   |   
+        |   |                   |   \---annotation
+        |   |                   |           AdminOnly.java
+        |   |                   |           ApiMessage.java
+        |   |                   |           EnableSoftDeleteFilter.java
+        |   |                   |           StudentOnly.java
+        |   |                   |           TeacherOnly.java
+        |   |                   |           
+        |   |                   \---view
+        |   |                           Views.java
+        |   |                           
+        |   \---resources
+        |       |   application.yml
+        |       |   application.yml.example
+        |       |   
+        |       +---i18n
+        |       |       messages_en.properties
+        |       |       messages_vi.properties
+        |       |       
+        |       \---templates
+        |           |   error.html
+        |           |   
+        |           \---mail
+        |               |   accountApprovedEmail.html
+        |               |   accountDeactivatedEmail.html
+        |               |   accountRejectedEmail.html
+        |               |   accountSuspendedEmail.html
+        |               |   accountUnknownEmail.html
+        |               |   accountUnlockedEmail.html
+        |               |   activationEmail.html
+        |               |   activationSuccessEmail.html
+        |               |   creationEmail.html
+        |               |   passwordResetEmail.html
+        |               |   
+        |               \---course
+        |                       courseApprovedEmail.html
+        |                       coursePublishedEmail.html
+        |                       courseRejectedEmail.html
+        |                       courseSubmittedEmail.html
+        |                       
+        \---test
+            \---java
+                \---vn
+                    \---uit
+                        \---lms
+                                LmsApplicationTests.java
+                                

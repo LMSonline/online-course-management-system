@@ -1,5 +1,9 @@
 package vn.uit.lms.controller.course.content;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "Chapter Management", description = "APIs for managing course chapters")
 public class ChapterController {
 
     private final ChapterService chapterService;
@@ -22,68 +27,76 @@ public class ChapterController {
         this.chapterService = chapterService;
     }
 
+    @Operation(summary = "Create a new chapter")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/chapters")
     @TeacherOnly
     public ResponseEntity<ChapterDto> createNewChapter(
-            @PathVariable("courseId") Long courseId,
-            @PathVariable("versionId") Long versionId,
-            @Valid @RequestBody ChapterRequest chapterRequest
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
+            @Parameter(description = "Chapter details") @Valid @RequestBody ChapterRequest chapterRequest
     ){
         ChapterDto chapterDto = chapterService.createNewChapter(chapterRequest, courseId, versionId);
         return ResponseEntity.status(HttpStatus.CREATED).body(chapterDto);
     }
 
+    @Operation(summary = "Get all chapters")
     @GetMapping("/courses/{courseId}/versions/{versionId}/chapters")
     public ResponseEntity<List<ChapterDto>> getListChapters(
-            @PathVariable("courseId") Long courseId,
-            @PathVariable("versionId") Long versionId
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
     ){
         return ResponseEntity.ok(chapterService.getListChapters(courseId, versionId));
     }
 
+    @Operation(summary = "Get chapter details")
     @GetMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
     public ResponseEntity<ChapterDto> getDetailChapter(
-            @PathVariable("courseId") Long courseId,
-            @PathVariable("versionId") Long versionId,
-            @PathVariable("chapterId") Long chapterId
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
+            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId
     ){
         ChapterDto chapter = chapterService.getDetailChapter(courseId, versionId, chapterId);
         return ResponseEntity.ok(chapter);
     }
 
+    @Operation(summary = "Update a chapter")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
     @TeacherOnly
     public ResponseEntity<ChapterDto> updateChapter(
-            @PathVariable("courseId") Long courseId,
-            @PathVariable("versionId") Long versionId,
-            @PathVariable("chapterId") Long chapterId,
-            @Valid @RequestBody ChapterRequest chapterRequest
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
+            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId,
+            @Parameter(description = "Updated chapter details") @Valid @RequestBody ChapterRequest chapterRequest
     ){
         ChapterDto updatedChapter = chapterService.updateChapter(courseId, versionId, chapterId, chapterRequest);
         return ResponseEntity.ok(updatedChapter);
     }
 
+    @Operation(summary = "Delete a chapter")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
     @TeacherOnly
     public ResponseEntity<Void> deleteChapter(
-            @PathVariable("courseId") Long courseId,
-            @PathVariable("versionId") Long versionId,
-            @PathVariable("chapterId") Long chapterId
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
+            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId
     ){
         chapterService.deleteChapter(courseId, versionId, chapterId);
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Reorder chapters")
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/chapters/{chapterId}/reorder")
     @TeacherOnly
     public ResponseEntity<Void> reorderChapter(
-            @PathVariable("chapterId") Long chapterId,
-            @Valid @RequestBody ChapterReorderRequest reorderRequest
+            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId,
+            @Parameter(description = "Reorder details") @Valid @RequestBody ChapterReorderRequest reorderRequest
     ){
         chapterService.reorderChapter(chapterId, reorderRequest);
         return ResponseEntity.noContent().build();
     }
-
-
 
 }
