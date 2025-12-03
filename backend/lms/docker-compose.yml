@@ -135,6 +135,58 @@ services:
       timeout: 10s
       retries: 5
 
+  rs:
+    build:
+      context: ../recommendation-service         
+      dockerfile: Dockerfile  
+    container_name: rs-service
+    ports:
+      - "8002:8002"           
+    environment:
+      # Optional: DB config for offline training scripts (can reuse LMS DB)
+      RS_DB_HOST: postgres
+      RS_DB_PORT: 5432
+      RS_DB_NAME: ${POSTGRES_DB}
+      RS_DB_USER: ${POSTGRES_USER}
+      RS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      RS_MODELS_DIR: /models
+    networks:
+      - lms-network          
+    restart: unless-stopped
+    volumes:
+      - rs-models:/models
+
+  chatbot:
+    build:
+      context: ../chatbot-service   
+      dockerfile: Dockerfile
+    container_name: chatbot-service
+    ports:
+      - "8003:8003"
+    environment:
+      RS_BASE_URL: http://rs-service:8002
+      LMS_DB_HOST: postgres
+      LMS_DB_PORT: 5432
+      LMS_DB_NAME: ${POSTGRES_DB}
+      LMS_DB_USER: ${POSTGRES_USER}
+      LMS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # LLM provider & model can be configured via env / .env file
+      # LLM_PROVIDER: dummy | llama3
+      # LLAMA3_API_BASE: https://api.groq.com/openai/v1
+      # LLAMA3_API_KEY: your-key
+      # LLAMA3_MODEL_NAME: llama-3-8b-instruct
+
+      # Vector store configuration
+      VECTOR_STORE_BACKEND: faiss
+      VECTOR_STORE_DIR: /vector_store
+    depends_on:
+      - rs                     
+    networks:
+      - lms-network
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
     driver: local
@@ -142,7 +194,12 @@ volumes:
     driver: local
   rabbitmq-data:
     driver: local
+  rs-models:
+    driver: local
+  chatbot-vectors:
+    driver: local
 
 networks:
   lms-network:
     driver: bridge
+

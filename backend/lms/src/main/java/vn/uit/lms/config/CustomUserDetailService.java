@@ -73,8 +73,9 @@ public class CustomUserDetailService implements UserDetailsService {
                     });
         }
 
+        AccountStatus status = accountDB.getStatus();
         // Verify activation status
-        if (accountDB.getStatus() != AccountStatus.ACTIVE) {
+        if (status == AccountStatus.PENDING_EMAIL || status == AccountStatus.SUSPENDED || status == AccountStatus.DEACTIVATED) {
             log.warn("Authentication failed: account not activated [{}]", username);
             throw new UsernameNotFoundException("User account is not activated: " + username);
         }

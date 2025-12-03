@@ -1,0 +1,29 @@
+# Two-tower model training configuration
+
+model:
+  user_input_dim: 16  # Must match UserFeatureEncoder.feature_dim
+  item_input_dim: 32  # Must match ItemFeatureEncoder.feature_dim
+  embedding_dim: 64
+  hidden_dims: [128, 64]
+
+training:
+  epochs: 10
+  batch_size: 64
+  learning_rate: 0.001
+  loss_type: "bce"  # bce or bpr
+
+data:
+  # Postgres connection (can use env vars instead)
+  db_host: null  # null = use RS_DB_HOST env var
+  db_port: null
+  db_name: null
+  db_user: null
+  db_password: null
+  
+  # Interaction filtering
+  min_interactions_per_user: 1
+  event_types: ["view", "click", "enroll"]  # Which events to use for training
+
+output:
+  models_dir: "models"  # Can override with RS_MODELS_DIR env var
+

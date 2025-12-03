@@ -1,0 +1,18 @@
+[
+  {
+    "question": "What is the difference between a list and a tuple in Python?",
+    "expected_course_id": "course_python_basic",
+    "expected_doc_id": "doc1"
+  },
+  {
+    "question": "How do you define a list in Python?",
+    "expected_course_id": "course_python_basic",
+    "expected_doc_id": "doc2"
+  },
+  {
+    "question": "What is machine learning?",
+    "expected_course_id": "course_ml_intro",
+    "expected_doc_id": null
+  }
+]
+
