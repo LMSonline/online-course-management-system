@@ -1,20 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import {
-  Mail,
-  Lock,
-  User,
-  Eye,
-  EyeOff,
-  Check,
-  GraduationCap,
-} from "lucide-react";
+import { registerUser } from "@/services/public/auth.services";
+import Popup from "@/core/components/public/Popup";
+import { useRouter } from "next/navigation";
 
-type Role = "learner" | "instructor";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { Mail, Lock, User, Eye, EyeOff, Check, GraduationCap } from "lucide-react";
+
+type Role = "student" | "teacher";
 
 export default function SignupPage() {
+  const router = useRouter();
+
+  // States
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [name, setName] = useState("");
@@ -22,8 +21,11 @@ export default function SignupPage() {
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [agree, setAgree] = useState(false);
-  const [role, setRole] = useState<Role>("learner");
+  const [role, setRole] = useState<Role>("student");
 
+  const [popup, setPopup] = useState<null | any>(null);
+
+  // Password strength logic
   const pwCheck = useMemo(() => {
     const hasLength = pw.length >= 8;
     const hasUpper = /[A-Z]/.test(pw);
@@ -31,40 +33,85 @@ export default function SignupPage() {
     const hasNumber = /\d/.test(pw);
     const hasSymbol = /[^A-Za-z0-9]/.test(pw);
 
-    let s = 0;
-    if (hasLength) s++;
-    if (hasUpper) s++;
-    if (hasLower) s++;
-    if (hasNumber) s++;
-    if (hasSymbol) s++;
+    const score = [hasLength, hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
 
-    return {
-      strength: Math.min(s, 4), // 0..4
-      hasLength,
-      hasUpper,
-      hasLower,
-      hasNumber,
-      hasSymbol,
-    };
+    return { hasLength, hasUpper, hasLower, hasNumber, hasSymbol, strength: Math.min(score, 4) };
   }, [pw]);
 
   const mismatch = pw && pw2 && pw !== pw2;
-  const canSubmit = !!(
-    name &&
-    email &&
-    pw &&
-    !mismatch &&
-    agree &&
-    pwCheck.strength >= 3
-  );
 
-  function handleSubmit(e: React.FormEvent) {
+  const canSubmit =
+    !!name &&
+    !!email &&
+    !!pw &&
+    pwCheck.strength >= 3 &&
+    !mismatch &&
+    agree;
+
+  // SUBMIT
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    // TODO: call API register với role, name, email, pw
-    // ví dụ: api.register({ name, email, password: pw, role })
-    alert(`Signed up as ${role}! (hook up API later)`);
-  }
+
+    try {
+      await registerUser({
+        username: name,
+        email,
+        password: pw,
+        role: role,
+        langKey: "vi",
+      });
+
+      // SUCCESS POPUP
+      setPopup({
+        type: "success", // thêm dòng này để popup dùng icon success
+        title: "Account created",
+        message: "We've sent you a verification email. Please check your inbox.",
+        actions: (
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/login")}
+              className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
+            >
+              Go to Login
+            </button>
+
+            <button
+              onClick={() => setPopup(null)}
+              className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
+            >
+              Close
+            </button>
+          </div>
+        ),
+        onClose: () => setPopup(null),
+      });
+
+
+    } catch (err: any) {
+      let msg = "Đăng ký thất bại. Vui lòng thử lại.";
+
+      if (err.message.includes("constraint") || err.message.includes("email"))
+        msg = "Email đã tồn tại. Hãy dùng email khác.";
+
+      setPopup({
+        type: "error",
+        title: "Registration failed",
+        message: "Email already exists. Please try another one.",
+        actions: (
+          <button
+            onClick={() => setPopup(null)}
+            className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
+          >
+            Close
+          </button>
+        ),
+        onClose: () => setPopup(null),
+      });
+
+    }
+  };
+
 
   return (
     <main className="min-h-[72vh]">
@@ -82,9 +129,9 @@ export default function SignupPage() {
               </p>
             </div>
 
-            {/* Full name */}
+            {/* User name */}
             <label htmlFor="name" className="block text-sm mb-2">
-              Full name
+              User name
             </label>
             <div className="relative mb-4">
               <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
@@ -92,7 +139,7 @@ export default function SignupPage() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder="Enter your username"
                 className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
               />
             </div>
@@ -118,25 +165,25 @@ export default function SignupPage() {
             <div className="mb-5 flex gap-3">
               <button
                 type="button"
-                onClick={() => setRole("learner")}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "learner"
-                    ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
-                    : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
+                onClick={() => setRole("student")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "student"
+                  ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
+                  : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}
               >
                 <User className="size-4" />
-                Learner
+                Student
               </button>
               <button
                 type="button"
-                onClick={() => setRole("instructor")}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "instructor"
-                    ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
-                    : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
+                onClick={() => setRole("teacher")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "teacher"
+                  ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
+                  : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}
               >
                 <GraduationCap className="size-4" />
-                Instructor
+                Teacher
               </button>
             </div>
             <p className="text-xs text-slate-400 mb-4">
@@ -187,8 +234,8 @@ export default function SignupPage() {
                 <li key={idx} className="flex items-center gap-2">
                   <span
                     className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${rule.ok
-                        ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
-                        : "border-white/20 text-slate-500"
+                      ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
+                      : "border-white/20 text-slate-500"
                       }`}
                   >
                     <Check className="size-3" />
@@ -340,6 +387,17 @@ export default function SignupPage() {
           </aside>
         </div>
       </section>
+      {/* POPUP RENDER */}
+      {popup && (
+        <Popup
+          type={popup.type}
+          title={popup.title}
+          message={popup.message}
+          actions={popup.actions}
+          open={true}
+          onClose={popup.onClose}
+        />
+      )}
     </main>
   );
 }

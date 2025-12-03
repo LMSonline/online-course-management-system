@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { Search, ShoppingCart, Bot, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { useAssistantStore } from "@/core/components/public/store";
+
 
 function NavItem({ href, label, className }: { href: string; label: string; className?: string }) {
   const pathname = usePathname();
@@ -14,6 +16,7 @@ function NavItem({ href, label, className }: { href: string; label: string; clas
 }
 
 export default function Navbar() {
+  const openPopup = useAssistantStore((s) => s.openPopup);
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -87,16 +90,16 @@ export default function Navbar() {
 
           {/* Globe */}
           {/* AI Tutor button – thay cho nút chọn ngôn ngữ */}
-          <Link
-            href="/assistant"  // hoặc /chatbot, /ai-tutor tuỳ route bạn đặt
+          <button
+            onClick={openPopup}
             aria-label="Open AI study assistant"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 
-             bg-slate-900/60 text-slate-200 
-             hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
-             transition"
+        bg-slate-900/60 text-slate-200 
+        hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
+        transition"
           >
             <Bot className="w-5 h-5" />
-          </Link>
+          </button>
 
         </div>
       </div>
