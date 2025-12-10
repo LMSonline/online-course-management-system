@@ -93,7 +93,18 @@ public class CourseService {
         return teacher;
     }
 
-    //verify student has enrolled course
+    /**
+     * Verify student has enrolled in the course
+     *
+     * TODO: Implement enrollment verification
+     * - Create Enrollment entity and repository
+     * - Inject EnrollmentRepository into this service
+     * - Query: enrollmentRepository.findByCourseAndStudent(course, student)
+     * - Throw UnauthorizedException if enrollment not found or not active
+     * - Check enrollment status (ACTIVE, COMPLETED, EXPIRED, DROPPED)
+     * - Validate enrollment expiration date if applicable
+     * - Consider adding caching for performance
+     */
     public Student verifyStudent(Course course) {
 
         Account account = accountService.verifyCurrentAccount();
@@ -101,7 +112,12 @@ public class CourseService {
         Student student = studentRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        //miss verify enrollment
+        // TODO: Verify enrollment
+        // Enrollment enrollment = enrollmentRepository.findByCourseAndStudent(course, student)
+        //     .orElseThrow(() -> new UnauthorizedException("Student not enrolled in this course"));
+        // if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
+        //     throw new UnauthorizedException("Enrollment is not active");
+        // }
 
         return student;
     }
@@ -241,6 +257,16 @@ public class CourseService {
         );
     }
 
+    /**
+     * Close course to prevent new enrollments
+     *
+     * TODO: Add active enrollment validation
+     * - Query enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE)
+     * - Consider warning if there are active students
+     * - Option to force close or notify students first
+     * - Send notification to enrolled students about course closure
+     * - Update enrollment access permissions
+     */
     @Transactional
     @EnableSoftDeleteFilter
     public CourseDetailResponse closeCourse(Long id) {
@@ -248,7 +274,13 @@ public class CourseService {
 
         verifyTeacher(course);
 
-        //missing check student active waiting for complete enrollment service
+        // TODO: Check if there are active enrollments
+        // long activeEnrollments = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE);
+        // if (activeEnrollments > 0) {
+        //     log.warn("Closing course with {} active enrollments", activeEnrollments);
+        //     // Consider sending notifications to students
+        // }
+
         course.setIsClosed(true);
         Course savedCourse = courseRepository.save(course);
         return CourseMapper.toCourseDetailResponse(savedCourse);
@@ -380,18 +412,38 @@ public class CourseService {
         return CourseMapper.toCourseDetailResponse(savedCourse);
     }
 
+    /**
+     * Delete course (soft delete)
+     *
+     * TODO: Implement enrollment validation before deletion
+     * - Check if course has any enrollments (active or completed)
+     * - Query: enrollmentRepository.existsByCourse(course)
+     * - Prevent deletion if there are active enrollments
+     * - For completed enrollments, consider archiving instead of deleting
+     * - Send notifications to affected students if any
+     * - Handle certificate records for completed students
+     * - Consider cascading effects on progress, assignments, etc.
+     */
     @Transactional
     @EnableSoftDeleteFilter
     @Audit(table = "courses", action = AuditAction.DELETE)
     public void deleteCourse(Long id) {
-        //miss check has student enrollment
         Course course = validateCourse(id);
 
         if(course.getVersionPublish() != null) {
             throw new InvalidRequestException("Course has published version, cannot delete");
         }
 
-//*        //miss check student has enrollment
+        // TODO: Check if course has any enrollments
+        // boolean hasEnrollments = enrollmentRepository.existsByCourse(course);
+        // if (hasEnrollments) {
+        //     long activeCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE);
+        //     long completedCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.COMPLETED);
+        //     throw new InvalidRequestException(
+        //         String.format("Cannot delete course with enrollments: %d active, %d completed",
+        //                       activeCount, completedCount)
+        //     );
+        // }
 
         verifyTeacher(course);
 

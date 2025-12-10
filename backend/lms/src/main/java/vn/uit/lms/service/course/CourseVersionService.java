@@ -135,6 +135,24 @@ public class CourseVersionService {
         return CourseVersionMapper.toCourseVersionResponse(version);
     }
 
+    /**
+     * Submit course version for approval
+     *
+     * TODO: Add comprehensive validation before submission
+     * - Validate version has minimum required content:
+     *   - At least 1 chapter with lessons
+     *   - All lessons have content (video or text)
+     *   - Price is set (if not free course)
+     *   - Duration and passing criteria are configured
+     * - Validate all videos are processed and ready
+     * - Check all required fields are filled
+     * - Validate course has thumbnail
+     * - Ensure learning objectives are defined
+     * - Check for placeholder content
+     * - Validate total course duration meets minimum
+     * - Generate preview link for admin review
+     * - Send notification to admin queue
+     */
     @Transactional
     @EnableSoftDeleteFilter
     public CourseVersionResponse submitCourseVersionToApprove(Long courseId, Long versionId) {
@@ -149,6 +167,26 @@ public class CourseVersionService {
             throw new InvalidRequestException("Course version is not DRAFT");
         }
 
+        // TODO: Add validation checks
+        // if (version.getChapters().isEmpty()) {
+        //     throw new InvalidRequestException("Course must have at least one chapter");
+        // }
+        //
+        // long totalLessons = version.getChapters().stream()
+        //     .mapToLong(Chapter::getLessons().size())
+        //     .sum();
+        // if (totalLessons < 3) {
+        //     throw new InvalidRequestException("Course must have at least 3 lessons");
+        // }
+        //
+        // boolean hasUnprocessedVideos = checkForUnprocessedVideos(version);
+        // if (hasUnprocessedVideos) {
+        //     throw new InvalidRequestException("All videos must be processed before submission");
+        // }
+        //
+        // if (version.getPrice() == null || version.getPrice() < 0) {
+        //     throw new InvalidRequestException("Course price must be set");
+        // }
         version.setStatus(CourseStatus.PENDING);
 
         courseVersionRepository.save(version);
@@ -270,5 +308,82 @@ public class CourseVersionService {
                 page.hasPrevious()
         );
     }
+
+    // TODO: Implement updateCourseVersion method
+    // @Transactional
+    // @EnableSoftDeleteFilter
+    // public CourseVersionResponse updateCourseVersion(Long courseId, Long versionId, CourseVersionRequest request) {
+    //     - Validate version is editable (DRAFT or REJECTED)
+    //     - Verify teacher ownership
+    //     - Update title, description, price, duration, passing criteria
+    //     - Validate business rules (price >= 0, duration > 0, etc.)
+    //     - Log changes for audit
+    // }
+
+    // TODO: Implement deleteCourseVersion method (soft delete)
+    // @Transactional
+    // @EnableSoftDeleteFilter
+    // public void deleteCourseVersion(Long courseId, Long versionId) {
+    //     - Validate cannot delete PUBLISHED or APPROVED versions
+    //     - Verify teacher ownership
+    //     - Check if it's the only version (must keep at least one)
+    //     - Soft delete version and all associated content
+    //     - Delete uploaded media files
+    // }
+
+    // TODO: Implement duplicateCourseVersion method
+    // @Transactional
+    // @EnableSoftDeleteFilter
+    // public CourseVersionResponse duplicateCourseVersion(Long courseId, Long versionId) {
+    //     - Copy all version data to new version
+    //     - Deep copy chapters, lessons, resources
+    //     - Copy video references (not files themselves)
+    //     - Set status to DRAFT
+    //     - Increment version number
+    //     - Clear approval/publish dates
+    // }
+
+    // TODO: Implement compareVersions method
+    // public VersionComparisonResponse compareVersions(Long courseId, Long version1Id, Long version2Id) {
+    //     - Compare content differences between two versions
+    //     - Show added/removed/modified chapters and lessons
+    //     - Compare pricing and configuration changes
+    //     - Useful for admin review process
+    // }
+
+    // TODO: Implement getVersionAnalytics method
+    // public VersionAnalyticsResponse getVersionAnalytics(Long courseId, Long versionId) {
+    //     - Count total chapters, lessons, resources
+    //     - Calculate total video duration
+    //     - Count different lesson types
+    //     - Estimate completion time
+    //     - Show content completeness percentage
+    // }
+
+    // TODO: Implement archiveCourseVersion method
+    // @Transactional
+    // public CourseVersionResponse archiveCourseVersion(Long courseId, Long versionId) {
+    //     - Manually archive old published version
+    //     - Verify not the current published version
+    //     - Update status to ARCHIVED
+    //     - Keep for historical reference
+    // }
+
+    // TODO: Implement restoreCourseVersion method
+    // @Transactional
+    // public CourseVersionResponse restoreCourseVersion(Long courseId, Long versionId) {
+    //     - Restore soft-deleted version
+    //     - Validate version can be restored
+    //     - Check for conflicts with existing versions
+    //     - Restore as DRAFT status
+    // }
+
+    // TODO: Implement getVersionHistory method
+    // public List<VersionHistoryResponse> getVersionHistory(Long courseId) {
+    //     - Get all versions with their status changes
+    //     - Include approval/rejection history
+    //     - Show who made changes and when
+    //     - Include version comparison links
+    // }
 
 }
