@@ -29,6 +29,7 @@ import vn.uit.lms.shared.exception.*;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.SecurityUtils;
 import vn.uit.lms.shared.util.TokenHashUtil;
+import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -97,6 +98,7 @@ public class AuthService {
      * @throws EmailAlreadyUsedException if the email is already used
      */
     @Transactional
+    @EnableSoftDeleteFilter
     public Account registerAccount(Account account) {
 
         accountRepository.findOneByUsername(account.getUsername())
@@ -166,6 +168,7 @@ public class AuthService {
      * @throws ResourceNotFoundException if the account does not exist
      * @throws UserNotActivatedException if the account is not yet activated
      */
+    @EnableSoftDeleteFilter
     public ResLoginDTO login(ReqLoginDTO reqLoginDTO) {
 
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -231,6 +234,7 @@ public class AuthService {
         return resLoginDTO;
     }
 
+    @EnableSoftDeleteFilter
     public void forgotPassword(String email) {
 
         Account accountDB = this.accountRepository.findByEmail(email)
@@ -257,6 +261,7 @@ public class AuthService {
     }
 
     @Transactional
+    @EnableSoftDeleteFilter
     public void resetPassword(String token, String newPassword) {
         log.info("Start resetting password with token: {}", token);
         String hashToken = TokenHashUtil.hashToken(token);
@@ -302,26 +307,35 @@ public class AuthService {
 
     }
 
+    @EnableSoftDeleteFilter
     public MeResponse getCurrentUserInfo() {
         String email = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
-                .orElseThrow(() -> new UnauthorizedException("User not authenticated") {
-                });
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
 
         Account account = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         MeResponse meResponse = buildBaseResponse(account);
 
+        // Use JOIN FETCH queries to avoid N+1 problem
         BaseProfile profile = switch (account.getRole()) {
-            case STUDENT -> studentRepository.findByAccount(account)
-                    .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
-            case TEACHER -> teacherRepository.findByAccount(account)
-                    .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(account)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                yield student;
+            }
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(account)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                yield teacher;
+            }
             default -> null;
         };
 
-        if (profile != null) fillUserProfile(meResponse, profile);
+        if (profile != null) {
+            fillUserProfile(meResponse, profile);
+        }
 
         return meResponse;
     }
@@ -346,6 +360,7 @@ public class AuthService {
     }
 
     @Transactional
+    @EnableSoftDeleteFilter
     public void changePassword(ChangePasswordDTO changePasswordDTO) {
 
         if (changePasswordDTO.getOldPassword().equals(changePasswordDTO.getNewPassword())) {
@@ -381,6 +396,19 @@ public class AuthService {
             throw new IllegalStateException("Account is already activated.");
         }
 
+        // Rate limiting: Check số lần resend trong 1 giờ qua
+        Instant oneHourAgo = Instant.now().minus(1, ChronoUnit.HOURS);
+        long recentAttempts = emailVerificationRepository.countByAccountAndCreatedAtAfterAndTokenType(
+                accountDB,
+                oneHourAgo,
+                TokenType.VERIFY_EMAIL
+        );
+
+        if (recentAttempts >= 3) {
+            log.warn("Too many resend attempts for email: {}", email);
+            throw new TooManyRequestsException("Too many resend attempts. Please try again later.");
+        }
+
         String rawToken = UUID.randomUUID().toString();
         Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
         String hashedToken = TokenHashUtil.hashToken(rawToken);
@@ -396,6 +424,8 @@ public class AuthService {
         emailVerificationRepository.save(verification);
 
         eventPublisher.publishEvent(new AccountActiveEvent(accountDB, rawToken));
+
+        log.info("Verification email resent to: {}", email);
     }
 
 

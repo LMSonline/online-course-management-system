@@ -3,6 +3,7 @@ package vn.uit.lms.core.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Language;
 import vn.uit.lms.shared.constant.Role;
@@ -17,6 +18,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@SQLDelete(sql = "UPDATE accounts SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Account extends BaseEntity {
 
     @Id

@@ -249,4 +249,65 @@ public class CategoryService {
         return CategoryMapper.toCategoryResponseDto(saved);
     }
 
+    // TODO: Implement getCategoryWithCourses method
+    // @EnableSoftDeleteFilter
+    // public CategoryWithCoursesResponse getCategoryWithCourses(Long id, Pageable pageable) {
+    //     - Get category details
+    //     - Query published courses in this category
+    //     - Include subcategory courses if requested
+    //     - Apply filters: difficulty, rating, price
+    //     - Return category with paginated course list
+    // }
+
+    // TODO: Implement getCategoryStatistics method
+    // public CategoryStatisticsResponse getCategoryStatistics(Long id) {
+    //     - Count total courses in category
+    //     - Count total enrollments across all courses
+    //     - Calculate average course rating
+    //     - Count active courses vs total
+    //     - Include statistics from subcategories
+    // }
+
+    // TODO: Implement getPopularCategories method
+    // public List<CategoryResponseDto> getPopularCategories(int limit) {
+    //     - Order categories by course count or enrollment count
+    //     - Include only visible categories
+    //     - Filter by minimum course count threshold
+    //     - Include course count and enrollment metrics
+    // }
+
+    // TODO: Implement moveCategoryToParent method
+    // @Transactional
+    // public CategoryResponseDto moveCategoryToParent(Long categoryId, Long newParentId) {
+    //     - Validate not creating circular reference
+    //     - Check if move creates too deep nesting (max 3 levels)
+    //     - Update parent relationship
+    //     - Validate no duplicate codes in new parent's children
+    // }
+
+    // TODO: Implement bulkDeleteCategories method
+    // @Transactional
+    // public void bulkDeleteCategories(List<Long> categoryIds) {
+    //     - Validate no categories have active courses
+    //     - Check no categories have children
+    //     - Soft delete all specified categories
+    //     - Log bulk operation
+    // }
+
+    // TODO: Implement searchCategories method
+    // public PageResponse<CategoryResponseDto> searchCategories(String keyword, Pageable pageable) {
+    //     - Search by name, description, code
+    //     - Support fuzzy matching
+    //     - Include course count
+    //     - Order by relevance
+    // }
+
+    // TODO: Implement validateCategoryHierarchy method
+    // private void validateCategoryHierarchy(Long categoryId, Long parentId) {
+    //     - Check for circular references
+    //     - Validate maximum nesting depth
+    //     - Ensure parent is not deleted
+    //     - Verify parent is visible if child is visible
+    // }
+
 }

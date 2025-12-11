@@ -1,7 +1,7 @@
 # Multi-stage build để tối ưu kích thước image
 
 # Stage 1: Build application
-FROM gradle:8.5-jdk21-alpine AS builder
+FROM gradle:8.5-jdk17-alpine AS builder
 
 WORKDIR /app
 
@@ -23,19 +23,21 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Create non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Install a lightweight HTTP client for healthcheck
+RUN apk add --no-cache curl \
+ && addgroup -S spring && adduser -S spring -G spring
 
-# Copy JAR from builder stage
+# Copy JAR from builder stage (do this as root, then set ownership)
 COPY --from=builder /app/build/libs/*.jar app.jar
+RUN chown spring:spring app.jar || true
+USER spring:spring
 
 # Expose port
 EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # JVM options for containerized environment
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
