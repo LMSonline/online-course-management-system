@@ -524,7 +524,6 @@ public class AccountService {
 
         AccountStatus oldStatus = account.getStatus();
         account.setStatus(AccountStatus.DEACTIVATED);
-        account.setDeletedAt(Instant.now());
 
         accountActionLogService.logAction(
                 account.getId(),

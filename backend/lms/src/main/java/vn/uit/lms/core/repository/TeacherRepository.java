@@ -22,4 +22,10 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long>, JpaSpec
     Optional<Teacher> findByTeacherCodeWithAccount(@Param("code") String code);
 
     Optional<Teacher> findByTeacherCode(String teacherCode);
+
+    long countByApprovedTrue();
+
+    long countByApprovedFalse();
 }
+
+
