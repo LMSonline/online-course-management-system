@@ -1,5 +1,4 @@
-// app/(public)/layout.tsx
-import Navbar from "@/core/components/layout/Navbar"
+import Navbar from "@/core/components/public/Navbar"
 
 export default function PublicLayout({
   children,
@@ -10,7 +9,6 @@ export default function PublicLayout({
     <>
       <Navbar />
       <main className="min-h-[72vh]">{children}</main>
-      {/* Footer đã ở RootLayout rồi, không cần lặp lại */}
     </>
   );
 }

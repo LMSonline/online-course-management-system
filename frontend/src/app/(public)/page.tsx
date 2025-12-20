@@ -1,15 +1,14 @@
-// app/page.tsx
 import CourseGrid from "@/core/components/course/CourseGrid"
 import BannerCarousel, {
   type BannerSlide,
-} from "@/core/components/home/BannerCarousel";
-import FeaturedSkills from "@/core/components/home/FeaturedSkills";
-import IntroWithStats from "@/core/components/home/IntroWithStats";
+} from "@/core/components/public/landingpage/BannerCarousel";
+import FeaturedSkills from "@/core/components/public/landingpage/FeaturedSkills";
+import IntroWithStats from "@/core/components/public/landingpage/IntroWithStats";
 import TopicsSection from "@/core/components/course/TopicsSection";
-import ReviewsSection from "@/core/components/home/ReviewsSection";
-import CertificatesSection from "@/core/components/home/CertificatesSection";
-import SkillsTabCarouselSection from "@/core/components/home/SkillsTabCarouselSection";
-import PlansSection from "@/core/components/home/PlansSection";
+import ReviewsSection from "@/core/components/public/landingpage/ReviewsSection";
+import CertificatesSection from "@/core/components/public/landingpage/CertificatesSection";
+import SkillsTabCarouselSection from "@/core/components/public/landingpage/SkillsTabCarouselSection";
+import PlansSection from "@/core/components/public/landingpage/PlansSection";
 
 const slides: BannerSlide[] = [
   {
@@ -39,22 +38,13 @@ const slides: BannerSlide[] = [
 export default function Home() {
   return (
     <div className="space-y-16">
-      {/* Hero Banner */}
       <BannerCarousel slides={slides} autoPlayMs={7000} />
-
-      {/* Category Pills / Intro */}
       <IntroWithStats />
-
-      {/* Explore by Topics */}
       <TopicsSection />
-
-      {/* Sections giống Udemy homepage */}
       <FeaturedSkills />
       <SkillsTabCarouselSection />
       <ReviewsSection />
       <CertificatesSection />
-
-      {/* Featured Courses */}
       <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
         <div className="flex items-center justify-between">
           <h2 className="text-[28px] md:text-[36px] font-extrabold leading-tight tracking-tight max-w-[1100px]">
@@ -84,7 +74,6 @@ export default function Home() {
         </div>
         <CourseGrid />
       </section>
-
       <PlansSection />
     </div>
   );

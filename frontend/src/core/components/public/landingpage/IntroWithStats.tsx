@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion, type Variants, type Transition } from "framer-motion";
 import gsap from "gsap";
 import React from "react";
+import Link from "next/link";
 
 const easeOutExpo: Transition["ease"] = [0.16, 1, 0.3, 1];
 
@@ -66,12 +67,9 @@ export default function IntroWithStats() {
   return (
 
     <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
-      {/* subtle glow background */}
       <div className="pointer-events-none absolute inset-0 -z-10 [background:radial-gradient(60%_40%_at_20%_0%,rgba(152,255,121,.08),transparent_60%),radial-gradient(50%_40%_at_100%_0%,rgba(152,255,121,.05),transparent_60%)]" />
 
-      {/* Text + Logo grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 md:gap-10 lg:gap-12 items-start">
-        {/* TEXT - slightly shifted right */}
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -114,18 +112,18 @@ export default function IntroWithStats() {
           <motion.p
             variants={fadeUp}
             className="mt-4 text-base md:text-lg text-muted-foreground/90 max-w-3xl lg:max-w-4xl">
-            <button
+            <Link
+              href="/signup"
               className="inline-flex items-center px-6 py-3 text-base font-semibold rounded-xl
-               bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(101,216,48,0.4)]
-               hover:shadow-[0_6px_25px_rgba(101,216,48,0.5)] hover:scale-[1.03]
-               active:scale-[0.98] transition-all duration-300 ease-out"
+    bg-[var(--brand-primary)] text-black shadow-[0_4px_20px_rgba(101,216,48,0.4)]
+    hover:shadow-[0_6px_25px_rgba(101,216,48,0.5)] hover:scale-[1.03]
+    active:scale-[0.98] transition-all duration-300 ease-out"
             >
               Get Started for Free
-            </button>
+            </Link>
           </motion.p>
         </motion.div>
 
-        {/* LOGO */}
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -153,10 +151,8 @@ export default function IntroWithStats() {
         </motion.div>
       </div>
 
-      {/* Divider */}
       <div className="mt-10 h-px bg-white/5" />
 
-      {/* Stats */}
       <motion.ul
         initial="hidden"
         whileInView="show"
