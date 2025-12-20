@@ -1,13 +1,12 @@
-// src/app/(learner)/layout.tsx
-import type { ReactNode } from "react";
+"use client";
+
 import LearnerNavbar from "@/core/components/learner/navbar/LearnerNavbar";
 
-export default function LearnerLayout({ children }: { children: ReactNode }) {
+export default function LearnerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
+    <>
       <LearnerNavbar />
-      <main className="flex-1">{children}</main>
-      {/* Nếu muốn footer riêng cho learner thì thêm ở đây */}
-    </div>
+      <main className="min-h-[72vh]">{children}</main>
+    </>
   );
 }

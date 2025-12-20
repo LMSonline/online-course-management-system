@@ -22,7 +22,7 @@ export function CourseGrid({ courses }: Props) {
         {courses.map((c) => (
           <div
             key={c.id}
-            onClick={() => router.push(`/courses/${c.id}`)}
+            onClick={() => router.push(`/learner/courses/${c.id}`)}
           >
             <CourseCard course={c} />
           </div>

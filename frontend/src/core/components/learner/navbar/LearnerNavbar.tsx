@@ -15,6 +15,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; // ⬅️ thêm
+import { useAssistantStore } from "@/core/components/public/store";
 
 function NavItem({
   href,
@@ -36,6 +37,8 @@ function NavItem({
 }
 
 export default function LearnerNavbar() {
+    const openPopup = useAssistantStore((s) => s.openPopup);
+
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +80,7 @@ export default function LearnerNavbar() {
             <Menu size={18} className="text-muted" />
           </button>
 
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/learner/catalog" className="flex items-center gap-2">
             <Image
               src="/images/lms_logo.png"
               alt="LMS"
@@ -144,17 +147,17 @@ export default function LearnerNavbar() {
             <Bell size={18} />
           </button>
 
-          {/* AI Tutor (chatbot) */}
-          <Link
-            href="/assistant"
+          {/* AI Tutor button – thay cho nút chọn ngôn ngữ */}
+          <button
+            onClick={openPopup}
             aria-label="Open AI study assistant"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 
-             bg-slate-900/60 text-slate-200 
-             hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
-             transition"
+        bg-slate-900/60 text-slate-200 
+        hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
+        transition"
           >
             <Bot className="w-5 h-5" />
-          </Link>
+          </button>
 
           {/* Avatar learner – hiện để static, sau bind user data */}
           <div className="relative" ref={profileRef}>
