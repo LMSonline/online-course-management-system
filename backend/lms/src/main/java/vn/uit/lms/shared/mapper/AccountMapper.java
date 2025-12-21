@@ -1,15 +1,9 @@
 package vn.uit.lms.shared.mapper;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.Student;
-import vn.uit.lms.core.entity.Teacher;
-import vn.uit.lms.core.repository.AccountRepository;
-import vn.uit.lms.core.repository.StudentRepository;
-import vn.uit.lms.core.repository.TeacherRepository;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.shared.constant.AccountStatus;
-import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.dto.request.RegisterRequest;
 import vn.uit.lms.shared.dto.response.RegisterResponse;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;

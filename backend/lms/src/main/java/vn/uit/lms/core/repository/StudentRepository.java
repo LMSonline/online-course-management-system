@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.Student;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.Student;
 
 import java.util.Optional;
 
@@ -22,3 +22,4 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
     @Query("SELECT s FROM Student s JOIN FETCH s.account WHERE s.studentCode = :code")
     Optional<Student> findByStudentCodeWithAccount(@Param("code") String code);
 }
+

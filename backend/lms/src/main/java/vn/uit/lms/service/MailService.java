@@ -7,24 +7,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.course.CourseVersion;
-import vn.uit.lms.core.repository.AccountRepository;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.shared.constant.AccountActionType;
-import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.CourseStatus;
-import vn.uit.lms.shared.exception.ResourceNotFoundException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.Optional;
 
 /**
  * Service for sending emails asynchronously.

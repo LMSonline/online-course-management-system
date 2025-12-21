@@ -3,7 +3,7 @@ package vn.uit.lms.core.repository.assessment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import vn.uit.lms.core.entity.assessment.AnswerOption;
+import vn.uit.lms.core.domain.assessment.AnswerOption;
 
 import java.util.List;
 

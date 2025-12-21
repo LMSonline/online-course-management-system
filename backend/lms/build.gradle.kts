@@ -43,6 +43,7 @@ dependencies {
 	implementation("com.github.slugify:slugify:3.0.7")
 	implementation("org.springframework.boot:spring-boot-starter-amqp")
 	implementation("io.minio:minio:8.5.17")
+	implementation("org.apache.poi:poi-ooxml:5.2.5")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 	compileOnly("org.projectlombok:lombok")

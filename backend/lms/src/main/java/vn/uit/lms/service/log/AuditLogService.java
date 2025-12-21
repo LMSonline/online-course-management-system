@@ -1,11 +1,10 @@
 package vn.uit.lms.service.log;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.log.AuditLog;
+import vn.uit.lms.core.domain.log.AuditLog;
 import vn.uit.lms.core.repository.log.AuditLogRepository;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.response.log.AuditLogResponse;

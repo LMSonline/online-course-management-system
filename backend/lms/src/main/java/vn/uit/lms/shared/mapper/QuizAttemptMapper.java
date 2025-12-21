@@ -1,7 +1,7 @@
 package vn.uit.lms.shared.mapper;
 
-import vn.uit.lms.core.entity.assessment.QuizAttempt;
-import vn.uit.lms.core.entity.assessment.QuizAttemptAnswer;
+import vn.uit.lms.core.domain.assessment.QuizAttempt;
+import vn.uit.lms.core.domain.assessment.QuizAttemptAnswer;
 import vn.uit.lms.shared.dto.response.assessment.QuizAttemptAnswerResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuizAttemptResponse;
 

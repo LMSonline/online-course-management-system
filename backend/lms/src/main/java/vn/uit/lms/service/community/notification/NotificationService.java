@@ -3,7 +3,7 @@ package vn.uit.lms.service.community.notification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.community.notification.Notification;
+import vn.uit.lms.core.domain.community.notification.Notification;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.community.notification.NotificationRepository;
 import vn.uit.lms.shared.dto.PageResponse;
@@ -11,7 +11,6 @@ import vn.uit.lms.shared.dto.request.community.notification.SendBulkNotification
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service

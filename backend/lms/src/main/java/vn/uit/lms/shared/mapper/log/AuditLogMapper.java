@@ -2,7 +2,7 @@ package vn.uit.lms.shared.mapper.log;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import vn.uit.lms.core.entity.log.AuditLog;
+import vn.uit.lms.core.domain.log.AuditLog;
 import vn.uit.lms.shared.dto.response.log.AuditLogResponse;
 
 @Mapper(componentModel = "spring")

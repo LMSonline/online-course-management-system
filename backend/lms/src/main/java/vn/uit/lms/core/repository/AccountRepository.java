@@ -3,7 +3,7 @@ package vn.uit.lms.core.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.shared.constant.Role;
 
 import java.util.Optional;

@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.AccountActionLog;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.AccountActionLog;
 import vn.uit.lms.core.repository.AccountActionLogRepository;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.shared.constant.AccountActionType;
@@ -17,6 +17,10 @@ public class AccountActionLogService {
     private final AccountActionLogRepository repo;
     private final AccountRepository accountRepository;
 
+    /**
+     * Legacy method - kept for backward compatibility
+     * Consider using saveLog with domain entity instead
+     */
     public AccountActionLog logAction(Long targetAccountId,
                                       AccountActionType type,
                                       String reason,
@@ -38,6 +42,13 @@ public class AccountActionLogService {
                 .newStatus(newStatus)
                 .build();
 
+        return repo.save(log);
+    }
+
+    /**
+     * Save log entity directly - preferred for Rich Domain Model
+     */
+    public AccountActionLog saveLog(AccountActionLog log) {
         return repo.save(log);
     }
 

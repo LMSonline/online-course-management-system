@@ -2,7 +2,7 @@ package vn.uit.lms.service.system;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.system.SystemSetting;
+import vn.uit.lms.core.domain.system.SystemSetting;
 import vn.uit.lms.core.repository.system.SystemSettingRepository;
 import vn.uit.lms.shared.dto.request.system.SystemSettingRequest;
 import vn.uit.lms.shared.dto.response.system.SystemSettingResponse;

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import vn.uit.lms.shared.constant.LessonType;
+import vn.uit.lms.shared.constant.VideoStatus;
 
 @Getter
 @Setter
@@ -26,8 +27,14 @@ public class LessonDTO {
     @Schema(description = "Short description", example = "Learn the fundamentals of Spring Boot")
     private String shortDescription;
 
-    @Schema(description = "URL to the lesson content (video, document, etc.)", example = "https://example.com/videos/lesson1.mp4")
-    private String contentUrl;
+    @Schema(description = "Video object key in storage (for video lessons)", example = "videos/spring-boot-basics.mp4")
+    private String videoObjectKey;
+
+    @Schema(description = "Status of the video processing (for video lessons)", example = "READY")
+    private VideoStatus videoStatus;
+
+    @Schema(description = "Indicates if the lesson is a preview", example = "true")
+    private Boolean isPreview ;
 
     @Schema(description = "Duration in seconds (for video lessons)", example = "1800")
     private Integer durationSeconds;

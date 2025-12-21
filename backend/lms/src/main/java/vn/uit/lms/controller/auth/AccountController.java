@@ -3,10 +3,6 @@ package vn.uit.lms.controller.auth;
 import com.turkraft.springfilter.boot.Filter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,11 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.shared.constant.AccountActionType;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.dto.PageResponse;
+import vn.uit.lms.shared.dto.request.account.AccountActionRequest;
 import vn.uit.lms.shared.dto.request.account.RejectRequest;
 import vn.uit.lms.shared.dto.request.account.UpdateProfileRequest;
 import vn.uit.lms.shared.dto.request.account.UpdateStatusRequest;
@@ -183,6 +180,66 @@ public class AccountController {
             ){
         String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
         AccountProfileResponse res = accountService.changeAccountStatus(id, statusRequest.getStatus(), statusRequest.getReason(), ip);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
+    }
+
+    @Operation(
+            summary = "Suspend account (Admin only)",
+            description = "Suspend an active account with optional reason. Only accessible by administrators."
+    )
+    @PostMapping("/admin/accounts/{id}/suspend")
+    @ApiMessage("Suspend account (Admin only)")
+    @AdminOnly
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> suspendAccount(
+            @Parameter(description = "ID of the account to suspend", required = true)
+            @PathVariable Long id,
+            @Parameter(description = "Suspension details including reason")
+            @Valid @RequestBody AccountActionRequest actionRequest,
+            HttpServletRequest request
+    ) {
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        AccountProfileResponse res = accountService.suspendAccount(id,
+                actionRequest != null ? actionRequest.getReason() : null, ip);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
+    }
+
+    @Operation(
+            summary = "Unlock suspended account (Admin only)",
+            description = "Unlock a suspended account with optional reason. Only accessible by administrators."
+    )
+    @PostMapping("/admin/accounts/{id}/unlock")
+    @ApiMessage("Unlock account (Admin only)")
+    @AdminOnly
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> unlockAccount(
+            @Parameter(description = "ID of the account to unlock", required = true)
+            @PathVariable Long id,
+            @Parameter(description = "Unlock details including reason")
+            @Valid @RequestBody AccountActionRequest actionRequest,
+            HttpServletRequest request
+    ) {
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        AccountProfileResponse res = accountService.unlockAccount(id,
+                actionRequest != null ? actionRequest.getReason() : null, ip);
+        return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
+    }
+
+    @Operation(
+            summary = "Deactivate account (Admin only)",
+            description = "Deactivate an active account with optional reason. Only accessible by administrators."
+    )
+    @PostMapping("/admin/accounts/{id}/deactivate")
+    @ApiMessage("Deactivate account (Admin only)")
+    @AdminOnly
+    public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> deactivateAccount(
+            @Parameter(description = "ID of the account to deactivate", required = true)
+            @PathVariable Long id,
+            @Parameter(description = "Deactivation details including reason")
+            @Valid @RequestBody AccountActionRequest actionRequest,
+            HttpServletRequest request
+    ) {
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For")).orElse(request.getRemoteAddr());
+        AccountProfileResponse res = accountService.deactivateAccount(id,
+                actionRequest != null ? actionRequest.getReason() : null, ip);
         return ResponseEntity.ok(JsonViewUtils.formatAccountProfileResponse(res));
     }
 

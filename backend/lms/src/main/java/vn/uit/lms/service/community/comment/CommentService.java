@@ -2,10 +2,10 @@ package vn.uit.lms.service.community.comment;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.community.comment.Comment;
-import vn.uit.lms.core.entity.course.Course;
-import vn.uit.lms.core.entity.course.content.Lesson;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.community.comment.Comment;
+import vn.uit.lms.core.domain.course.Course;
+import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.community.comment.CommentRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
@@ -17,7 +17,6 @@ import vn.uit.lms.shared.dto.request.community.comment.CommentCreateRequest;
 import vn.uit.lms.shared.dto.response.community.comment.CommentResponse;
 import vn.uit.lms.shared.mapper.community.CommentMapper;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service

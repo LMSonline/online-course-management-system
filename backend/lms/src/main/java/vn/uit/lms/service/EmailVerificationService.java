@@ -1,13 +1,12 @@
 package vn.uit.lms.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.EmailVerification;
-import vn.uit.lms.core.entity.Student;
-import vn.uit.lms.core.entity.Teacher;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.EmailVerification;
+import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.EmailVerificationRepository;
 import vn.uit.lms.core.repository.StudentRepository;
@@ -16,13 +15,10 @@ import vn.uit.lms.service.event.AccountActivatedEvent;
 import vn.uit.lms.service.helper.StudentCodeGenerator;
 import vn.uit.lms.service.helper.TeacherCodeGenerator;
 import vn.uit.lms.shared.constant.AccountStatus;
-import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.TokenType;
 import vn.uit.lms.shared.exception.InvalidTokenException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -87,16 +87,17 @@ public class ChapterController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Reorder chapters")
+    @Operation(summary = "Reorder chapters", description = "Reorder chapters within a course version. Provide ordered list of chapter IDs.")
     @SecurityRequirement(name = "bearerAuth")
-    @PatchMapping("/chapters/{chapterId}/reorder")
+    @PostMapping("/courses/{courseId}/versions/{versionId}/chapters/reorder")
     @TeacherOnly
-    public ResponseEntity<Void> reorderChapter(
-            @Parameter(description = "Chapter ID") @PathVariable("chapterId") Long chapterId,
-            @Parameter(description = "Reorder details") @Valid @RequestBody ChapterReorderRequest reorderRequest
+    public ResponseEntity<Void> reorderChapters(
+            @Parameter(description = "Course ID", required = true) @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID", required = true) @PathVariable("versionId") Long versionId,
+            @Parameter(description = "Ordered list of chapter IDs", required = true) @Valid @RequestBody ChapterReorderRequest reorderRequest
     ){
-        chapterService.reorderChapter(chapterId, reorderRequest);
-        return ResponseEntity.noContent().build();
+        chapterService.reorderChapters(courseId, versionId, reorderRequest);
+        return ResponseEntity.ok().build();
     }
 
 }

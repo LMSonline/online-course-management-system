@@ -1,7 +1,6 @@
 package vn.uit.lms.service.event;
 
-import lombok.Data;
-import vn.uit.lms.core.entity.course.CourseVersion;
+import vn.uit.lms.core.domain.course.CourseVersion;
 
 
 public record CourseVersionStatusChangeEvent (

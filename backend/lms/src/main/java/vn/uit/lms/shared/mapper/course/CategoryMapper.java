@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper.course;
 
-import vn.uit.lms.core.entity.course.Category;
+import vn.uit.lms.core.domain.course.Category;
 import vn.uit.lms.shared.dto.response.course.CategoryResponseDto;
 
 public class CategoryMapper {

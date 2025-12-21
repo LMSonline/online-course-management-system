@@ -1,7 +1,7 @@
 package vn.uit.lms.core.repository.system;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import vn.uit.lms.core.entity.system.SystemSetting;
+import vn.uit.lms.core.domain.system.SystemSetting;
 
 import java.util.Optional;
 

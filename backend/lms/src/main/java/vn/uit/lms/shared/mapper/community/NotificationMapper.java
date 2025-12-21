@@ -1,7 +1,7 @@
 package vn.uit.lms.shared.mapper.community;
 
 import org.springframework.stereotype.Component;
-import vn.uit.lms.core.entity.community.notification.Notification;
+import vn.uit.lms.core.domain.community.notification.Notification;
 import vn.uit.lms.shared.dto.response.community.notification.NotificationResponse;
 
 @Component

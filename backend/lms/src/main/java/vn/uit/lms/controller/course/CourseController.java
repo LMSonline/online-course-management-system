@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.uit.lms.core.entity.course.Course;
+import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.service.course.CourseService;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.CourseRequest;

@@ -7,19 +7,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.config.MinioBucketProperties;
 import vn.uit.lms.config.RabbitMQConfig;
-import vn.uit.lms.core.entity.course.CourseVersion;
-import vn.uit.lms.core.entity.course.content.Chapter;
-import vn.uit.lms.core.entity.course.content.Lesson;
+import vn.uit.lms.core.domain.course.content.Chapter;
+import vn.uit.lms.core.domain.course.content.Lesson;
+import vn.uit.lms.core.domain.course.content.LessonResource;
 import vn.uit.lms.core.repository.course.content.ChapterRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
-import vn.uit.lms.service.course.CourseService;
+import vn.uit.lms.core.repository.course.content.LessonResourceRepository;
 import vn.uit.lms.service.event.VideoConvertMessage;
 import vn.uit.lms.service.storage.MinioService;
 import vn.uit.lms.shared.dto.request.course.content.CreateLessonRequest;
+import vn.uit.lms.shared.dto.request.course.content.ReorderLessonsRequest;
+import vn.uit.lms.shared.dto.request.course.content.UpdateLessonRequest;
 import vn.uit.lms.shared.dto.request.course.content.UpdateVideoRequest;
 import vn.uit.lms.shared.dto.response.course.content.LessonDTO;
 import vn.uit.lms.shared.dto.response.course.content.RequestUploadUrlResponse;
 import vn.uit.lms.shared.exception.DuplicateResourceException;
+import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.course.content.LessonMapper;
 
@@ -31,6 +34,7 @@ import java.util.List;
 public class LessonService {
 
     private final LessonRepository lessonRepository;
+    private final LessonResourceRepository lessonResourceRepository;
     private final MinioService minioService;
     private final ChapterService chapterService;
     private final ChapterRepository chapterRepository;
@@ -56,16 +60,16 @@ public class LessonService {
         boolean existTitle = this.lessonRepository.existsByTitleAndChapter(lesson.getTitle(), chapter);
 
         if (existTitle) {
-            throw new DuplicateResourceException("Title already exists");
+            throw new DuplicateResourceException("Title already exists in this chapter");
         }
 
         lesson.setChapter(chapter);
-        lesson.setContentUrl(null);
-        lesson.setDurationSeconds(0);
-        lesson.setOrderIndex(chapter.getTotalLessons()+1);
+        lesson.setVideoObjectKey(null);
+        lesson.setOrderIndex(chapter.getTotalLessons());
+        lesson.validateLesson();
 
         Lesson savedLesson = lessonRepository.save(lesson);
-        log.info("Created lesson with id: {}", savedLesson.getId());
+        log.info("Created lesson with id: {} in chapter: {}", savedLesson.getId(), chapterId);
 
         return LessonMapper.toResponse(savedLesson);
     }
@@ -98,7 +102,122 @@ public class LessonService {
     }
 
     /**
+     * Get lesson details by ID
+     */
+    public LessonDTO getLessonById(Long lessonId) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
+
+        return LessonMapper.toResponse(lesson);
+    }
+
+    /**
+     * Update lesson
+     */
+    @Transactional
+    public LessonDTO updateLesson(Long lessonId, UpdateLessonRequest request) {
+        Lesson lesson = validateLessonEditable(lessonId);
+
+        // Check for duplicate title if title changed
+        if (!lesson.getTitle().equals(request.getTitle())) {
+            boolean existTitle = lessonRepository.existsByTitleAndChapter(request.getTitle(), lesson.getChapter());
+            if (existTitle) {
+                throw new DuplicateResourceException("Title already exists in this chapter");
+            }
+        }
+
+        // Update type (domain validation)
+        lesson.updateType(request.getType());
+
+        // Update basic info
+        lesson.updateBasicInfo(request.getTitle(), request.getShortDescription(), request.getIsPreview());
+
+        lesson.validateLesson();
+        Lesson updatedLesson = lessonRepository.save(lesson);
+        log.info("Updated lesson with id: {}", lessonId);
+
+        return LessonMapper.toResponse(updatedLesson);
+    }
+
+    /**
+     * Delete lesson
+     */
+    @Transactional
+    public void deleteLesson(Long lessonId) {
+        Lesson lesson = validateLessonEditable(lessonId);
+
+        // Delete video from MinIO if exists
+        if (lesson.getVideoObjectKey() != null) {
+            try {
+                minioService.deleteObject(lesson.getVideoObjectKey(), minioBucketProperties.getVideos());
+                log.info("Deleted video for lesson: {}", lessonId);
+            } catch (Exception e) {
+                log.warn("Failed to delete video for lesson: {}, error: {}", lessonId, e.getMessage());
+            }
+        }
+
+        Chapter chapter = lesson.getChapter();
+        Integer deletedOrderIndex = lesson.getOrderIndex();
+
+        // Delete lesson (cascade will delete resources)
+        lessonRepository.delete(lesson);
+
+        // Reorder remaining lessons
+        List<Lesson> remainingLessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+        for (int i = 0; i < remainingLessons.size(); i++) {
+            Lesson l = remainingLessons.get(i);
+            if (l.getOrderIndex() > deletedOrderIndex) {
+                l.updateOrderIndex(i);
+            }
+        }
+        lessonRepository.saveAll(remainingLessons);
+
+        log.info("Deleted lesson with id: {}", lessonId);
+    }
+
+    /**
+     * Reorder lessons in a chapter
+     */
+    @Transactional
+    public void reorderLessons(Long chapterId, ReorderLessonsRequest request) {
+        Chapter chapter = chapterService.validateChapterEditable(chapterId);
+
+        List<Long> lessonIds = request.getLessonIds();
+
+        // Validate all lessons belong to this chapter
+        List<Lesson> lessons = lessonRepository.findAllById(lessonIds);
+
+        if (lessons.size() != lessonIds.size()) {
+            throw new InvalidRequestException("Some lessons not found");
+        }
+
+        for (Lesson lesson : lessons) {
+            if (!lesson.getChapter().getId().equals(chapterId)) {
+                throw new InvalidRequestException("Lesson " + lesson.getId() + " does not belong to chapter " + chapterId);
+            }
+        }
+
+        // Update order index
+        for (int i = 0; i < lessonIds.size(); i++) {
+            Long lessonId = lessonIds.get(i);
+            Lesson lesson = lessons.stream()
+                    .filter(l -> l.getId().equals(lessonId))
+                    .findFirst()
+                    .orElseThrow();
+            lesson.updateOrderIndex(i);
+        }
+
+        lessonRepository.saveAll(lessons);
+        log.info("Reordered {} lessons in chapter: {}", lessonIds.size(), chapterId);
+    }
+
+    /**
      * Complete video upload and trigger processing
+     *
+     * IMPORTANT: When uploading new video
+     * 1. Delete old video (raw + HLS) if exists
+     * 2. Update lesson with new video
+     * 3. Trigger processing for new video
      *
      * TODO: Enhance video processing workflow
      * - Add video validation (format, codec, resolution)
@@ -131,7 +250,9 @@ public class LessonService {
 
         Lesson lesson = validateLessonEditable(lessonId);
 
-        String contentUrl = minioService.buildPublicUrl(request.getObjectKey(), minioBucketProperties.getVideos());
+        if (!lesson.isVideoLesson()) {
+            throw new InvalidRequestException("Only VIDEO type lessons can have videos");
+        }
 
         boolean isExistVideo = minioService.isExistsObject(request.getObjectKey(), minioBucketProperties.getVideos());
 
@@ -139,19 +260,32 @@ public class LessonService {
             throw new ResourceNotFoundException("Video object not found in storage with key: " + request.getObjectKey());
         }
 
-        // TODO: Create video processing job record
-        // VideoProcessingJob job = new VideoProcessingJob();
-        // job.setLesson(lesson);
-        // job.setStatus(VideoProcessingStatus.UPLOADED);
-        // job.setOriginalObjectKey(request.getObjectKey());
-        // videoProcessingJobRepository.save(job);
+        // IMPORTANT: Delete old video if exists (raw + HLS)
+        if (lesson.getVideoObjectKey() != null) {
+            log.info("Deleting old video for lesson: {}", lessonId);
+            try {
+                minioService.deleteVideoCompletely(
+                    lesson.getVideoObjectKey(),
+                    minioBucketProperties.getVideos(),
+                    lessonId
+                );
+                log.info("Successfully deleted old video (raw + HLS) for lesson: {}", lessonId);
+            } catch (Exception e) {
+                log.warn("Failed to delete old video for lesson: {}, continuing with new upload. Error: {}",
+                        lessonId, e.getMessage());
+                // Continue even if deletion fails - new video will overwrite
+            }
+        }
 
+        // Use domain method to mark video uploaded
+        lesson.markVideoUploaded(request.getObjectKey());
+        lesson.setDurationSeconds(request.getDurationSeconds());
+
+        // Send message to video processing queue
         VideoConvertMessage videoConvertMessage = new VideoConvertMessage();
         videoConvertMessage.setObjectKey(request.getObjectKey());
         videoConvertMessage.setBucket(minioBucketProperties.getVideos());
-        // TODO: Add lessonId and jobId to message for tracking
-        // videoConvertMessage.setLessonId(lessonId);
-        // videoConvertMessage.setJobId(job.getId());
+        videoConvertMessage.setLessonId(lessonId);  // Include lessonId for updating after processing
 
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.VIDEO_CONVERT_EXCHANGE,
@@ -159,102 +293,73 @@ public class LessonService {
                 videoConvertMessage
         );
 
-        // TODO: Update with placeholder URL until conversion completes
-        // Set contentUrl to HLS playlist path (will be available after conversion)
-        lesson.setContentUrl(contentUrl);
-        lesson.setDurationSeconds(request.getDurationSeconds());
-        // TODO: Add processing status field
-        // lesson.setVideoStatus(VideoStatus.PROCESSING);
-
         Lesson updatedLesson = lessonRepository.save(lesson);
         log.info("Updated lesson video for lesson id: {}, video processing initiated", lessonId);
 
         return LessonMapper.toResponse(updatedLesson);
     }
 
-    // TODO: Implement updateLesson method
-    // @Transactional
-    // public LessonDTO updateLesson(Long lessonId, UpdateLessonRequest request) {
-    //     - Validate lesson is editable
-    //     - Update title, description, type, isFree, isPreview
-    //     - Check for duplicate title within chapter
-    //     - Validate lesson type changes (e.g., VIDEO to QUIZ requires content migration)
-    // }
+    /**
+     * Get video streaming URL (HLS playlist with presigned URLs)
+     *
+     * For HLS streaming, we need to:
+     * 1. Get the playlist object key (e.g., hls/lessons/1/index.m3u8)
+     * 2. Generate modified playlist with presigned URLs for all segments
+     * 3. Return the modified playlist content as inline data URI
+     *
+     * Alternative approaches:
+     * - Return presigned URL for playlist (but segments will still be forbidden)
+     * - Set MinIO bucket policy to public (not secure)
+     * - Use proxy endpoint to serve HLS files (adds latency)
+     */
+    public String getVideoStreamingUrl(Long lessonId) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
 
-    // TODO: Implement deleteLesson method
-    // @Transactional
-    // public void deleteLesson(Long lessonId) {
-    //     - Validate lesson is editable
-    //     - Delete associated video files from MinIO
-    //     - Delete lesson resources
-    //     - Remove progress records
-    //     - Reorder remaining lessons in chapter
-    // }
+        if (!lesson.isVideoReady()) {
+            throw new InvalidRequestException("Video is not ready for streaming");
+        }
 
-    // TODO: Implement reorderLessons method
-    // @Transactional
-    // public void reorderLessons(Long chapterId, List<Long> lessonIds) {
-    //     - Validate all lessons belong to the chapter
-    //     - Update orderIndex for each lesson
-    //     - Ensure no gaps in ordering
-    // }
+        // Generate HLS playlist with presigned URLs for segments (valid for 1 hour)
+        String modifiedPlaylist = minioService.generateHLSPlaylistWithPresignedUrls(
+                lesson.getVideoObjectKey(),
+                minioBucketProperties.getVideos(),
+                3600 // 1 hour
+        );
 
-    // TODO: Implement getLessonById method
-    // public LessonDTO getLessonById(Long lessonId) {
-    //     - Return lesson details with chapter and course info
-    //     - Include video streaming URL if available
-    //     - Show resources count
-    // }
+        // Return as data URI that video players can use
+        return "data:application/vnd.apple.mpegurl;base64," +
+               java.util.Base64.getEncoder().encodeToString(modifiedPlaylist.getBytes());
+    }
 
-    // TODO: Implement getLessonForStudent method
-    // public LessonDTO getLessonForStudent(Long lessonId, Long studentId) {
-    //     - Verify student enrollment in course
-    //     - Check if lesson is accessible (not locked by prerequisites)
-    //     - Include student's progress for this lesson
-    //     - Track lesson view/access
-    //     - Generate streaming token for video
-    // }
+    /**
+     * Delete video from lesson (including raw video and HLS files)
+     */
+    @Transactional
+    public LessonDTO deleteVideo(Long lessonId) {
+        Lesson lesson = validateLessonEditable(lessonId);
 
-    // TODO: Implement markLessonComplete method
-    // @Transactional
-    // public void markLessonComplete(Long lessonId, Long studentId) {
-    //     - Verify enrollment and access
-    //     - Create/update LessonProgress record
-    //     - Update overall course progress
-    //     - Unlock next lesson if applicable
-    //     - Award points/badges if configured
-    // }
+        if (lesson.getVideoObjectKey() == null) {
+            throw new InvalidRequestException("Lesson has no video to delete");
+        }
 
-    // TODO: Implement getVideoStreamingUrl method
-    // public String getVideoStreamingUrl(Long lessonId, Long studentId) {
-    //     - Verify enrollment and access
-    //     - Check video processing status
-    //     - Generate time-limited streaming token
-    //     - Return HLS playlist URL with token
-    //     - Log streaming session
-    // }
+        String objectKey = lesson.getVideoObjectKey();
 
-    // TODO: Implement handleVideoProcessingComplete method (called by webhook/consumer)
-    // @Transactional
-    // public void handleVideoProcessingComplete(Long lessonId, VideoProcessingResult result) {
-    //     - Update lesson with HLS playlist URL
-    //     - Set video status to COMPLETED
-    //     - Update video metadata (resolution, bitrate, etc.)
-    //     - Save thumbnail URLs
-    //     - Notify teacher about completion
-    //     - Delete original uploaded file if configured
-    // }
+        // Delete from MinIO (raw video + HLS folder)
+        try {
+            minioService.deleteVideoCompletely(objectKey, minioBucketProperties.getVideos(), lessonId);
+            log.info("Deleted video completely (raw + HLS) for lesson: {}", lessonId);
+        } catch (Exception e) {
+            log.warn("Failed to delete video completely for lesson: {}, error: {}", lessonId, e.getMessage());
+            // Continue to clear lesson data even if MinIO deletion fails
+        }
 
-    // TODO: Implement handleVideoProcessingFailed method
-    // @Transactional
-    // public void handleVideoProcessingFailed(Long lessonId, String errorMessage) {
-    //     - Set video status to FAILED
-    //     - Log error details
-    //     - Notify teacher about failure
-    //     - Keep original video as fallback
-    //     - Allow retry option
-    // }
+        // Clear video data using domain method
+        lesson.clearVideoData();
 
+        Lesson updatedLesson = lessonRepository.save(lesson);
+        log.info("Cleared video data for lesson: {}", lessonId);
+
+        return LessonMapper.toResponse(updatedLesson);
+    }
 }
-
-

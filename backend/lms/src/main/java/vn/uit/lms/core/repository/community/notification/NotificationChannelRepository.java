@@ -1,7 +1,7 @@
 package vn.uit.lms.core.repository.community.notification;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import vn.uit.lms.core.entity.community.notification.NotificationChannel;
+import vn.uit.lms.core.domain.community.notification.NotificationChannel;
 
 import java.util.List;
 

@@ -2,23 +2,18 @@ package vn.uit.lms.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.*;
+import vn.uit.lms.core.domain.*;
 import vn.uit.lms.core.repository.*;
 import vn.uit.lms.service.event.AccountActiveEvent;
 import vn.uit.lms.service.event.PasswordResetEvent;
-import vn.uit.lms.shared.constant.AccountStatus;
-import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.constant.SecurityConstants;
 import vn.uit.lms.shared.constant.TokenType;
 import vn.uit.lms.shared.dto.request.ChangePasswordDTO;
@@ -36,10 +31,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 /**
- * Service class for managing user accounts, authentication, and registration.
+ * AuthService - Thin orchestrator following Rich Domain Model pattern
  * <p>
- * Handles registration, login, token generation, and account verification processes.
- * Integrates with Spring Security for authentication and with email service for activation.
+ * This service coordinates authentication workflows and delegates business logic to domain entities.
+ * Domain entities (Account, EmailVerification, Teacher, Student) encapsulate their own behavior.
  * </p>
  */
 @Service
@@ -87,9 +82,8 @@ public class AuthService {
     /**
      * Registers a new account and sends an email verification link.
      * <p>
-     * - Checks for duplicate username or email.
-     * - Deletes non-activated accounts with same credentials.
-     * - Saves the account in {@code PENDING_EMAIL} status and sends verification mail.
+     * Service orchestrates: duplicate check, deletion, save, token creation, email event
+     * Business logic is in the Account entity
      * </p>
      *
      * @param account the account entity to register
@@ -101,26 +95,30 @@ public class AuthService {
     @EnableSoftDeleteFilter
     public Account registerAccount(Account account) {
 
+        // Check for duplicate username
         accountRepository.findOneByUsername(account.getUsername())
                 .ifPresent(existingAccount -> {
-                    boolean removed = removeNonActivatedAccount(existingAccount);
-                    if (!removed) {
+                    if (!existingAccount.isPendingEmailVerification()) {
                         throw new UsernameAlreadyUsedException();
                     }
+                    accountRepository.delete(existingAccount);
+                    accountRepository.flush();
                 });
 
+        // Check for duplicate email
         accountRepository.findOneByEmailIgnoreCase(account.getEmail())
                 .ifPresent(existingAccount -> {
-                    boolean removed = removeNonActivatedAccount(existingAccount);
-                    if (!removed) {
+                    if (!existingAccount.isPendingEmailVerification()) {
                         throw new EmailAlreadyUsedException();
                     }
+                    accountRepository.delete(existingAccount);
+                    accountRepository.flush();
                 });
 
-        account.setStatus(AccountStatus.PENDING_EMAIL);
-
+        // Save account (entity manages its own status)
         Account saved = accountRepository.save(account);
 
+        // Create email verification token
         String rawToken = UUID.randomUUID().toString();
         Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
         String hashedToken = TokenHashUtil.hashToken(rawToken);
@@ -135,32 +133,17 @@ public class AuthService {
 
         emailVerificationRepository.save(verification);
 
+        // Publish event for email sending
         eventPublisher.publishEvent(new AccountActiveEvent(saved, rawToken));
 
         return saved;
     }
 
     /**
-     * Removes an account if it is pending email verification.
-     *
-     * @param existingAccount the account to check
-     * @return {@code true} if removed, {@code false} otherwise
-     */
-    public boolean removeNonActivatedAccount(Account existingAccount) {
-        if (existingAccount.getStatus() == AccountStatus.PENDING_EMAIL) {
-            accountRepository.delete(existingAccount);
-            accountRepository.flush();
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Authenticates a user and generates access and refresh tokens.
      * <p>
-     * - Authenticates credentials via Spring Security.
-     * - Builds response with account info and tokens.
-     * - Stores hashed refresh token in database.
+     * Service orchestrates: authentication, token generation, DB updates, event publishing
+     * Business logic for status management is in Account entity
      * </p>
      *
      * @param reqLoginDTO the login request containing credentials and device info
@@ -171,20 +154,20 @@ public class AuthService {
     @EnableSoftDeleteFilter
     public ResLoginDTO login(ReqLoginDTO reqLoginDTO) {
 
+        // Authenticate credentials
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(reqLoginDTO.getLogin(), reqLoginDTO.getPassword());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-
-        // Set the authentication in the security context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        ResLoginDTO resLoginDTO;
+        // Fetch account
         String email = authentication.getName();
         Account accountDB = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         // Map account to response DTO depending on role
+        ResLoginDTO resLoginDTO;
         switch (accountDB.getRole()) {
             case STUDENT -> {
                 Student student = studentRepository.findByAccount(accountDB)
@@ -204,7 +187,6 @@ public class AuthService {
 
             default -> throw new IllegalStateException("Unexpected role: " + accountDB.getRole());
         }
-
 
         // Generate access token
         String accessToken = securityUtils.createAccessToken(authentication.getName(), resLoginDTO);
@@ -228,7 +210,8 @@ public class AuthService {
         resLoginDTO.setRefreshToken(rawRefreshToken);
         resLoginDTO.setRefreshTokenExpiresAt(refreshToken.getExpiresAt());
 
-        accountDB.setLastLoginAt(Instant.now());
+        // Update last login (using domain behavior)
+        accountDB.recordLogin();
         accountRepository.save(accountDB);
 
         return resLoginDTO;
@@ -243,6 +226,7 @@ public class AuthService {
                     return new ResourceNotFoundException("User not found with email: " + email);
                 });
 
+        // Create password reset token
         String rawToken = UUID.randomUUID().toString();
         Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
         String hashedToken = TokenHashUtil.hashToken(rawToken);
@@ -257,6 +241,7 @@ public class AuthService {
 
         emailVerificationRepository.save(verification);
 
+        // Publish event for email sending
         eventPublisher.publishEvent(new PasswordResetEvent(accountDB, rawToken));
     }
 
@@ -266,45 +251,29 @@ public class AuthService {
         log.info("Start resetting password with token: {}", token);
         String hashToken = TokenHashUtil.hashToken(token);
 
-        // Validate token existence
+        // Find and validate token
         EmailVerification verification = emailVerificationRepository.findByTokenHash(hashToken)
                 .orElseThrow(() -> {
                     log.warn("Token not found: {}", token);
                     return new InvalidTokenException("Invalid token.");
                 });
 
-        // Check token usage
-        if (verification.isUsed()) {
-            log.warn("Token has already been used: {}", token);
-            throw new InvalidTokenException("Token has already been used.");
-        }
+        // Validate token using domain behavior
+        verification.validateForUse();
+        verification.validateTokenType(TokenType.RESET_PASSWORD);
 
-        // Check expiration
-        if (verification.getExpiresAt().isBefore(Instant.now())) {
-            log.warn("Token expired: {}", token);
-            throw new InvalidTokenException("Token has expired.");
-        }
-
-        // Validate token type
-        if (verification.getTokenType() != TokenType.RESET_PASSWORD) {
-            log.warn("Invalid token type: {}", verification.getTokenType());
-            throw new InvalidTokenException("Invalid token type.");
-        }
-
-        // Load associated account
+        // Get account and reset password using domain behavior
         Account account = verification.getAccount();
         log.debug("Resetting password for account id={}, role={}", account.getId(), account.getRole());
 
-        // Update password
-        account.setPasswordHash(passwordEncoder.encode(newPassword));
+        account.resetPassword(newPassword, passwordEncoder);
         accountRepository.save(account);
 
-        // Mark token as used
-        verification.setUsed(true);
+        // Mark token as used using domain behavior
+        verification.markAsUsed();
         emailVerificationRepository.save(verification);
 
         log.info("Password reset successfully for account id={}", account.getId());
-
     }
 
     @EnableSoftDeleteFilter
@@ -318,7 +287,7 @@ public class AuthService {
 
         MeResponse meResponse = buildBaseResponse(account);
 
-        // Use JOIN FETCH queries to avoid N+1 problem
+        // Fetch profile based on role
         BaseProfile profile = switch (account.getRole()) {
             case STUDENT -> {
                 Student student = studentRepository.findByAccount(account)
@@ -363,24 +332,20 @@ public class AuthService {
     @EnableSoftDeleteFilter
     public void changePassword(ChangePasswordDTO changePasswordDTO) {
 
-        if (changePasswordDTO.getOldPassword().equals(changePasswordDTO.getNewPassword())) {
-            throw new InvalidPasswordException("New password must be different from old password");
-        }
-
         String email = SecurityUtils.getCurrentUserLogin()
                 .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
                 .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
 
-
         Account account = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), account.getPasswordHash())) {
-            throw new InvalidPasswordException("Old password does not match");
-        }
+        // Use domain behavior for password change with validation
+        account.changePassword(
+                changePasswordDTO.getOldPassword(),
+                changePasswordDTO.getNewPassword(),
+                passwordEncoder
+        );
 
-
-        account.setPasswordHash(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
         accountRepository.save(account);
     }
 
@@ -391,12 +356,13 @@ public class AuthService {
                     return new ResourceNotFoundException("User not found with email: " + email);
                 });
 
-        if (accountDB.getStatus() != AccountStatus.PENDING_EMAIL) {
+        // Use domain behavior to check status
+        if (!accountDB.isPendingEmailVerification()) {
             log.warn("Resend verification email failed: account already activated [{}]", email);
             throw new IllegalStateException("Account is already activated.");
         }
 
-        // Rate limiting: Check số lần resend trong 1 giờ qua
+        // Rate limiting check
         Instant oneHourAgo = Instant.now().minus(1, ChronoUnit.HOURS);
         long recentAttempts = emailVerificationRepository.countByAccountAndCreatedAtAfterAndTokenType(
                 accountDB,
@@ -409,6 +375,7 @@ public class AuthService {
             throw new TooManyRequestsException("Too many resend attempts. Please try again later.");
         }
 
+        // Create new verification token
         String rawToken = UUID.randomUUID().toString();
         Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
         String hashedToken = TokenHashUtil.hashToken(rawToken);
@@ -423,6 +390,7 @@ public class AuthService {
 
         emailVerificationRepository.save(verification);
 
+        // Publish event for email sending
         eventPublisher.publishEvent(new AccountActiveEvent(accountDB, rawToken));
 
         log.info("Verification email resent to: {}", email);

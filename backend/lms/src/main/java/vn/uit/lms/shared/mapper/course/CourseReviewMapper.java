@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper.course;
 
-import vn.uit.lms.core.entity.course.CourseReview;
+import vn.uit.lms.core.domain.course.CourseReview;
 import vn.uit.lms.shared.dto.request.course.CourseReviewRequest;
 import vn.uit.lms.shared.dto.response.course.CourseReviewResponse;
 
