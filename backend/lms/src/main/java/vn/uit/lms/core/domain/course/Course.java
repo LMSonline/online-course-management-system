@@ -85,10 +85,15 @@ public class Course extends BaseEntity {
                 .orElse(null);
     }
 
+    /**
+     * Get the currently published version (latest one)
+     * Returns the most recently published version based on publishedAt timestamp
+     */
     public CourseVersion getVersionPublish(){
-        return  this.versions.stream()
+        return this.versions.stream()
                 .filter(version -> version.getStatus() == CourseStatus.PUBLISHED)
-                .findFirst()
+                .filter(version -> version.getPublishedAt() != null)
+                .max(java.util.Comparator.comparing(CourseVersion::getPublishedAt))
                 .orElse(null);
     }
 

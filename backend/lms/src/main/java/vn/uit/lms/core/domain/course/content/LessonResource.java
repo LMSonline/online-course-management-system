@@ -181,4 +181,53 @@ public class LessonResource extends BaseEntity {
             isRequired = false;
         }
     }
+
+    /**
+     * Update resource basic info
+     */
+    public void updateBasicInfo(String title, String description, Boolean isRequired) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
+        }
+        this.description = description;
+        if (isRequired != null) {
+            this.isRequired = isRequired;
+        }
+    }
+
+    /**
+     * Update external URL (for LINK/EMBED types)
+     */
+    public void updateExternalUrl(String newUrl) {
+        if (!isLinkResource() && !isEmbedResource()) {
+            throw new IllegalStateException("Can only update external URL for LINK/EMBED resources");
+        }
+        if (newUrl == null || newUrl.isBlank()) {
+            throw new IllegalArgumentException("External URL cannot be empty for LINK/EMBED resources");
+        }
+        this.externalUrl = newUrl;
+    }
+
+    /**
+     * Update order index
+     */
+    public void updateOrderIndex(Integer newOrderIndex) {
+        if (newOrderIndex != null && newOrderIndex >= 0) {
+            this.orderIndex = newOrderIndex;
+        }
+    }
+
+    /**
+     * Replace file storage (for FILE type)
+     */
+    public void replaceFileStorage(FileStorage newFileStorage) {
+        if (!isFileResource()) {
+            throw new IllegalStateException("Can only replace file storage for FILE resources");
+        }
+        if (newFileStorage == null) {
+            throw new IllegalArgumentException("New file storage cannot be null");
+        }
+        this.fileStorage = newFileStorage;
+        syncFileSizeFromStorage();
+    }
 }

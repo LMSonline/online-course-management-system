@@ -87,7 +87,7 @@ public class Initializer implements CommandLineRunner {
 //        } else {
 //            logger.info("[TAG] Tags already exist. Skipping initialization.");
 //        }
-
+//
 //        if (categoryRepository.count() == 0) {
 //            createDefaultCategories();
 //        } else {

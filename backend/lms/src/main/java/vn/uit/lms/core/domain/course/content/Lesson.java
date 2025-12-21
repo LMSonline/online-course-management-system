@@ -222,4 +222,55 @@ public class Lesson extends BaseEntity {
             isPreview = false;
         }
     }
+
+    /**
+     * Update lesson basic information
+     */
+    public void updateBasicInfo(String title, String shortDescription, Boolean isPreview) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
+        }
+        this.shortDescription = shortDescription;
+        if (isPreview != null) {
+            this.isPreview = isPreview;
+        }
+    }
+
+    /**
+     * Update lesson type
+     * Business rule: Cannot change type if video is already uploaded
+     */
+    public void updateType(LessonType newType) {
+        if (this.type == LessonType.VIDEO && newType != LessonType.VIDEO) {
+            if (this.videoObjectKey != null) {
+                throw new IllegalStateException("Cannot change type from VIDEO when video is already uploaded");
+            }
+        }
+        this.type = newType;
+
+        // Clear video fields if changing away from VIDEO type
+        if (newType != LessonType.VIDEO) {
+            this.videoObjectKey = null;
+            this.videoStatus = null;
+            this.durationSeconds = null;
+        }
+    }
+
+    /**
+     * Clear video data when deleting video
+     */
+    public void clearVideoData() {
+        this.videoObjectKey = null;
+        this.videoStatus = null;
+        this.durationSeconds = null;
+    }
+
+    /**
+     * Update order index
+     */
+    public void updateOrderIndex(Integer newOrderIndex) {
+        if (newOrderIndex != null && newOrderIndex >= 0) {
+            this.orderIndex = newOrderIndex;
+        }
+    }
 }

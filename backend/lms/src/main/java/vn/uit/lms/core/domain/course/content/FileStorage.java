@@ -85,4 +85,63 @@ public class FileStorage extends BaseEntity {
         }
         return originalName.substring(originalName.lastIndexOf(".") + 1).toLowerCase();
     }
+
+    /**
+     * Update file metadata
+     */
+    public void updateMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
+    /**
+     * Validate file storage
+     * Business rules:
+     * - Storage key must not be null
+     * - Storage provider must not be null
+     * - Original name must not be null
+     */
+    public void validateFileStorage() {
+        if (storageKey == null || storageKey.isBlank()) {
+            throw new IllegalStateException("Storage key is required");
+        }
+        if (storageProvider == null) {
+            throw new IllegalStateException("Storage provider is required");
+        }
+        if (originalName == null || originalName.isBlank()) {
+            throw new IllegalStateException("Original name is required");
+        }
+    }
+
+    /**
+     * Check if file is stored in MinIO
+     */
+    public boolean isMinioStorage() {
+        return storageProvider == StorageProvider.MINIO;
+    }
+
+    /**
+     * Check if file is stored in Cloudinary
+     */
+    public boolean isCloudinaryStorage() {
+        return storageProvider == StorageProvider.CLOUDINARY;
+    }
+
+    /**
+     * Get formatted file size with appropriate unit
+     */
+    public String getFormattedSize() {
+        if (sizeBytes == null || sizeBytes == 0) {
+            return "0 KB";
+        }
+
+        if (sizeBytes < 1024) {
+            return sizeBytes + " B";
+        } else if (sizeBytes < 1024 * 1024) {
+            return String.format("%.1f KB", sizeBytes / 1024.0);
+        } else if (sizeBytes < 1024 * 1024 * 1024) {
+            return String.format("%.1f MB", sizeBytes / (1024.0 * 1024.0));
+        } else {
+            return String.format("%.1f GB", sizeBytes / (1024.0 * 1024.0 * 1024.0));
+        }
+    }
 }

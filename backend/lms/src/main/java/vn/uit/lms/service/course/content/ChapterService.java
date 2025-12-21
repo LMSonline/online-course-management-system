@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course.content;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.course.Course;
@@ -14,6 +15,7 @@ import vn.uit.lms.shared.dto.request.course.content.ChapterReorderRequest;
 import vn.uit.lms.shared.dto.request.course.content.ChapterRequest;
 import vn.uit.lms.shared.dto.response.course.content.ChapterDto;
 import vn.uit.lms.shared.exception.DuplicateResourceException;
+import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.course.content.ChapterMapper;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ChapterService {
 
     private final CourseRepository courseRepository;
@@ -193,69 +196,47 @@ public class ChapterService {
 
 
     @Transactional
-    public void reorderChapter(Long chapterId, ChapterReorderRequest request) {
-        Chapter chapter = this.chapterRepository.findByIdAndDeletedAtIsNull(chapterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found"));
-
-        CourseVersion courseVersion = chapter.getCourseVersion();
-        if (courseVersion == null) {
-            throw new ResourceNotFoundException("CourseVersion not found for chapter");
-        }
-
-        // verify teacher permission
-        Course course = courseVersion.getCourse();
-        if (course == null || course.getId() == null) {
-            throw new ResourceNotFoundException("Course not found for chapter's version");
-        }
-        course = this.courseRepository.findByIdAndDeletedAtIsNull(course.getId())
+    public void reorderChapters(Long courseId, Long versionId, ChapterReorderRequest request) {
+        // Verify course exists and teacher has permission
+        Course course = this.courseRepository.findByIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
         courseService.verifyTeacher(course);
 
-        // ensure version is editable
-        courseVersion = this.courseVersionService.validateVersionEditable(courseVersion.getId());
+        // Ensure version is editable
+        CourseVersion courseVersion = this.courseVersionService.validateVersionEditable(versionId);
 
-        //lock chapter reordering process
-        List<Chapter> chapters = this.chapterRepository.findChaptersForReorder(courseVersion);
-        if (chapters.isEmpty()) {
-            return;
+        // Verify version belongs to course
+        if (!courseVersion.getCourse().getId().equals(courseId)) {
+            throw new ResourceNotFoundException("Version does not belong to this course");
         }
 
-        int size = chapters.size();
-        int newPosition = request.getNewPosition() <= 0 ? 1 : request.getNewPosition();
-        if (newPosition > size) {
-            newPosition = size;
+        List<Long> chapterIds = request.getChapterIds();
+
+        // Validate all chapters belong to this version
+        List<Chapter> chapters = this.chapterRepository.findAllById(chapterIds);
+
+        if (chapters.size() != chapterIds.size()) {
+            throw new InvalidRequestException("Some chapters not found");
         }
 
-        int currentIndex = -1;
-        for (int i = 0; i < chapters.size(); i++) {
-            if (chapters.get(i).getId().equals(chapterId)) {
-                currentIndex = i;
-                break;
+        for (Chapter chapter : chapters) {
+            if (!chapter.getCourseVersion().getId().equals(versionId)) {
+                throw new InvalidRequestException("Chapter " + chapter.getId() + " does not belong to version " + versionId);
             }
         }
 
-        if (currentIndex == -1) {
-            throw new ResourceNotFoundException("Chapter does not belong to this version");
-        }
-
-        int targetIndex = newPosition - 1;
-        if (currentIndex == targetIndex) {
-            return; // nothing to do
-        }
-
-        Chapter moving = chapters.remove(currentIndex);
-        chapters.add(targetIndex, moving);
-
-        // reassign orderIndex starting from 1
-        for (int i = 0; i < chapters.size(); i++) {
-            Chapter c = chapters.get(i);
-            int expectedIndex = i + 1;
-            if (c.getOrderIndex() != expectedIndex) {
-                c.setOrderIndex(expectedIndex);
-            }
+        // Update order index starting from 0
+        for (int i = 0; i < chapterIds.size(); i++) {
+            Long chapterId = chapterIds.get(i);
+            Chapter chapter = chapters.stream()
+                    .filter(c -> c.getId().equals(chapterId))
+                    .findFirst()
+                    .orElseThrow();
+            chapter.setOrderIndex(i);
         }
 
         this.chapterRepository.saveAll(chapters);
+        log.info("Reordered {} chapters in version: {}", chapterIds.size(), versionId);
     }
 
 

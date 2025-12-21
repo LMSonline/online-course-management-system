@@ -237,6 +237,14 @@ public class CourseVersionService {
         return CourseVersionMapper.toCourseVersionResponse(version);
     }
 
+    /**
+     * Publish course version
+     *
+     * NOTE: This method only sets the status to PUBLISHED and publishes the version.
+     * The Course entity's getVersionPublish() method will automatically return the latest published version.
+     * Previous published versions remain in PUBLISHED status for historical record.
+     * To archive old versions, use the archiveCourseVersion() method explicitly.
+     */
     @Transactional
     @EnableSoftDeleteFilter
     public CourseVersionResponse publishCourseVersion(Long courseId, Long versionId){
@@ -255,16 +263,12 @@ public class CourseVersionService {
         version.setStatus(CourseStatus.PUBLISHED);
         version.setPublishedAt(Instant.now());
 
-        CourseVersion publishedVersion = course.getVersionPublish();
-        if(publishedVersion!=null){
-            publishedVersion.setStatus(CourseStatus.ARCHIVED);
-            courseVersionRepository.save(publishedVersion);
-        }
-
+        // Save the newly published version
         courseVersionRepository.save(version);
 
-
+        // Publish event for notification
         eventPublisher.publishEvent(new CourseVersionStatusChangeEvent(version, ""));
+
         return CourseVersionMapper.toCourseVersionResponse(version);
     }
 

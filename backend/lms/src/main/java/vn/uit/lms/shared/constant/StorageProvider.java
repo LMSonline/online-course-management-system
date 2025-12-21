@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Cloud storage provider types")
 public enum StorageProvider {
 
+    @Schema(description = "Cloudinary object storage")
+    CLOUDINARY,
+
     @Schema(description = "MinIO object storage")
     MINIO,
 
@@ -26,6 +29,8 @@ public enum StorageProvider {
 
     @Schema(description = "Local file system (dev/testing only)")
     LOCAL;
+
+
 
     /**
      * Check if provider is cloud-based

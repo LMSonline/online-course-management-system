@@ -25,13 +25,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/auth/register",
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/auth/register",
 							"host": [
 								"{{BASE_URL}}"
 							],
 							"path": [
-								"api",
-								"v1",
+								"{{API_VERSION}}",
 								"auth",
 								"register"
 							]
@@ -52,13 +51,12 @@
 							"raw": "{\r\n    \r\n}"
 						},
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/auth/verify-email?token",
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/auth/verify-email?token",
 							"host": [
 								"{{BASE_URL}}"
 							],
 							"path": [
-								"api",
-								"v1",
+								"{{API_VERSION}}",
 								"auth",
 								"verify-email"
 							],
@@ -74,15 +72,76 @@
 				},
 				{
 					"name": "login (ALL)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse JSON body\r",
+									"let res = pm.response.json();\r",
+									"\r",
+									"// Kiểm tra tồn tại data\r",
+									"if (res?.data?.accessToken && res?.data?.user?.role) {\r",
+									"    const token = res.data.accessToken;\r",
+									"    const role = res.data.user.role.toUpperCase();\r",
+									"\r",
+									"    console.log(\"ROLE:\", role);\r",
+									"    console.log(\"TOKEN:\", token);\r",
+									"\r",
+									"    // Set CURRENT_JWT dùng chung cho toàn Collection\r",
+									"    pm.collectionVariables.set(\"CURRENT_JWT\", token);\r",
+									"\r",
+									"    // Set token theo role (Environment)\r",
+									"    switch (role) {\r",
+									"        case \"ADMIN\":\r",
+									"            pm.environment.set(\"ADMIN_JWT\", token);\r",
+									"            break;\r",
+									"\r",
+									"        case \"TEACHER\":\r",
+									"            pm.environment.set(\"TEACHER_JWT\", token);\r",
+									"            break;\r",
+									"\r",
+									"        case \"STUDENT\":\r",
+									"            pm.environment.set(\"STUDENT_JWT\", token);\r",
+									"            break;\r",
+									"\r",
+									"        default:\r",
+									"            console.warn(\"Role không hợp lệ:\", role);\r",
+									"    }\r",
+									"}\r",
+									"\r",
+									"// Lưu refresh token (Environment)\r",
+									"if (res?.data?.refreshToken) {\r",
+									"    pm.environment.set(\"REFRESH_TOKEN\", res.data.refreshToken);\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer"
 						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "// {\r\n//     // email or username\r\n//     \"login\": \"admin\",\r\n//     \"password\": \"Admin@123\",\r\n//     \"deviceInfo\": \"Windows 10 Chrome 142.0\"\r\n// }\r\n\r\n// {\r\n//     // email or username\r\n//     \"login\": \"teacher\",\r\n//     \"password\": \"Teacher@123\",\r\n//     \"deviceInfo\": \"Windows 10 Chrome 142.0\"\r\n// }\r\n\r\n{\r\n    // email or username\r\n    \"login\": \"student\",\r\n    \"password\": \"Student@123\",\r\n    \"deviceInfo\": \"Windows 10 Chrome 142.0\"\r\n}\r\n\r\n",
+							"raw": "// {\r\n//     // email or username\r\n//     \"login\": \"admin\",\r\n//     \"password\": \"Admin@123\"\r\n// }\r\n// {\r\n//     // email or username\r\n//     \"login\": \"student\",\r\n//     \"password\": \"Student@123\"\r\n// }\r\n{\r\n    // email or username\r\n    \"login\": \"teacher\",\r\n    \"password\": \"Teacher@123\"\r\n}\r\n\r\n\r\n// {\r\n//     // email or username\r\n//     \"login\": \"student\",\r\n//     \"password\": \"123456\"\r\n// }\r\n\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -90,13 +149,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/auth/login",
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/auth/login",
 							"host": [
 								"{{BASE_URL}}"
 							],
 							"path": [
-								"api",
-								"v1",
+								"{{API_VERSION}}",
 								"auth",
 								"login"
 							]
@@ -119,13 +177,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/auth/logout",
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/auth/logout",
 							"host": [
 								"{{BASE_URL}}"
 							],
 							"path": [
-								"api",
-								"v1",
+								"{{API_VERSION}}",
 								"auth",
 								"logout"
 							]
@@ -148,13 +205,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/auth/refresh",
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/auth/refresh",
 							"host": [
 								"{{BASE_URL}}"
 							],
 							"path": [
-								"api",
-								"v1",
+								"{{API_VERSION}}",
 								"auth",
 								"refresh"
 							]
@@ -275,6 +331,14 @@
 								"change"
 							]
 						}
+					},
+					"response": []
+				},
+				{
+					"name": "resend token to verify email",
+					"request": {
+						"method": "GET",
+						"header": []
 					},
 					"response": []
 				}
@@ -403,7 +467,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/admin/accounts?filter=deletedAt is not null",
+							"raw": "{{BASE_URL}}/api/v1/admin/accounts",
 							"host": [
 								"{{BASE_URL}}"
 							],
@@ -431,7 +495,8 @@
 								},
 								{
 									"key": "filter",
-									"value": "deletedAt is not null"
+									"value": "deletedAt is not null",
+									"disabled": true
 								}
 							]
 						}
@@ -563,6 +628,217 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Suspend Account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Violating community guidelines\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/accounts/3/suspend",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"{{API_VERSION}}",
+								"admin",
+								"accounts",
+								"3",
+								"suspend"
+							]
+						},
+						"description": "Suspend an active account. Only accessible by administrators."
+					},
+					"response": []
+				},
+				{
+					"name": "Unlock Account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Appeal approved after review\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/accounts/3/unlock",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"{{API_VERSION}}",
+								"admin",
+								"accounts",
+								"3",
+								"unlock"
+							]
+						},
+						"description": "Unlock a suspended account. Only accessible by administrators."
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate Account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"User requested account closure\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/accounts/3/deactivate",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"{{API_VERSION}}",
+								"admin",
+								"accounts",
+								"3",
+								"deactivate"
+							]
+						},
+						"description": "Deactivate an active account. Only accessible by administrators."
+					},
+					"response": []
+				},
+				{
+					"name": "Suspend Without Reason",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/accounts/{{account_id}}/suspend",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"accounts",
+								"{{account_id}}",
+								"suspend"
+							]
+						},
+						"description": "Test suspending account without providing a reason (should work as reason is optional)"
+					},
+					"response": []
+				},
+				{
+					"name": "Suspend Account - Invalid Status (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Testing invalid transition\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/accounts/3/suspend",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"{{API_VERSION}}",
+								"admin",
+								"accounts",
+								"3",
+								"suspend"
+							]
+						},
+						"description": "Test suspending an already suspended account (should fail with InvalidStatusException)"
+					},
+					"response": []
+				},
+				{
+					"name": "Unlock Account - Invalid Status (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Testing invalid transition\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/accounts/3/unlock",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"{{API_VERSION}}",
+								"admin",
+								"accounts",
+								"3",
+								"unlock"
+							]
+						},
+						"description": "Test unlocking an active account (should fail with InvalidStatusException)"
+					},
+					"response": []
 				}
 			]
 		},
@@ -579,7 +855,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n  \"name\":\"blockchain\"\r\n}\r\n",
+									"raw": "{\r\n  \"name\": \"Spring Boot\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -725,7 +1001,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n  \"name\": \"Long Description Category\",\r\n  \"description\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce elementum, ipsum a facilisis lacinia, metus erat hendrerit nisl, nec consectetur tortor justo et risus. Integer vehicula cursus diam, vitae semper felis blandit sit amet. Phasellus pharetra, quam ac suscipit bibendum.\",\r\n  \"visible\": true\r\n}\r\n",
+									"raw": "{\r\n  \"name\": \"Programming\",\r\n  \"code\": \"PROG\",\r\n  \"description\": \"Courses related to software development\",\r\n  \"parentId\": 1,\r\n  \"visible\": true,\r\n  \"slug\": \"programming\",\r\n  \"metaTitle\": \"Programming Courses\",\r\n  \"metaDescription\": \"Learn programming with our comprehensive courses\",\r\n  \"thumbnailUrl\": \"https://example.com/images/programming.jpg\"\r\n}\r\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1044,10 +1320,20 @@
 						{
 							"name": "submit version to approve",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{TEACHER_JWT}}",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [],
 								"url": {
-									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/submit-approval",
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/4/submit-approval",
 									"host": [
 										"{{BASE_URL}}"
 									],
@@ -1057,7 +1343,7 @@
 										"courses",
 										"1",
 										"versions",
-										"1",
+										"4",
 										"submit-approval"
 									]
 								}
@@ -1070,7 +1356,7 @@
 								"method": "POST",
 								"header": [],
 								"url": {
-									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/approve",
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/4/approve",
 									"host": [
 										"{{BASE_URL}}"
 									],
@@ -1080,7 +1366,7 @@
 										"courses",
 										"1",
 										"versions",
-										"1",
+										"4",
 										"approve"
 									]
 								}
@@ -1113,10 +1399,20 @@
 						{
 							"name": "publish version",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{TEACHER_JWT}}",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [],
 								"url": {
-									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/1/publish",
+									"raw": "{{BASE_URL}}/api/v1/courses/1/versions/4/publish",
 									"host": [
 										"{{BASE_URL}}"
 									],
@@ -1126,7 +1422,7 @@
 										"courses",
 										"1",
 										"versions",
-										"1",
+										"4",
 										"publish"
 									]
 								}
@@ -1139,7 +1435,17 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": ""
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/admin/versions/pending",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"courses",
+										"admin",
+										"versions",
+										"pending"
+									]
 								}
 							},
 							"response": []
@@ -1148,7 +1454,2029 @@
 				},
 				{
 					"name": "Module Course Content",
-					"item": []
+					"item": [
+						{
+							"name": "Chapter",
+							"item": [
+								{
+									"name": "create new chapter",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{TEACHER_JWT}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"title\": \"hello\",\r\n    \"orderIndex\": \"heeee\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/api/v1/courses/1/versions/2/chapters",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"courses",
+												"1",
+												"versions",
+												"2",
+												"chapters"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "get all chapter",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/1/versions/2/chapters",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"courses",
+												"1",
+												"versions",
+												"2",
+												"chapters"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "get detail chapter",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/1/versions/1/chapters/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"courses",
+												"1",
+												"versions",
+												"1",
+												"chapters",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "update a chapter",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/1/versions/1/chapters/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"courses",
+												"1",
+												"versions",
+												"1",
+												"chapters",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "delete a chapter",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/1/versions/1/chapters/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"courses",
+												"1",
+												"versions",
+												"1",
+												"chapters",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reorder chapter",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"chapterIds\": [3, 1, 2, 4]\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/chapters/1/reorder",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"chapters",
+												"1",
+												"reorder"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Lesson",
+							"item": [
+								{
+									"name": "create new lesson",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"type\": \"VIDEO\",\r\n  \"title\": \"Introduction to Spring Boot\",\r\n  \"shortDescription\": \"Learn the fundamentals of Spring Boot framework\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/chapters/1/lessons",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"chapters",
+												"1",
+												"lessons"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Lesson",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"type\": \"VIDEO\",\n  \"title\": \"Introduction to Spring Boot - Updated\",\n  \"shortDescription\": \"Updated description with more details\",\n  \"isPreview\": true\n}"
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1"
+											]
+										},
+										"description": "Update lesson information (title, type, description, isPreview)"
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Lesson",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1"
+											]
+										},
+										"description": "Delete a lesson and its associated resources (video will be deleted from MinIO)"
+									},
+									"response": []
+								},
+								{
+									"name": "request presigned URL for video upload",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{TEACHER_JWT}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/video/upload-url",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1",
+												"video",
+												"upload-url"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Lesson Details",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1"
+											]
+										},
+										"description": "Get detailed information about a specific lesson"
+									},
+									"response": []
+								},
+								{
+									"name": "get all lessons of chapter",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/chapters/1/lessons",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"chapters",
+												"1",
+												"lessons"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "notify server of completed video upload",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{TEACHER_JWT}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"objectKey\": \"lessons/1/1d517b64-30ab-4127-a040-92e47f0f6f01.mp4\",\r\n  \"durationSeconds\": 1800\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/video/upload-complete",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1",
+												"video",
+												"upload-complete"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Video Streaming URL",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    var jsonData = pm.response.json();",
+													"    console.log('Stream URL:', jsonData.streamUrl);",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/video/stream-url",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1",
+												"video",
+												"stream-url"
+											]
+										},
+										"description": "Get presigned URL for streaming video (valid for 1 hour). Video must be in READY status."
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Video",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/video",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1",
+												"video"
+											]
+										},
+										"description": "Delete video from lesson and MinIO storage"
+									},
+									"response": []
+								},
+								{
+									"name": "Reorder Lessons",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"lessonIds\": [3, 1, 2, 4]\n}"
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/chapters/1/lessons/reorder",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"chapters",
+												"1",
+												"lessons",
+												"reorder"
+											]
+										},
+										"description": "Reorder lessons within a chapter. lessonIds array represents the desired order (0-based indexing)"
+									},
+									"response": []
+								},
+								{
+									"name": "Reorder - Move First to Last",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"lessonIds\": [2, 3, 4, 1]\n}"
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/chapters/1/lessons/reorder",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"chapters",
+												"1",
+												"lessons",
+												"reorder"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Lesson Resources",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{teacherToken}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/resources",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"1",
+												"resources"
+											]
+										},
+										"description": "Retrieve all resources (files, links, embeds) for a lesson"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Lesson resource",
+							"item": [
+								{
+									"name": "1. Add Resources",
+									"item": [
+										{
+											"name": "Add FILE Resource (with upload)",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"if (pm.response.code === 201) {",
+															"    var jsonData = pm.response.json();",
+															"    pm.collectionVariables.set('resourceId', jsonData.id);",
+															"    console.log('Resource ID saved:', jsonData.id);",
+															"    console.log('File Storage ID:', jsonData.fileStorageId);",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"description": "File to upload (PDF, DOCX, etc.)",
+															"type": "file",
+															"src": []
+														},
+														{
+															"key": "title",
+															"value": "Lecture Notes",
+															"description": "Resource title (optional, defaults to filename)",
+															"type": "text"
+														},
+														{
+															"key": "description",
+															"value": "Comprehensive notes for this lesson",
+															"description": "Resource description (optional)",
+															"type": "text"
+														},
+														{
+															"key": "isRequired",
+															"value": "true",
+															"description": "Whether this resource is required (optional, default: false)",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"file"
+													]
+												},
+												"description": "Upload and attach a file resource to a lesson. Only accessible by teachers."
+											},
+											"response": [
+												{
+													"name": "Success Response",
+													"originalRequest": {
+														"method": "POST",
+														"header": [],
+														"body": {
+															"mode": "formdata",
+															"formdata": [
+																{
+																	"key": "file",
+																	"type": "file",
+																	"src": "notes.pdf"
+																},
+																{
+																	"key": "title",
+																	"value": "Lecture Notes",
+																	"type": "text"
+																}
+															]
+														},
+														"url": {
+															"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/resources/file",
+															"host": [
+																"{{BASE_URL}}"
+															],
+															"path": [
+																"{{API_VERSION}}",
+																"lessons",
+																"1",
+																"resources",
+																"file"
+															]
+														}
+													},
+													"status": "Created",
+													"code": 201,
+													"_postman_previewlanguage": "json",
+													"header": [],
+													"cookie": [],
+													"body": "{\n  \"id\": 1,\n  \"lessonId\": 1,\n  \"resourceType\": \"FILE\",\n  \"title\": \"Lecture Notes\",\n  \"description\": \"Comprehensive notes for this lesson\",\n  \"fileStorageId\": 10,\n  \"fileName\": \"notes.pdf\",\n  \"fileSizeBytes\": 2048576,\n  \"formattedFileSize\": \"2.0 MB\",\n  \"downloadUrl\": \"http://minio:9000/documents/...\",\n  \"orderIndex\": 0,\n  \"isRequired\": true,\n  \"isDownloadable\": true,\n  \"createdAt\": \"2025-12-21T10:00:00Z\"\n}"
+												}
+											]
+										},
+										{
+											"name": "Add LINK Resource",
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{TEACHER_JWT}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"YouTube Tutorial\",\n  \"description\": \"Additional video explanation\",\n  \"externalUrl\": \"https://youtube.com/watch?v=abc123\",\n  \"isRequired\": false\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"1",
+														"resources"
+													]
+												},
+												"description": "Add an external link resource to a lesson. Only accessible by teachers."
+											},
+											"response": []
+										},
+										{
+											"name": "Add EMBED Resource",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"EMBED\",\n  \"title\": \"Interactive CodePen Demo\",\n  \"description\": \"Try it yourself\",\n  \"externalUrl\": \"https://codepen.io/username/pen/xyz\",\n  \"isRequired\": false\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												},
+												"description": "Add an embeddable content resource to a lesson. Only accessible by teachers."
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "2. Get Resources",
+									"item": [
+										{
+											"name": "Get All Resources for Lesson",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												},
+												"description": "Retrieve all resources attached to a lesson (ordered by orderIndex)"
+											},
+											"response": []
+										},
+										{
+											"name": "Get Resource Details",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/1/resources/1",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"1",
+														"resources",
+														"1"
+													]
+												},
+												"description": "Retrieve detailed information about a specific resource"
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "3. Update Resources",
+									"item": [
+										{
+											"name": "Update Resource Info",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"Updated Title - YouTube Tutorial\",\n  \"description\": \"Updated description with more details\",\n  \"externalUrl\": \"https://youtube.com/watch?v=newvideo\",\n  \"isRequired\": true\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/{{resourceId}}",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"{{resourceId}}"
+													]
+												},
+												"description": "Update resource information (title, description, URL, etc.). Only accessible by teachers."
+											},
+											"response": []
+										},
+										{
+											"name": "Replace Resource File",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"description": "New file to upload",
+															"type": "file",
+															"src": []
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/{{resourceId}}/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"{{resourceId}}",
+														"file"
+													]
+												},
+												"description": "Replace the file for a FILE type resource. Only accessible by teachers."
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Complete Workflow",
+									"item": [
+										{
+											"name": "1. Add PDF Resource",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"if (pm.response.code === 201) {",
+															"    var jsonData = pm.response.json();",
+															"    pm.collectionVariables.set('resource1Id', jsonData.id);",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "lecture-notes.pdf"
+														},
+														{
+															"key": "title",
+															"value": "Lecture Notes",
+															"type": "text"
+														},
+														{
+															"key": "isRequired",
+															"value": "true",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"file"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "2. Add YouTube Link",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"if (pm.response.code === 201) {",
+															"    var jsonData = pm.response.json();",
+															"    pm.collectionVariables.set('resource2Id', jsonData.id);",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"YouTube Tutorial\",\n  \"externalUrl\": \"https://youtube.com/watch?v=abc123\"\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "3. Add DOCX Resource",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"if (pm.response.code === 201) {",
+															"    var jsonData = pm.response.json();",
+															"    pm.collectionVariables.set('resource3Id', jsonData.id);",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "assignment.docx"
+														},
+														{
+															"key": "title",
+															"value": "Assignment Template",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"file"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "4. Get All Resources",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "5. Reorder Resources",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceIds\": [\n    \"{{resource2Id}}\",\n    \"{{resource1Id}}\",\n    \"{{resource3Id}}\"\n  ]\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/reorder",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"reorder"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "6. Update Resource Title",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"Updated YouTube Tutorial\",\n  \"externalUrl\": \"https://youtube.com/watch?v=abc123\",\n  \"isRequired\": true\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/{{resource2Id}}",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"{{resource2Id}}"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Error Cases",
+									"item": [
+										{
+											"name": "Add FILE Resource Without File",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"FILE\",\n  \"title\": \"Missing File\"\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												},
+												"description": "Expected: 400 Bad Request - Use addFileResourceToLesson for FILE type"
+											},
+											"response": []
+										},
+										{
+											"name": "Add LINK Without URL",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"Missing URL\"\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												},
+												"description": "Expected: 400 Bad Request - External URL is required"
+											},
+											"response": []
+										},
+										{
+											"name": "Replace File on LINK Resource",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "new-file.pdf"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/2/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"2",
+														"file"
+													]
+												},
+												"description": "Expected: 400 Bad Request - Can only replace file for FILE type"
+											},
+											"response": []
+										},
+										{
+											"name": "Reorder with Invalid ID",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceIds\": [1, 2, 999]\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/reorder",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"reorder"
+													]
+												},
+												"description": "Expected: 400 Bad Request - Some resources not found"
+											},
+											"response": []
+										},
+										{
+											"name": "Get Resource - Not Found",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/999999",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"999999"
+													]
+												},
+												"description": "Expected: 404 Not Found"
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Examples by Resource Type",
+									"item": [
+										{
+											"name": "FILE - PDF",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "chapter-summary.pdf"
+														},
+														{
+															"key": "title",
+															"value": "Chapter Summary",
+															"type": "text"
+														},
+														{
+															"key": "description",
+															"value": "Key points from this chapter",
+															"type": "text"
+														},
+														{
+															"key": "isRequired",
+															"value": "true",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"file"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "FILE - PowerPoint",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "presentation.pptx"
+														},
+														{
+															"key": "title",
+															"value": "Lecture Slides",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/file",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources",
+														"file"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "LINK - YouTube",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"Supplementary Video\",\n  \"description\": \"Watch this for better understanding\",\n  \"externalUrl\": \"https://youtube.com/watch?v=dQw4w9WgXcQ\",\n  \"isRequired\": false\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "LINK - GitHub Repository",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"LINK\",\n  \"title\": \"Source Code Repository\",\n  \"description\": \"Clone and practice\",\n  \"externalUrl\": \"https://github.com/username/project\",\n  \"isRequired\": false\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "EMBED - CodePen",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"EMBED\",\n  \"title\": \"Interactive Example\",\n  \"description\": \"Try modifying the code\",\n  \"externalUrl\": \"https://codepen.io/pen/abcxyz\",\n  \"isRequired\": false\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "EMBED - Google Docs",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													},
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"resourceType\": \"EMBED\",\n  \"title\": \"Collaborative Document\",\n  \"description\": \"View and comment\",\n  \"externalUrl\": \"https://docs.google.com/document/d/abc123/edit\",\n  \"isRequired\": false\n}"
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"lessons",
+														"{{lessonId}}",
+														"resources"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "4. Reorder Resources",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"resourceIds\": [3, 1, 2, 4]\n}"
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/reorder",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"{{lessonId}}",
+												"resources",
+												"reorder"
+											]
+										},
+										"description": "Reorder resources within a lesson. Provide ordered list of resource IDs. Only accessible by teachers."
+									},
+									"response": []
+								},
+								{
+									"name": "5. Delete Resource",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/resources/{{resourceId}}",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"lessons",
+												"{{lessonId}}",
+												"resources",
+												"{{resourceId}}"
+											]
+										},
+										"description": "Delete a resource from the lesson. Only accessible by teachers."
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "File storage",
+							"item": [
+								{
+									"name": "Examples",
+									"item": [
+										{
+											"name": "Upload PDF Document",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "document.pdf"
+														},
+														{
+															"key": "folderPath",
+															"value": "lessons/1/resources",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/files/upload",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"files",
+														"upload"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Upload Image",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "image.jpg"
+														},
+														{
+															"key": "folderPath",
+															"value": "courses/thumbnails",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/files/upload",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"files",
+														"upload"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Upload Video",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "video.mp4"
+														},
+														{
+															"key": "folderPath",
+															"value": "lessons/1/videos",
+															"type": "text"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/files/upload",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"files",
+														"upload"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Error Cases",
+									"item": [
+										{
+											"name": "Upload - Invalid File Type",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "malicious.exe"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/files/upload",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"files",
+														"upload"
+													]
+												},
+												"description": "Expected: 400 Bad Request - File type not allowed"
+											},
+											"response": []
+										},
+										{
+											"name": "Get File - Not Found",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Bearer {{ACCESS_TOKEN}}"
+													}
+												],
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/files/999999",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"files",
+														"999999"
+													]
+												},
+												"description": "Expected: 404 Not Found"
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "1. Upload File",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 201) {",
+													"    var jsonData = pm.response.json();",
+													"    pm.collectionVariables.set('fileId', jsonData.id);",
+													"    console.log('File ID saved:', jsonData.id);",
+													"    console.log('Storage Key:', jsonData.storageKey);",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": []
+												},
+												{
+													"key": "folderPath",
+													"value": "resources/documents",
+													"description": "Optional folder path",
+													"type": "text"
+												},
+												{
+													"key": "storageProvider",
+													"value": "MINIO",
+													"description": "Optional: MINIO or CLOUDINARY",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/files/upload",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"files",
+												"upload"
+											]
+										},
+										"description": "Upload a file to storage. Automatically determines storage provider based on file type if not specified."
+									},
+									"response": [
+										{
+											"name": "Success Response",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "lecture-notes.pdf"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{BASE_URL}}/{{API_VERSION}}/files/upload",
+													"host": [
+														"{{BASE_URL}}"
+													],
+													"path": [
+														"{{API_VERSION}}",
+														"files",
+														"upload"
+													]
+												}
+											},
+											"status": "Created",
+											"code": 201,
+											"_postman_previewlanguage": "json",
+											"header": [],
+											"cookie": [],
+											"body": "{\n  \"id\": 1,\n  \"storageKey\": \"resources/documents/uuid-123.pdf\",\n  \"storageProvider\": \"MINIO\",\n  \"originalName\": \"lecture-notes.pdf\",\n  \"mimeType\": \"application/pdf\",\n  \"sizeBytes\": 2048576,\n  \"formattedSize\": \"2.0 MB\",\n  \"fileExtension\": \"pdf\",\n  \"checksum\": \"5d41402abc4b2a76b9719d911017c592\",\n  \"isVideo\": false,\n  \"isImage\": false,\n  \"isDocument\": true,\n  \"createdAt\": \"2025-12-21T10:00:00Z\"\n}"
+										}
+									]
+								},
+								{
+									"name": "2. Get File Details",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/files/1",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"files",
+												"1"
+											]
+										},
+										"description": "Retrieve file storage information by ID"
+									},
+									"response": []
+								},
+								{
+									"name": "3. Get Download URL",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    var jsonData = pm.response.json();",
+													"    console.log('Download URL:', jsonData.downloadUrl);",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/files/{{fileId}}/download?expirySeconds=3600",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"files",
+												"{{fileId}}",
+												"download"
+											],
+											"query": [
+												{
+													"key": "expirySeconds",
+													"value": "3600",
+													"description": "URL expiry time in seconds (default: 3600 = 1 hour)"
+												}
+											]
+										},
+										"description": "Generate a presigned URL for downloading the file (valid for specified duration)"
+									},
+									"response": []
+								},
+								{
+									"name": "4. Get File with Download URL",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/files/{{fileId}}/details?expirySeconds=3600",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"files",
+												"{{fileId}}",
+												"details"
+											],
+											"query": [
+												{
+													"key": "expirySeconds",
+													"value": "3600"
+												}
+											]
+										},
+										"description": "Get file details along with a presigned download URL"
+									},
+									"response": []
+								},
+								{
+									"name": "5. Delete File",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{ACCESS_TOKEN}}"
+											}
+										],
+										"url": {
+											"raw": "{{BASE_URL}}/{{API_VERSION}}/files/{{fileId}}",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"{{API_VERSION}}",
+												"files",
+												"{{fileId}}"
+											]
+										},
+										"description": "Delete a file from storage and database"
+									},
+									"response": []
+								}
+							]
+						}
+					]
 				},
 				{
 					"name": "Course Review",
@@ -1156,6 +3484,16 @@
 						{
 							"name": "write review course",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{STUDENT_JWT}}",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [],
 								"body": {
@@ -1288,7 +3626,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"title\": \"Blockchain cơ bản cho developer\",\r\n    \"shortDescription\": \"Khóa học giới thiệu blockchain, smart contract, và dApps.\",\r\n    \"categoryId\": 1,\r\n    \"teacherId\": 1,\r\n    \"isClosed\": false,\r\n    \"difficulty\": \"ADVANCED\",\r\n    \"metaTitle\": \"Blockchain cơ bản\",\r\n    \"metaDescription\": \"Học blockchain cơ bản và cách xây dựng ứng dụng phân tán.\",\r\n    \"seoKeywords\": \"Blockchain, Smart Contract, dApps, Developer\",\r\n    \"thumbnailUrl\": \"https://example.com/thumbnails/blockchain.png\",\r\n    \"isIndexed\": true,\r\n    \"tags\": [\"java\", \"Spring boot\", \"Backend\"]\r\n  }",
+							"raw": "{\r\n    \"title\": \"Blockchain cơ bản cho developer\",\r\n    \"shortDescription\": \"Khóa học giới thiệu blockchain, smart contract, và dApps.\",\r\n    \"categoryId\": 2,\r\n    \"teacherId\": 1,\r\n    \"isClosed\": false,\r\n    \"difficulty\": \"ADVANCED\",\r\n    \"metaTitle\": \"Blockchain cơ bản\",\r\n    \"metaDescription\": \"Học blockchain cơ bản và cách xây dựng ứng dụng phân tán.\",\r\n    \"seoKeywords\": \"Blockchain, Smart Contract, dApps, Developer\",\r\n    \"thumbnailUrl\": \"https://example.com/thumbnails/blockchain.png\",\r\n    \"isIndexed\": true,\r\n    \"tags\": [ \"Spring boot\"]\r\n  }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1489,6 +3827,16 @@
 				{
 					"name": "get my courses (TEACHER)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TEACHER_JWT}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -2435,6 +4783,1951 @@
 			]
 		},
 		{
+			"name": "Module Comment & Engagement",
+			"item": [
+				{
+					"name": "Comment",
+					"item": [
+						{
+							"name": "Reply",
+							"item": [
+								{
+									"name": "Reply Comment",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"content\": \"Cảm ơn bạn!\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8080/api/v1/comments/5/reply",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"comments",
+												"5",
+												"reply"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Comment Replies",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8080/api/v1/comments/5/replies",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"comments",
+												"5",
+												"replies"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Lesson",
+							"item": [
+								{
+									"name": "Create Lesson Comment",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"content\": \"Bài học cực kỳ hữu ích!\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8080/api/v1/lessons/10/comments",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"lessons",
+												"10",
+												"comments"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Lesson Comments",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8080/api/v1/lessons/10/comments",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"lessons",
+												"10",
+												"comments"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Course",
+							"item": [
+								{
+									"name": "Create Course Comment",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{token}}",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"content\": \"Khóa học dễ hiểu quá!\",\r\n  \"isPublic\": true\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8080/api/v1/courses/1/comments",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"courses",
+												"1",
+												"comments"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Course Comments",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8080/api/v1/courses/5/comments",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"courses",
+												"5",
+												"comments"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Comment",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"content\": \"Comment đã được update!\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8080/api/v1/4",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"4"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Comment",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"content\": \"Comment đã được update!\"\r\n}\r\n"
+										},
+										"url": {
+											"raw": "http://localhost:8080/api/v1/4",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8080",
+											"path": [
+												"api",
+												"v1",
+												"4"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Violation Report",
+					"item": [
+						{
+							"name": "User Report API",
+							"item": [
+								{
+									"name": "Create Report",
+									"protocolProfileBehavior": {
+										"disabledSystemHeaders": {
+											"content-type": true,
+											"content-length": true,
+											"host": true,
+											"user-agent": true,
+											"accept": true,
+											"accept-encoding": true,
+											"connection": true
+										}
+									},
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{BICHLA_JWT}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiaWNobGExMjAwNUBnbWFpbC5jb20iLCJyb2xlIjoiU1RVREVOVCIsImlzcyI6Imxtcy1zeXN0ZW0iLCJleHAiOjE3NjQ2NjY0MjMsImlhdCI6MTc2NDU4MDAyMywidXNlcklkIjoxMCwidXNlciI6eyJhY2NvdW50SWQiOjEwLCJ1c2VybmFtZSI6ImJpY2hsYSIsImVtYWlsIjoiYmljaGxhMTIwMDVAZ21haWwuY29tIiwicm9sZSI6IlNUVURFTlQifX0.vdjA6WE8Yb47hyar2iD2GYit4GKFj899qWIdrSrz-r4",
+												"type": "text",
+												"disabled": true
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"targetAccountId\": 3,\r\n  \"reportType\": \"ABUSE\",\r\n  \"description\": \"Offensive language\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/v1/reports\n",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"reports\n"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Notification",
+					"item": [
+						{
+							"name": "Create Notificaition",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/notifications/send-bulk",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"notifications",
+										"send-bulk"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Channel",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/notification-channels",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"notification-channels"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Notification List",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/notification-channels",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"notification-channels"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Notification Update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"notificationId\": 1,\r\n  \"channel\": \"WEB\",\r\n  \"status\": \"SENT\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/notification-channels/3",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"notification-channels",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Notification Detail",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/notifications/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"notifications",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Notification Mark Read",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/notifications/12/mark-read",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"notifications",
+										"12",
+										"mark-read"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Notification Mark All Read",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Notification",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/notifications/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"notifications",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Module System & Admin",
+			"item": [
+				{
+					"name": "System Setting",
+					"item": [
+						{
+							"name": "Create Settings",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"keyName\": \"system.theme\",\r\n  \"value\": \"dark\",\r\n  \"description\": \"Current theme of system\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/settings",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"settings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get System List",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/admin/settings",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"admin",
+										"settings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Setting",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"keyName\": \"system.theme\",\r\n  \"value\": \"light\",\r\n  \"description\": \"Change theme to light\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/settings/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"settings",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Setting",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/settings/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"settings",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Audit Log",
+					"item": [
+						{
+							"name": "Get Audit Log List",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/v1/admin/audit-logs",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"audit-logs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Audit Log Search",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/admin/audit-logs/search",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"admin",
+										"audit-logs",
+										"search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Audit Log Export",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/admin/audit-logs/export\n",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"admin",
+										"audit-logs",
+										"export\n"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Recommendation",
+					"item": [
+						{
+							"name": "Recommendation Course",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Recommendation Feedback",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"feedbackType\": \"LIKED\",\r\n  \"metadata\": \"{\\\"device\\\":\\\"Windows\\\", \\\"reason\\\":\\\"Interesting course\\\"}\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/recommendations/12/feedback",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"recommendations",
+										"12",
+										"feedback"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Recommendation Statistic",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/admin/recommendations/stats",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"admin",
+										"recommendations",
+										"stats"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DashBoard",
+					"item": [
+						{
+							"name": "Dashboard",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Statisitic",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/admin/statistics",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"admin",
+										"statistics"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Revenue Report",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "New Request",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/admin/reports/courses",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"admin",
+										"reports",
+										"courses"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Module User Management",
+			"item": [
+				{
+					"name": "Student",
+					"item": [
+						{
+							"name": "get student by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get student by student code",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/code/STU257FDD86",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"code",
+										"STU257FDD86"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update student",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get student courses",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1/courses",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1",
+										"courses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get student progress",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1/progress",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1",
+										"progress"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get student certificates",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1/certificates",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1",
+										"certificates"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete student",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update student avatar",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/api/v1/students/1/avatar",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"students",
+										"1",
+										"avatar"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Teacher",
+					"item": [
+						{
+							"name": "get teacher by id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response has teacher data\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('id');",
+											"    pm.expect(jsonData.data).to.have.property('teacherCode');",
+											"    pm.expect(jsonData.data).to.have.property('specialty');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get teacher by code",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Teacher code matches\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.teacherCode).to.eql(\"GV2024001\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/code/GV2024001",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"code",
+										"GV2024001"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update teacher",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Teacher updated successfully\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.message).to.include(\"updated\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"fullName\": \"Nguyen Van A Updated\",\r\n  \"specialty\": \"Machine Learning\",\r\n  \"degree\": \"PhD in Computer Science\",\r\n  \"bio\": \"Expert in ML and AI\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "upload teacher avatar",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Avatar URL returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('avatarUrl');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"value": "",
+											"type": "file"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/avatar",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"avatar"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "request teacher approval",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Approval requested\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.approvalStatus).to.eql(\"PENDING\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/request-approval",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"request-approval"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "approve teacher (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Teacher approved\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.approvalStatus).to.eql(\"APPROVED\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"note\": \"Credentials verified\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/approve",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"approve"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "reject teacher (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Teacher rejected\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.approvalStatus).to.eql(\"REJECTED\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"reason\": \"Invalid credentials\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/reject",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"reject"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get teacher courses",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response contains courses\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('items');",
+											"    pm.expect(jsonData.data.items).to.be.an('array');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/courses?page=0&size=10",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"courses"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get teacher students",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response contains students\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('items');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/students?page=0&size=10",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"students"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get teacher revenue",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Revenue data exists\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('totalRevenue');",
+											"    pm.expect(jsonData.data).to.have.property('monthlyRevenue');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/revenue",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"revenue"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get teacher statistics",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Stats contain key metrics\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('courseCount');",
+											"    pm.expect(jsonData.data).to.have.property('studentCount');",
+											"    pm.expect(jsonData.data).to.have.property('averageRating');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1/stats",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1",
+										"stats"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete teacher (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/teachers/1",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"teachers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "User",
+					"item": [
+						{
+							"name": "get all users (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response is paginated\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('items');",
+											"    pm.expect(jsonData.data).to.have.property('totalItems');",
+											"    pm.expect(jsonData.data).to.have.property('currentPage');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/users?page=0&size=20&sortBy=createdAt&sortDirection=DESC",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"admin",
+										"users"
+									],
+									"query": [
+										{
+											"key": "keyword",
+											"value": "john",
+											"disabled": true
+										},
+										{
+											"key": "role",
+											"value": "TEACHER",
+											"disabled": true
+										},
+										{
+											"key": "status",
+											"value": "ACTIVE",
+											"disabled": true
+										},
+										{
+											"key": "teacherApproved",
+											"value": "true",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "20"
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortDirection",
+											"value": "DESC"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all users with filters (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Filtered results returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.items).to.be.an('array');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/users?keyword=student&role=STUDENT&status=ACTIVE&page=0&size=10",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"admin",
+										"users"
+									],
+									"query": [
+										{
+											"key": "keyword",
+											"value": "student"
+										},
+										{
+											"key": "role",
+											"value": "STUDENT"
+										},
+										{
+											"key": "status",
+											"value": "ACTIVE"
+										},
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get teachers pending approval (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Only pending teachers\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.items.every(u => u.role === 'TEACHER')).to.be.true;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/users?role=TEACHER&teacherApproved=false&page=0&size=20",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"admin",
+										"users"
+									],
+									"query": [
+										{
+											"key": "role",
+											"value": "TEACHER"
+										},
+										{
+											"key": "teacherApproved",
+											"value": "false"
+										},
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get user statistics (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Stats contain all categories\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.have.property('totalUsers');",
+											"    pm.expect(jsonData.data).to.have.property('activeUsers');",
+											"    pm.expect(jsonData.data).to.have.property('statusStats');",
+											"    pm.expect(jsonData.data).to.have.property('roleStats');",
+											"    pm.expect(jsonData.data).to.have.property('registrationStats');",
+											"    pm.expect(jsonData.data).to.have.property('activityStats');",
+											"});",
+											"",
+											"pm.test(\"Counts are non-negative\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data.totalUsers).to.be.at.least(0);",
+											"    pm.expect(jsonData.data.activeUsers).to.be.at.least(0);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/users/stats",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"admin",
+										"users",
+										"stats"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "export users to CSV (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response is CSV\", function () {",
+											"    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
+											"});",
+											"",
+											"pm.test(\"Content-Disposition header present\", function () {",
+											"    pm.expect(pm.response.headers.get('Content-Disposition')).to.exist;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"format\": \"CSV\",\r\n  \"includeInactive\": false,\r\n  \"includeSuspended\": false,\r\n  \"includeRejected\": false,\r\n  \"includeDeleted\": false\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/users/export",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"admin",
+										"users",
+										"export"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "export all users including deleted (ADMIN)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{ADMIN_JWT}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"format\": \"CSV\",\r\n  \"includeInactive\": true,\r\n  \"includeSuspended\": true,\r\n  \"includeRejected\": true,\r\n  \"includeDeleted\": true\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/admin/users/export",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"admin",
+										"users",
+										"export"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "HelloWorld",
 			"request": {
 				"auth": {
@@ -2502,15 +6795,31 @@
 			"value": ""
 		},
 		{
-			"key": "TEACHER_JWT",
-			"value": ""
-		},
-		{
 			"key": "ADMIN_JWT",
 			"value": ""
 		},
 		{
+			"key": "TEACHER_JWT",
+			"value": ""
+		},
+		{
 			"key": "STUDENT_JWT",
+			"value": ""
+		},
+		{
+			"key": "CURRENT_JWT",
+			"value": ""
+		},
+		{
+			"key": "REFRESH_TOKEN",
+			"value": ""
+		},
+		{
+			"key": "API_VERSION",
+			"value": ""
+		},
+		{
+			"key": "resourceId",
 			"value": ""
 		}
 	]
