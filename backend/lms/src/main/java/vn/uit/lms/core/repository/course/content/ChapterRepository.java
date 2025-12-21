@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.uit.lms.core.entity.course.CourseVersion;
-import vn.uit.lms.core.entity.course.content.Chapter;
+import vn.uit.lms.core.domain.course.CourseVersion;
+import vn.uit.lms.core.domain.course.content.Chapter;
 
 import java.util.List;
 import java.util.Optional;

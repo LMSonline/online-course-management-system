@@ -7,12 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.config.MinioBucketProperties;
 import vn.uit.lms.config.RabbitMQConfig;
-import vn.uit.lms.core.entity.course.CourseVersion;
-import vn.uit.lms.core.entity.course.content.Chapter;
-import vn.uit.lms.core.entity.course.content.Lesson;
+import vn.uit.lms.core.domain.course.content.Chapter;
+import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.core.repository.course.content.ChapterRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
-import vn.uit.lms.service.course.CourseService;
 import vn.uit.lms.service.event.VideoConvertMessage;
 import vn.uit.lms.service.storage.MinioService;
 import vn.uit.lms.shared.dto.request.course.content.CreateLessonRequest;
@@ -60,9 +58,8 @@ public class LessonService {
         }
 
         lesson.setChapter(chapter);
-        lesson.setContentUrl(null);
-        lesson.setDurationSeconds(0);
-        lesson.setOrderIndex(chapter.getTotalLessons()+1);
+        lesson.setVideoObjectKey(null);
+        lesson.setOrderIndex(chapter.getTotalLessons());
 
         Lesson savedLesson = lessonRepository.save(lesson);
         log.info("Created lesson with id: {}", savedLesson.getId());
@@ -131,8 +128,6 @@ public class LessonService {
 
         Lesson lesson = validateLessonEditable(lessonId);
 
-        String contentUrl = minioService.buildPublicUrl(request.getObjectKey(), minioBucketProperties.getVideos());
-
         boolean isExistVideo = minioService.isExistsObject(request.getObjectKey(), minioBucketProperties.getVideos());
 
         if (!isExistVideo) {
@@ -160,8 +155,6 @@ public class LessonService {
         );
 
         // TODO: Update with placeholder URL until conversion completes
-        // Set contentUrl to HLS playlist path (will be available after conversion)
-        lesson.setContentUrl(contentUrl);
         lesson.setDurationSeconds(request.getDurationSeconds());
         // TODO: Add processing status field
         // lesson.setVideoStatus(VideoStatus.PROCESSING);

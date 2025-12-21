@@ -1,11 +1,10 @@
 package vn.uit.lms.service.course;
 
-import com.github.slugify.Slugify;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.course.Tag;
+import vn.uit.lms.core.domain.course.Tag;
 import vn.uit.lms.core.repository.course.TagRepository;
 import vn.uit.lms.service.helper.SEOHelperImpl;
 import vn.uit.lms.shared.dto.PageResponse;

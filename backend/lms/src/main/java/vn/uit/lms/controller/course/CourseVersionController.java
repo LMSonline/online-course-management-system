@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.uit.lms.core.entity.course.CourseVersion;
+import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.service.course.CourseVersionService;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.RejectRequest;

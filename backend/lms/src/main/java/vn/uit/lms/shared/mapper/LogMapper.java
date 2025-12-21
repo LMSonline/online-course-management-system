@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper;
 
-import vn.uit.lms.core.entity.AccountActionLog;
+import vn.uit.lms.core.domain.AccountActionLog;
 import vn.uit.lms.shared.constant.AccountActionType;
 import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.dto.response.log.AccountActionLogResponse;

@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper.course;
 
-import vn.uit.lms.core.entity.course.CourseVersion;
+import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.shared.dto.response.course.CourseVersionResponse;
 
 public class CourseVersionMapper {

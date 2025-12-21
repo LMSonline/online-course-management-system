@@ -1,7 +1,7 @@
 package vn.uit.lms.shared.mapper;
 
-import vn.uit.lms.core.entity.assessment.AnswerOption;
-import vn.uit.lms.core.entity.assessment.Question;
+import vn.uit.lms.core.domain.assessment.AnswerOption;
+import vn.uit.lms.core.domain.assessment.Question;
 import vn.uit.lms.shared.dto.response.assessment.AnswerOptionResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuestionResponse;
 

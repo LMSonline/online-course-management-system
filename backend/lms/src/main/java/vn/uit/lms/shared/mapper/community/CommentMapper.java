@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper.community;
 
-import vn.uit.lms.core.entity.community.comment.Comment;
+import vn.uit.lms.core.domain.community.comment.Comment;
 import vn.uit.lms.shared.dto.response.community.comment.CommentResponse;
 
 import java.util.List;

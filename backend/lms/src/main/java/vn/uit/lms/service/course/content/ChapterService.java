@@ -2,9 +2,9 @@ package vn.uit.lms.service.course.content;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.course.Course;
-import vn.uit.lms.core.entity.course.CourseVersion;
-import vn.uit.lms.core.entity.course.content.Chapter;
+import vn.uit.lms.core.domain.course.Course;
+import vn.uit.lms.core.domain.course.CourseVersion;
+import vn.uit.lms.core.domain.course.content.Chapter;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.course.content.ChapterRepository;
@@ -86,7 +86,7 @@ public class ChapterService {
         Chapter newChapter = Chapter.builder()
                 .courseVersion(courseVersion)
                 .title(chapterRequest.getTitle())
-                .orderIndex(courseVersion.getAmountChapter()+1)
+                .orderIndex(courseVersion.getAmountChapter())
                 .build();
 
         Chapter persistedChapter = this.chapterRepository.save(newChapter);

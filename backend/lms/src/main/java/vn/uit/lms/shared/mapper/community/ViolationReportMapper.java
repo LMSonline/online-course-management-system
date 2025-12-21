@@ -1,5 +1,5 @@
 package vn.uit.lms.shared.mapper.community;
-import vn.uit.lms.core.entity.community.report.ViolationReport;
+import vn.uit.lms.core.domain.community.report.ViolationReport;
 import vn.uit.lms.shared.dto.response.community.report.ViolationReportDetailResponse;
 import vn.uit.lms.shared.dto.response.community.report.ViolationReportResponse;
 

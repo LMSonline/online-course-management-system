@@ -1,8 +1,8 @@
 package vn.uit.lms.shared.mapper.course;
 
-import vn.uit.lms.core.entity.course.Course;
-import vn.uit.lms.core.entity.course.CourseTag;
-import vn.uit.lms.core.entity.course.CourseVersion;
+import vn.uit.lms.core.domain.course.Course;
+import vn.uit.lms.core.domain.course.CourseTag;
+import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.shared.dto.response.course.CourseDetailResponse;
 import vn.uit.lms.shared.dto.response.course.CourseResponse;
 

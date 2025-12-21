@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper;
 
-import vn.uit.lms.core.entity.assessment.QuestionBank;
+import vn.uit.lms.core.domain.assessment.QuestionBank;
 import vn.uit.lms.shared.dto.response.assessment.QuestionBankResponse;
 
 public class QuestionBankMapper {

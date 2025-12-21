@@ -11,10 +11,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.AccountActionLog;
-import vn.uit.lms.core.entity.Student;
-import vn.uit.lms.core.entity.Teacher;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.AccountActionLog;
+import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
@@ -32,7 +32,6 @@ import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 import vn.uit.lms.shared.dto.response.account.AccountResponse;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.dto.response.log.AccountActionLogResponse;
-import vn.uit.lms.shared.entity.PersonBase;
 import vn.uit.lms.shared.exception.*;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.mapper.LogMapper;
@@ -41,11 +40,17 @@ import vn.uit.lms.shared.mapper.TeacherMapper;
 import vn.uit.lms.shared.util.CloudinaryUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * AccountService - Thin orchestrator following Rich Domain Model pattern
+ * <p>
+ * This service coordinates account management workflows and delegates business logic to domain entities.
+ * Domain entities (Account, Teacher, Student) encapsulate their own behavior and validation rules.
+ * </p>
+ */
 @Service
 public class AccountService {
 
@@ -91,9 +96,8 @@ public class AccountService {
         Account account = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new UnauthorizedException("Account is not active");
-        }
+        // Use domain behavior
+        account.requireActive();
 
         return account;
     }
@@ -102,27 +106,18 @@ public class AccountService {
 
        Account account = verifyCurrentAccount();
 
-        // Role-specific validations
-        switch (account.getRole()) {
-            case TEACHER -> validateTeacher(account);
-            case ADMIN -> {} // future: validate admin conditions
+        // Role-specific validations using domain behaviors
+        if (account.isTeacher()) {
+            Teacher teacher = teacherRepository.findByAccount(account)
+                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+            teacher.requireApproved();
         }
+        // Admin validations can be added here if needed
 
-        // Final authorization
-        if (account.getRole() != requiredRole) {
-            throw new UnauthorizedException("Access denied for role: " + account.getRole());
-        }
+        // Final authorization using domain behavior
+        account.requireRole(requiredRole);
 
         return account;
-    }
-
-    private void validateTeacher(Account account) {
-        Teacher teacher = teacherRepository.findByAccount(account)
-                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
-
-        if (!teacher.isApproved()) {
-            throw new UnauthorizedException("Teacher is not approved");
-        }
     }
 
 
@@ -144,9 +139,11 @@ public class AccountService {
 
     /**
      * Upload a new avatar for the current user and update the database record.
+     * Service orchestrates: validation, upload, deletion, save
      */
     @Transactional
     public UploadAvatarResponse uploadAvatar(MultipartFile file, String currentUserEmail) {
+        // Validate file
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("File is empty");
         }
@@ -159,15 +156,16 @@ public class AccountService {
             throw new InvalidFileException("File size exceeds " + (maxSizeBytes / 1024 / 1024) + "MB");
         }
 
+        // Fetch account
         Account account = accountRepository.findOneByEmailIgnoreCase(currentUserEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         Long userId = account.getId();
-        String oldPublicId = account.getAvatarPublicId();
+        String oldPublicId = account.getOldAvatarPublicId();
 
         log.info("Uploading avatar for userId={} (oldPublicId={})", userId, oldPublicId);
 
-        // Upload avatar to Cloudinary (overwrite if existing)
+        // Upload avatar to Cloudinary
         CloudinaryStorageService.UploadResult uploadResult =
                 cloudinaryStorageService.uploadAvatar(file, userId, oldPublicId);
 
@@ -181,9 +179,8 @@ public class AccountService {
             }
         }
 
-        // Update avatar info in DB
-        account.setAvatarUrl(uploadResult.getUrl());
-        account.setAvatarPublicId(uploadResult.getPublicId());
+        // Update avatar using domain behavior
+        account.updateAvatar(uploadResult.getUrl(), uploadResult.getPublicId());
         accountRepository.save(account);
 
         // Prepare response
@@ -197,6 +194,7 @@ public class AccountService {
 
     /**
      * Update the profile details of the currently logged-in user.
+     * Service orchestrates: fetch, validation, profile update, save
      */
     @Transactional
     @Audit(table = "accounts", action = AuditAction.UPDATE)
@@ -209,10 +207,6 @@ public class AccountService {
 
         Account account = accountRepository.findOneByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
-
-        if (req.getFullName() == null || req.getFullName().isBlank()) {
-            throw new InvalidFileException("Full name cannot be empty");
-        }
 
         AccountProfileResponse.Profile profile = switch (account.getRole()) {
             case STUDENT -> updateStudentProfile(req, account);
@@ -228,13 +222,14 @@ public class AccountService {
     }
 
     /**
-     * Update Student-specific profile information.
+     * Update Student-specific profile using domain behavior
      */
     private AccountProfileResponse.Profile updateStudentProfile(UpdateProfileRequest req, Account account) {
         Student student = studentRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        updateCommonProfile(req, student);
+        // Use domain behavior for profile update
+        student.updateProfile(req.getFullName(), req.getBio(), req.getGender(), req.getBirthDate(), req.getPhone());
         studentRepository.save(student);
 
         log.debug("Student profile updated for accountId={}", account.getId());
@@ -242,14 +237,14 @@ public class AccountService {
     }
 
     /**
-     * Update Teacher-specific profile information.
+     * Update Teacher-specific profile using domain behavior
      */
-    
     private AccountProfileResponse.Profile updateTeacherProfile(UpdateProfileRequest req, Account account) {
         Teacher teacher = teacherRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
 
-        updateCommonProfile(req, teacher);
+        // Use domain behavior for profile update
+        teacher.updateProfile(req.getFullName(), req.getBio(), req.getGender(), req.getBirthDate(), req.getPhone());
         teacher.setSpecialty(req.getSpecialty());
         teacher.setDegree(req.getDegree());
         teacherRepository.save(teacher);
@@ -258,16 +253,6 @@ public class AccountService {
         return TeacherMapper.toProfileResponse(teacher);
     }
 
-    /**
-     * Apply common profile updates for both Student and Teacher.
-     */
-    private void updateCommonProfile(UpdateProfileRequest req, PersonBase person) {
-        person.setFullName(req.getFullName());
-        person.setBio(req.getBio());
-        person.setGender(req.getGender());
-        person.setBirthDate(req.getBirthDate());
-        person.setPhone(req.getPhone());
-    }
 
     public PageResponse<AccountResponse> getAllAccounts(Specification<Account> spec, Pageable pageable) {
         Page<Account> page = accountRepository.findAll(spec, pageable);
@@ -315,6 +300,7 @@ public class AccountService {
 
     /**
      * Approve a teacher account by admin.
+     * Service orchestrates: validation, approval, logging, event publishing
      *
      * @param id teacher account ID
      * @return approved teacher profile
@@ -326,11 +312,12 @@ public class AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if (account.getRole() != Role.TEACHER) {
+        // Validate account is a teacher using domain behavior
+        if (!account.isTeacher()) {
             throw new InvalidRequestException("Only teacher accounts can be approved");
         }
 
-        if (account.getStatus() == AccountStatus.PENDING_EMAIL) {
+        if (account.isPendingEmailVerification()) {
             throw new InvalidStatusException("Teacher has not verified email yet");
         }
 
@@ -343,38 +330,41 @@ public class AccountService {
         Account adminAccount = accountRepository.findById(adminId)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
 
-        teacher.setApproved(true);
-        teacher.setApprovedAt(Instant.now());
-        teacher.setApprovedBy(adminId);
-        teacher.setRejectReason(null);
-
-        account.setStatus(AccountStatus.ACTIVE);
+        // Use domain behaviors for approval
+        AccountStatus oldStatus = account.getStatus();
+        teacher.approve(adminId);
 
         teacherRepository.save(teacher);
         accountRepository.save(account);
 
-
-        accountActionLogService.logAction(
-                account.getId(),
-                AccountActionType.APPROVE,
+        // Log action using factory method
+        AccountActionLog log = AccountActionLog.createApprovalLog(
+                account,
+                adminAccount,
                 "Teacher account approved by: " + adminAccount.getUsername(),
-                adminId,
                 ipAddress,
-                AccountStatus.PENDING_APPROVAL.name(),
+                oldStatus.name(),
                 AccountStatus.ACTIVE.name()
         );
+        accountActionLogService.saveLog(log);
 
-        eventPublisher.publishEvent(new AccountStatusChangeEvent(account, AccountActionType.APPROVE, "Teacher account approved by: " + adminAccount.getUsername()));
+        // Publish event
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(
+                account,
+                AccountActionType.APPROVE,
+                "Teacher account approved by: " + adminAccount.getUsername()
+        ));
 
         AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
         AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
 
-        log.info("Teacher account id={} approved successfully by admin={}", id, adminAccount.getUsername());
+        AccountService.log.info("Teacher account id={} approved successfully by admin={}", id, adminAccount.getUsername());
         return response;
     }
 
     /**
      * Reject a teacher account by admin.
+     * Service orchestrates: validation, rejection, logging, event publishing
      *
      * @param id teacher account ID
      * @return rejected teacher profile
@@ -386,11 +376,12 @@ public class AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if (account.getRole() != Role.TEACHER) {
+        // Validate account is a teacher using domain behavior
+        if (!account.isTeacher()) {
             throw new InvalidRequestException("Only teacher accounts can be rejected");
         }
 
-        if (account.getStatus() == AccountStatus.PENDING_EMAIL) {
+        if (account.isPendingEmailVerification()) {
             throw new InvalidStatusException("Teacher has not verified email yet");
         }
 
@@ -403,27 +394,27 @@ public class AccountService {
         Account adminAccount = accountRepository.findById(adminId)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
 
-        teacher.setApproved(false);
-        teacher.setApprovedAt(Instant.now());
-        teacher.setApprovedBy(adminId);
-        teacher.setRejectReason(reason);
-
-        account.setStatus(AccountStatus.REJECTED);
+        // Use domain behaviors for rejection
+        AccountStatus oldStatus = account.getStatus();
+        teacher.reject(adminId, reason);
+        account.reject();
 
         teacherRepository.save(teacher);
         accountRepository.save(account);
 
-        accountActionLogService.logAction(
-                account.getId(),
-                AccountActionType.REJECT,
+        // Log action using factory method
+        AccountActionLog logEntry = AccountActionLog.createRejectionLog(
+                account,
+                adminAccount,
                 reason,
-                adminId,
                 ipAddress,
-                AccountStatus.PENDING_APPROVAL.name(),
+                oldStatus.name(),
                 AccountStatus.REJECTED.name()
         );
+        accountActionLogService.saveLog(logEntry);
 
-       eventPublisher.publishEvent(new AccountStatusChangeEvent(account, AccountActionType.REJECT, reason));
+        // Publish event
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(account, AccountActionType.REJECT, reason));
 
         AccountProfileResponse.Profile profile = TeacherMapper.toProfileResponse(teacher);
         AccountProfileResponse response = AccountMapper.toProfileResponse(account, profile);
@@ -455,29 +446,89 @@ public class AccountService {
     public AccountProfileResponse changeAccountStatus(Long accountId, AccountStatus newStatus, String reason, String ip){
         log.info("Changing account status for accountId={}, newStatus={}, ip={}", accountId, newStatus, ip);
 
-        if(newStatus == AccountStatus.PENDING_EMAIL){
-            throw new InvalidRequestException("Cannot change status to PENDING_EMAIL");
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        // Handle teacher-specific approval/rejection
+        if(account.isTeacher() && newStatus == AccountStatus.ACTIVE){
+            return approveTeacherAccount(accountId, ip);
         }
+
+        if(account.isTeacher() && newStatus == AccountStatus.REJECTED){
+            return rejectTeacherAccount(accountId, reason != null ? reason : "No reason provided", ip);
+        }
+
+        // Validate admin account changes
+        if(account.isAdmin()){
+            throw new InvalidRequestException("Cannot change status of ADMIN accounts");
+        }
+
+        // Store old status and set new status
+        AccountStatus oldStatus = account.getStatus();
+        account.setStatus(newStatus);
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        accountRepository.save(account);
+
+        // Map status to action type
+        AccountActionType actionType = LogMapper.mapStatusToAction(newStatus, oldStatus);
+
+        // Create and save log using factory method
+        AccountActionLog logEntry = AccountActionLog.createStatusChangeLog(
+                account,
+                adminAccount,
+                actionType,
+                reason != null ? reason : "Account status changed to: " + newStatus + " by admin: " + adminAccount.getUsername(),
+                ip,
+                oldStatus.name(),
+                newStatus.name()
+        );
+        accountActionLogService.saveLog(logEntry);
+
+        // Publish event
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(
+                account,
+                actionType,
+                reason != null ? reason : "Account status changed to: " + newStatus
+        ));
+
+        // Build response based on role
+        AccountProfileResponse.Profile profile = switch (account.getRole()) {
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(account)
+                        .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+                yield StudentMapper.toProfileResponse(student);
+            }
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(account)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+                yield TeacherMapper.toProfileResponse(teacher);
+            }
+            case ADMIN -> new AccountProfileResponse.Profile();
+        };
+
+        log.info("Account status changed successfully for accountId={} from {} to {}", accountId, oldStatus, newStatus);
+        return AccountMapper.toProfileResponse(account, profile);
+    }
+
+    /**
+     * Suspend an active account.
+     * Service orchestrates: validation, suspension, logging, event publishing
+     */
+    @Transactional
+    public AccountProfileResponse suspendAccount(Long accountId, String reason, String ipAddress) {
+        log.info("Suspending account id={}, reason='{}', ip={}", accountId, reason, ipAddress);
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if(account.getRole() == Role.TEACHER && newStatus == AccountStatus.ACTIVE){
-            return approveTeacherAccount(accountId, ip);
-        }
-
-        if(account.getRole() == Role.TEACHER && newStatus == AccountStatus.REJECTED){
-            return rejectTeacherAccount(accountId, reason != null ? reason : "No reason provided", ip);
-        }
-
-        if(account.getRole() == Role.ADMIN){
-            throw new InvalidRequestException("Cannot change status of ADMIN accounts");
-        }
-
-        AccountStatus oldStatus =  account.getStatus();
-
-        if(oldStatus == newStatus){
-            throw new InvalidStatusException("Account is already in status: " + newStatus);
+        if (account.isAdmin()) {
+            throw new InvalidRequestException("Cannot suspend ADMIN accounts");
         }
 
         Long adminId = SecurityUtils.getCurrentUserId()
@@ -486,28 +537,152 @@ public class AccountService {
         Account adminAccount = accountRepository.findById(adminId)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
 
-        account.setStatus(newStatus);
+        // Use domain behavior for suspension
+        AccountStatus oldStatus = account.getStatus();
+        account.suspend();
         accountRepository.save(account);
 
-        AccountActionType actionType = LogMapper.mapStatusToAction(newStatus, oldStatus);
-
-        accountActionLogService.logAction(
-                account.getId(),
-                actionType,
-                reason != null ? reason:"Account status changed to: " + newStatus + " by admin: " + adminAccount.getUsername(),
-                adminId,
-                ip,
+        // Log action
+        AccountActionLog logEntry = AccountActionLog.createStatusChangeLog(
+                account,
+                adminAccount,
+                AccountActionType.SUSPEND,
+                reason != null ? reason : "Account suspended by admin: " + adminAccount.getUsername(),
+                ipAddress,
                 oldStatus.name(),
-                newStatus.name()
+                AccountStatus.SUSPENDED.name()
         );
+        accountActionLogService.saveLog(logEntry);
 
-        AccountProfileResponse response = getAccountProfile(account);
+        // Publish event
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(
+                account,
+                AccountActionType.SUSPEND,
+                reason != null ? reason : "Account suspended"
+        ));
 
-        eventPublisher.publishEvent(new AccountStatusChangeEvent(account, actionType, reason));
+        AccountProfileResponse.Profile profile = buildAccountProfile(account);
+        log.info("Account id={} suspended successfully by admin={}", accountId, adminAccount.getUsername());
+        return AccountMapper.toProfileResponse(account, profile);
+    }
 
+    /**
+     * Unlock a suspended account.
+     * Service orchestrates: validation, unlocking, logging, event publishing
+     */
+    @Transactional
+    public AccountProfileResponse unlockAccount(Long accountId, String reason, String ipAddress) {
+        log.info("Unlocking account id={}, reason='{}', ip={}", accountId, reason, ipAddress);
 
-        log.info("Account status for accountId={} changed from {} to {} by admin={}", accountId, oldStatus, newStatus, adminAccount.getUsername());
-        return response;
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (account.isAdmin()) {
+            throw new InvalidRequestException("Cannot unlock ADMIN accounts");
+        }
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        // Use domain behavior for unlocking
+        AccountStatus oldStatus = account.getStatus();
+        account.unlock();
+        accountRepository.save(account);
+
+        // Log action
+        AccountActionLog logEntry = AccountActionLog.createStatusChangeLog(
+                account,
+                adminAccount,
+                AccountActionType.UNLOCK,
+                reason != null ? reason : "Account unlocked by admin: " + adminAccount.getUsername(),
+                ipAddress,
+                oldStatus.name(),
+                AccountStatus.ACTIVE.name()
+        );
+        accountActionLogService.saveLog(logEntry);
+
+        // Publish event
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(
+                account,
+                AccountActionType.UNLOCK,
+                reason != null ? reason : "Account unlocked"
+        ));
+
+        AccountProfileResponse.Profile profile = buildAccountProfile(account);
+        log.info("Account id={} unlocked successfully by admin={}", accountId, adminAccount.getUsername());
+        return AccountMapper.toProfileResponse(account, profile);
+    }
+
+    /**
+     * Deactivate an active account.
+     * Service orchestrates: validation, deactivation, logging, event publishing
+     */
+    @Transactional
+    public AccountProfileResponse deactivateAccount(Long accountId, String reason, String ipAddress) {
+        log.info("Deactivating account id={}, reason='{}', ip={}", accountId, reason, ipAddress);
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (account.isAdmin()) {
+            throw new InvalidRequestException("Cannot deactivate ADMIN accounts");
+        }
+
+        Long adminId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        Account adminAccount = accountRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin account not found"));
+
+        // Use domain behavior for deactivation
+        AccountStatus oldStatus = account.getStatus();
+        account.deactivate();
+        accountRepository.save(account);
+
+        // Log action
+        AccountActionLog logEntry = AccountActionLog.createStatusChangeLog(
+                account,
+                adminAccount,
+                AccountActionType.DEACTIVATE,
+                reason != null ? reason : "Account deactivated by admin: " + adminAccount.getUsername(),
+                ipAddress,
+                oldStatus.name(),
+                AccountStatus.DEACTIVATED.name()
+        );
+        accountActionLogService.saveLog(logEntry);
+
+        // Publish event
+        eventPublisher.publishEvent(new AccountStatusChangeEvent(
+                account,
+                AccountActionType.DEACTIVATE,
+                reason != null ? reason : "Account deactivated"
+        ));
+
+        AccountProfileResponse.Profile profile = buildAccountProfile(account);
+        log.info("Account id={} deactivated successfully by admin={}", accountId, adminAccount.getUsername());
+        return AccountMapper.toProfileResponse(account, profile);
+    }
+
+    /**
+     * Helper method to build account profile based on role
+     */
+    private AccountProfileResponse.Profile buildAccountProfile(Account account) {
+        return switch (account.getRole()) {
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(account)
+                        .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+                yield StudentMapper.toProfileResponse(student);
+            }
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(account)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+                yield TeacherMapper.toProfileResponse(teacher);
+            }
+            case ADMIN -> new AccountProfileResponse.Profile();
+        };
     }
 
     public void deleteAccountById(Long id, String ipAddress) {

@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper.course.content;
 
-import vn.uit.lms.core.entity.course.content.Lesson;
+import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.shared.dto.request.course.content.CreateLessonRequest;
 import vn.uit.lms.shared.dto.response.course.content.LessonDTO;
 
@@ -22,7 +22,9 @@ public class LessonMapper {
                 .type(lesson.getType())
                 .title(lesson.getTitle())
                 .shortDescription(lesson.getShortDescription())
-                .contentUrl(lesson.getContentUrl())
+                .videoObjectKey(lesson.getVideoObjectKey()!= null ? lesson.getVideoObjectKey() : null)
+                .videoStatus(lesson.getVideoStatus() != null ? lesson.getVideoStatus() : null)
+                .isPreview(lesson.getIsPreview())
                 .durationSeconds(lesson.getDurationSeconds())
                 .orderIndex(lesson.getOrderIndex())
                 .build();

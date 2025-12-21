@@ -1,6 +1,6 @@
 package vn.uit.lms.shared.mapper;
 
-import vn.uit.lms.core.entity.Student;
+import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 import vn.uit.lms.shared.dto.response.student.StudentDetailResponse;
 import vn.uit.lms.shared.dto.response.student.StudentResponse;

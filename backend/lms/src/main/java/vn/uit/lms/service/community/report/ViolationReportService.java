@@ -4,25 +4,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.community.comment.Comment;
-import vn.uit.lms.core.entity.community.report.ViolationReport;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.community.report.ViolationReport;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.community.comment.CommentRepository;
 import vn.uit.lms.core.repository.community.report.ViolationReportRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.service.AccountService;
-import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.ViolationReportStatus;
 import vn.uit.lms.shared.dto.request.community.report.*;
 import vn.uit.lms.shared.dto.response.community.report.ViolationReportDetailResponse;
 import vn.uit.lms.shared.dto.response.community.report.ViolationReportResponse;
-import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.community.ViolationReportMapper;
-
-import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor

@@ -1,8 +1,8 @@
 package vn.uit.lms.shared.mapper;
 
-import vn.uit.lms.core.entity.assignment.Assignment;
-import vn.uit.lms.core.entity.assignment.Submission;
-import vn.uit.lms.core.entity.assignment.SubmissionFile;
+import vn.uit.lms.core.domain.assignment.Assignment;
+import vn.uit.lms.core.domain.assignment.Submission;
+import vn.uit.lms.core.domain.assignment.SubmissionFile;
 import vn.uit.lms.shared.dto.response.assignment.AssignmentResponse;
 import vn.uit.lms.shared.dto.response.assignment.SubmissionFileResponse;
 import vn.uit.lms.shared.dto.response.assignment.SubmissionResponse;
@@ -56,7 +56,7 @@ public class AssignmentMapper {
     public static SubmissionFileResponse toSubmissionFileResponse(SubmissionFile file) {
         return SubmissionFileResponse.builder()
                 .id(file.getId())
-                .fileUrl(file.getFile() != null ? file.getFile().getUrl() : null)
+//                .fileUrl(file.getFile() != null ? file.getFile().getUrl() : null)
                 .fileName(file.getFile() != null ? file.getFile().getOriginalName() : null)
                 .build();
     }

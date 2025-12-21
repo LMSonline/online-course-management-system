@@ -1,17 +1,14 @@
 package vn.uit.lms.service.course;
 
-import org.apache.coyote.BadRequestException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.Teacher;
-import vn.uit.lms.core.entity.course.Course;
-import vn.uit.lms.core.entity.course.CourseVersion;
-import vn.uit.lms.core.repository.course.CourseRepository;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.course.Course;
+import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.event.CourseVersionStatusChangeEvent;
@@ -29,7 +26,6 @@ import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CourseVersionService {
@@ -58,10 +54,6 @@ public class CourseVersionService {
         }
 
         return version;
-    }
-
-    public boolean isAvailableVersion(Long versionId){
-        return courseVersionRepository.existsByIdAndDeletedAtIsNull(versionId);
     }
 
     @Transactional

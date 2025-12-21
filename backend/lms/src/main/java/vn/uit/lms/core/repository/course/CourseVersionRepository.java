@@ -3,8 +3,8 @@ package vn.uit.lms.core.repository.course;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import vn.uit.lms.core.entity.course.Course;
-import vn.uit.lms.core.entity.course.CourseVersion;
+import vn.uit.lms.core.domain.course.Course;
+import vn.uit.lms.core.domain.course.CourseVersion;
 
 
 import java.util.List;

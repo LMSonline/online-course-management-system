@@ -1,9 +1,8 @@
 package vn.uit.lms.service.course;
 
-import com.github.slugify.Slugify;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.course.Category;
+import vn.uit.lms.core.domain.course.Category;
 import vn.uit.lms.core.repository.course.CategoryRepository;
 import vn.uit.lms.service.helper.SEOHelperImpl;
 import vn.uit.lms.shared.dto.request.course.CategoryRequest;

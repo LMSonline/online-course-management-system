@@ -7,7 +7,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
-import vn.uit.lms.core.entity.log.AuditLog;
+import vn.uit.lms.core.domain.log.AuditLog;
 import vn.uit.lms.core.repository.log.AuditLogRepository;
 import vn.uit.lms.shared.annotation.Audit;
 import vn.uit.lms.shared.constant.AuditAction;

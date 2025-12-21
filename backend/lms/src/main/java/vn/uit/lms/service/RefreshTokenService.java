@@ -1,16 +1,14 @@
 package vn.uit.lms.service;
 
-import org.springdoc.core.service.SecurityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.entity.Account;
-import vn.uit.lms.core.entity.RefreshToken;
-import vn.uit.lms.core.entity.Student;
-import vn.uit.lms.core.entity.Teacher;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.RefreshToken;
+import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.repository.RefreshTokenRepository;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
-import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.dto.request.ReqRefreshTokenDTO;
 import vn.uit.lms.shared.dto.response.ResLoginDTO;
 import vn.uit.lms.shared.exception.InvalidTokenException;

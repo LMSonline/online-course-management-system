@@ -2,7 +2,7 @@ package vn.uit.lms.service.recommendation;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.recommendation.RecommendationFeedback;
+import vn.uit.lms.core.domain.recommendation.RecommendationFeedback;
 import vn.uit.lms.core.repository.recommendation.RecommendationFeedbackRepository;
 import vn.uit.lms.core.repository.recommendation.RecommendationLogRepository;
 import vn.uit.lms.shared.dto.request.recommendation.RecommendationFeedbackRequest;

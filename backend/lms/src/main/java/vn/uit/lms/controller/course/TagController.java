@@ -29,17 +29,17 @@ public class TagController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/admin/tags")
     @AdminOnly
-    public ResponseEntity<vn.uit.lms.core.entity.course.Tag> createTag(
+    public ResponseEntity<vn.uit.lms.core.domain.course.Tag> createTag(
             @Parameter(description = "Tag details") @Valid @RequestBody TagRequest tagRequest) {
-        vn.uit.lms.core.entity.course.Tag createdTag = tagService.createTag(tagRequest);
+        vn.uit.lms.core.domain.course.Tag createdTag = tagService.createTag(tagRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTag);
     }
 
     @Operation(summary = "Get all active tags")
     @GetMapping("/tags")
-    public ResponseEntity<PageResponse<vn.uit.lms.core.entity.course.Tag>> getTags(
+    public ResponseEntity<PageResponse<vn.uit.lms.core.domain.course.Tag>> getTags(
             @Parameter(description = "Pagination parameters") Pageable pageable) {
-        PageResponse<vn.uit.lms.core.entity.course.Tag> tagsPage = tagService.getTagsActive(pageable);
+        PageResponse<vn.uit.lms.core.domain.course.Tag> tagsPage = tagService.getTagsActive(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
@@ -47,9 +47,9 @@ public class TagController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/admin/tags")
     @AdminOnly
-    public ResponseEntity<PageResponse<vn.uit.lms.core.entity.course.Tag>> getAllTags(
+    public ResponseEntity<PageResponse<vn.uit.lms.core.domain.course.Tag>> getAllTags(
             @Parameter(description = "Pagination parameters") Pageable pageable) {
-        PageResponse<vn.uit.lms.core.entity.course.Tag> tagsPage = tagService.getAllIncludingDeleted(pageable);
+        PageResponse<vn.uit.lms.core.domain.course.Tag> tagsPage = tagService.getAllIncludingDeleted(pageable);
         return ResponseEntity.ok(tagsPage);
     }
 
@@ -57,10 +57,10 @@ public class TagController {
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/admin/tags/{id}")
     @AdminOnly
-    public ResponseEntity<vn.uit.lms.core.entity.course.Tag> updateTag(
+    public ResponseEntity<vn.uit.lms.core.domain.course.Tag> updateTag(
             @Parameter(description = "Tag ID") @PathVariable Long id,
             @Parameter(description = "Updated tag details") @Valid @RequestBody TagRequest tagRequest) {
-        vn.uit.lms.core.entity.course.Tag updatedTag = tagService.updateTag(id, tagRequest);
+        vn.uit.lms.core.domain.course.Tag updatedTag = tagService.updateTag(id, tagRequest);
         return ResponseEntity.ok(updatedTag);
     }
 
@@ -78,9 +78,9 @@ public class TagController {
     @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/admin/tags/{id}/restore")
     @AdminOnly
-    public ResponseEntity<vn.uit.lms.core.entity.course.Tag> restoreTag(
+    public ResponseEntity<vn.uit.lms.core.domain.course.Tag> restoreTag(
             @Parameter(description = "Tag ID") @PathVariable Long id) {
-        vn.uit.lms.core.entity.course.Tag restoredTag = tagService.restoreTag(id);
+        vn.uit.lms.core.domain.course.Tag restoredTag = tagService.restoreTag(id);
         return ResponseEntity.ok(restoredTag);
     }
 }

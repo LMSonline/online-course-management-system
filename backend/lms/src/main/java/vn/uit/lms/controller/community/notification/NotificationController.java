@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.uit.lms.core.entity.community.notification.Notification;
+import vn.uit.lms.core.domain.community.notification.Notification;
 import vn.uit.lms.service.community.notification.NotificationService;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.response.community.notification.NotificationResponse;

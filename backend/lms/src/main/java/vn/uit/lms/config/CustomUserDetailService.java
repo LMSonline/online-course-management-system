@@ -10,9 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.core.entity.Account;
+import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.repository.AccountRepository;
-import vn.uit.lms.shared.constant.AccountStatus;
 
 import java.util.List;
 
@@ -73,12 +72,7 @@ public class CustomUserDetailService implements UserDetailsService {
                     });
         }
 
-        AccountStatus status = accountDB.getStatus();
-        // Verify activation status
-        if (status == AccountStatus.PENDING_EMAIL || status == AccountStatus.SUSPENDED || status == AccountStatus.DEACTIVATED) {
-            log.warn("Authentication failed: account not activated [{}]", username);
-            throw new UsernameNotFoundException("User account is not activated: " + username);
-        }
+        accountDB.verifyToLogin();
 
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + accountDB.getRole().name());
 
