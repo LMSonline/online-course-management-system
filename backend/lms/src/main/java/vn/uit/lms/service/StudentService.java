@@ -256,35 +256,6 @@ public class StudentService {
         );
     }
 
-    /**
-     * Get student's learning progress
-     * - STUDENT: Can only view their own progress
-     * - TEACHER: Can view students enrolled in their courses (TODO: add enrollment check)
-     * - ADMIN: Can view any student's progress
-     */
-    public StudentProgressResponse getStudentProgress(Long id) {
-        log.info("Fetching progress for student id: {}", id);
-
-        Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
-
-        // Check authorization
-        validateStudentAccess(student);
-
-        // TODO: Implement actual progress calculation when Enrollment/Progress entities are created
-        // For now, return empty progress
-        return StudentProgressResponse.builder()
-                .totalEnrolledCourses(0L)
-                .completedCourses(0L)
-                .inProgressCourses(0L)
-                .totalCertificates(0L)
-                .totalLearningHours(0.0)
-                .averageProgressPercentage(0.0)
-                .lastActivityAt(null)
-                .totalAssignmentsSubmitted(0L)
-                .totalAssessmentsCompleted(0L)
-                .build();
-    }
 
     /**
      * Get student's certificates
