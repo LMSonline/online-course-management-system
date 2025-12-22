@@ -1,4 +1,28 @@
-{"id": "video_001", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_001", "lesson_title": "Introduction to Python", "video_id": "video_001", "video_title": "What is Python?", "video_url": "https://example.com/videos/python-basics/intro.mp4", "language": "en", "difficulty": "BEGINNER", "duration_sec": 600, "start_time_sec": 0, "end_time_sec": 600, "content_type": "video_transcript", "text": "Welcome to Python Basics! Python is a high-level programming language known for its simplicity and readability. In this course, we'll cover fundamental concepts like variables, data types, and control structures. Python is widely used in web development, data science, and automation.", "tags": ["python", "programming", "beginner", "introduction"], "skills": ["programming", "coding", "logic"], "topics": ["programming-languages", "syntax", "basics"], "source": "lms_db", "created_at": "2024-01-15T10:00:00Z", "updated_at": "2024-01-15T10:00:00Z"}
+{
+    "id": "video_001", 
+    "course_id": "course_python_basic", 
+    "course_title": "Python Basics", 
+    "lesson_id": "lesson_001", 
+    "lesson_title": "Introduction to Python", 
+    "video_id": "video_001", 
+    "video_title": "What is Python?", 
+    "video_url": "https://example.com/videos/python-basics/intro.mp4", 
+    "language": "en", 
+    "difficulty": "BEGINNER", 
+    "duration_sec": 600, 
+    "start_time_sec": 0, 
+    "end_time_sec": 600, 
+    "content_type": "video_transcript", 
+    "text": "Welcome to Python Basics! Python is a high-level programming language known for its simplicity 
+    and readability. In this course, we'll cover fundamental concepts like variables, data types, and control 
+    structures. Python is widely used in web development, data science, and automation.", 
+    "tags": ["python", "programming", "beginner", "introduction"], 
+    "skills": ["programming", "coding", "logic"], 
+    "topics": ["programming-languages", "syntax", "basics"], 
+    "source": "lms_db", 
+    "created_at": "2024-01-15T10:00:00Z", 
+    "updated_at": "2024-01-15T10:00:00Z"
+}
 {"id": "video_002", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_002", "lesson_title": "Variables and Data Types", "video_id": "video_002", "video_title": "Understanding Variables", "video_url": "https://example.com/videos/python-basics/variables.mp4", "language": "en", "difficulty": "BEGINNER", "duration_sec": 720, "start_time_sec": 0, "end_time_sec": 720, "content_type": "video_transcript", "text": "Variables in Python are containers for storing data values. Unlike other languages, Python doesn't require explicit type declaration. We'll explore integers, floats, strings, and booleans. You can assign values using the equals sign, and Python will automatically determine the type.", "tags": ["python", "variables", "data-types", "beginner"], "skills": ["programming", "data-manipulation"], "topics": ["variables", "data-types", "syntax"], "source": "lms_db", "created_at": "2024-01-15T10:12:00Z", "updated_at": "2024-01-15T10:12:00Z"}
 {"id": "video_003", "course_id": "course_python_basic", "course_title": "Python Basics", "lesson_id": "lesson_003", "lesson_title": "Control Structures", "video_id": "video_003", "video_title": "If Statements and Loops", "video_url": "https://example.com/videos/python-basics/control.mp4", "language": "en", "difficulty": "BEGINNER", "duration_sec": 900, "start_time_sec": 0, "end_time_sec": 900, "content_type": "video_transcript", "text": "Control structures allow you to make decisions and repeat actions in your code. We'll cover if-elif-else statements for conditional logic, and for/while loops for iteration. Python uses indentation to define code blocks, which makes the code more readable.", "tags": ["python", "control-flow", "loops", "conditionals", "beginner"], "skills": ["programming", "logic", "problem-solving"], "topics": ["control-structures", "loops", "conditionals"], "source": "lms_db", "created_at": "2024-01-15T10:27:00Z", "updated_at": "2024-01-15T10:27:00Z"}
 {"id": "video_004", "course_id": "course_python_advanced", "course_title": "Advanced Python", "lesson_id": "lesson_101", "lesson_title": "Object-Oriented Programming", "video_id": "video_101", "video_title": "Classes and Objects", "video_url": "https://example.com/videos/python-advanced/oop.mp4", "language": "en", "difficulty": "INTERMEDIATE", "duration_sec": 1200, "start_time_sec": 0, "end_time_sec": 1200, "content_type": "video_transcript", "text": "Object-oriented programming is a paradigm that organizes code into classes and objects. In Python, everything is an object. We'll learn how to define classes, create instances, use inheritance, and implement polymorphism. This is essential for building larger, more maintainable applications.", "tags": ["python", "oop", "classes", "objects", "intermediate"], "skills": ["programming", "software-design", "architecture"], "topics": ["object-oriented", "classes", "inheritance", "polymorphism"], "source": "lms_db", "created_at": "2024-02-01T09:00:00Z", "updated_at": "2024-02-01T09:00:00Z"}
