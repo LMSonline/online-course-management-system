@@ -134,7 +134,7 @@ public class TeacherService {
 
         // Validate unique teacher code if changed
         if (request.getTeacherCode() != null &&
-            !request.getTeacherCode().equals(teacher.getTeacherCode())) {
+                !request.getTeacherCode().equals(teacher.getTeacherCode())) {
             if (teacherRepository.findByTeacherCode(request.getTeacherCode()).isPresent()) {
                 throw new InvalidRequestException("Teacher code already exists: " + request.getTeacherCode());
             }

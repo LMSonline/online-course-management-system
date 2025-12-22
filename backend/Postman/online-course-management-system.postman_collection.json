@@ -6728,6 +6728,420 @@
 			]
 		},
 		{
+			"name": "Module Learning Management",
+			"item": [
+				{
+					"name": "Erollment",
+					"item": [
+						{
+							"name": "Enroll in Course",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"paymentTransactionId\": null,\n  \"notes\": \"Interested in learning\"\n}"
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/{{courseId}}/enroll",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"courses",
+										"{{courseId}}",
+										"enroll"
+									]
+								},
+								"description": "Student enrolls in a course. For paid courses, payment must be completed first."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Student Enrollments",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/students/{{studentId}}/enrollments?page=0&size=20&sort=enrolledAt,desc",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"students",
+										"{{studentId}}",
+										"enrollments"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0",
+											"description": "Page number (0-based)"
+										},
+										{
+											"key": "size",
+											"value": "20",
+											"description": "Page size"
+										},
+										{
+											"key": "sort",
+											"value": "enrolledAt,desc",
+											"description": "Sort by field and direction"
+										}
+									]
+								},
+								"description": "Get list of all courses enrolled by a student"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Course Enrollments (Teacher)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/{{courseId}}/enrollments?page=0&size=20&sort=enrolledAt,desc",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"courses",
+										"{{courseId}}",
+										"enrollments"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0",
+											"description": "Page number (0-based)"
+										},
+										{
+											"key": "size",
+											"value": "20",
+											"description": "Page size"
+										},
+										{
+											"key": "sort",
+											"value": "enrolledAt,desc",
+											"description": "Sort by field and direction"
+										}
+									]
+								},
+								"description": "Get list of all students enrolled in a course (Teacher access)"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Enrollment Details",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/enrollments/{{enrollmentId}}",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"enrollments",
+										"{{enrollmentId}}"
+									]
+								},
+								"description": "Get detailed information about a specific enrollment"
+							},
+							"response": []
+						},
+						{
+							"name": "Cancel Enrollment",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"reason\": \"Changed my mind\"\n}"
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/enrollments/{{enrollmentId}}/cancel",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"enrollments",
+										"{{enrollmentId}}",
+										"cancel"
+									]
+								},
+								"description": "Student cancels their enrollment in a course"
+							},
+							"response": []
+						},
+						{
+							"name": "Complete Enrollment (Teacher)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/enrollments/{{enrollmentId}}/complete",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"enrollments",
+										"{{enrollmentId}}",
+										"complete"
+									]
+								},
+								"description": "Mark enrollment as completed (Teacher or System). Student must meet all requirements (progress % and pass score)."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Enrollment Statistics (Teacher)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/{{courseId}}/enrollment-stats",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"courses",
+										"{{courseId}}",
+										"enrollment-stats"
+									]
+								},
+								"description": "Get statistics about enrollments for a course (Teacher access)"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Progress",
+					"item": [
+						{
+							"name": "Get Student Overall Progress",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/students/{{studentId}}/progress",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"students",
+										"{{studentId}}",
+										"progress"
+									]
+								},
+								"description": "Get overall learning progress summary for a student across all enrolled courses"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Student Course Progress",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/students/{{studentId}}/courses/{{courseId}}/progress",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"students",
+										"{{studentId}}",
+										"courses",
+										"{{courseId}}",
+										"progress"
+									]
+								},
+								"description": "Get detailed progress for a student in a specific course, including all chapters and lessons"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Student Lesson Progress",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/students/{{studentId}}/lessons/{{lessonId}}/progress",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"students",
+										"{{studentId}}",
+										"lessons",
+										"{{lessonId}}",
+										"progress"
+									]
+								},
+								"description": "Get progress information for a student in a specific lesson"
+							},
+							"response": []
+						},
+						{
+							"name": "Mark Lesson as Viewed",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/mark-viewed",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"lessons",
+										"{{lessonId}}",
+										"mark-viewed"
+									]
+								},
+								"description": "Mark a lesson as viewed by the authenticated student. Creates or updates progress record with viewed status."
+							},
+							"response": []
+						},
+						{
+							"name": "Mark Lesson as Completed",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/lessons/{{lessonId}}/mark-completed",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"lessons",
+										"{{lessonId}}",
+										"mark-completed"
+									]
+								},
+								"description": "Mark a lesson as completed by the authenticated student. Updates enrollment completion percentage automatically."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Course Progress Statistics (Teacher)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{ACCESS_TOKEN}}"
+									}
+								],
+								"url": {
+									"raw": "{{BASE_URL}}/{{API_VERSION}}/courses/{{courseId}}/progress-stats",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"{{API_VERSION}}",
+										"courses",
+										"{{courseId}}",
+										"progress-stats"
+									]
+								},
+								"description": "Get progress statistics for a course (Teacher access). Includes enrollment stats, completion rates, and average scores."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Certificate",
+					"item": []
+				}
+			]
+		},
+		{
+			"name": "Module Payment Management",
+			"item": []
+		},
+		{
 			"name": "HelloWorld",
 			"request": {
 				"auth": {
