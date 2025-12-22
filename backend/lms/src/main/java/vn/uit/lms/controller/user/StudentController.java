@@ -116,20 +116,6 @@ public class StudentController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(
-            summary = "Get student's learning progress",
-            description = "Retrieve overall learning progress statistics for a student including completed courses, total learning hours, and achievements. Students can only view their own progress, teachers can view students in their courses, and admins can view any student's progress."
-    )
-    @GetMapping("/{id}/progress")
-    @ApiMessage("Get student's learning progress")
-    public ResponseEntity<StudentProgressResponse> getStudentProgress(
-            @Parameter(description = "Student ID", required = true, example = "1")
-            @PathVariable Long id
-    ) {
-        log.info("GET /api/v1/students/{}/progress", id);
-        StudentProgressResponse response = studentService.getStudentProgress(id);
-        return ResponseEntity.ok(response);
-    }
 
     @Operation(
             summary = "Get student's certificates",
