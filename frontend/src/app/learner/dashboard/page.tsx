@@ -6,14 +6,14 @@ import { DashboardHeader } from "@/core/components/learner/dashboard/DashboardHe
 import { DashboardStatsRow } from "@/core/components/learner/dashboard/DashboardStatsRow";
 import { MyCoursesSection } from "@/core/components/learner/dashboard/MyCoursesSection";
 import { RecommendedCarousel } from "@/core/components/learner/dashboard/RecommendedCarousel";
-import { getStudentCourses } from "@/features/learner/services/learner.service";
+import { getStudentCourses, type StudentCourseResponse } from "@/features/learner/services/learner.service";
 import { getRecommendations } from "@/features/recommendation/services/recommendation.service";
 import { getCurrentUserInfo } from "@/services/auth";
-import type { CourseSummary } from "@/features/courses/types/catalog.types";
+import type { MyCourse } from "@/lib/learner/dashboard/types";
 
 export default function LearnerDashboardPage() {
   const [courses, setCourses] = useState<StudentCourseResponse[]>([]);
-  const [recommendations, setRecommendations] = useState<CourseSummary[]>([]);
+  const [recommendations, setRecommendations] = useState<MyCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,21 +27,19 @@ export default function LearnerDashboardPage() {
             getRecommendations(user.accountId).catch(() => []),
           ]);
           setCourses(coursesData.items || []);
-          // Transform recommendations to CourseSummary format
+          // Transform recommendations to MyCourse format for the carousel
           setRecommendations(
             recsData.map((r) => ({
               id: r.courseId.toString(),
+              slug: r.courseSlug || r.courseId.toString(),
               title: r.courseTitle,
               instructor: "",
-              category: "",
-              level: "Beginner" as const,
-              rating: 4.5,
-              ratingCount: 0,
-              students: 0,
-              duration: "0h 0m",
-              lectures: 0,
               thumbColor: "from-blue-500 to-purple-600",
-              priceLabel: "₫2,239,000",
+              progress: 0,
+              lastViewed: "Recommended for you",
+              level: "Beginner" as const,
+              category: "",
+              rating: 4.5,
             }))
           );
         }
@@ -67,20 +65,20 @@ export default function LearnerDashboardPage() {
       <section className="mx-auto w-full max-w-6xl xl:max-w-7xl">
         <DashboardHeader />
         <DashboardStatsRow />
-        <MyCoursesSection courses={courses.map((c) => ({
-          id: c.courseId.toString(),
-          title: c.courseTitle,
-          instructor: "",
-          category: "",
-          level: "Beginner" as const,
-          rating: 4.5,
-          ratingCount: 0,
-          students: 0,
-          duration: "0h 0m",
-          lectures: 0,
-          thumbColor: "from-blue-500 to-purple-600",
-          priceLabel: "₫2,239,000",
-        }))} />
+        <MyCoursesSection
+          courses={courses.map((c) => ({
+            id: c.courseId.toString(),
+            slug: c.courseSlug || c.courseId.toString(),
+            title: c.courseTitle,
+            instructor: "",
+            thumbColor: "from-blue-500 to-purple-600",
+            progress: c.progress ?? 0,
+            lastViewed: c.lastAccessedAt ? new Date(c.lastAccessedAt).toLocaleDateString() : "Recently enrolled",
+            level: "Beginner" as const,
+            category: "",
+            rating: 4.5,
+          }))}
+        />
         {recommendations.length > 0 && (
           <RecommendedCarousel courses={recommendations} />
         )}

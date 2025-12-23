@@ -44,6 +44,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
     {
       id: "c1",
       title: "React & TypeScript for Modern Web Apps",
+      revenue: 820.5,
       category: "Web Development",
       level: "Intermediate",
       students: 4352,
@@ -55,6 +56,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
     {
       id: "c2",
       title: "Node.js & Express – REST APIs from Zero to Hero",
+      revenue: 540.25,
       category: "Backend",
       level: "Intermediate",
       students: 2150,
@@ -66,6 +68,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
     {
       id: "c3",
       title: "Git & GitHub Essentials for Developers",
+      revenue: 310.0,
       category: "DevTools",
       level: "Beginner",
       students: 980,
@@ -77,6 +80,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
     {
       id: "c4",
       title: "Clean Architecture in TypeScript",
+      revenue: 95.75,
       category: "Architecture",
       level: "Advanced",
       students: 312,

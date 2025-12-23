@@ -35,8 +35,8 @@ export async function getInstructorDashboard(): Promise<InstructorDashboardData>
       overview: {
         totalCourses: stats?.data?.totalCourses || 0,
         totalStudents: stats?.data?.totalStudents || 0,
-        totalRevenue: revenue?.data?.totalRevenue || 0,
-        averageRating: stats?.data?.averageRating || 0,
+        monthlyRevenue: revenue?.data?.monthlyRevenue ?? revenue?.data?.totalRevenue ?? 0,
+        avgRating: stats?.data?.averageRating || 0,
       },
       revenueHistory: revenue?.data?.monthlyRevenue || [],
       enrollmentByCourse: courses?.data?.items?.map((c: { id: number; title: string }) => ({

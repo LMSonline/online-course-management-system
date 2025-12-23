@@ -6,9 +6,10 @@ import ExploreCategoriesNew from "@/core/components/public/explore/ExploreCatego
 import TrendingTopics from "@/core/components/public/explore/ExploreTopics";
 import FeaturedCollections from "@/core/components/public/explore/ExploreRecommended";
 import PopularCoursesSection from "@/core/components/public/explore/ExplorePopular";
-import { getCategoryTree } from "@/features/courses/services/courses.service";
+import { getCategoryTree } from "@/features/categories/services/categories.service";
+import type { CategoryResponseDto } from "@/features/categories/types/categories.types";
 import { listCourses } from "@/features/courses/services/courses.service";
-import type { CategoryResponseDto } from "@/features/courses/services/courses.service";
+import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function ExplorePage() {
   const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
@@ -47,8 +48,8 @@ export default function ExplorePage() {
       <HeroExplore />
       <TrendingTopics />
       <ExploreCategoriesNew categories={categories} />
-      <FeaturedCollections courses={courses.slice(0, 10)} />
-      <PopularCoursesSection courses={courses.slice(0, 12)} />
+      <FeaturedCollections />
+      <PopularCoursesSection />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SafeImage } from "@/components/shared/SafeImage";
-import type { CategoryResponseDto } from "@/features/courses/services/courses.service";
+import type { CategoryResponseDto } from "@/features/categories/types/categories.types";
 
 const defaultCategories = [
   { title: "Development", img: "/images/categories/dev.png", slug: "development" },

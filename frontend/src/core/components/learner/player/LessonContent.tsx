@@ -2,11 +2,11 @@
 "use client";
 
 import { Play, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Lesson, LessonSection } from "@/lib/learner/player/types";
+import type { PlayerSection } from "@/lib/learner/player/types";
 
 type Props = {
   courseTitle: string;
-  sections: LessonSection[];
+  sections: PlayerSection[];
   currentSectionIndex: number;
   currentLessonIndex: number;
   onPrev: () => void;

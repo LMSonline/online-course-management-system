@@ -14,11 +14,18 @@ export class ApiError extends Error {
   }
 
   static fromResponse(status: number, data: unknown): ApiError {
+    const anyData = (data || {}) as {
+      message?: string;
+      error?: string;
+      details?: unknown;
+      traceId?: string;
+    };
+
     return new ApiError(
       status,
-      data?.message || data?.error || "Request failed",
-      data?.details,
-      data?.traceId
+      anyData.message || anyData.error || "Request failed",
+      anyData.details,
+      anyData.traceId
     );
   }
 }

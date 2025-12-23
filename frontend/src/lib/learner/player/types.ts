@@ -3,22 +3,31 @@
 export type PlayerLesson = {
   id: string;
   title: string;
-  duration: string;    
+  duration: string;
   videoUrl: string;
   isPreview?: boolean;
+  completed?: boolean;
 };
 
 export type PlayerSection = {
   id: string;
   title: string;
   lessons: PlayerLesson[];
+  lecturesCount?: number;
+  duration?: string;
 };
 
 export type PlayerCourse = {
-  slug: string;        
+  slug: string;
   title: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   sections: PlayerSection[];
+};
+
+export type PlayerCourseMeta = {
+  title: string;
+  progress: number;
+  totalDuration: string;
 };
 
 export const MOCK_PLAYER_COURSE: PlayerCourse = {

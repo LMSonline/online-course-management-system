@@ -2,11 +2,11 @@
 "use client";
 
 import { ChevronDown, CheckCircle2, PlayCircle } from "lucide-react";
-import type { LessonSection } from "@/lib/learner/player/types";
+import type { PlayerSection } from "@/lib/learner/player/types";
 import { cn } from "@/lib/cn";
 
 type Props = {
-  sections: LessonSection[];
+  sections: PlayerSection[];
   currentLessonId: string;
   onSelectLesson: (sectionId: string, lessonId: string) => void;
 };
@@ -45,7 +45,7 @@ function SectionGroup({
   currentLessonId,
   onSelectLesson,
 }: {
-  section: LessonSection;
+  section: PlayerSection;
   currentLessonId: string;
   onSelectLesson: (sectionId: string, lessonId: string) => void;
 }) {
