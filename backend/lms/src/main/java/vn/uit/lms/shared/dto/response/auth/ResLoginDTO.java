@@ -1,11 +1,10 @@
-package vn.uit.lms.shared.dto.response;
+package vn.uit.lms.shared.dto.response.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.uit.lms.shared.constant.AccountStatus;
 import vn.uit.lms.shared.constant.Role;
 
 import java.time.Instant;

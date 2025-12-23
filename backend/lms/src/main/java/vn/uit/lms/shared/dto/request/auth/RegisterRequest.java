@@ -1,4 +1,4 @@
-package vn.uit.lms.shared.dto.request;
+package vn.uit.lms.shared.dto.request.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;

@@ -4,9 +4,9 @@ import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.shared.constant.AccountStatus;
-import vn.uit.lms.shared.dto.request.RegisterRequest;
-import vn.uit.lms.shared.dto.response.RegisterResponse;
-import vn.uit.lms.shared.dto.response.ResLoginDTO;
+import vn.uit.lms.shared.dto.request.auth.RegisterRequest;
+import vn.uit.lms.shared.dto.response.auth.RegisterResponse;
+import vn.uit.lms.shared.dto.response.auth.ResLoginDTO;
 import vn.uit.lms.shared.dto.response.account.AccountProfileResponse;
 import vn.uit.lms.shared.dto.response.account.AccountResponse;
 

@@ -17,10 +17,10 @@ import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.service.AuthService;
 import vn.uit.lms.service.EmailVerificationService;
 import vn.uit.lms.service.RefreshTokenService;
-import vn.uit.lms.shared.dto.request.*;
-import vn.uit.lms.shared.dto.response.MeResponse;
-import vn.uit.lms.shared.dto.response.RegisterResponse;
-import vn.uit.lms.shared.dto.response.ResLoginDTO;
+import vn.uit.lms.shared.dto.request.auth.*;
+import vn.uit.lms.shared.dto.response.auth.MeResponse;
+import vn.uit.lms.shared.dto.response.auth.RegisterResponse;
+import vn.uit.lms.shared.dto.response.auth.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
 

@@ -2,6 +2,8 @@ import "../styles/globals.css";
 import { ThemeProvider } from "next-themes";
 import type { Metadata } from "next";
 import AssistantWidget from "@/core/components/public/AssistantWidget";
+import { ReactQueryProvider } from "@/lib/providers/ReactQueryProvider";
+import { ToasterProvider } from "@/lib/providers/ToasterProvider";
 
 import Footer from "@/core/components/public/Footer";
 
@@ -18,15 +20,18 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-        >
-          {children}
-          <AssistantWidget />
-          <Footer />
-        </ThemeProvider>
+        <ReactQueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+          >
+            <ToasterProvider />
+            {children}
+            <AssistantWidget />
+            <Footer />
+          </ThemeProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

@@ -2,118 +2,74 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, Check } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Mail, Lock, Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
+import { useLogin, useResendVerificationEmail } from "@/hooks/useAuth";
 import Popup from "@/core/components/public/Popup";
-import {
-  loginUser,
-  resendVerificationEmail,
-} from "@/services/auth/auth.services";
+
+type PopupType = "success" | "error" | "warning" | "info";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
-  const [popup, setPopup] = useState<any>(null);
+  const [popup, setPopup] = useState<{
+    type: PopupType;
+    title: string;
+    message: string;
+    actions?: React.ReactNode;
+    onClose: () => void;
+  } | null>(null);
 
-  const router = useRouter();
+  const { mutate: login, isPending } = useLogin();
+  const { mutate: resendEmail } = useResendVerificationEmail();
 
-  const canSubmit = email && pw;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-
-    try {
-      const res = await loginUser({
-        login: email,
-        password: pw,
-      });
-
-      // res = { success, status, message, code, data: { accessToken, refreshToken, user } }
-      const payload = res.data;
-      const accessToken = payload.accessToken;
-      const refreshToken = payload.refreshToken;
-      const user = payload.user;
-
-      // 🔐 Lưu token + user
-      if (typeof window !== "undefined") {
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
-        localStorage.setItem("user", JSON.stringify(user));
-      }
-
-      const username = user.username;
-      // const role = user.role; // nếu cần dùng ở đây
-
-      setPopup({
-        type: "success",
-        title: "Login successful",
-        message: "Welcome back!",
-        actions: null,
-        onClose: () => {
-          setPopup(null);
-          router.push(`/${username}/dashboard`);
+  const onSubmit = (data: LoginFormData) => {
+    login(
+      {
+        login: data.email,
+        password: data.password,
+      },
+      {
+        onError: (error) => {
+          // Handle email not verified error
+          if (error.code === "EMAIL_NOT_VERIFIED") {
+            setPopup({
+              type: "error",
+              title: "Account not activated",
+              message:
+                "Your email is not verified yet. Please check your inbox or resend the verification email.",
+              actions: (
+                <button
+                  onClick={() => {
+                    const email = getValues("email");
+                    resendEmail(email);
+                    setPopup(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[var(--brand-600)] text-white hover:bg-[var(--brand-900)]"
+                >
+                  Resend verification email
+                </button>
+              ),
+              onClose: () => setPopup(null),
+            });
+          }
         },
-      });
-
-    } catch (err: any) {
-      const msg: string =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Login failed. Please try again.";
-
-      // Nếu BE trả "Account not activated" → show nút resend email
-      if (msg.toLowerCase().includes("not activated")) {
-        setPopup({
-          type: "error",
-          title: "Account not activated",
-          message:
-            "Your email is not verified yet. Please check your inbox or resend the verification email.",
-          actions: (
-            <button
-              onClick={async () => {
-                try {
-                  await resendVerificationEmail(email);
-                  setPopup({
-                    type: "success",
-                    title: "Verification email sent",
-                    message: "Please check your inbox.",
-                    onClose: () => setPopup(null),
-                  });
-                } catch {
-                  setPopup({
-                    type: "error",
-                    title: "Failed to send email",
-                    message: "Please try again later.",
-                    onClose: () => setPopup(null),
-                  });
-                }
-              }}
-              className="px-4 py-2 rounded-xl bg-[var(--brand-600)] text-white hover:bg-[var(--brand-900)]"
-            >
-              Resend verification email
-            </button>
-          ),
-          onClose: () => setPopup(null),
-        });
-      } else {
-        setPopup({
-          type: "error",
-          title: "Login failed",
-          message: msg,
-          actions: (
-            <button
-              onClick={() => setPopup(null)}
-              className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
-            >
-              Close
-            </button>
-          ),
-          onClose: () => setPopup(null),
-        });
       }
-    }
+    );
   };
 
   return (
@@ -122,7 +78,7 @@ export default function LoginPage() {
         <div className="grid gap-8 md:grid-cols-2 items-center">
           {/* ==== Left: Login Card ==== */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="bg-slate-900/40 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl"
           >
             <div className="mb-6">
@@ -134,19 +90,23 @@ export default function LoginPage() {
 
             {/* Email */}
             <label className="block text-sm mb-2" htmlFor="email">
-              Email
+              Email or Username
             </label>
-            <div className="relative mb-5">
+            <div className="relative mb-1">
               <input
                 id="email"
-                type="email"
+                type="text"
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl bg-slate-800/60 border border-white/10 px-4 py-3 pr-11 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+                {...register("email")}
+                disabled={isPending}
+                className="w-full rounded-xl bg-slate-800/60 border border-white/10 px-4 py-3 pr-11 outline-none focus:ring-2 focus:ring-[var(--brand-600)] disabled:opacity-50"
               />
               <Mail className="absolute right-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
             </div>
+            {errors.email && (
+              <p className="text-sm text-red-400 mb-3 mt-1">{errors.email.message}</p>
+            )}
+            {!errors.email && <div className="mb-5" />}
 
             {/* Password */}
             <div className="flex items-center justify-between">
@@ -160,31 +120,41 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <div className="relative mt-2 mb-4">
+            <div className="relative mt-2 mb-1">
               <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                value={pw}
-                onChange={(e) => setPw(e.target.value)}
-                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pr-11 pl-10 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+                {...register("password")}
+                disabled={isPending}
+                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pr-11 pl-10 outline-none focus:ring-2 focus:ring-[var(--brand-600)] disabled:opacity-50"
               />
               <button
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 disabled:opacity-50"
+                disabled={isPending}
               >
-                {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                {showPassword ? (
+                  <EyeOff className="size-5" />
+                ) : (
+                  <Eye className="size-5" />
+                )}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-sm text-red-400 mb-3 mt-1">{errors.password.message}</p>
+            )}
+            {!errors.password && <div className="mb-4" />}
 
             {/* Remember me */}
             <label className="inline-flex items-center gap-2 text-sm mb-5 select-none">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-white/20 bg-slate-800/60"
+                disabled={isPending}
               />
               Remember me
             </label>
@@ -192,10 +162,11 @@ export default function LoginPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={!canSubmit}
-              className="w-full rounded-xl py-3 font-medium text-white bg-[var(--brand-600)] hover:bg-[var(--brand-900)] disabled:opacity-50 transition"
+              disabled={isPending}
+              className="w-full rounded-xl py-3 font-medium text-white bg-[var(--brand-600)] hover:bg-[var(--brand-900)] disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
             >
-              Log in
+              {isPending && <Loader2 className="size-5 animate-spin" />}
+              {isPending ? "Logging in..." : "Log in"}
             </button>
 
             {/* Divider */}
@@ -209,10 +180,18 @@ export default function LoginPage() {
 
             {/* Socials */}
             <div className="grid sm:grid-cols-2 gap-3">
-              <button className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition">
+              <button
+                type="button"
+                disabled={isPending}
+                className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition disabled:opacity-50"
+              >
                 Continue with Google
               </button>
-              <button className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition">
+              <button
+                type="button"
+                disabled={isPending}
+                className="rounded-xl border border-white/10 bg-slate-800/40 py-2.5 hover:bg-slate-800/70 transition disabled:opacity-50"
+              >
                 Continue with Facebook
               </button>
             </div>

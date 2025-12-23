@@ -1,115 +1,80 @@
 "use client";
 
-import { registerUser } from "@/services/auth/auth.services";
-import Popup from "@/core/components/public/Popup";
-import { useRouter } from "next/navigation";
-
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Mail, Lock, User, Eye, EyeOff, Check, GraduationCap } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Mail, Lock, User, Eye, EyeOff, Check, GraduationCap, Loader2 } from "lucide-react";
+import { registerSchema, type RegisterFormData } from "@/lib/validations/auth.schema";
+import { useRegister } from "@/hooks/useAuth";
+import Popup from "@/core/components/public/Popup";
 
-type Role = "student" | "teacher";
+type PopupType = "success" | "error" | "warning" | "info";
 
 export default function SignupPage() {
-  const router = useRouter();
-
-  // States
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
-  const [pw2, setPw2] = useState("");
   const [agree, setAgree] = useState(false);
-  const [role, setRole] = useState<Role>("student");
+  const [popup, setPopup] = useState<{
+    type: PopupType;
+    title: string;
+    message: string;
+    actions?: React.ReactNode;
+    onClose: () => void;
+  } | null>(null);
 
-  const [popup, setPopup] = useState<null | any>(null);
+  const { mutate: register, isPending } = useRegister();
+
+  const {
+    register: registerField,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: "STUDENT",
+    },
+  });
+
+  const password = watch("password");
+  const role = watch("role");
 
   // Password strength logic
   const pwCheck = useMemo(() => {
-    const hasLength = pw.length >= 8;
-    const hasUpper = /[A-Z]/.test(pw);
-    const hasLower = /[a-z]/.test(pw);
-    const hasNumber = /\d/.test(pw);
-    const hasSymbol = /[^A-Za-z0-9]/.test(pw);
+    const hasLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[^A-Za-z0-9]/.test(password);
 
     const score = [hasLength, hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
 
     return { hasLength, hasUpper, hasLower, hasNumber, hasSymbol, strength: Math.min(score, 4) };
-  }, [pw]);
+  }, [password]);
 
-  const mismatch = pw && pw2 && pw !== pw2;
-
-  const canSubmit =
-    !!name &&
-    !!email &&
-    !!pw &&
-    pwCheck.strength >= 3 &&
-    !mismatch &&
-    agree;
-
-  // SUBMIT
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-
-    try {
-      await registerUser({
-        username: name,
-        email,
-        password: pw,
-        role: role,
-        langKey: "vi",
-      });
-
-      // SUCCESS POPUP
-      setPopup({
-        type: "success", // thêm dòng này để popup dùng icon success
-        title: "Account created",
-        message: "We've sent you a verification email. Please check your inbox.",
-        actions: (
-          <div className="flex gap-3">
-            <button
-              onClick={() => router.push("/login")}
-              className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
-            >
-              Go to Login
-            </button>
-
-            <button
-              onClick={() => setPopup(null)}
-              className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
-            >
-              Close
-            </button>
-          </div>
-        ),
-        onClose: () => setPopup(null),
-      });
-
-
-    } catch (err: any) {
-      let msg = "Đăng ký thất bại. Vui lòng thử lại.";
-
-      if (err.message.includes("constraint") || err.message.includes("email"))
-        msg = "Email đã tồn tại. Hãy dùng email khác.";
-
+  const onSubmit = (data: RegisterFormData) => {
+    if (!agree) {
       setPopup({
         type: "error",
-        title: "Registration failed",
-        message: "Email already exists. Please try another one.",
-        actions: (
-          <button
-            onClick={() => setPopup(null)}
-            className="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600"
-          >
-            Close
-          </button>
-        ),
+        title: "Terms and Conditions",
+        message: "Please agree to the Terms and Privacy Policy to continue.",
         onClose: () => setPopup(null),
       });
-
+      return;
     }
+
+    register({
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+      langKey: "en",
+    });
   };
 
 
@@ -119,7 +84,7 @@ export default function SignupPage() {
         <div className="grid gap-8 md:grid-cols-2 items-start">
           {/* ==== Left: Sign up card ==== */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="bg-slate-900/40 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl"
           >
             <div className="mb-6">
@@ -133,40 +98,49 @@ export default function SignupPage() {
             <label htmlFor="name" className="block text-sm mb-2">
               User name
             </label>
-            <div className="relative mb-4">
+            <div className="relative mb-1">
               <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
                 id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                {...registerField("username")}
+                disabled={isPending}
                 placeholder="Enter your username"
-                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)] disabled:opacity-50"
               />
             </div>
+            {errors.username && (
+              <p className="text-sm text-red-400 mb-3 mt-1">{errors.username.message}</p>
+            )}
+            {!errors.username && <div className="mb-4" />}
 
             {/* Email */}
             <label htmlFor="email" className="block text-sm mb-2">
               Email
             </label>
-            <div className="relative mb-4">
+            <div className="relative mb-1">
               <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...registerField("email")}
+                disabled={isPending}
                 placeholder="you@example.com"
-                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-3 outline-none focus:ring-2 focus:ring-[var(--brand-600)] disabled:opacity-50"
               />
             </div>
+            {errors.email && (
+              <p className="text-sm text-red-400 mb-3 mt-1">{errors.email.message}</p>
+            )}
+            {!errors.email && <div className="mb-4" />}
 
             {/* Role selector */}
             <p className="block text-sm mb-2">I&apos;m signing up as</p>
-            <div className="mb-5 flex gap-3">
+            <div className="mb-1 flex gap-3">
               <button
                 type="button"
-                onClick={() => setRole("student")}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "student"
+                onClick={() => registerField("role").onChange({ target: { value: "STUDENT" } })}
+                disabled={isPending}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition disabled:opacity-50 ${role === "STUDENT"
                   ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
                   : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}
@@ -176,8 +150,9 @@ export default function SignupPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setRole("teacher")}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${role === "teacher"
+                onClick={() => registerField("role").onChange({ target: { value: "INSTRUCTOR" } })}
+                disabled={isPending}
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition disabled:opacity-50 ${role === "INSTRUCTOR"
                   ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
                   : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}
@@ -186,7 +161,10 @@ export default function SignupPage() {
                 Teacher
               </button>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            {errors.role && (
+              <p className="text-sm text-red-400 mt-1">{errors.role.message}</p>
+            )}
+            <p className="text-xs text-slate-400 my-4">
               You can adjust your role later in your profile settings.
             </p>
 
@@ -194,25 +172,29 @@ export default function SignupPage() {
             <label htmlFor="password" className="block text-sm mb-2">
               Password
             </label>
-            <div className="relative mb-2">
+            <div className="relative mb-1">
               <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
                 id="password"
                 type={showPw ? "text" : "password"}
-                value={pw}
-                onChange={(e) => setPw(e.target.value)}
+                {...registerField("password")}
+                disabled={isPending}
                 placeholder="At least 8 characters"
-                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-11 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-11 outline-none focus:ring-2 focus:ring-[var(--brand-600)] disabled:opacity-50"
               />
               <button
                 type="button"
                 aria-label={showPw ? "Hide password" : "Show password"}
                 onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                disabled={isPending}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 disabled:opacity-50"
               >
                 {showPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-sm text-red-400 mb-1 mt-1">{errors.password.message}</p>
+            )}
 
             {/* Strength bar */}
             <div className="h-1.5 rounded bg-white/10 overflow-hidden mb-2">
@@ -253,28 +235,29 @@ export default function SignupPage() {
             <label htmlFor="password2" className="block text-sm mb-2">
               Confirm password
             </label>
-            <div className="relative">
+            <div className="relative mb-1">
               <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
               <input
                 id="password2"
                 type={showPw2 ? "text" : "password"}
-                value={pw2}
-                onChange={(e) => setPw2(e.target.value)}
+                {...registerField("confirmPassword")}
+                disabled={isPending}
                 placeholder="Re-enter your password"
-                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-11 outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+                className="w-full rounded-xl bg-slate-800/60 border border-white/10 py-3 pl-10 pr-11 outline-none focus:ring-2 focus:ring-[var(--brand-600)] disabled:opacity-50"
               />
               <button
                 type="button"
                 aria-label={showPw2 ? "Hide password" : "Show password"}
                 onClick={() => setShowPw2((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                disabled={isPending}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 disabled:opacity-50"
               >
                 {showPw2 ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             </div>
-            {mismatch && (
-              <p className="text-xs text-red-400 mt-2">
-                Passwords do not match.
+            {errors.confirmPassword && (
+              <p className="text-xs text-red-400 mt-1 mb-2">
+                {errors.confirmPassword.message}
               </p>
             )}
 
@@ -284,7 +267,8 @@ export default function SignupPage() {
                 type="checkbox"
                 checked={agree}
                 onChange={(e) => setAgree(e.target.checked)}
-                className="h-4 w-4 rounded border-white/20 bg-slate-800/60"
+                disabled={isPending}
+                className="h-4 w-4 rounded border-white/20 bg-slate-800/60 disabled:opacity-50"
               />
               <span>
                 I agree to the{" "}
@@ -308,10 +292,11 @@ export default function SignupPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={!canSubmit}
-              className="w-full rounded-xl py-3 font-medium text-white bg-[var(--brand-600)] hover:bg-[var(--brand-900)] disabled:opacity-50 disabled:cursor-not-allowed transition"
+              disabled={isPending}
+              className="w-full rounded-xl py-3 font-medium text-white bg-[var(--brand-600)] hover:bg-[var(--brand-900)] disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
             >
-              Create account
+              {isPending && <Loader2 className="size-5 animate-spin" />}
+              {isPending ? "Creating account..." : "Create account"}
             </button>
 
             {/* Divider */}
