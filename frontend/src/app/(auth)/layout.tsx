@@ -1,6 +1,6 @@
 import Navbar from "@/core/components/public/Navbar"
 
-export default function PublicLayout({
+export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
