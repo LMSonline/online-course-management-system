@@ -18,7 +18,7 @@ import {
   type RatingSummaryResponse,
 } from "@/features/courses/services/courses.service";
 import { getCourseComments, createCourseComment, type CommentResponse } from "@/features/community/services/community.service";
-import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
+import { getCurrentUserInfo } from "@/services/auth";
 import type { CourseDetail } from "@/features/courses/types/course-detail.types";
 import { Star, MessageSquare, Send } from "lucide-react";
 

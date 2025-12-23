@@ -23,8 +23,8 @@ export default function ExplorePage() {
           getCategoryTree(),
           listCourses({ size: 20 }),
         ]);
-        setCategories(cats);
-        setCourses(courseList);
+        setCategories(cats || []);
+        setCourses(courseList || []);
       } catch (error: unknown) {
         console.error("Failed to load explore data:", error);
       } finally {

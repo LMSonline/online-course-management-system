@@ -47,12 +47,17 @@ export async function getInstructorDashboard(): Promise<InstructorDashboardData>
       quickSections: [],
       tasks: [],
       reviews: [],
-      courses: courses?.data?.items?.map((c: { id: number; title: string }) => ({
+      courses: courses?.data?.items?.map((c: { id: number; title: string; categoryName?: string; difficulty?: string; isClosed?: boolean }) => ({
         id: c.id.toString(),
         title: c.title,
+        category: c.categoryName || "",
+        level: (c.difficulty || "Beginner") as "Beginner" | "Intermediate" | "Advanced",
         students: 0,
         revenue: 0,
         rating: 0,
+        completionRate: 0,
+        status: c.isClosed ? "Private" as const : "Published" as const,
+        lastUpdated: new Date().toLocaleDateString(),
       })) || [],
     };
   } catch (error) {

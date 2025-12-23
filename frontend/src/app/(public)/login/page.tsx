@@ -8,7 +8,7 @@ import Popup from "@/core/components/public/Popup";
 import {
   loginUser,
   resendVerificationEmail,
-} from "@/features/auth/services/auth.service";
+} from "@/services/auth";
 import { getCurrentTeacher } from "@/features/instructor/services/instructor.service";
 
 export default function LoginPage() {
@@ -31,8 +31,8 @@ export default function LoginPage() {
         password: pw,
       });
 
-      // res = { success, status, message, code, data: { accessToken, refreshToken, user } }
-      const payload = res.data;
+      // res = ApiResponse<LoginResponse> = { success, status, message, code, data: { accessToken, refreshToken, user } }
+      const payload = res.data; // This is LoginResponse
       const accessToken = payload.accessToken;
       const refreshToken = payload.refreshToken;
       const user = payload.user;

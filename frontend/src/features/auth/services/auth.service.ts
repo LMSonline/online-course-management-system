@@ -5,6 +5,7 @@
 
 import { apiClient, type ApiResponse } from "@/services/core/api";
 import { setAccessToken, setRefreshToken, clearTokens } from "@/services/core/token";
+import { unwrapApiResponse } from "@/services/core/unwrap";
 
 const AUTH_PREFIX = "/auth";
 
@@ -62,7 +63,7 @@ export async function loginUser(payload: {
     body
   );
 
-  // Store tokens
+
   if (response.data.data) {
     setAccessToken(response.data.data.accessToken);
     setRefreshToken(response.data.data.refreshToken);
@@ -71,17 +72,12 @@ export async function loginUser(payload: {
   return response.data;
 }
 
-/**
- * Get current user info
- */
+
 export async function getCurrentUserInfo(): Promise<MeUser> {
   const response = await apiClient.get<ApiResponse<MeUser>>(`${AUTH_PREFIX}/me`);
-  return response.data.data;
+  return unwrapApiResponse<MeUser>(response.data);
 }
 
-/**
- * Logout user
- */
 export async function logout(refreshToken: string): Promise<void> {
   try {
     await apiClient.post(`${AUTH_PREFIX}/logout`, { refreshToken });
@@ -90,9 +86,7 @@ export async function logout(refreshToken: string): Promise<void> {
   }
 }
 
-/**
- * Refresh access token
- */
+
 export async function refreshToken(refreshToken: string): Promise<ApiResponse<{ accessToken: string }>> {
   const response = await apiClient.post<ApiResponse<{ accessToken: string }>>(
     `${AUTH_PREFIX}/refresh`,
@@ -106,9 +100,7 @@ export async function refreshToken(refreshToken: string): Promise<ApiResponse<{ 
   return response.data;
 }
 
-/**
- * Verify email
- */
+
 export async function verifyEmail(token: string): Promise<ApiResponse<void>> {
   const response = await apiClient.get<ApiResponse<void>>(
     `${AUTH_PREFIX}/verify-email?token=${encodeURIComponent(token)}`
@@ -116,9 +108,7 @@ export async function verifyEmail(token: string): Promise<ApiResponse<void>> {
   return response.data;
 }
 
-/**
- * Resend verification email
- */
+
 export async function resendVerificationEmail(email: string): Promise<ApiResponse<void>> {
   const response = await apiClient.post<ApiResponse<void>>(
     `${AUTH_PREFIX}/resend-verification`,
@@ -127,9 +117,7 @@ export async function resendVerificationEmail(email: string): Promise<ApiRespons
   return response.data;
 }
 
-/**
- * Forgot password
- */
+
 export async function forgotPassword(email: string): Promise<ApiResponse<void>> {
   const response = await apiClient.post<ApiResponse<void>>(
     `${AUTH_PREFIX}/password/forgot`,
@@ -138,9 +126,7 @@ export async function forgotPassword(email: string): Promise<ApiResponse<void>> 
   return response.data;
 }
 
-/**
- * Reset password
- */
+
 export async function resetPassword(token: string, newPassword: string): Promise<ApiResponse<void>> {
   const response = await apiClient.post<ApiResponse<void>>(
     `${AUTH_PREFIX}/password/reset?token=${encodeURIComponent(token)}`,
@@ -149,9 +135,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
   return response.data;
 }
 
-/**
- * Change password
- */
+
 export async function changePassword(payload: {
   oldPassword: string;
   newPassword: string;

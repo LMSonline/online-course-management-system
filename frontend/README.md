@@ -23,7 +23,8 @@ npm install
 2. Configure environment variables in `.env.local`:
    ```env
    # API Configuration
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+   # IMPORTANT: Include /api/v1 in the base URL
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
    
    # Runtime Mode
    # Set to "true" to use mock data instead of real API calls

@@ -5,6 +5,7 @@
 
 import axios from "axios";
 import { USE_MOCK } from "@/config/runtime";
+import { unwrapApiResponse } from "@/services/core/unwrap";
 
 const RECOMMENDATION_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "") || "http://localhost:8080";
 
@@ -39,7 +40,7 @@ export async function getRecommendations(studentId: number): Promise<Recommendat
   const response = await axios.get<ApiResponse<Recommendation[]>>(
     `${RECOMMENDATION_BASE_URL}/students/${studentId}/recommendations`
   );
-  return response.data.data;
+  return unwrapApiResponse<Recommendation[]>(response.data);
 }
 
 /**

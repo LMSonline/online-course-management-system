@@ -14,6 +14,7 @@ export type InstructorCourseSummary = {
   level: "Beginner" | "Intermediate" | "Advanced";
   students: number;
   rating: number;
+  revenue: number; // Revenue in dollars
   completionRate: number; // %
   status: "Published" | "Draft" | "Private";
   lastUpdated: string;
@@ -113,6 +114,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
       level: "Intermediate",
       students: 4352,
       rating: 4.7,
+      revenue: 12450.50,
       completionRate: 62,
       status: "Published",
       lastUpdated: "Mar 10, 2025",
@@ -124,6 +126,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
       level: "Intermediate",
       students: 2150,
       rating: 4.6,
+      revenue: 8750.25,
       completionRate: 54,
       status: "Published",
       lastUpdated: "Feb 28, 2025",
@@ -135,6 +138,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
       level: "Beginner",
       students: 980,
       rating: 4.8,
+      revenue: 3920.00,
       completionRate: 71,
       status: "Published",
       lastUpdated: "Jan 16, 2025",
@@ -146,6 +150,7 @@ export const INSTRUCTOR_DASHBOARD_MOCK: InstructorDashboardData = {
       level: "Advanced",
       students: 312,
       rating: 4.9,
+      revenue: 1248.00,
       completionRate: 38,
       status: "Draft",
       lastUpdated: "Mar 5, 2025",

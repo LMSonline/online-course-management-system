@@ -14,6 +14,7 @@ export type InstructorCourseSummary = {
   level: "Beginner" | "Intermediate" | "Advanced";
   students: number;
   rating: number;
+  revenue: number; // Revenue in dollars
   completionRate: number; // %
   status: "Published" | "Draft" | "Private";
   lastUpdated: string;

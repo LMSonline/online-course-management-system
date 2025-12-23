@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getStudentCertificates } from "@/features/learner/services/learner.service";
-import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
+import { getCurrentUserInfo } from "@/services/auth";
 import type { StudentCertificateResponse } from "@/features/learner/services/learner.service";
 import { Award, Download } from "lucide-react";
 import Link from "next/link";

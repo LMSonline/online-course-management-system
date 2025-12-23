@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { SafeImage } from "@/components/shared/SafeImage";
 import type { CategoryResponseDto } from "@/features/courses/services/courses.service";
 
 const defaultCategories = [
@@ -44,7 +44,7 @@ export default function ExploreCategories({ categories }: ExploreCategoriesProps
             "
           >
             <div className="relative w-full aspect-[4/5]">
-              <Image
+              <SafeImage
                 src={c.img}
                 alt={c.title}
                 fill

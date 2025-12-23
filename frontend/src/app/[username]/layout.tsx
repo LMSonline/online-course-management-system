@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { getCurrentUserInfo } from "@/services/public/auth.services";
+import { getCurrentUserInfo } from "@/services/auth";
 
 import LearnerNavbar from "@/core/components/learner/navbar/LearnerNavbar";
 import InstructorNavbar from "@/core/components/instructor/navbar/InstructorNavbar";

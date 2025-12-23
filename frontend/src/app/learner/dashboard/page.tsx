@@ -8,7 +8,7 @@ import { MyCoursesSection } from "@/core/components/learner/dashboard/MyCoursesS
 import { RecommendedCarousel } from "@/core/components/learner/dashboard/RecommendedCarousel";
 import { getStudentCourses } from "@/features/learner/services/learner.service";
 import { getRecommendations } from "@/features/recommendation/services/recommendation.service";
-import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
+import { getCurrentUserInfo } from "@/services/auth";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function LearnerDashboardPage() {

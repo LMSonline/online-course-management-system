@@ -2,11 +2,12 @@
  * Courses service - handles course-related API calls
  */
 
-import { apiClient } from "@/services/core/api";
+import { apiClient, type ApiResponse } from "@/services/core/api";
 import type { PageResponse } from "@/services/core/api";
 import { USE_MOCK } from "@/config/runtime";
 import { COURSE_CATALOG_MOCK } from "../mocks/catalog.mocks";
 import type { CourseSummary } from "../types/catalog.types";
+import { unwrapPage, unwrapApiResponse } from "@/services/core/unwrap";
 import type { CourseDetail } from "../types/course-detail.types";
 
 export interface CourseListParams {
@@ -111,15 +112,20 @@ export async function listCourses(params?: CourseListParams): Promise<CourseSumm
   }
 
   try {
-    const response = await apiClient.get<PageResponse<CourseResponse>>("/courses", {
+    const response = await apiClient.get<ApiResponse<PageResponse<CourseResponse>> | PageResponse<CourseResponse>>("/courses", {
       params: {
         page: params?.page || 0,
         size: params?.size || 20,
       },
     });
     
-    // Transform backend response to frontend format
-    return response.data.items.map((course) => ({
+    // Unwrap the response (handles both ApiResponse<PageResponse> and direct PageResponse)
+    const pageData = unwrapPage<CourseResponse>(response.data);
+    
+    // Safely transform backend response to frontend format
+    const items = pageData.items || [];
+    
+    return items.map((course) => ({
       id: course.id.toString(),
       title: course.title,
       instructor: course.teacherName,

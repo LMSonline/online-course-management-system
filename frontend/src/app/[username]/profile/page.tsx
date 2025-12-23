@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getProfile, updateProfile, uploadAvatar, type AccountProfileResponse } from "@/features/profile/services/profile.service";
-import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
+import { getCurrentUserInfo } from "@/services/auth";
 import { User, Mail, Calendar, Edit2, Upload } from "lucide-react";
 
 export default function ProfilePage() {

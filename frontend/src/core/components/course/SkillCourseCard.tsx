@@ -8,11 +8,11 @@ export type SkillCourse = {
     price: string;
     image: string;
     bestSeller?: boolean;
-    href?: string; // optional: đường dẫn course thực (nếu có)
+    href?: string; 
 };
 
 type Props = SkillCourse & {
-    onClick?: () => void; // optional: handle click custom, mặc định không làm gì
+    onClick?: () => void; 
 };
 
 export default function SkillCourseCard({
@@ -25,8 +25,7 @@ export default function SkillCourseCard({
     href,
     onClick,
 }: Props) {
-    // KHÔNG trỏ đến ảnh => KHÔNG có <a href={image}>
-    // Nếu cần điều hướng, truyền props href (vd: /course/xyz) hoặc onClick custom
+
     const Wrapper: React.ElementType = href ? "a" : "div";
     const wrapperProps = href
         ? { href, role: "link", tabIndex: 0 }

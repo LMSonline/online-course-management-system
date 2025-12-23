@@ -4,6 +4,7 @@
 
 import { apiClient, type ApiResponse } from "@/services/core/api";
 import { USE_MOCK } from "@/config/runtime";
+import { unwrapApiResponse } from "@/services/core/unwrap";
 
 export interface AccountProfileResponse {
   accountId: number;
@@ -51,7 +52,7 @@ export async function getProfile(): Promise<AccountProfileResponse> {
   }
 
   const response = await apiClient.get<ApiResponse<AccountProfileResponse>>("/accounts/me");
-  return response.data.data;
+  return unwrapApiResponse<AccountProfileResponse>(response.data);
 }
 
 /**

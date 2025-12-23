@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CourseGrid } from "@/core/components/learner/catalog/CourseGrid";
 import { getStudentCourses } from "@/features/learner/services/learner.service";
-import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
+import { getCurrentUserInfo } from "@/services/auth";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function CoursesPage() {
