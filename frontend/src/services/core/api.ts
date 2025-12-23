@@ -1,62 +1,87 @@
-export const API = process.env.NEXT_PUBLIC_API_BASE_URL;
+/**
+ * Axios-based API client with authentication and token refresh
+ */
 
-function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
-  if (!headers) return {};
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import { getAccessToken } from "./token";
+import { refreshAccessToken } from "./auth-refresh";
+import { ApiError, NetworkError } from "./errors";
 
-  if (headers instanceof Headers) {
-    const obj: Record<string, string> = {};
-    headers.forEach((value, key) => (obj[key] = value));
-    return obj;
-  }
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-  if (Array.isArray(headers)) {
-    return Object.fromEntries(headers);
-  }
-
-  return headers as Record<string, string>;
-}
-
-export async function apiClient(
-  path: string,
-  options: RequestInit & { skipAuth?: boolean } = {}
-) {
-  let accessToken: string | null = null;
-
-  if (!options.skipAuth && typeof window !== "undefined") {
-    accessToken = localStorage.getItem("accessToken");
-  }
-
-  const normalized = normalizeHeaders(options.headers);
-
-  const headers: Record<string, string> = {
+// Create axios instance
+export const apiClient: AxiosInstance = axios.create({
+  baseURL,
+  timeout: 15000,
+  headers: {
     "Content-Type": "application/json",
-    ...normalized,
-  };
+  },
+});
 
-  if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
+// Request interceptor: attach access token
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  const res = await fetch(`${API}${path}`, {
-    ...options,
-    headers,
-  });
+// Response interceptor: handle 401 and token refresh
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-  let data: any = null;
-  try {
-    data = await res.json();
-  } catch {
-    data = {};
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Attempt to refresh token
+        await refreshAccessToken();
+
+        // Retry original request with new token
+        const newToken = getAccessToken();
+        if (newToken && originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        }
+
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed - error already handled in refreshAccessToken
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      return Promise.reject(new NetworkError(error.message));
+    }
+
+    // Handle API errors
+    return Promise.reject(
+      ApiError.fromResponse(
+        error.response.status,
+        error.response.data
+      )
+    );
   }
+);
 
-  if (!res.ok) {
-    const msg = data?.message || data?.error || "Request failed";
-    const error: any = new Error(msg);
-    error.status = res.status;
-    error.response = data;
-    throw error;
-  }
-
-  return data;
-}
-
+// Export typed response helper
+export type ApiResponse<T> = {
+  success: boolean;
+  status: number;
+  message: string;
+  code?: string;
+  data: T;
+  timestamp?: string;
+};

@@ -41,7 +41,7 @@ services:
 
       APP_BASE_URL: ${APP_BASE_URL}
       APP_FRONTEND_URL: ${APP_FRONTEND_URL}
-      APP_AVATAR_DEFAULT_URL: ${APP_AVATAR_DEFAULT_URL}
+
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
       JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
@@ -55,10 +55,11 @@ services:
       MINIO_USERNAME: ${MINIO_ROOT_USER}
       MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
 
-      RABBITMQ_HOST: ${RABBITMQ_CONTAINER_NAME}
-      RABBITMQ_PORT: ${RABBITMQ_PORT}
-      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      SPRING_RABBITMQ_HOST: rabbitmq-lms
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
 
     depends_on:
       postgres:
@@ -117,7 +118,7 @@ services:
 
   rabbitmq:
     image: ${RABBITMQ_IMAGE:-rabbitmq:3-management}
-    container_name: ${RABBITMQ_CONTAINER_NAME:-rabbitmq}
+    container_name: ${RABBITMQ_CONTAINER_NAME:-rabbitmq-lms}
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
@@ -135,56 +136,56 @@ services:
       timeout: 10s
       retries: 5
 
-  rs:
-    build:
-      context: ../recommendation-service         
-      dockerfile: Dockerfile  
-    container_name: rs-service
-    ports:
-      - "8002:8002"           
-    environment:
-      # Optional: DB config for offline training scripts (can reuse LMS DB)
-      RS_DB_HOST: postgres
-      RS_DB_PORT: 5432
-      RS_DB_NAME: ${POSTGRES_DB}
-      RS_DB_USER: ${POSTGRES_USER}
-      RS_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      RS_MODELS_DIR: /models
-    networks:
-      - lms-network          
-    restart: unless-stopped
-    volumes:
-      - rs-models:/models
+  # rs:
+  #   build:
+  #     context: ../recommendation-service         
+  #     dockerfile: Dockerfile  
+  #   container_name: rs-service
+  #   ports:
+  #     - "8002:8002"           
+  #   environment:
+  #     # Optional: DB config for offline training scripts (can reuse LMS DB)
+  #     RS_DB_HOST: postgres
+  #     RS_DB_PORT: 5432
+  #     RS_DB_NAME: ${POSTGRES_DB}
+  #     RS_DB_USER: ${POSTGRES_USER}
+  #     RS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+  #     RS_MODELS_DIR: /models
+  #   networks:
+  #     - lms-network          
+  #   restart: unless-stopped
+  #   volumes:
+  #     - rs-models:/models
 
-  chatbot:
-    build:
-      context: ../chatbot-service   
-      dockerfile: Dockerfile
-    container_name: chatbot-service
-    ports:
-      - "8003:8003"
-    environment:
-      RS_BASE_URL: http://rs-service:8002
-      LMS_DB_HOST: postgres
-      LMS_DB_PORT: 5432
-      LMS_DB_NAME: ${POSTGRES_DB}
-      LMS_DB_USER: ${POSTGRES_USER}
-      LMS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+  # chatbot:
+  #   build:
+  #     context: ../chatbot-service   
+  #     dockerfile: Dockerfile
+  #   container_name: chatbot-service
+  #   ports:
+  #     - "8003:8003"
+  #   environment:
+  #     RS_BASE_URL: http://rs-service:8002
+  #     LMS_DB_HOST: postgres
+  #     LMS_DB_PORT: 5432
+  #     LMS_DB_NAME: ${POSTGRES_DB}
+  #     LMS_DB_USER: ${POSTGRES_USER}
+  #     LMS_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
-      # LLM provider & model can be configured via env / .env file
-      # LLM_PROVIDER: dummy | llama3
-      # LLAMA3_API_BASE: https://api.groq.com/openai/v1
-      # LLAMA3_API_KEY: your-key
-      # LLAMA3_MODEL_NAME: llama-3-8b-instruct
+  #     # LLM provider & model can be configured via env / .env file
+  #     # LLM_PROVIDER: dummy | llama3
+  #     # LLAMA3_API_BASE: https://api.groq.com/openai/v1
+  #     # LLAMA3_API_KEY: your-key
+  #     # LLAMA3_MODEL_NAME: llama-3-8b-instruct
 
-      # Vector store configuration
-      VECTOR_STORE_BACKEND: faiss
-      VECTOR_STORE_DIR: /vector_store
-    depends_on:
-      - rs                     
-    networks:
-      - lms-network
-    restart: unless-stopped
+  #     # Vector store configuration
+  #     VECTOR_STORE_BACKEND: faiss
+  #     VECTOR_STORE_DIR: /vector_store
+  #   depends_on:
+  #     - rs                     
+  #   networks:
+  #     - lms-network
+  #   restart: unless-stopped
 
 
 volumes:
@@ -194,12 +195,11 @@ volumes:
     driver: local
   rabbitmq-data:
     driver: local
-  rs-models:
-    driver: local
-  chatbot-vectors:
-    driver: local
+  # rs-models:
+  #   driver: local
+  # chatbot-vectors:
+  #   driver: local
 
 networks:
   lms-network:
     driver: bridge
-

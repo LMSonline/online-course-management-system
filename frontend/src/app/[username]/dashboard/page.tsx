@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCurrentUserInfo, MeUser } from "@/services/public/auth.services";
+import { getCurrentUserInfo, type MeUser } from "@/features/auth/services/auth.service";
+import { getCurrentTeacher } from "@/services/teacher/teacher.services";
 
 import LearnerDashboardPage from "@/app/learner/dashboard/page";
 import InstructorDashboardPage from "@/app/instructor/dashboard/page";
@@ -44,6 +45,24 @@ export default function UnifiedDashboard() {
 
         if (typeof window !== "undefined") {
           localStorage.setItem("user", JSON.stringify(me));
+        }
+
+        // If user is a TEACHER, fetch teacher profile to get teacherId if not already stored
+        if (me.role === "TEACHER") {
+          const storedTeacherId = localStorage.getItem("teacherId");
+          if (!storedTeacherId) {
+            try {
+              const teacherProfile = await getCurrentTeacher();
+              localStorage.setItem("teacherId", teacherProfile.id.toString());
+            } catch (err) {
+              console.warn("Failed to fetch teacher profile:", err);
+            }
+          }
+        } else {
+          // Clear teacherId for non-teachers
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("teacherId");
+          }
         }
 
         if (me.username !== usernameFromUrl) {

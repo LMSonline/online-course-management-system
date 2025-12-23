@@ -40,6 +40,18 @@ public class TeacherController {
     }
 
     @Operation(
+            summary = "Get current teacher profile",
+            description = "Retrieve detailed information about the currently authenticated teacher. Requires TEACHER role."
+    )
+    @GetMapping("/me")
+    @ApiMessage("Get current teacher profile")
+    public ResponseEntity<TeacherDetailResponse> getCurrentTeacher() {
+        log.info("GET /api/v1/teachers/me");
+        TeacherDetailResponse response = teacherService.getCurrentTeacher();
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
             summary = "Get teacher by ID",
             description = "Retrieve detailed information about a teacher by their ID. Teachers can only view their own profile, students can view approved teachers, and admins can view any teacher."
     )

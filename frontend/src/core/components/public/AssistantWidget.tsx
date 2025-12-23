@@ -1,7 +1,7 @@
 "use client";
 
 import AssistantPopup from "./AssistantPopup";
-import { useAssistantStore } from "./store";
+import { useAssistantStore } from "@/store/assistant.store";
 
 export default function AssistantWidget() {
   const { open, closePopup } = useAssistantStore();

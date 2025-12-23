@@ -8,7 +8,8 @@ import Popup from "@/core/components/public/Popup";
 import {
   loginUser,
   resendVerificationEmail,
-} from "@/services/public/auth.services";
+} from "@/features/auth/services/auth.service";
+import { getCurrentTeacher } from "@/services/teacher/teacher.services";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,15 +37,36 @@ export default function LoginPage() {
       const refreshToken = payload.refreshToken;
       const user = payload.user;
 
-      // 🔐 Lưu token + user
+      // 🔐 Tokens are already stored by auth.service.ts loginUser()
+      // Just store user info
       if (typeof window !== "undefined") {
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
       }
 
       const username = user.username;
-      // const role = user.role; // nếu cần dùng ở đây
+      const role = user.role;
+
+      // If user is a TEACHER, fetch teacher profile to get teacherId
+      if (role === "TEACHER") {
+        try {
+          const teacherProfile = await getCurrentTeacher();
+          if (typeof window !== "undefined") {
+            localStorage.setItem("teacherId", teacherProfile.id.toString());
+          }
+        } catch (err) {
+          // If teacher profile not found, log but don't block login
+          console.warn("Failed to fetch teacher profile:", err);
+          // Clear teacherId if it exists
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("teacherId");
+          }
+        }
+      } else {
+        // Clear teacherId for non-teachers
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("teacherId");
+        }
+      }
 
       setPopup({
         type: "success",

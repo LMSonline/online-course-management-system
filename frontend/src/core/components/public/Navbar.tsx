@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Search, ShoppingCart, Bot, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import { useAssistantStore } from "@/core/components/public/store";
+import { useAssistantStore } from "@/store/assistant.store";
 
 
 function NavItem({ href, label, className }: { href: string; label: string; className?: string }) {

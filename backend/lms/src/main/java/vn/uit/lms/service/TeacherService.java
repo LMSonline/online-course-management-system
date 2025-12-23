@@ -65,6 +65,33 @@ public class TeacherService {
     }
 
     /**
+     * Get current teacher profile (authenticated teacher)
+     * - TEACHER: Can only view their own profile
+     */
+    public TeacherDetailResponse getCurrentTeacher() {
+        log.info("Fetching current teacher profile");
+
+        // Get current user ID from JWT
+        Long currentUserId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+
+        // Load current account
+        Account currentAccount = accountRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Current account not found"));
+
+        // Verify TEACHER role
+        if (currentAccount.getRole() != Role.TEACHER) {
+            throw new UnauthorizedException("This endpoint is only accessible by teachers");
+        }
+
+        // Find teacher by account
+        Teacher teacher = teacherRepository.findByAccount(currentAccount)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher profile not found for account id: " + currentUserId));
+
+        return TeacherMapper.toTeacherDetailResponse(teacher);
+    }
+
+    /**
      * Get teacher by ID
      * - TEACHER: Can only view their own profile
      * - ADMIN: Can view any teacher

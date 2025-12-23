@@ -1,4 +1,7 @@
 // src/app/(learner)/courses/[slug]/page.tsx
+"use client";
+
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { CourseHero } from "@/core/components/learner/course/CourseHero";
 import { CourseWhatYouWillLearn } from "@/core/components/learner/course/CourseWhatYouWillLearn";
@@ -6,17 +9,40 @@ import { CourseIncludes } from "@/core/components/learner/course/CourseIncludes"
 import { CourseContentOutline } from "@/core/components/learner/course/CourseContentOutline";
 import { CourseInstructorCard } from "@/core/components/learner/course/CourseInstructorCard";
 import { CourseStudentFeedback } from "@/core/components/learner/course/CourseStudentFeedback";
-import { MOCK_COURSE } from "@/lib/learner/course/types";
+import { getCourseBySlug } from "@/features/courses/services/courses.service";
+import type { CourseDetail } from "@/features/courses/types/course-detail.types";
 
 export default function CourseDetailPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  // TODO: fetch from API by slug
-const course = MOCK_COURSE.id === params.slug ? MOCK_COURSE : null;
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!course) return notFound();
+  useEffect(() => {
+    async function loadCourse() {
+      try {
+        setLoading(true);
+        const data = await getCourseBySlug(params.slug);
+        setCourse(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load course");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCourse();
+  }, [params.slug]);
+
+  if (loading) {
+    return <p className="text-white p-6">Loading course...</p>;
+  }
+
+  if (error || !course) {
+    return notFound();
+  }
 
   return (
     <div className="bg-slate-950 text-slate-50">

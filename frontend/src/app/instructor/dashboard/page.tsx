@@ -1,6 +1,7 @@
 // src/app/(instructor)/dashboard/page.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { InstructorDashboardHeader } from "@/core/components/instructor/dashboard/InstructorDashboardHeader";
 import { StatsRow } from "@/core/components/instructor/dashboard/StatsRow";
 import { QuickSections } from "@/core/components/instructor/dashboard/QuickSections";
@@ -9,10 +10,40 @@ import { CoursesPerformanceTable } from "@/core/components/instructor/dashboard/
 import { RecentReviews } from "@/core/components/instructor/dashboard/RecentReviews";
 import { RevenueChart } from "@/core/components/instructor/dashboard/RevenueChart";
 import { EnrollmentsChart } from "@/core/components/instructor/dashboard/EnrollmentsChart";
-import { INSTRUCTOR_DASHBOARD_MOCK } from "@/lib/instructor/dashboard/types";
+import { getInstructorDashboard } from "@/features/instructor/services/instructor.service";
+import type { InstructorDashboardData } from "@/features/instructor/types/dashboard.types";
 
 export default function InstructorDashboardPage() {
-  const data = INSTRUCTOR_DASHBOARD_MOCK;
+  const [data, setData] = useState<InstructorDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        setLoading(true);
+        const dashboardData = await getInstructorDashboard();
+        setData(dashboardData);
+      } catch (err: any) {
+        setError(err.message || "Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboard();
+  }, []);
+
+  if (loading) {
+    return <p className="text-white p-6">Loading dashboard...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-500 p-6">Error: {error}</p>;
+  }
+
+  if (!data) {
+    return <p className="text-white p-6">No data available</p>;
+  }
 
   return (
     <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-6 md:py-8">
