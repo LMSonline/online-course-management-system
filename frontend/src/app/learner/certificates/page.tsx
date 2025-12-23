@@ -55,7 +55,7 @@ export default function CertificatesPage() {
       <div className="mx-auto w-full max-w-6xl xl:max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">My Certificates</h1>
-          <p className="text-slate-300">Certificates you've earned by completing courses</p>
+          <p className="text-slate-300">Certificates you&apos;ve earned by completing courses</p>
         </div>
 
         {certificates.length === 0 ? (

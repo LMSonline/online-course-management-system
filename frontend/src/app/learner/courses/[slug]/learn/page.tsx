@@ -6,6 +6,7 @@ import { notFound, useParams } from "next/navigation";
 import { CoursePlayerShell } from "@/core/components/learner/player/CoursePlayerShell";
 import { MOCK_PLAYER_COURSE } from "@/lib/learner/player/types";
 import type { PlayerCourse } from "@/lib/learner/player/types";
+import type { CourseDetail } from "@/features/courses/types/course-detail.types";
 import {
   getCourseBySlug,
   getChapters,
@@ -37,7 +38,7 @@ export default function CoursePlayerPage() {
         }
 
         // Fetch course detail
-        const courseDetail: any = await getCourseBySlug(slug);
+        const courseDetail = await getCourseBySlug(slug) as CourseDetail & { PublicVersionId?: number; publicVersionId?: number };
         if (!courseDetail.id) {
           throw new Error("Course not found");
         }

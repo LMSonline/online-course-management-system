@@ -33,7 +33,7 @@ export default function CourseDetailPage({
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ role: string } | null>(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
   const [commentForm, setCommentForm] = useState("");

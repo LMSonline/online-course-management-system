@@ -81,7 +81,7 @@ export interface LessonDTO {
   order: number;
   duration: number;
   videoUrl: string | null;
-  resources: any[];
+  resources: unknown[];
 }
 
 /**

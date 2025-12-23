@@ -12,7 +12,7 @@ import type { CategoryResponseDto } from "@/features/courses/services/courses.se
 
 export default function ExplorePage() {
   const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

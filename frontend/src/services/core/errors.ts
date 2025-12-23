@@ -13,7 +13,7 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 
-  static fromResponse(status: number, data: any): ApiError {
+  static fromResponse(status: number, data: unknown): ApiError {
     return new ApiError(
       status,
       data?.message || data?.error || "Request failed",

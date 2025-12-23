@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getProfile, updateProfile, uploadAvatar, type AccountProfileResponse } from "@/features/profile/services/profile.service";
 import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
 import { User, Mail, Calendar, Edit2, Upload } from "lucide-react";
