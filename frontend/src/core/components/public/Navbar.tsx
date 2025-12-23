@@ -60,7 +60,14 @@ export default function Navbar() {
             <input
               placeholder="Search for anything"
               className="search-input w-full"
-              onKeyDown={(e) => { if (e.key === "Enter") location.href = "/explore"; }}
+              onKeyDown={(e) => {
+                const target = e.target as HTMLInputElement;
+                if (e.key === "Enter" && target.value.trim()) {
+                  location.href = `/search?q=${encodeURIComponent(target.value.trim())}`;
+                } else if (e.key === "Enter") {
+                  location.href = "/explore";
+                }
+              }}
             />
           </div>
         </div>
@@ -134,7 +141,17 @@ export default function Navbar() {
             <input
               placeholder="Search for anything"
               className="search-input w-full pl-10"
-              onKeyDown={(e) => { if (e.key === "Enter") { setOpen(false); location.href = "/explore"; } }}
+              onKeyDown={(e) => {
+                const target = e.target as HTMLInputElement;
+                if (e.key === "Enter") {
+                  setOpen(false);
+                  if (target.value.trim()) {
+                    location.href = `/search?q=${encodeURIComponent(target.value.trim())}`;
+                  } else {
+                    location.href = "/explore";
+                  }
+                }
+              }}
             />
           </div>
 

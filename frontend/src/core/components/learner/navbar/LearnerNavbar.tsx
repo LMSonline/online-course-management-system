@@ -128,7 +128,12 @@ export default function LearnerNavbar() {
               placeholder="Search for anything"
               className="search-input w-full"
               onKeyDown={(e) => {
-                if (e.key === "Enter") location.href = "/explore";
+                const target = e.target as HTMLInputElement;
+                if (e.key === "Enter" && target.value.trim()) {
+                  location.href = `/search?q=${encodeURIComponent(target.value.trim())}`;
+                } else if (e.key === "Enter") {
+                  location.href = "/explore";
+                }
               }}
             />
           </div>
@@ -255,9 +260,14 @@ export default function LearnerNavbar() {
               placeholder="Search for anything"
               className="search-input w-full pl-10"
               onKeyDown={(e) => {
+                const target = e.target as HTMLInputElement;
                 if (e.key === "Enter") {
                   setOpen(false);
-                  location.href = "/explore";
+                  if (target.value.trim()) {
+                    location.href = `/search?q=${encodeURIComponent(target.value.trim())}`;
+                  } else {
+                    location.href = "/explore";
+                  }
                 }
               }}
             />

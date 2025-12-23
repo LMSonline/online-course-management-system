@@ -9,7 +9,7 @@ import {
   loginUser,
   resendVerificationEmail,
 } from "@/features/auth/services/auth.service";
-import { getCurrentTeacher } from "@/services/teacher/teacher.services";
+import { getCurrentTeacher } from "@/features/instructor/services/instructor.service";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
