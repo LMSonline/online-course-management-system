@@ -1,6 +1,13 @@
+"use client";
+
 // src/components/learner/catalog/CourseCard.tsx
+import { useState, useRef } from "react";
 import { Star } from "lucide-react";
 import type { CourseSummary } from "@/lib/learner/catalog/types";
+import { CourseHoverCard } from "@/features/courses/components/CourseHoverCard";
+import { addToCart, isInCart } from "@/features/cart/services/cart.service";
+import { useToastStore } from "@/lib/toast";
+import { useRouter } from "next/navigation";
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -8,9 +15,72 @@ function formatNumber(n: number): string {
   return `${n}`;
 }
 
-export function CourseCard({ course }: { course: CourseSummary }) {
+interface CourseCardProps {
+  course: CourseSummary;
+  showHoverCard?: boolean; // Enable hover card on desktop
+}
+
+export function CourseCard({ course, showHoverCard = true }: CourseCardProps) {
+  const router = useRouter();
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | undefined>();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    if (!showHoverCard) return;
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (rect) {
+      setHoverPosition({
+        x: rect.right + 16,
+        y: rect.top,
+      });
+      setHoverOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!showHoverCard) return;
+    // Delay to allow moving to hover card
+    setTimeout(() => {
+      setHoverOpen(false);
+    }, 200);
+  };
+
+  const handleAddToCartClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (isInCart(course.id)) {
+      router.push("/cart");
+      return;
+    }
+
+    const priceMatch = course.priceLabel.match(/[\d,]+/);
+    const price = priceMatch ? parseInt(priceMatch[0].replace(/,/g, "")) : 0;
+
+    addToCart({
+      courseId: course.id,
+      slug: course.id,
+      title: course.title,
+      price,
+      priceLabel: course.priceLabel,
+      thumbColor: course.thumbColor,
+      instructorName: course.instructor,
+      rating: course.rating,
+      ratingCount: course.ratingCount,
+    });
+
+    useToastStore.getState().success("Added to cart!");
+  };
+
   return (
-    <article className="group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950/80 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_32px_rgba(34,197,94,0.4)] transition">
+    <>
+      <article
+        ref={cardRef}
+        className="group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950/80 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_32px_rgba(34,197,94,0.4)] transition relative"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
       {/* thumbnail */}
       <div
         className={`relative h-32 md:h-36 w-full bg-gradient-to-br ${course.thumbColor}`}
@@ -56,11 +126,25 @@ export function CourseCard({ course }: { course: CourseSummary }) {
           <span className="text-sm font-bold text-slate-50">
             {course.priceLabel}
           </span>
-          <button className="text-[11px] font-medium text-[var(--brand-300)] hover:text-[var(--brand-100)]">
-            Add to cart
+          <button
+            onClick={handleAddToCartClick}
+            className="text-[11px] font-medium text-[var(--brand-300)] hover:text-[var(--brand-100)] transition"
+          >
+            {isInCart(course.id) ? "In cart" : "Add to cart"}
           </button>
         </div>
       </div>
     </article>
+
+    {/* Hover card (desktop only) */}
+    {showHoverCard && hoverOpen && (
+      <CourseHoverCard
+        course={course}
+        isOpen={hoverOpen}
+        onClose={() => setHoverOpen(false)}
+        position={hoverPosition}
+      />
+    )}
+    </>
   );
 }

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { useAssistantStore } from "@/store/assistant.store";
 import { ExploreMegaMenu } from "./ExploreMegaMenu";
+import { CartBadge } from "@/components/cart/CartBadge";
 
 
 function NavItem({ href, label, className }: { href: string; label: string; className?: string }) {
@@ -97,9 +98,9 @@ export default function Navbar() {
           <Link href="#" className="hidden lg:block nav-link">Teach on LMS</Link>
 
           {/* Cart */}
-          <button className="btn-icon hidden sm:inline-flex" aria-label="Cart">
-            <ShoppingCart size={18} />
-          </button>
+          <div className="hidden sm:inline-flex">
+            <CartBadge />
+          </div>
 
 
 
