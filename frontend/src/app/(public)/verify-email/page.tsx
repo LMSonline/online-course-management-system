@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Popup from "@/core/components/public/Popup";
-import { verifyEmail } from "@/services/public/auth.services";
+import { verifyEmail } from "@/services/auth/auth.services";
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();

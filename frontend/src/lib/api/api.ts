@@ -1,4 +1,7 @@
-export const API = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { ENV } from "../env";
+import { tokenStorage } from "./tokenStorage";
+
+export const API = ENV.API.BASE_API_URL;
 
 function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
   if (!headers) return {};
@@ -23,7 +26,7 @@ export async function apiClient(
   let accessToken: string | null = null;
 
   if (!options.skipAuth && typeof window !== "undefined") {
-    accessToken = localStorage.getItem("accessToken");
+    accessToken = tokenStorage.getAccessToken();
   }
 
   const normalized = normalizeHeaders(options.headers);

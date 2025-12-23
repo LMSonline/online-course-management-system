@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import Popup from "@/core/components/public/Popup";
-import { forgotPassword } from "@/services/public/auth.services";
+import { forgotPassword } from "@/services/auth/auth.services";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

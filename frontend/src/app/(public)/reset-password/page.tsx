@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock } from "lucide-react";
 import Popup from "@/core/components/public/Popup";
-import { resetPassword } from "@/services/public/auth.services";
+import { resetPassword } from "@/services/auth/auth.services";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();

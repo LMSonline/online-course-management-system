@@ -1,17 +1,7 @@
-import { apiClient } from "@/services/core/api";
+import { apiClient } from "@/lib/api/api";
+import { MeUser } from "@/services/auth/auth.types";
 
-const AUTH_PREFIX = "/api/v1/auth";
-
-export interface MeUser {
-  accountId: number;
-  username: string;
-  email: string;
-  fullName: string;
-  status: string;
-  avatarUrl: string | null;
-  role: "STUDENT" | "TEACHER" | "ADMIN" | string;
-}
-
+const AUTH_PREFIX = `/auth`;
 
 export async function registerUser(payload: {
   username: string;
@@ -36,7 +26,9 @@ export async function loginUser(payload: {
   const body = {
     login: payload.login,
     password: payload.password,
-    deviceInfo: payload.deviceInfo ?? (typeof navigator !== "undefined" ? navigator.userAgent : "unknown"),
+    deviceInfo:
+      payload.deviceInfo ??
+      (typeof navigator !== "undefined" ? navigator.userAgent : "unknown"),
     ipAddress: payload.ipAddress ?? "127.0.0.1",
   };
 
@@ -81,17 +73,18 @@ export async function forgotPassword(email: string) {
 }
 
 export async function resetPassword(token: string, newPassword: string) {
-  const url = `${AUTH_PREFIX}/reset-password?token=${encodeURIComponent(token)}`;
+  const url = `${AUTH_PREFIX}/reset-password?token=${encodeURIComponent(
+    token
+  )}`;
   return apiClient(url, {
     method: "POST",
     body: JSON.stringify({ newPassword }),
   });
 }
 
-
 export async function getCurrentUserInfo(): Promise<MeUser> {
   const res = await apiClient(`${AUTH_PREFIX}/me`, { method: "GET" });
-  return res.data as MeUser; 
+  return res.data as MeUser;
 }
 
 export async function changePassword(payload: {

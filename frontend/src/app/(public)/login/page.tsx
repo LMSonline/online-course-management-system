@@ -8,7 +8,7 @@ import Popup from "@/core/components/public/Popup";
 import {
   loginUser,
   resendVerificationEmail,
-} from "@/services/public/auth.services";
+} from "@/services/auth/auth.services";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);

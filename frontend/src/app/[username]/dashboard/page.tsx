@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCurrentUserInfo, MeUser } from "@/services/public/auth.services";
+import { getCurrentUserInfo, MeUser } from "@/services/auth/auth.services";
 
 import LearnerDashboardPage from "@/app/learner/dashboard/page";
 import InstructorDashboardPage from "@/app/instructor/dashboard/page";
