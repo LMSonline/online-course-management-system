@@ -17,11 +17,11 @@ export type AssessmentSummary = {
   type: AssessmentType;
   title: string;
   status: AssessmentStatus;
-  dueDate: string;        // "2025-03-15"
-  dueLabel: string;       // "Due in 2 days" / "Overdue 1 day"
+  dueDate: string;        
+  dueLabel: string;       
   estimatedMinutes: number;
-  score?: number;         // 82
-  maxScore?: number;      // 100
+  score?: number;         
+  maxScore?: number;      
   attemptsUsed?: number;
   maxAttempts?: number;
   tag?: "Required" | "Optional";

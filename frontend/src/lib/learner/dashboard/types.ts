@@ -51,7 +51,6 @@ export const MOCK_COURSES: MyCourse[] = [
   },
 ];
 
-// === thêm block này cho phần recommended ===
 export const RECOMMENDED_COURSES: MyCourse[] = [
   {
     id: "r1",

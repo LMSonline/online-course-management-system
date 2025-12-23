@@ -28,7 +28,7 @@ export type QuizDetail = {
 };
 
 export const MOCK_QUIZ: QuizDetail = {
-  id: "a1", // trùng với assessment id quiz trong ASSESSMENTS_MOCK
+  id: "a1", 
   courseId: "d2",
   courseTitle: "React, TypeScript & Next.js – Build Modern Web Apps",
   title: "Module 1 • React fundamentals",

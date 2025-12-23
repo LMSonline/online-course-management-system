@@ -34,7 +34,6 @@ export function SafeImage({
     }
   };
 
-  // If fill is true, use fill layout
   if (fill) {
     return (
       <Image
@@ -44,12 +43,11 @@ export function SafeImage({
         className={className}
         onError={handleError}
         priority={priority}
-        unoptimized={imgSrc.startsWith("http")} // Disable optimization for external URLs
+        unoptimized={imgSrc.startsWith("http")}
       />
     );
   }
 
-  // Otherwise use width/height
   return (
     <Image
       src={imgSrc}
@@ -59,7 +57,7 @@ export function SafeImage({
       className={className}
       onError={handleError}
       priority={priority}
-      unoptimized={imgSrc.startsWith("http")} // Disable optimization for external URLs
+      unoptimized={imgSrc.startsWith("http")} 
     />
   );
 }

@@ -24,7 +24,7 @@ export default function ProfilePage() {
     async function loadProfile() {
       try {
         setLoading(true);
-        await getCurrentUserInfo(); // Verify user is authenticated
+        await getCurrentUserInfo(); 
         const profileData = await getProfile();
         setProfile(profileData);
         setFormData({

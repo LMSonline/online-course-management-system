@@ -30,7 +30,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         const urlUser = usernameFromUrl?.toLowerCase().trim();
         const realUser = user.username?.toLowerCase().trim();
 
-        // If URL username doesn't match, redirect to correct URL
         if (urlUser !== realUser) {
           router.replace(`/${user.username}/dashboard`);
         }
@@ -40,7 +39,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     verifyUser();
   }, [user, loading, usernameFromUrl, router, fetchMe]);
 
-  // Show loading while checking auth
   if (loading || !user) {
     return <div className="text-center text-white p-6">Loading...</div>;
   }

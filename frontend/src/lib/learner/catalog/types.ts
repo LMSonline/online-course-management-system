@@ -8,11 +8,11 @@ export type CourseSummary = {
   rating: number;
   ratingCount: number;
   students: number;
-  duration: string; // "12h 30m"
+  duration: string; 
   lectures: number;
-  thumbColor: string; // tailwind gradient
+  thumbColor: string; 
   tag?: "Bestseller" | "New" | "Highest rated";
-  priceLabel: string; // "₫2,239,000" hoặc "Included in subscription"
+  priceLabel: string; 
 };
 
 export const COURSE_CATEGORIES = [

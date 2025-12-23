@@ -17,6 +17,7 @@ interface AuthActions {
   login: (user: MeUser) => void;
   logout: () => void;
   setError: (error: string | null) => void;
+  setUser: (user: MeUser | null) => void;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -79,6 +80,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   // Set error
   setError: (error: string | null) => {
     set({ error });
+  },
+
+  // Set user (for updating user data after profile changes)
+  setUser: (user: MeUser | null) => {
+    set({ user });
   },
 }));
 

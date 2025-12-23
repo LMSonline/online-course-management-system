@@ -3,7 +3,7 @@
 export type PlayerLesson = {
   id: string;
   title: string;
-  duration: string;      // "08:45"
+  duration: string;    
   videoUrl: string;
   isPreview?: boolean;
 };
@@ -15,7 +15,7 @@ export type PlayerSection = {
 };
 
 export type PlayerCourse = {
-  slug: string;          // trùng với slug khoá học
+  slug: string;        
   title: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   sections: PlayerSection[];
@@ -34,7 +34,7 @@ export const MOCK_PLAYER_COURSE: PlayerCourse = {
           id: "l1",
           title: "Welcome to the course",
           duration: "05:12",
-          videoUrl: "/video/sample-1.mp4", // có thể để tạm file placeholder
+          videoUrl: "/video/sample-1.mp4", 
           isPreview: true,
         },
         {

@@ -47,7 +47,6 @@ export default function UnifiedDashboard() {
           localStorage.setItem("user", JSON.stringify(me));
         }
 
-        // If user is a TEACHER, fetch teacher profile to get teacherId if not already stored
         if (me.role === "TEACHER") {
           const storedTeacherId = localStorage.getItem("teacherId");
           if (!storedTeacherId) {
@@ -59,7 +58,6 @@ export default function UnifiedDashboard() {
             }
           }
         } else {
-          // Clear teacherId for non-teachers
           if (typeof window !== "undefined") {
             localStorage.removeItem("teacherId");
           }

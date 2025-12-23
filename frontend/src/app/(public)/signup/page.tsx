@@ -13,7 +13,6 @@ type Role = "student" | "teacher";
 export default function SignupPage() {
   const router = useRouter();
 
-  // States
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [name, setName] = useState("");
@@ -25,7 +24,6 @@ export default function SignupPage() {
 
   const [popup, setPopup] = useState<null | any>(null);
 
-  // Password strength logic
   const pwCheck = useMemo(() => {
     const hasLength = pw.length >= 8;
     const hasUpper = /[A-Z]/.test(pw);
@@ -48,7 +46,7 @@ export default function SignupPage() {
     !mismatch &&
     agree;
 
-  // SUBMIT
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
@@ -62,9 +60,8 @@ export default function SignupPage() {
         langKey: "vi",
       });
 
-      // SUCCESS POPUP
       setPopup({
-        type: "success", // thêm dòng này để popup dùng icon success
+        type: "success",
         title: "Account created",
         message: "We've sent you a verification email. Please check your inbox.",
         actions: (

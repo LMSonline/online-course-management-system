@@ -29,6 +29,9 @@ const PROTECTED_ROUTES = [
   "/instructor",
   "/admin",
   "/notifications",
+  "/profile",
+  "/cart",
+  "/checkout",
 ];
 
 // Role-based route prefixes

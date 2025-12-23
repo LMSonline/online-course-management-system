@@ -178,15 +178,12 @@ export default function ProfileSettingsPage() {
       });
 
       // Update auth store user snapshot
-      if (updated) {
-        const authStore = useAuthStore.getState();
-        if (authStore.user) {
-          authStore.setUser({
-            ...authStore.user,
-            fullName: updated.fullName,
-            avatarUrl: updated.avatarUrl,
-          });
-        }
+      if (updated && user) {
+        useAuthStore.getState().setUser({
+          ...user,
+          fullName: updated.fullName,
+          avatarUrl: updated.avatarUrl,
+        });
       }
 
       setIsDirty(false);
@@ -219,10 +216,9 @@ export default function ProfileSettingsPage() {
       setAvatarPreview(null);
       
       // Update auth store
-      const authStore = useAuthStore.getState();
-      if (authStore.user && profile) {
-        authStore.setUser({
-          ...authStore.user,
+      if (user && profile) {
+        useAuthStore.getState().setUser({
+          ...user,
           avatarUrl: profile.avatarUrl,
         });
       }

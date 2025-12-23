@@ -80,9 +80,9 @@ export async function uploadAvatar(file: File): Promise<UploadAvatarResponse> {
 
   const formData = new FormData();
   formData.append("file", file);
-  const response = await apiClient.post<UploadAvatarResponse>("/accounts/me/avatar", formData, {
+  const response = await apiClient.post<ApiResponse<UploadAvatarResponse>>("/accounts/me/avatar", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return response.data;
+  return unwrapApiResponse<UploadAvatarResponse>(response.data);
 }
 
