@@ -10,6 +10,7 @@ import { SafeImage } from "@/components/shared/SafeImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Upload, Save, Globe, Lock } from "lucide-react";
+import { useToastStore } from "@/lib/toast";
 import type { UpdateProfileRequest } from "@/features/profile/types/profile.types";
 
 // Split fullName into firstName and lastName

@@ -56,6 +56,8 @@ export async function getItems(): Promise<Item[]> {
 | Instructor | `/teachers/*` | `features/instructor/services/instructor.service.ts` |
 | Learner | `/students/*` | `features/learner/services/learner.service.ts` |
 | Profile | `/accounts/*` | `features/profile/services/profile.service.ts` |
+| Cart | Local (Zustand) | `features/cart/services/cart.service.ts` |
+| Payment | Mock (backend not ready) | `features/payment/services/payment.service.ts` |
 | Community | `/courses/*/comments`, `/notifications/*` | `features/community/services/community.service.ts` |
 | Recommendations | `/students/*/recommendations` | `features/recommendation/services/recommendation.service.ts` |
 

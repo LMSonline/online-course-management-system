@@ -64,8 +64,8 @@ export async function updateProfile(payload: UpdateProfileRequest): Promise<Acco
     return Promise.resolve({ ...current, ...payload });
   }
 
-  const response = await apiClient.put<AccountProfileResponse>("/accounts/me", payload);
-  return response.data;
+  const response = await apiClient.put<ApiResponse<AccountProfileResponse>>("/accounts/me", payload);
+  return unwrapApiResponse<AccountProfileResponse>(response.data);
 }
 
 /**
