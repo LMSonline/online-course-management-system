@@ -7,9 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
 import { useLogin, useResendVerificationEmail } from "@/hooks/useAuth";
-import Popup from "@/core/components/public/Popup";
-
-type PopupType = "success" | "error" | "warning" | "info";
+import Popup, { PopupType } from "@/core/components/public/Popup";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);

@@ -11,9 +11,7 @@ import {
     type ResetPasswordFormData,
 } from "@/lib/validations/auth.schema";
 import { useResetPassword } from "@/hooks/useAuth";
-import Popup from "@/core/components/public/Popup";
-
-type PopupType = "success" | "error" | "warning" | "info";
+import Popup, { PopupType } from "@/core/components/public/Popup";
 
 function ResetPasswordContent() {
     const searchParams = useSearchParams();
@@ -169,8 +167,8 @@ function ResetPasswordContent() {
                             <li key={idx} className="flex items-center gap-2">
                                 <span
                                     className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${rule.ok
-                                            ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
-                                            : "border-white/20 text-slate-500"
+                                        ? "bg-[var(--brand-600)] border-[var(--brand-600)] text-white"
+                                        : "border-white/20 text-slate-500"
                                         }`}
                                 >
                                     <Check className="size-3" />

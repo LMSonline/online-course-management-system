@@ -10,9 +10,7 @@ import {
   type ForgotPasswordFormData,
 } from "@/lib/validations/auth.schema";
 import { useForgotPassword } from "@/hooks/useAuth";
-import Popup from "@/core/components/public/Popup";
-
-type PopupType = "success" | "error" | "warning" | "info";
+import Popup, { PopupType } from "@/core/components/public/Popup";
 
 export default function ForgotPasswordPage() {
   const [popup, setPopup] = useState<{

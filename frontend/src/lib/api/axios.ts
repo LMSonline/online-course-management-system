@@ -77,7 +77,7 @@ axiosClient.interceptors.response.use(
         const refreshToken = tokenStorage.getRefreshToken();
         if (!refreshToken) throw new Error("No refresh token");
 
-        const res = await refreshClient.post("/auth/refresh-token", {
+        const res = await refreshClient.post("/auth/refresh", {
           refreshToken,
         });
 

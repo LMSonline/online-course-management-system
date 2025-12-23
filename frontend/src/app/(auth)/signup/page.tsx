@@ -7,9 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, User, Eye, EyeOff, Check, GraduationCap, Loader2 } from "lucide-react";
 import { registerSchema, type RegisterFormData } from "@/lib/validations/auth.schema";
 import { useRegister } from "@/hooks/useAuth";
-import Popup from "@/core/components/public/Popup";
-
-type PopupType = "success" | "error" | "warning" | "info";
+import Popup, { PopupType } from "@/core/components/public/Popup";
 
 export default function SignupPage() {
   const [showPw, setShowPw] = useState(false);
@@ -150,9 +148,9 @@ export default function SignupPage() {
               </button>
               <button
                 type="button"
-                onClick={() => registerField("role").onChange({ target: { value: "INSTRUCTOR" } })}
+                onClick={() => registerField("role").onChange({ target: { value: "TEACHER" } })}
                 disabled={isPending}
-                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition disabled:opacity-50 ${role === "INSTRUCTOR"
+                className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition disabled:opacity-50 ${role === "TEACHER"
                   ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
                   : "bg-slate-800/60 text-slate-200 border-white/10 hover:border-[var(--brand-600)]/60"
                   }`}

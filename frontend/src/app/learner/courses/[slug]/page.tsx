@@ -4,7 +4,7 @@ import { CourseHero } from "@/core/components/learner/course/CourseHero";
 import { CourseWhatYouWillLearn } from "@/core/components/learner/course/CourseWhatYouWillLearn";
 import { CourseIncludes } from "@/core/components/learner/course/CourseIncludes";
 import { CourseContentOutline } from "@/core/components/learner/course/CourseContentOutline";
-import { CourseInstructorCard } from "@/core/components/learner/course/CourseInstructorCard";
+import { CourseTeacherCard } from "@/core/components/learner/course/CourseTeacherCard";
 import { CourseStudentFeedback } from "@/core/components/learner/course/CourseStudentFeedback";
 import { MOCK_COURSE } from "@/lib/learner/course/types";
 
@@ -14,7 +14,7 @@ export default function CourseDetailPage({
   params: { slug: string };
 }) {
   // TODO: fetch from API by slug
-const course = MOCK_COURSE.id === params.slug ? MOCK_COURSE : null;
+  const course = MOCK_COURSE.id === params.slug ? MOCK_COURSE : null;
 
   if (!course) return notFound();
 
@@ -41,7 +41,7 @@ const course = MOCK_COURSE.id === params.slug ? MOCK_COURSE : null;
         {/* Right column */}
         <aside className="w-full lg:w-80 xl:w-96 space-y-5">
           <CourseIncludes course={course} />
-          <CourseInstructorCard course={course} />
+          <CourseTeacherCard course={course} />
         </aside>
       </main>
     </div>

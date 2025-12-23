@@ -37,8 +37,8 @@ export const useLogin = () => {
       const role = data.user.role;
       if (role === "ADMIN") {
         router.push("/admin/dashboard");
-      } else if (role === "INSTRUCTOR") {
-        router.push("/instructor/dashboard");
+      } else if (role === "TEACHER") {
+        router.push("/teacher/dashboard");
       } else {
         router.push("/learner/dashboard");
       }

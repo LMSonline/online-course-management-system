@@ -37,7 +37,7 @@ function NavItem({
 }
 
 export default function LearnerNavbar() {
-    const openPopup = useAssistantStore((s) => s.openPopup);
+  const openPopup = useAssistantStore((s) => s.openPopup);
 
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -120,7 +120,7 @@ export default function LearnerNavbar() {
             LMS Business
           </Link>
           <Link href="/teach" className="hidden lg:block nav-link">
-            Instructor
+            Teacher
           </Link>
           <Link href="/my-learning" className="hidden md:block nav-link">
             My learning
@@ -239,7 +239,7 @@ export default function LearnerNavbar() {
             <NavItem href="/explore" label="Explore" />
             <NavItem href="/my-learning" label="My learning" />
             <NavItem href="/business" label="LMS Business" />
-            <NavItem href="/teach" label="Instructor" />
+            <NavItem href="/teach" label="Teacher" />
           </div>
 
           <div className="mt-auto flex items-center justify-between gap-3">

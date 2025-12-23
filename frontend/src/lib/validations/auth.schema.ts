@@ -43,7 +43,7 @@ export const registerSchema = z
         "Password must contain at least one uppercase letter, one lowercase letter, and one number"
       ),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    role: z.enum(["STUDENT", "INSTRUCTOR"], {
+    role: z.enum(["STUDENT", "TEACHER"], {
       message: "Please select a role",
     }),
   })

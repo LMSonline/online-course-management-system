@@ -1,25 +1,24 @@
-// src/core/components/admin/dashboard/AdminStatsRow.tsx
-import { Users, BookOpen, UserCircle2, DollarSign } from "lucide-react";
-import type { AdminOverview } from "@/lib/admin/types";
+// src/core/components/teacher/dashboard/StatsRow.tsx
+import { Users, DollarSign, BookOpen, Star } from "lucide-react";
+import type { TeacherOverview } from "@/lib/teacher/dashboard/types";
 
 type Props = {
-  overview: AdminOverview;
+  overview: TeacherOverview;
 };
 
-export function AdminStatsRow({ overview }: Props) {
+export function StatsRow({ overview }: Props) {
   const items = [
     {
       icon: Users,
-      label: "Total users",
-      value: overview.totalUsers.toLocaleString(),
-      hint: `${overview.learners.toLocaleString()} learners · ${overview.teachers
-        } teachers`,
+      label: "Total students",
+      value: overview.totalStudents.toLocaleString(),
+      hint: "All-time enrolled learners",
     },
     {
       icon: BookOpen,
-      label: "Courses",
-      value: overview.activeCourses.toString(),
-      hint: `${overview.pendingCourses} pending approval`,
+      label: "Active courses",
+      value: overview.totalCourses.toString(),
+      hint: "Published & visible courses",
     },
     {
       icon: DollarSign,
@@ -28,10 +27,10 @@ export function AdminStatsRow({ overview }: Props) {
       hint: "Before tax & platform fees",
     },
     {
-      icon: UserCircle2,
-      label: "Active teachers",
-      value: overview.teachers.toString(),
-      hint: "With at least one active course",
+      icon: Star,
+      label: "Average rating",
+      value: overview.avgRating.toFixed(2),
+      hint: "Weighted across all courses",
     },
   ];
 

@@ -1,5 +1,4 @@
-
-export type UserRole = "STUDENT" | "INSTRUCTOR" | "ADMIN";
+export type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
 export type AccountStatus = "ACTIVE" | "PENDING" | "SUSPENDED" | "INACTIVE";
 export type Gender = "MALE" | "FEMALE" | "OTHER" | "UNKNOWN";
 

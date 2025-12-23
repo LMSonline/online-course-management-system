@@ -3,7 +3,7 @@
 import { ADMIN_MOCK_DATA } from "@/lib/admin/types";
 import { AdminReportsSummaryRow } from "@/core/components/admin/reports/AdminReportsSummaryRow";
 import { AdminReportsCharts } from "@/core/components/admin/reports/AdminReportsCharts";
-import { AdminInstructorPerformanceTable } from "@/core/components/admin/reports/AdminInstructorPerformanceTable";
+import { AdminTeacherPerformanceTable } from "@/core/components/admin/reports/AdminTeacherPerformanceTable";
 
 export default function AdminReportsPage() {
   const data = ADMIN_MOCK_DATA;
@@ -26,7 +26,7 @@ export default function AdminReportsPage() {
 
         <AdminReportsSummaryRow summary={data.reportsSummary} />
         <AdminReportsCharts monthly={data.monthly} />
-        <AdminInstructorPerformanceTable items={data.instructorPerformance} />
+        <AdminTeacherPerformanceTable items={data.teacherPerformance} />
       </section>
     </main>
   );

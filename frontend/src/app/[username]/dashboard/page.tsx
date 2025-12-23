@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCurrentUserInfo, MeUser } from "@/services/auth/auth.services";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { tokenStorage } from "@/lib/api/tokenStorage";
 
 import LearnerDashboardPage from "@/app/learner/dashboard/page";
-import InstructorDashboardPage from "@/app/instructor/dashboard/page";
+import TeacherDashboardPage from "@/app/teacher/dashboard/page";
 import AdminDashboardPage from "@/app/admin/dashboard/page";
 
 export default function UnifiedDashboard() {
@@ -13,64 +14,30 @@ export default function UnifiedDashboard() {
   const params = useParams();
 
   const rawUsername = params.username;
-  const usernameFromUrl =
-    Array.isArray(rawUsername) ? rawUsername[0] : (rawUsername as string);
+  const usernameFromUrl = Array.isArray(rawUsername) ? rawUsername[0] : (rawUsername as string);
 
-  const [user, setUser] = useState<MeUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: user, isLoading, isError } = useCurrentUser();
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadUser() {
-      try {
-        if (typeof window !== "undefined") {
-          const cached = localStorage.getItem("user");
-          if (cached) {
-            try {
-              const parsed = JSON.parse(cached);
-              if (!cancelled) setUser(parsed);
-            } catch {
-
-            }
-          }
-        }
-
-        const me = await getCurrentUserInfo();
-
-        if (cancelled) return;
-
-        setUser(me);
-
-        if (typeof window !== "undefined") {
-          localStorage.setItem("user", JSON.stringify(me));
-        }
-
-        if (me.username !== usernameFromUrl) {
-          router.replace(`/${me.username}/dashboard`);
-          return;
-        }
-      } catch (err: any) {
-        if (cancelled) return;
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("user");
-        }
-        router.replace("/login");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    // Check authentication
+    if (!tokenStorage.getAccessToken()) {
+      router.replace("/login");
+      return;
     }
 
-    loadUser();
+    // Handle error
+    if (isError) {
+      router.replace("/login");
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [router, usernameFromUrl]);
+    // Validate username match
+    if (user && user.username !== usernameFromUrl) {
+      router.replace(`/${user.username}/dashboard`);
+    }
+  }, [user, isError, router, usernameFromUrl]);
 
-  if (loading) {
+  if (isLoading) {
     return <p className="text-white p-6">Loading dashboard...</p>;
   }
 
@@ -82,7 +49,7 @@ export default function UnifiedDashboard() {
     case "STUDENT":
       return <LearnerDashboardPage />;
     case "TEACHER":
-      return <InstructorDashboardPage />;
+      return <TeacherDashboardPage />;
     case "ADMIN":
       return <AdminDashboardPage />;
     default:
