@@ -3,11 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingCart, Bot, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, Bot, Menu, X, Sun, Moon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { useAssistantStore } from "@/core/components/public/store";
-
+import { useTheme } from "next-themes";
 
 function NavItem({ href, label, className }: { href: string; label: string; className?: string }) {
   const pathname = usePathname();
@@ -19,6 +19,13 @@ export default function Navbar() {
   const openPopup = useAssistantStore((s) => s.openPopup);
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -75,9 +82,6 @@ export default function Navbar() {
             <ShoppingCart size={18} />
           </button>
 
-
-
-
           {/* Log in – outline strong (nổi bật) */}
           <Link href="/login">
             <button className="btn btn-outline strong">Log in</button>
@@ -88,7 +92,22 @@ export default function Navbar() {
             <button className="btn btn-primary neon">Sign up</button>
           </Link>
 
-          {/* Globe */}
+          {/* Theme toggle button */}
+          <button
+            aria-label="Toggle theme"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 
+              bg-slate-900/60 text-slate-200 
+              hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
+              transition"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {mounted && (
+              theme === "dark"
+                ? <Sun className="w-5 h-5" />
+                : <Moon className="w-5 h-5" />
+            )}
+          </button>
+
           {/* AI Tutor button – thay cho nút chọn ngôn ngữ */}
           <button
             onClick={openPopup}

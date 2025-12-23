@@ -36,11 +36,11 @@
   --ring: rgba(22,163,74,.35);
 
   color-scheme: dark;
-
 }
 
-/* Light theme (tùy chọn) */
-.light {
+/* Sửa lại: dùng .dark cho dark theme, :root cho light theme */
+html:not(.dark) {
+  /* Light theme (default) */
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-2: #f8fafc;
@@ -49,6 +49,18 @@
   --border: rgba(2,6,23,.12);
   --ring: rgba(22,163,74,.25);
   color-scheme: light;
+}
+
+html.dark {
+  /* Dark theme */
+  --bg: #0b1220;
+  --surface: #0f172a;
+  --surface-2: #0b1220;
+  --text: #e5e7eb;
+  --muted: #9aa5b1;
+  --border: #1f2937;
+  --ring: rgba(22,163,74,.35);
+  color-scheme: dark;
 }
 
 /* ================================
