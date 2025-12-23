@@ -1,6 +1,7 @@
 import {
   Users, DollarSign, Star, Clock, MoreVertical, TrendingUp, Eye, Edit, AlertCircle, FileText
 } from "lucide-react";
+import Link from 'next/link';
 
 type CourseStatus = 'draft' | 'pending' | 'published' | 'rejected';
 
@@ -136,10 +137,13 @@ export default function CourseCard({ course }: { course: Course }) {
                 <span>Waiting for admin approval</span>
               </div>
             )}
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#1a2237] hover:bg-[#1f2844] border border-gray-700 rounded-lg transition-colors text-sm ml-auto">
+            <Link
+              href={`/instructor/courses/builder?courseId=${course.id}`}
+              className="flex items-center gap-2 px-4 py-2 bg-[#1a2237] hover:bg-[#1f2844] border border-gray-700 rounded-lg transition-colors text-sm ml-auto"
+            >
               <FileText className="w-4 h-4" />
               Manage Content
-            </button>
+            </Link>
           </div>
         </div>
       </div>

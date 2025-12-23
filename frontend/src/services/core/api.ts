@@ -60,3 +60,30 @@ export async function apiClient(
   return data;
 }
 
+/**
+ * Create a new lesson in a chapter.
+ * @param chapterId number
+ * @param lessonData { type: 'VIDEO' | 'TEXT' | 'QUIZ', title: string, shortDescription?: string }
+ */
+export async function createLesson(chapterId: number, lessonData: { type: string; title: string; shortDescription?: string }) {
+  return apiClient(`/api/v1/chapters/${chapterId}/lessons`, {
+    method: 'POST',
+    body: JSON.stringify(lessonData),
+  });
+}
+
+/**
+ * Notify server of completed video upload for a lesson.
+ * @param lessonId number
+ * @param payload { objectKey: string, durationSeconds: number }
+ */
+export async function notifyLessonUploadComplete(
+  lessonId: number,
+  payload: { objectKey: string; durationSeconds: number }
+) {
+  return apiClient(`/api/v1/lessons/${lessonId}/upload-complete`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
