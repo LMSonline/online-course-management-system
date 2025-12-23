@@ -23,9 +23,10 @@ export default function CertificatesPage() {
         }
         const result = await getStudentCertificates(user.accountId, 0, 50);
         setCertificates(result.items);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as Error;
         console.error("Failed to load certificates:", err);
-        setError(err.message || "Failed to load certificates");
+        setError(error.message || "Failed to load certificates");
       } finally {
         setLoading(false);
       }

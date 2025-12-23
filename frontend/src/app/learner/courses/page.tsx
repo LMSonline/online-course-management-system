@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { CourseGrid } from "@/core/components/learner/catalog/CourseGrid";
 import { getStudentCourses } from "@/features/learner/services/learner.service";
 import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
-import type { StudentCourseResponse } from "@/features/learner/services/learner.service";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function CoursesPage() {
@@ -38,9 +37,10 @@ export default function CoursesPage() {
             priceLabel: "₫2,239,000",
           }))
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as Error;
         console.error("Failed to load courses:", err);
-        setError(err.message || "Failed to load courses");
+        setError(error.message || "Failed to load courses");
       } finally {
         setLoading(false);
       }

@@ -69,7 +69,7 @@ export default function UnifiedDashboard() {
           router.replace(`/${me.username}/dashboard`);
           return;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (cancelled) return;
         if (typeof window !== "undefined") {
           localStorage.removeItem("accessToken");
@@ -77,6 +77,7 @@ export default function UnifiedDashboard() {
           localStorage.removeItem("user");
         }
         router.replace("/login");
+        return;
       } finally {
         if (!cancelled) setLoading(false);
       }

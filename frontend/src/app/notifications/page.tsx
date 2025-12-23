@@ -9,7 +9,7 @@ import {
   getUnreadNotificationCount,
 } from "@/features/community/services/community.service";
 import type { NotificationResponse } from "@/features/community/services/community.service";
-import { Bell, Check, Trash2, X } from "lucide-react";
+import { Bell, Check, Trash2 } from "lucide-react";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);

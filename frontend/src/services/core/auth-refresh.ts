@@ -43,7 +43,7 @@ export async function refreshAccessToken(): Promise<string> {
 
       setAccessToken(newAccessToken);
       return newAccessToken;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Refresh failed - clear tokens and redirect
       clearTokens();
       if (typeof window !== "undefined") {

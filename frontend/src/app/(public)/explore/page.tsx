@@ -25,7 +25,7 @@ export default function ExplorePage() {
         ]);
         setCategories(cats);
         setCourses(courseList);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to load explore data:", error);
       } finally {
         setLoading(false);

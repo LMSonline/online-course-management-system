@@ -7,7 +7,7 @@ import { CategoryTabs } from "@/core/components/learner/catalog/CategoryTabs";
 import { FilterBar } from "@/core/components/learner/catalog/FilterBar";
 import { CourseGrid } from "@/core/components/learner/catalog/CourseGrid";
 import { listCourses } from "@/features/courses/services/courses.service";
-import { CategoryKey, COURSE_CATEGORIES } from "@/features/courses/types/catalog.types";
+import { CategoryKey } from "@/features/courses/types/catalog.types";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function LearnerCatalogPage() {

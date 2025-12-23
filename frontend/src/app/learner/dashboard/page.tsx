@@ -6,11 +6,9 @@ import { DashboardHeader } from "@/core/components/learner/dashboard/DashboardHe
 import { DashboardStatsRow } from "@/core/components/learner/dashboard/DashboardStatsRow";
 import { MyCoursesSection } from "@/core/components/learner/dashboard/MyCoursesSection";
 import { RecommendedCarousel } from "@/core/components/learner/dashboard/RecommendedCarousel";
-import { getStudentCourses, getStudentProgress } from "@/features/learner/services/learner.service";
+import { getStudentCourses } from "@/features/learner/services/learner.service";
 import { getRecommendations } from "@/features/recommendation/services/recommendation.service";
 import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
-import type { StudentCourseResponse } from "@/features/learner/services/learner.service";
-import type { Recommendation } from "@/features/recommendation/services/recommendation.service";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function LearnerDashboardPage() {

@@ -26,9 +26,10 @@ export default function CategoryPage() {
         ]);
         setCategory(catData);
         setCourses(courseList);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as Error;
         console.error("Failed to load category:", err);
-        setError(err.message || "Failed to load category");
+        setError(error.message || "Failed to load category");
       } finally {
         setLoading(false);
       }

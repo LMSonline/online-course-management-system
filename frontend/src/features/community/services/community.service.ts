@@ -1,8 +1,6 @@
-/**
- * Community service - handles comments and notifications API calls
- */
 
-import { apiClient, type ApiResponse } from "@/services/core/api";
+
+import { apiClient } from "@/services/core/api";
 import { USE_MOCK } from "@/config/runtime";
 import type { PageResponse } from "@/services/core/api";
 
@@ -31,9 +29,7 @@ export interface NotificationResponse {
   link?: string;
 }
 
-/**
- * Get course comments
- */
+
 export async function getCourseComments(courseId: number): Promise<CommentResponse[]> {
   if (USE_MOCK) {
     return Promise.resolve([]);
@@ -43,9 +39,7 @@ export async function getCourseComments(courseId: number): Promise<CommentRespon
   return response.data;
 }
 
-/**
- * Create course comment
- */
+
 export async function createCourseComment(
   courseId: number,
   content: string
@@ -67,9 +61,7 @@ export async function createCourseComment(
   return response.data;
 }
 
-/**
- * Get lesson comments
- */
+
 export async function getLessonComments(lessonId: number): Promise<CommentResponse[]> {
   if (USE_MOCK) {
     return Promise.resolve([]);
@@ -79,9 +71,7 @@ export async function getLessonComments(lessonId: number): Promise<CommentRespon
   return response.data;
 }
 
-/**
- * Create lesson comment
- */
+
 export async function createLessonComment(
   lessonId: number,
   content: string
@@ -103,9 +93,7 @@ export async function createLessonComment(
   return response.data;
 }
 
-/**
- * Get comment replies
- */
+
 export async function getCommentReplies(commentId: number): Promise<CommentResponse[]> {
   if (USE_MOCK) {
     return Promise.resolve([]);
@@ -115,9 +103,7 @@ export async function getCommentReplies(commentId: number): Promise<CommentRespo
   return response.data;
 }
 
-/**
- * Reply to comment
- */
+
 export async function replyToComment(commentId: number, content: string): Promise<CommentResponse> {
   if (USE_MOCK) {
     return Promise.resolve({
@@ -136,9 +122,7 @@ export async function replyToComment(commentId: number, content: string): Promis
   return response.data;
 }
 
-/**
- * Update comment
- */
+
 export async function updateComment(
   commentId: number,
   content: string
@@ -158,9 +142,7 @@ export async function updateComment(
   return response.data;
 }
 
-/**
- * Delete comment
- */
+
 export async function deleteComment(commentId: number): Promise<void> {
   if (USE_MOCK) {
     return Promise.resolve();
@@ -169,9 +151,7 @@ export async function deleteComment(commentId: number): Promise<void> {
   await apiClient.delete(`/comments/${commentId}`);
 }
 
-/**
- * Get notifications
- */
+
 export async function getNotifications(
   page = 0,
   size = 10
@@ -194,9 +174,7 @@ export async function getNotifications(
   return response.data;
 }
 
-/**
- * Get unread notification count
- */
+
 export async function getUnreadNotificationCount(): Promise<number> {
   if (USE_MOCK) {
     return Promise.resolve(0);
@@ -206,9 +184,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
   return response.data.count;
 }
 
-/**
- * Mark notification as read
- */
+
 export async function markNotificationRead(id: number): Promise<void> {
   if (USE_MOCK) {
     return Promise.resolve();
@@ -217,9 +193,7 @@ export async function markNotificationRead(id: number): Promise<void> {
   await apiClient.post(`/notifications/${id}/mark-read`);
 }
 
-/**
- * Mark all notifications as read
- */
+
 export async function markAllNotificationsRead(): Promise<void> {
   if (USE_MOCK) {
     return Promise.resolve();
@@ -228,9 +202,7 @@ export async function markAllNotificationsRead(): Promise<void> {
   await apiClient.post("/notifications/mark-all-read");
 }
 
-/**
- * Delete notification
- */
+
 export async function deleteNotification(id: number): Promise<void> {
   if (USE_MOCK) {
     return Promise.resolve();

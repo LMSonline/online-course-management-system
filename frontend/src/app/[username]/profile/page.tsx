@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getProfile, updateProfile, uploadAvatar, type AccountProfileResponse } from "@/features/profile/services/profile.service";
 import { getCurrentUserInfo } from "@/features/auth/services/auth.service";
-import { User, Mail, Calendar, Edit2, Upload, X } from "lucide-react";
+import { User, Mail, Calendar, Edit2, Upload } from "lucide-react";
 
 export default function ProfilePage() {
-  const params = useParams();
   const router = useRouter();
   const [profile, setProfile] = useState<AccountProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +24,7 @@ export default function ProfilePage() {
     async function loadProfile() {
       try {
         setLoading(true);
-        const user = await getCurrentUserInfo();
+        await getCurrentUserInfo(); // Verify user is authenticated
         const profileData = await getProfile();
         setProfile(profileData);
         setFormData({
@@ -116,11 +115,12 @@ export default function ProfilePage() {
           {/* Avatar Section */}
           <div className="flex items-center gap-6 mb-8">
             <div className="relative">
-              <img
-                src={avatarPreview || profile.avatarUrl || "/images/default-avatar.png"}
-                alt={profile.fullName}
-                className="w-24 h-24 rounded-full border-2 border-white/20"
-              />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={avatarPreview || profile.avatarUrl || "/images/default-avatar.png"}
+                        alt={profile.fullName}
+                        className="w-24 h-24 rounded-full border-2 border-white/20"
+                      />
               {editing && (
                 <label className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full cursor-pointer hover:bg-blue-700">
                   <Upload className="w-4 h-4 text-white" />

@@ -1,10 +1,7 @@
 @import "tailwindcss";
 
-/* ================================
-   🎨 DESIGN TOKENS
-   ================================ */
+
 :root {
-  /* Legacy brand (giữ nguyên) */
   --brand-900: #2d5a27;
   --brand-600: #3fa337;
   --brand-200: #d9f2c7;
@@ -12,7 +9,6 @@
   --brand-600-rgb: 63 163 55;
   --brand-200-rgb: 217 242 199;
 
-  /* Neon theo logo (CTA/nhấn) */
   --brand-primary: #65D830;
   --brand-primary-rgb: 101 216 48;
   --brand-secondary: #2B3A4A;
@@ -20,13 +16,12 @@
   --brand-accent: #CFF6B2;
   --brand-accent-rgb: 207 246 178;
 
-  /* Brand chính UI (giữ) */
   --primary: #16a34a;
   --primary-700: #15803d;
   --primary-900: #14532d;
   --primary-soft: rgba(22,163,74,.12);
 
-  /* Dark theme (default) */
+
   --bg: #0b1220;
   --surface: #0f172a;
   --surface-2: #0b1220;
@@ -39,7 +34,7 @@
 
 }
 
-/* Light theme (tùy chọn) */
+
 .light {
   --bg: #f8fafc;
   --surface: #ffffff;
@@ -51,9 +46,7 @@
   color-scheme: light;
 }
 
-/* ================================
-   🧱 BASE
-   ================================ */
+
 html, body { min-height: 100%; }
 body {
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -64,15 +57,13 @@ body {
   
 }
 
-/* Scrollbar */
+
 * { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.35) transparent; }
 *::-webkit-scrollbar { height: 10px; width: 10px; }
 *::-webkit-scrollbar-thumb { background: rgba(148,163,184,.35); border-radius: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 
-/* ================================
-   🔧 TOKENS → helpers
-   ================================ */
+
 .bg-app     { background-color: var(--bg); }
 .bg-surface { background-color: var(--surface); }
 .text-body  { color: var(--text); }
@@ -80,16 +71,13 @@ body {
 .border-app { border-color: var(--border); }
 .ring-brand { box-shadow: 0 0 0 4px var(--ring); }
 
-/* Glow nhẹ cho chữ brand */
 .text-glow-lime {
   text-shadow:
     0 0 6px rgba(var(--brand-primary-rgb) / .45),
     0 0 14px rgba(var(--brand-primary-rgb) / .25);
 }
 
-/* ================================
-   🔵 BUTTONS (giữ + thêm biến thể)
-   ================================ */
+
 .btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold transition; }
 
 .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 6px 20px var(--ring); }
@@ -101,7 +89,7 @@ body {
 .btn-outline { border: 1px solid var(--border); color: var(--text); }
 .btn-outline:hover { background: rgba(255,255,255,.05); }
 
-/* tăng tương phản cho nút outline (Log in) */
+
 .btn-outline.strong {
   border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
   color: #fff;
@@ -112,15 +100,14 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
-/* Icon button */
-/* === ICON BUTTONS (Cart, Globe) – cùng kích thước Sign up === */
+
 .btn-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 40px;          /* khớp chiều cao .btn */
+  height: 40px;          
   min-width: 40px;
-  padding: 0 16px;       /* cho cảm giác nút đều */
+  padding: 0 16px;      
   border-radius: 0.375rem;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -140,7 +127,7 @@ body {
 }
 
 
-/* Neon CTA (Sign up) */
+
 .btn-primary.neon{
   background: var(--brand-primary);
   color: #091119;
@@ -152,24 +139,19 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 10px 38px rgba(var(--brand-primary-rgb) / .75);
 }
-/* ================================
-   🧩 CARDS / INPUTS
-   ================================ */
+
 .card { @apply rounded-2xl p-4 transition; background: var(--surface); border: 1px solid var(--border); }
 .card:hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); }
 
 .input { @apply w-full py-3 px-4 rounded-md outline-none transition; background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 .input::placeholder { color: var(--muted); }
 
-/* ================================
-   🔍 SEARCHBAR – sửa chồng chéo icon/text
-   ================================ */
-/* === SEARCHBAR: viền neon === */
+
 .searchbar{
   position: relative;
   border-radius: 9999px;
   background: #0c1525;
-  /* viền neon nhạt ở trạng thái idle */
+
   border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, var(--border));
   transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
 }
@@ -178,14 +160,14 @@ body {
   border-color: color-mix(in srgb, var(--brand-primary) 55%, var(--border));
 }
 .searchbar:focus-within{
-  /* viền neon rõ + glow */
+
   border-color: var(--brand-primary);
   box-shadow:
     0 0 0 2px rgba(var(--brand-primary-rgb) / .40),
     0 0 24px 2px rgba(var(--brand-primary-rgb) / .20);
 }
 
-/* input bên trong: giữ padding để không đè icon */
+
 .search-input{
   background: transparent; border: none; box-shadow:none;
   color: var(--text);
@@ -194,12 +176,9 @@ body {
 }
 .search-input::placeholder{ color: var(--muted); }
 
-/* icon màu theo token */
+
 .input-icon { color: var(--muted); }
 
-/* ================================
-   ✨ EFFECTS & NAV
-   ================================ */
 .bg-lms {
   background:
     radial-gradient(60rem 60rem at 80% -10%, rgba(var(--brand-600-rgb) / .20), transparent 60%),
@@ -211,7 +190,6 @@ body {
 .navbar { @apply sticky top-0 z-40 backdrop-blur; background: color-mix(in srgb, var(--surface) 88%, transparent); border-bottom: 1px solid var(--border); }
 .section { @apply container mx-auto px-4; }
 
-/* nav link */
 .nav-link{
   padding: .5rem .75rem;
   border-radius: .375rem;
@@ -227,11 +205,9 @@ body {
   border: 1px solid color-mix(in srgb, var(--primary) 36%, var(--border));
 }
 
-/* Drawer (mobile) */
 .drawer-panel{ background: var(--surface); color: var(--text); border-right: 1px solid var(--border); }
 
 
-/* mũi tên trong card (dấu →) */
 .i-ch::after{
   content: "→";
   font-weight: 700;
@@ -240,7 +216,6 @@ body {
 }
 a:hover .i-ch::after{ transform: translateX(2px); opacity: 1; }
 
-/* tinh chỉnh card hover (viền mờ) */
 article:hover > .ring-outer { opacity: .9; }
 
 .hide-scrollbar {

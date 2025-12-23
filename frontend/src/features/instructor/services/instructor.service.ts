@@ -2,7 +2,7 @@
  * Instructor service - handles instructor-related API calls
  */
 
-import { apiClient, type ApiResponse } from "@/services/core/api";
+import { apiClient } from "@/services/core/api";
 import { USE_MOCK } from "@/config/runtime";
 import { INSTRUCTOR_DASHBOARD_MOCK } from "../mocks/dashboard.mocks";
 import type { InstructorDashboardData } from "../types/dashboard.types";
@@ -39,7 +39,7 @@ export async function getInstructorDashboard(): Promise<InstructorDashboardData>
         averageRating: stats?.data?.averageRating || 0,
       },
       revenueHistory: revenue?.data?.monthlyRevenue || [],
-      enrollmentByCourse: courses?.data?.items?.map((c: any) => ({
+      enrollmentByCourse: courses?.data?.items?.map((c: { id: number; title: string }) => ({
         courseId: c.id,
         courseTitle: c.title,
         enrollments: 0, // TODO: Get from course stats
@@ -47,7 +47,7 @@ export async function getInstructorDashboard(): Promise<InstructorDashboardData>
       quickSections: [],
       tasks: [],
       reviews: [],
-      courses: courses?.data?.items?.map((c: any) => ({
+      courses: courses?.data?.items?.map((c: { id: number; title: string }) => ({
         id: c.id.toString(),
         title: c.title,
         students: 0,

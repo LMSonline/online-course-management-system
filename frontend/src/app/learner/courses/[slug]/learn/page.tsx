@@ -12,7 +12,6 @@ import {
   getLessonsByChapter,
   getVideoStreamUrl,
 } from "@/features/courses/services/courses.service";
-import { getLessonComments, createLessonComment, type CommentResponse } from "@/features/community/services/community.service";
 import { USE_MOCK } from "@/config/runtime";
 
 export default function CoursePlayerPage() {
@@ -91,9 +90,10 @@ export default function CoursePlayerPage() {
           level: courseDetail.level,
           sections,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as Error;
         console.error("Failed to load course:", err);
-        setError(err.message || "Failed to load course");
+        setError(error.message || "Failed to load course");
         // Fallback to mock if available
         if (slug === "d2" || slug === MOCK_PLAYER_COURSE.slug) {
           setCourse(MOCK_PLAYER_COURSE);

@@ -2,7 +2,7 @@
  * Courses service - handles course-related API calls
  */
 
-import { apiClient, type ApiResponse } from "@/services/core/api";
+import { apiClient } from "@/services/core/api";
 import type { PageResponse } from "@/services/core/api";
 import { USE_MOCK } from "@/config/runtime";
 import { COURSE_CATALOG_MOCK } from "../mocks/catalog.mocks";
@@ -157,7 +157,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseDetail> {
     
         // Transform backend response to frontend format
         // Note: This is a simplified transformation - you may need to fetch additional data
-        const courseDetail: any = {
+        const courseDetail: CourseDetail & { PublicVersionId?: number; publicVersionId?: number } = {
           id: course.id.toString(),
           slug: course.slug,
           title: course.title,
@@ -181,10 +181,11 @@ export async function getCourseBySlug(slug: string): Promise<CourseDetail> {
         };
         
         // Add publicVersionId for learning player
-        if ((course as any).PublicVersionId) {
-          courseDetail.PublicVersionId = (course as any).PublicVersionId;
-        } else if ((course as any).publicVersionId) {
-          courseDetail.PublicVersionId = (course as any).publicVersionId;
+        const courseWithVersion = course as CourseResponse & { PublicVersionId?: number; publicVersionId?: number };
+        if (courseWithVersion.PublicVersionId) {
+          courseDetail.PublicVersionId = courseWithVersion.PublicVersionId;
+        } else if (courseWithVersion.publicVersionId) {
+          courseDetail.PublicVersionId = courseWithVersion.publicVersionId;
         }
         
         return courseDetail;

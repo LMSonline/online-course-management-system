@@ -36,11 +36,6 @@ export default function SearchPage() {
     loadCourses();
   }, [query, level]);
 
-  const handleSearch = () => {
-    if (search.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(search)}`;
-    }
-  };
 
   const filtered = courses.filter((c) => {
     if (rating !== "all") {
@@ -71,7 +66,7 @@ export default function SearchPage() {
         />
         {query && (
           <p className="text-slate-300 mb-4">
-            Search results for: <span className="font-semibold">"{query}"</span>
+            Search results for: <span className="font-semibold">&ldquo;{query}&rdquo;</span>
           </p>
         )}
         {loading ? (

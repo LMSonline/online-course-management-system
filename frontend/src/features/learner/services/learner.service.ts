@@ -2,7 +2,7 @@
  * Learner service - handles student/learner API calls
  */
 
-import { apiClient, type ApiResponse } from "@/services/core/api";
+import { apiClient } from "@/services/core/api";
 import { USE_MOCK } from "@/config/runtime";
 import type { PageResponse } from "@/services/core/api";
 

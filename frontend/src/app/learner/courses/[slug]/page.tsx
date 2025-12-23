@@ -60,8 +60,9 @@ export default function CourseDetailPage({
           setRatingSummary(ratingData);
           setComments(commentsData);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load course");
+      } catch (err: unknown) {
+        const error = err as Error;
+        setError(error.message || "Failed to load course");
       } finally {
         setLoading(false);
       }
@@ -286,13 +287,14 @@ export default function CourseDetailPage({
                 <p className="text-slate-400 text-center py-4">No comments yet</p>
               ) : (
                 comments.map((comment) => (
-                  <div key={comment.id} className="border-t border-white/10 pt-4">
-                    <div className="flex items-start gap-3">
-                      <img
-                        src={comment.authorAvatarUrl || "/images/default-avatar.png"}
-                        alt={comment.authorName}
-                        className="w-10 h-10 rounded-full"
-                      />
+                    <div key={comment.id} className="border-t border-white/10 pt-4">
+                      <div className="flex items-start gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={comment.authorAvatarUrl || "/images/default-avatar.png"}
+                          alt={comment.authorName}
+                          className="w-10 h-10 rounded-full"
+                        />
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <p className="font-semibold text-sm">{comment.authorName}</p>
