@@ -112,11 +112,35 @@ export async function listCourses(params?: CourseListParams): Promise<CourseSumm
   }
 
   try {
+    // Build query params - backend uses Spring Filter spec
+    const queryParams: Record<string, string | number> = {
+      page: params?.page || 0,
+      size: params?.size || 20,
+    };
+    
+    // Add category filter if provided (backend uses Spring Filter: categoryName==value)
+    if (params?.category) {
+      queryParams.filter = `categoryName==${params.category}`;
+    }
+    
+    // Add level filter if provided
+    if (params?.level) {
+      const existingFilter = queryParams.filter as string | undefined;
+      queryParams.filter = existingFilter 
+        ? `${existingFilter};difficulty==${params.level}`
+        : `difficulty==${params.level}`;
+    }
+    
+    // Add search filter if provided
+    if (params?.search) {
+      const existingFilter = queryParams.filter as string | undefined;
+      queryParams.filter = existingFilter
+        ? `${existingFilter};title=like=${params.search}`
+        : `title=like=${params.search}`;
+    }
+
     const response = await apiClient.get<ApiResponse<PageResponse<CourseResponse>> | PageResponse<CourseResponse>>("/courses", {
-      params: {
-        page: params?.page || 0,
-        size: params?.size || 20,
-      },
+      params: queryParams,
     });
     
     // Unwrap the response (handles both ApiResponse<PageResponse> and direct PageResponse)

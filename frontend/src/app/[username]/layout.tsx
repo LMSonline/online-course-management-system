@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-import { getCurrentUserInfo } from "@/services/auth";
-
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import LearnerNavbar from "@/core/components/learner/navbar/LearnerNavbar";
 import InstructorNavbar from "@/core/components/instructor/navbar/InstructorNavbar";
 import AdminNavbar from "@/core/components/admin/navbar/AdminNavbar";
@@ -12,39 +10,38 @@ import AdminNavbar from "@/core/components/admin/navbar/AdminNavbar";
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const params = useParams();
+  const { user, role, loading, fetchMe } = useAuth();
 
   const rawUsername = params.username;
   const usernameFromUrl = Array.isArray(rawUsername) ? rawUsername[0] : rawUsername;
 
-  const [role, setRole] = useState<string | null>(null);
-  const [verified, setVerified] = useState(false); // tránh loop
-
   useEffect(() => {
-    async function loadUser() {
-      try {
-        const me = await getCurrentUserInfo(); // { username, role, ... }
-
-        const urlUser = usernameFromUrl?.toLowerCase().trim();
-        const realUser = me.username?.toLowerCase().trim();
-
-        // Nếu URL sai username → redirect sang URL đúng
-        if (urlUser !== realUser) {
-          router.replace(`/${me.username}/dashboard`);
+    async function verifyUser() {
+      if (!user && !loading) {
+        try {
+          await fetchMe();
+        } catch {
+          router.replace("/login");
           return;
         }
+      }
 
-        setRole(me.role);
-        setVerified(true);
-      } catch (err) {
-        router.replace("/login");
+      if (user) {
+        const urlUser = usernameFromUrl?.toLowerCase().trim();
+        const realUser = user.username?.toLowerCase().trim();
+
+        // If URL username doesn't match, redirect to correct URL
+        if (urlUser !== realUser) {
+          router.replace(`/${user.username}/dashboard`);
+        }
       }
     }
 
-    loadUser();
-  }, [router, usernameFromUrl]);
+    verifyUser();
+  }, [user, loading, usernameFromUrl, router, fetchMe]);
 
-  // Khi chưa xác thực → tránh hiển thị UI sai
-  if (!verified) {
+  // Show loading while checking auth
+  if (loading || !user) {
     return <div className="text-center text-white p-6">Loading...</div>;
   }
 

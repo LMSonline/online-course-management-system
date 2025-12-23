@@ -33,12 +33,14 @@ export default function LoginPage() {
 
       // res = ApiResponse<LoginResponse> = { success, status, message, code, data: { accessToken, refreshToken, user } }
       const payload = res.data; // This is LoginResponse
-      const accessToken = payload.accessToken;
-      const refreshToken = payload.refreshToken;
       const user = payload.user;
 
       // 🔐 Tokens are already stored by auth.service.ts loginUser()
-      // Just store user info
+      // Update auth store
+      const { useAuthStore } = await import("@/store/auth.store");
+      useAuthStore.getState().login(user);
+      
+      // Store user in localStorage for backward compatibility
       if (typeof window !== "undefined") {
         localStorage.setItem("user", JSON.stringify(user));
       }

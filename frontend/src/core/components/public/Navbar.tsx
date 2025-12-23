@@ -7,6 +7,7 @@ import { Search, ShoppingCart, Bot, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { useAssistantStore } from "@/store/assistant.store";
+import { ExploreMegaMenu } from "./ExploreMegaMenu";
 
 
 function NavItem({ href, label, className }: { href: string; label: string; className?: string }) {
@@ -17,8 +18,11 @@ function NavItem({ href, label, className }: { href: string; label: string; clas
 
 export default function Navbar() {
   const openPopup = useAssistantStore((s) => s.openPopup);
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const exploreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +54,22 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <NavItem href="/explore" label="Explore" className="hidden md:inline-flex" />
+          <div
+            ref={exploreRef}
+            className="relative hidden md:block"
+            onMouseEnter={() => setExploreOpen(true)}
+            onMouseLeave={() => setExploreOpen(false)}
+          >
+            <button
+              className={cn(
+                "nav-link",
+                pathname?.startsWith("/explore") || pathname?.startsWith("/topic") ? "active" : ""
+              )}
+            >
+              Explore
+            </button>
+            <ExploreMegaMenu isOpen={exploreOpen} onClose={() => setExploreOpen(false)} />
+          </div>
         </div>
 
         {/* CENTER: Search (đã fix icon/placeholder) */}
@@ -157,10 +176,21 @@ export default function Navbar() {
 
           <div className="flex flex-wrap gap-2">
             <NavItem href="/explore" label="Explore" />
-            {["Web Dev", "Data Science", "Design", "Mobile", "AI/ML"].map((c) => (
-              <a key={c} href={`#/c/${encodeURIComponent(c)}`} className="nav-link">{c}</a>
-            ))}
+            <button
+              onClick={() => {
+                setOpen(false);
+                setExploreOpen(!exploreOpen);
+              }}
+              className="nav-link"
+            >
+              Browse Topics
+            </button>
           </div>
+          {exploreOpen && (
+            <div className="mt-4 relative">
+              <ExploreMegaMenu isOpen={exploreOpen} onClose={() => setExploreOpen(false)} />
+            </div>
+          )}
 
           <div className="mt-auto flex gap-2">
             <button className="btn btn-outline strong flex-1">Log in</button>

@@ -1,8 +1,10 @@
 /**
  * Runtime configuration flags
+ * @deprecated Use src/config/env.ts instead
  */
 
-export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+import { env } from "./env";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+export const USE_MOCK = env.USE_MOCK;
+export const API_BASE_URL = env.API_BASE_URL;
 

@@ -67,6 +67,10 @@ export async function loginUser(payload: {
   if (response.data.data) {
     setAccessToken(response.data.data.accessToken);
     setRefreshToken(response.data.data.refreshToken);
+    // Set user role cookie for middleware
+    if (typeof document !== "undefined" && response.data.data.user?.role) {
+      document.cookie = `user-role=${response.data.data.user.role}; path=/; max-age=86400; SameSite=Lax`;
+    }
   }
 
   return response.data;
