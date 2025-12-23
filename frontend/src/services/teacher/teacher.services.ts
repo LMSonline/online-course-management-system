@@ -1,6 +1,6 @@
 import { apiClient } from "@/services/core/api";
 
-const TEACHER_PREFIX = "/api/v1/teachers";
+const TEACHER_PREFIX = "/teachers";
 
 export interface TeacherDetail {
   id: number;
@@ -32,7 +32,7 @@ export interface TeacherDetail {
  * Requires TEACHER role
  */
 export async function getCurrentTeacher(): Promise<TeacherDetail> {
-  const res = await apiClient(`${TEACHER_PREFIX}/me`, { method: "GET" });
-  return res.data as TeacherDetail;
+  const res = await apiClient.get<TeacherDetail>(`${TEACHER_PREFIX}/me`);
+  return res.data;
 }
 

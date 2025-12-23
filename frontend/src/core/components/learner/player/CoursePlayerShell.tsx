@@ -208,6 +208,9 @@ export function CoursePlayerShell({ course }: Props) {
               <button className="rounded-full px-3 py-1.5 text-slate-300 hover:bg-slate-900">
                 Notes
               </button>
+              <button className="rounded-full px-3 py-1.5 text-slate-300 hover:bg-slate-900">
+                Comments
+              </button>
             </div>
 
             <p className="text-sm text-slate-300">

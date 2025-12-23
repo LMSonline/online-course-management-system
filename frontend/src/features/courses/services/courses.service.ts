@@ -155,30 +155,39 @@ export async function getCourseBySlug(slug: string): Promise<CourseDetail> {
     const response = await apiClient.get<CourseResponse>(`/courses/${slug}`);
     const course = response.data;
     
-    // Transform backend response to frontend format
-    // Note: This is a simplified transformation - you may need to fetch additional data
-    return {
-      id: course.id.toString(),
-      slug: course.slug,
-      title: course.title,
-      subtitle: course.shortDescription,
-      rating: 4.5, // TODO: Get from reviews
-      ratingCount: 0, // TODO: Get from reviews
-      studentsCount: 0, // TODO: Get from enrollment count
-      lastUpdated: new Date().toISOString(),
-      language: "English",
-      subtitles: [],
-      level: course.difficulty as "Beginner" | "Intermediate" | "Advanced",
-      whatYouWillLearn: [],
-      includes: [],
-      sections: [],
-      description: course.shortDescription,
-      instructor: {
-        name: course.teacherName,
-        title: "Instructor",
-        about: "",
-      },
-    };
+        // Transform backend response to frontend format
+        // Note: This is a simplified transformation - you may need to fetch additional data
+        const courseDetail: any = {
+          id: course.id.toString(),
+          slug: course.slug,
+          title: course.title,
+          subtitle: course.shortDescription,
+          rating: 4.5, // TODO: Get from reviews
+          ratingCount: 0, // TODO: Get from reviews
+          studentsCount: 0, // TODO: Get from enrollment count
+          lastUpdated: new Date().toISOString(),
+          language: "English",
+          subtitles: [],
+          level: course.difficulty as "Beginner" | "Intermediate" | "Advanced",
+          whatYouWillLearn: [],
+          includes: [],
+          sections: [],
+          description: course.shortDescription,
+          instructor: {
+            name: course.teacherName,
+            title: "Instructor",
+            about: "",
+          },
+        };
+        
+        // Add publicVersionId for learning player
+        if ((course as any).PublicVersionId) {
+          courseDetail.PublicVersionId = (course as any).PublicVersionId;
+        } else if ((course as any).publicVersionId) {
+          courseDetail.PublicVersionId = (course as any).publicVersionId;
+        }
+        
+        return courseDetail;
   } catch (error) {
     console.error("Failed to fetch course:", error);
     const { MOCK_COURSE } = await import("../mocks/course-detail.mocks");

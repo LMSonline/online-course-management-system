@@ -1,16 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CategoryResponseDto } from "@/features/courses/services/courses.service";
 
-const categories = [
-  { title: "Development", img: "/images/categories/dev.png" },
-  { title: "Design", img: "/images/categories/design.png" },
-  { title: "Business", img: "/images/categories/business.png" },
-  { title: "AI & Data", img: "/images/categories/ai.png" },
-  { title: "Marketing", img: "/images/categories/marketing.png" },
-  { title: "Photography", img: "/images/categories/photo.png" },
+const defaultCategories = [
+  { title: "Development", img: "/images/categories/dev.png", slug: "development" },
+  { title: "Design", img: "/images/categories/design.png", slug: "design" },
+  { title: "Business", img: "/images/categories/business.png", slug: "business" },
+  { title: "AI & Data", img: "/images/categories/ai.png", slug: "ai-data" },
+  { title: "Marketing", img: "/images/categories/marketing.png", slug: "marketing" },
+  { title: "Photography", img: "/images/categories/photo.png", slug: "photography" },
 ];
 
-export default function ExploreCategories() {
+interface ExploreCategoriesProps {
+  categories?: CategoryResponseDto[];
+}
+
+export default function ExploreCategories({ categories }: ExploreCategoriesProps) {
+  const displayCategories = categories && categories.length > 0
+    ? categories.slice(0, 6).map((cat) => ({
+        title: cat.name,
+        slug: cat.slug,
+        img: cat.thumbnailUrl || "/images/categories/default.png",
+      }))
+    : defaultCategories;
+
   return (
     <section className="px-4 sm:px-6 md:px-10 xl:px-16 mt-10">
       <h2 className="text-[28px] md:text-[36px] font-extrabold mb-6">
@@ -18,10 +31,10 @@ export default function ExploreCategories() {
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-        {categories.map((c) => (
+        {displayCategories.map((c) => (
           <Link
-            key={c.title}
-            href={`/explore?category=${c.title.toLowerCase()}`}
+            key={c.slug || c.title}
+            href={c.slug ? `/categories/${c.slug}` : `/explore?category=${c.title.toLowerCase()}`}
             className="
               group relative overflow-hidden
               rounded-2xl border border-white/10 bg-white/[0.03]

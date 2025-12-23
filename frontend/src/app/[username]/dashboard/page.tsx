@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getCurrentUserInfo, type MeUser } from "@/features/auth/services/auth.service";
-import { getCurrentTeacher } from "@/services/teacher/teacher.services";
+import { getCurrentTeacher } from "@/features/instructor/services/instructor.service";
 
 import LearnerDashboardPage from "@/app/learner/dashboard/page";
 import InstructorDashboardPage from "@/app/instructor/dashboard/page";
