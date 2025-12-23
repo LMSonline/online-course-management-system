@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, Eye, EyeOff, Check, Loader2 } from "lucide-react";
@@ -10,6 +11,9 @@ import { useLogin, useResendVerificationEmail } from "@/hooks/useAuth";
 import Popup, { PopupType } from "@/core/components/public/Popup";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+
   const [showPassword, setShowPassword] = useState(false);
   const [popup, setPopup] = useState<{
     type: PopupType;
@@ -40,6 +44,7 @@ export default function LoginPage() {
       {
         login: data.email,
         password: data.password,
+        redirectUrl: redirectUrl || undefined,
       },
       {
         onError: (error) => {
@@ -203,7 +208,6 @@ export default function LoginPage() {
             </p>
           </form>
 
-          {/* ==== Right: Promo panel giữ nguyên ==== */}
           <aside className="hidden md:block">
             <div className="relative overflow-hidden rounded-2xl border border-white/10 p-8 min-h-[360px]">
               <div className="absolute inset-0 bg-gradient-to-br from-[color:rgb(var(--brand-600-rgb,63_163_55))]/15 via-transparent to-[color:rgb(var(--brand-900-rgb,45_90_39))]/25" />

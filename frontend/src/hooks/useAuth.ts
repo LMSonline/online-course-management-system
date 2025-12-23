@@ -17,9 +17,13 @@ export const useLogin = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  return useMutation<LoginResponse, AppError, LoginRequest>({
-    mutationFn: authService.login,
-    onSuccess: (data) => {
+  return useMutation<
+    LoginResponse,
+    AppError,
+    LoginRequest & { redirectUrl?: string }
+  >({
+    mutationFn: ({ redirectUrl, ...loginData }) => authService.login(loginData),
+    onSuccess: (data, variables) => {
       // Store tokens
       tokenStorage.setTokens(data.accessToken, data.refreshToken);
 
@@ -33,15 +37,22 @@ export const useLogin = () => {
 
       toast.success("Login successful!");
 
-      // Redirect based on role
-      const role = data.user.role;
-      if (role === "ADMIN") {
-        router.push("/admin/dashboard");
-      } else if (role === "TEACHER") {
-        router.push("/teacher/dashboard");
-      } else {
-        router.push("/learner/dashboard");
-      }
+      // Redirect based on role with small delay to ensure token is set
+      setTimeout(() => {
+        // Use redirect URL if provided, otherwise use default dashboard
+        if (variables.redirectUrl) {
+          router.replace(variables.redirectUrl);
+        } else {
+          const role = data.user.role;
+          if (role === "ADMIN") {
+            router.replace("/admin/dashboard");
+          } else if (role === "TEACHER") {
+            router.replace("/teacher/dashboard");
+          } else {
+            router.replace("/learner/dashboard");
+          }
+        }
+      }, 150);
     },
     onError: (error) => {
       console.error("Login error:", error);
