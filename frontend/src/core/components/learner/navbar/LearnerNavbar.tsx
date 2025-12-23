@@ -16,6 +16,8 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; // ⬅️ thêm
 import { useAssistantStore } from "@/core/components/public/store";
+import { getUnreadNotificationCount } from "@/features/community/services/community.service";
+import { useRouter } from "next/navigation";
 
 function NavItem({
   href,
@@ -37,13 +39,16 @@ function NavItem({
 }
 
 export default function LearnerNavbar() {
-    const openPopup = useAssistantStore((s) => s.openPopup);
+  const openPopup = useAssistantStore((s) => s.openPopup);
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -66,6 +71,21 @@ export default function LearnerNavbar() {
     window.addEventListener("click", onClick);
     return () => window.removeEventListener("click", onClick);
   }, [profileOpen]);
+
+  useEffect(() => {
+    async function loadUnreadCount() {
+      try {
+        const count = await getUnreadNotificationCount();
+        setUnreadCount(count);
+      } catch (error) {
+        // Silently fail - user might not be authenticated
+      }
+    }
+    loadUnreadCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <header className="navbar">
@@ -143,9 +163,18 @@ export default function LearnerNavbar() {
           </button>
 
           {/* Notifications */}
-          <button className="btn-icon hidden sm:inline-flex" aria-label="Notifications">
+          <Link
+            href="/notifications"
+            className="btn-icon hidden sm:inline-flex relative"
+            aria-label="Notifications"
+          >
             <Bell size={18} />
-          </button>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs font-semibold flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
 
           {/* AI Tutor button – thay cho nút chọn ngôn ngữ */}
           <button
@@ -255,12 +284,18 @@ export default function LearnerNavbar() {
             >
               <ShoppingCart size={18} />
             </button>
-            <button
-              className="btn-icon"
+            <Link
+              href="/notifications"
+              className="btn-icon relative"
               aria-label="Notifications"
             >
               <Bell size={18} />
-            </button>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs font-semibold flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
             <Link
               href="/assistant"
               aria-label="Open AI study assistant"
