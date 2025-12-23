@@ -1,6 +1,6 @@
 "use client";
 
-import { registerUser } from "@/services/public/auth.services";
+import { registerUser } from "@/services/auth/auth.services";
 import Popup from "@/core/components/public/Popup";
 import { useRouter } from "next/navigation";
 
