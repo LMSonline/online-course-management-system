@@ -8,7 +8,7 @@ import { getRefreshToken, setAccessToken, clearTokens } from "./token";
 import { AuthError } from "./errors";
 import type { ApiResponse } from "./api";
 
-const REFRESH_ENDPOINT = "/api/v1/auth/refresh-token";
+const REFRESH_ENDPOINT = "/auth/refresh";
 
 let refreshPromise: Promise<string> | null = null;
 

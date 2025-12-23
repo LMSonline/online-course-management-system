@@ -6,7 +6,7 @@
 import { apiClient, type ApiResponse } from "@/services/core/api";
 import { setAccessToken, setRefreshToken, clearTokens } from "@/services/core/token";
 
-const AUTH_PREFIX = "/api/v1/auth";
+const AUTH_PREFIX = "/auth";
 
 export interface MeUser {
   accountId: number;
@@ -95,7 +95,7 @@ export async function logout(refreshToken: string): Promise<void> {
  */
 export async function refreshToken(refreshToken: string): Promise<ApiResponse<{ accessToken: string }>> {
   const response = await apiClient.post<ApiResponse<{ accessToken: string }>>(
-    `${AUTH_PREFIX}/refresh-token`,
+    `${AUTH_PREFIX}/refresh`,
     { refreshToken }
   );
   
@@ -121,7 +121,7 @@ export async function verifyEmail(token: string): Promise<ApiResponse<void>> {
  */
 export async function resendVerificationEmail(email: string): Promise<ApiResponse<void>> {
   const response = await apiClient.post<ApiResponse<void>>(
-    `${AUTH_PREFIX}/resend-verification-email`,
+    `${AUTH_PREFIX}/resend-verification`,
     { email }
   );
   return response.data;
@@ -132,7 +132,7 @@ export async function resendVerificationEmail(email: string): Promise<ApiRespons
  */
 export async function forgotPassword(email: string): Promise<ApiResponse<void>> {
   const response = await apiClient.post<ApiResponse<void>>(
-    `${AUTH_PREFIX}/forgot-password`,
+    `${AUTH_PREFIX}/password/forgot`,
     { email }
   );
   return response.data;
@@ -143,7 +143,7 @@ export async function forgotPassword(email: string): Promise<ApiResponse<void>> 
  */
 export async function resetPassword(token: string, newPassword: string): Promise<ApiResponse<void>> {
   const response = await apiClient.post<ApiResponse<void>>(
-    `${AUTH_PREFIX}/reset-password?token=${encodeURIComponent(token)}`,
+    `${AUTH_PREFIX}/password/reset?token=${encodeURIComponent(token)}`,
     { newPassword }
   );
   return response.data;

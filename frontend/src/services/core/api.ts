@@ -7,7 +7,7 @@ import { getAccessToken } from "./token";
 import { refreshAccessToken } from "./auth-refresh";
 import { ApiError, NetworkError } from "./errors";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
