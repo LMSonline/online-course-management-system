@@ -191,123 +191,234 @@ export function useCreateCourse() {
 
 ## Contract Keys
 
+**Source of Truth:** `ENDPOINT_TO_CONTRACT_MAP.md`
+
 Use **UPPER_SNAKE_CASE** for contract keys. These are used for:
 - API endpoint constants
 - Error code mappings
 - Feature flags
 - Cache keys
 
-### Endpoint Contract Keys
+### Contract Keys (Source: ENDPOINT_TO_CONTRACT_MAP.md)
 
+All contract keys listed below are extracted from `ENDPOINT_TO_CONTRACT_MAP.md`. Do not use keys not present in the map.
+
+#### AUTH Domain
 ```typescript
-// Auth
 export const AUTH_REGISTER = 'AUTH_REGISTER';
 export const AUTH_LOGIN = 'AUTH_LOGIN';
 export const AUTH_REFRESH = 'AUTH_REFRESH';
 export const AUTH_LOGOUT = 'AUTH_LOGOUT';
 export const AUTH_ME = 'AUTH_ME';
-export const AUTH_VERIFY_EMAIL = 'AUTH_VERIFY_EMAIL';
-export const AUTH_FORGOT_PASSWORD = 'AUTH_FORGOT_PASSWORD';
-export const AUTH_RESET_PASSWORD = 'AUTH_RESET_PASSWORD';
-export const AUTH_CHANGE_PASSWORD = 'AUTH_CHANGE_PASSWORD';
+```
 
-// Account
+#### ACCOUNT Domain
+```typescript
 export const ACCOUNT_GET_PROFILE = 'ACCOUNT_GET_PROFILE';
 export const ACCOUNT_UPDATE_PROFILE = 'ACCOUNT_UPDATE_PROFILE';
 export const ACCOUNT_UPLOAD_AVATAR = 'ACCOUNT_UPLOAD_AVATAR';
+```
 
-// Student
-export const STUDENT_GET_BY_ID = 'STUDENT_GET_BY_ID';
-export const STUDENT_GET_BY_CODE = 'STUDENT_GET_BY_CODE';
-export const STUDENT_UPDATE = 'STUDENT_UPDATE';
-export const STUDENT_GET_COURSES = 'STUDENT_GET_COURSES';
-export const STUDENT_GET_CERTIFICATES = 'STUDENT_GET_CERTIFICATES';
+#### STUDENT Domain
+```typescript
 export const STUDENT_GET_ME = 'STUDENT_GET_ME';
+export const STUDENT_GET_BY_ID = 'STUDENT_GET_BY_ID';
+export const STUDENT_GET_COURSES = 'STUDENT_GET_COURSES';
+```
 
-// Teacher
-export const TEACHER_GET_BY_ID = 'TEACHER_GET_BY_ID';
-export const TEACHER_GET_BY_CODE = 'TEACHER_GET_BY_CODE';
-export const TEACHER_UPDATE = 'TEACHER_UPDATE';
-export const TEACHER_GET_COURSES = 'TEACHER_GET_COURSES';
-export const TEACHER_GET_STUDENTS = 'TEACHER_GET_STUDENTS';
-export const TEACHER_GET_REVENUE = 'TEACHER_GET_REVENUE';
-export const TEACHER_GET_STATS = 'TEACHER_GET_STATS';
+#### TEACHER Domain
+```typescript
 export const TEACHER_GET_ME = 'TEACHER_GET_ME';
+export const TEACHER_GET_BY_ID = 'TEACHER_GET_BY_ID';
+export const TEACHER_GET_COURSES = 'TEACHER_GET_COURSES';
+export const TEACHER_GET_STATS = 'TEACHER_GET_STATS';
+export const TEACHER_GET_REVENUE = 'TEACHER_GET_REVENUE';
+```
 
-// Course
+#### COURSE Domain
+```typescript
 export const COURSE_CREATE = 'COURSE_CREATE';
-export const COURSE_GET_BY_SLUG = 'COURSE_GET_BY_SLUG';
-export const COURSE_LIST = 'COURSE_LIST';
+export const COURSE_GET_DETAIL = 'COURSE_GET_DETAIL';
+export const COURSE_GET_LIST = 'COURSE_GET_LIST';
 export const COURSE_UPDATE = 'COURSE_UPDATE';
 export const COURSE_DELETE = 'COURSE_DELETE';
-export const COURSE_CLOSE = 'COURSE_CLOSE';
-export const COURSE_OPEN = 'COURSE_OPEN';
-export const COURSE_RESTORE = 'COURSE_RESTORE';
-export const COURSE_GET_MY_COURSES = 'COURSE_GET_MY_COURSES';
+export const COURSE_CLOSE_ACTION = 'COURSE_CLOSE_ACTION';
+export const COURSE_OPEN_ACTION = 'COURSE_OPEN_ACTION';
+```
 
-// Category
-export const CATEGORY_CREATE = 'CATEGORY_CREATE';
-export const CATEGORY_GET_BY_ID = 'CATEGORY_GET_BY_ID';
-export const CATEGORY_GET_BY_SLUG = 'CATEGORY_GET_BY_SLUG';
+#### CATEGORY Domain
+```typescript
 export const CATEGORY_GET_TREE = 'CATEGORY_GET_TREE';
+export const CATEGORY_GET_BY_SLUG = 'CATEGORY_GET_BY_SLUG';
+export const CATEGORY_GET_BY_ID = 'CATEGORY_GET_BY_ID';
+export const CATEGORY_CREATE = 'CATEGORY_CREATE';
 export const CATEGORY_UPDATE = 'CATEGORY_UPDATE';
 export const CATEGORY_DELETE = 'CATEGORY_DELETE';
-export const CATEGORY_RESTORE = 'CATEGORY_RESTORE';
+```
 
-// Enrollment
+#### ENROLLMENT Domain
+```typescript
 export const ENROLLMENT_CREATE = 'ENROLLMENT_CREATE';
-export const ENROLLMENT_GET_STUDENT_ENROLLMENTS = 'ENROLLMENT_GET_STUDENT_ENROLLMENTS';
-export const ENROLLMENT_GET_COURSE_ENROLLMENTS = 'ENROLLMENT_GET_COURSE_ENROLLMENTS';
+export const ENROLLMENT_GET_STUDENT_LIST = 'ENROLLMENT_GET_STUDENT_LIST';
+export const ENROLLMENT_GET_COURSE_LIST = 'ENROLLMENT_GET_COURSE_LIST';
 export const ENROLLMENT_GET_DETAIL = 'ENROLLMENT_GET_DETAIL';
-export const ENROLLMENT_CANCEL = 'ENROLLMENT_CANCEL';
-export const ENROLLMENT_COMPLETE = 'ENROLLMENT_COMPLETE';
-export const ENROLLMENT_GET_STATS = 'ENROLLMENT_GET_STATS';
+export const ENROLLMENT_CANCEL_ACTION = 'ENROLLMENT_CANCEL_ACTION';
+```
 
-// Progress
+#### PROGRESS Domain
+```typescript
 export const PROGRESS_GET_STUDENT_OVERVIEW = 'PROGRESS_GET_STUDENT_OVERVIEW';
 export const PROGRESS_GET_COURSE = 'PROGRESS_GET_COURSE';
-export const PROGRESS_GET_LESSON = 'PROGRESS_GET_LESSON';
-export const PROGRESS_MARK_VIEWED = 'PROGRESS_MARK_VIEWED';
-export const PROGRESS_MARK_COMPLETED = 'PROGRESS_MARK_COMPLETED';
-export const PROGRESS_GET_COURSE_STATS = 'PROGRESS_GET_COURSE_STATS';
+export const PROGRESS_MARK_VIEWED_ACTION = 'PROGRESS_MARK_VIEWED_ACTION';
+export const PROGRESS_MARK_COMPLETED_ACTION = 'PROGRESS_MARK_COMPLETED_ACTION';
+```
 
-// Review
+#### REVIEW Domain
+```typescript
 export const REVIEW_CREATE = 'REVIEW_CREATE';
-export const REVIEW_GET_COURSE_REVIEWS = 'REVIEW_GET_COURSE_REVIEWS';
+export const REVIEW_GET_COURSE_LIST = 'REVIEW_GET_COURSE_LIST';
 export const REVIEW_UPDATE = 'REVIEW_UPDATE';
 export const REVIEW_DELETE = 'REVIEW_DELETE';
 export const REVIEW_GET_RATING_SUMMARY = 'REVIEW_GET_RATING_SUMMARY';
+```
 
-// Recommendation
+#### RECOMMENDATION Domain
+```typescript
 export const RECOMMENDATION_GET = 'RECOMMENDATION_GET';
-export const RECOMMENDATION_SUBMIT_FEEDBACK = 'RECOMMENDATION_SUBMIT_FEEDBACK';
-export const RECOMMENDATION_GET_STATS = 'RECOMMENDATION_GET_STATS';
+export const RECOMMENDATION_SUBMIT_FEEDBACK_ACTION = 'RECOMMENDATION_SUBMIT_FEEDBACK_ACTION';
+```
 
-// Comment
+#### COMMENT Domain
+```typescript
 export const COMMENT_CREATE_COURSE = 'COMMENT_CREATE_COURSE';
 export const COMMENT_CREATE_LESSON = 'COMMENT_CREATE_LESSON';
-export const COMMENT_REPLY = 'COMMENT_REPLY';
-export const COMMENT_GET_COURSE = 'COMMENT_GET_COURSE';
-export const COMMENT_GET_LESSON = 'COMMENT_GET_LESSON';
-export const COMMENT_GET_REPLIES = 'COMMENT_GET_REPLIES';
+export const COMMENT_GET_COURSE_LIST = 'COMMENT_GET_COURSE_LIST';
+export const COMMENT_GET_LESSON_LIST = 'COMMENT_GET_LESSON_LIST';
 export const COMMENT_UPDATE = 'COMMENT_UPDATE';
 export const COMMENT_DELETE = 'COMMENT_DELETE';
+```
 
-// Notification
-export const NOTIFICATION_GET = 'NOTIFICATION_GET';
+#### NOTIFICATION Domain
+```typescript
+export const NOTIFICATION_GET_LIST = 'NOTIFICATION_GET_LIST';
 export const NOTIFICATION_GET_UNREAD_COUNT = 'NOTIFICATION_GET_UNREAD_COUNT';
-export const NOTIFICATION_MARK_READ = 'NOTIFICATION_MARK_READ';
-export const NOTIFICATION_MARK_ALL_READ = 'NOTIFICATION_MARK_ALL_READ';
+export const NOTIFICATION_MARK_READ_ACTION = 'NOTIFICATION_MARK_READ_ACTION';
+export const NOTIFICATION_MARK_ALL_READ_ACTION = 'NOTIFICATION_MARK_ALL_READ_ACTION';
 export const NOTIFICATION_DELETE = 'NOTIFICATION_DELETE';
+```
 
-// Quiz/Assessment
+#### QUIZ Domain
+```typescript
 export const QUIZ_CREATE = 'QUIZ_CREATE';
 export const QUIZ_GET_BY_LESSON = 'QUIZ_GET_BY_LESSON';
 export const QUIZ_GET_BY_ID = 'QUIZ_GET_BY_ID';
 export const QUIZ_UPDATE = 'QUIZ_UPDATE';
 export const QUIZ_DELETE = 'QUIZ_DELETE';
-export const QUIZ_ADD_QUESTIONS = 'QUIZ_ADD_QUESTIONS';
-export const QUIZ_REMOVE_QUESTION = 'QUIZ_REMOVE_QUESTION';
+export const QUIZ_START_ACTION = 'QUIZ_START_ACTION';
+export const QUIZ_SUBMIT_ANSWER_ACTION = 'QUIZ_SUBMIT_ANSWER_ACTION';
+export const QUIZ_FINISH_ACTION = 'QUIZ_FINISH_ACTION';
+```
+
+#### ASSIGNMENT Domain
+```typescript
+export const ASSIGNMENT_CREATE = 'ASSIGNMENT_CREATE';
+export const ASSIGNMENT_GET_BY_LESSON = 'ASSIGNMENT_GET_BY_LESSON';
+export const ASSIGNMENT_GET_BY_ID = 'ASSIGNMENT_GET_BY_ID';
+export const ASSIGNMENT_UPDATE = 'ASSIGNMENT_UPDATE';
+export const ASSIGNMENT_DELETE = 'ASSIGNMENT_DELETE';
+```
+
+#### SUBMISSION Domain
+```typescript
+export const SUBMISSION_CREATE = 'SUBMISSION_CREATE';
+export const SUBMISSION_GET_BY_ASSIGNMENT = 'SUBMISSION_GET_BY_ASSIGNMENT';
+export const SUBMISSION_GET_BY_ID = 'SUBMISSION_GET_BY_ID';
+export const SUBMISSION_GRADE_ACTION = 'SUBMISSION_GRADE_ACTION';
+export const SUBMISSION_FEEDBACK_ACTION = 'SUBMISSION_FEEDBACK_ACTION';
+```
+
+#### CHAPTER Domain
+```typescript
+export const CHAPTER_CREATE = 'CHAPTER_CREATE';
+export const CHAPTER_GET_LIST = 'CHAPTER_GET_LIST';
+export const CHAPTER_GET_DETAIL = 'CHAPTER_GET_DETAIL';
+export const CHAPTER_UPDATE = 'CHAPTER_UPDATE';
+export const CHAPTER_DELETE = 'CHAPTER_DELETE';
+export const CHAPTER_REORDER_ACTION = 'CHAPTER_REORDER_ACTION';
+```
+
+#### LESSON Domain
+```typescript
+export const LESSON_CREATE = 'LESSON_CREATE';
+export const LESSON_GET_BY_CHAPTER = 'LESSON_GET_BY_CHAPTER';
+export const LESSON_GET_BY_ID = 'LESSON_GET_BY_ID';
+export const LESSON_UPDATE = 'LESSON_UPDATE';
+export const LESSON_DELETE = 'LESSON_DELETE';
+export const LESSON_GET_VIDEO_UPLOAD_URL = 'LESSON_GET_VIDEO_UPLOAD_URL';
+export const LESSON_VIDEO_UPLOAD_COMPLETE_ACTION = 'LESSON_VIDEO_UPLOAD_COMPLETE_ACTION';
+export const LESSON_GET_VIDEO_STREAM_URL = 'LESSON_GET_VIDEO_STREAM_URL';
+```
+
+#### RESOURCE Domain
+```typescript
+export const RESOURCE_CREATE_LINK = 'RESOURCE_CREATE_LINK';
+export const RESOURCE_CREATE_FILE = 'RESOURCE_CREATE_FILE';
+export const RESOURCE_GET_BY_LESSON = 'RESOURCE_GET_BY_LESSON';
+export const RESOURCE_GET_BY_ID = 'RESOURCE_GET_BY_ID';
+export const RESOURCE_UPDATE = 'RESOURCE_UPDATE';
+export const RESOURCE_DELETE = 'RESOURCE_DELETE';
+```
+
+#### FILE Domain
+```typescript
+export const FILE_UPLOAD = 'FILE_UPLOAD';
+export const FILE_GET_BY_ID = 'FILE_GET_BY_ID';
+export const FILE_GET_DOWNLOAD_URL = 'FILE_GET_DOWNLOAD_URL';
+export const FILE_DELETE = 'FILE_DELETE';
+```
+
+#### TAG Domain
+```typescript
+export const TAG_CREATE = 'TAG_CREATE';
+export const TAG_GET_LIST = 'TAG_GET_LIST';
+export const TAG_UPDATE = 'TAG_UPDATE';
+export const TAG_DELETE = 'TAG_DELETE';
+```
+
+#### VERSION Domain
+```typescript
+export const VERSION_CREATE = 'VERSION_CREATE';
+export const VERSION_GET_LIST = 'VERSION_GET_LIST';
+export const VERSION_GET_DETAIL = 'VERSION_GET_DETAIL';
+export const VERSION_SUBMIT_APPROVAL_ACTION = 'VERSION_SUBMIT_APPROVAL_ACTION';
+export const VERSION_APPROVE_ACTION = 'VERSION_APPROVE_ACTION';
+export const VERSION_REJECT_ACTION = 'VERSION_REJECT_ACTION';
+export const VERSION_PUBLISH_ACTION = 'VERSION_PUBLISH_ACTION';
+```
+
+#### ADMIN Domain
+```typescript
+export const ADMIN_GET_USERS = 'ADMIN_GET_USERS';
+export const ADMIN_GET_USER_STATS = 'ADMIN_GET_USER_STATS';
+export const ADMIN_EXPORT_USERS_ACTION = 'ADMIN_EXPORT_USERS_ACTION';
+export const ADMIN_GET_DASHBOARD = 'ADMIN_GET_DASHBOARD';
+export const ADMIN_GET_STATISTICS = 'ADMIN_GET_STATISTICS';
+export const ADMIN_GET_REVENUE_REPORT = 'ADMIN_GET_REVENUE_REPORT';
+export const ADMIN_GET_AUDIT_LOGS = 'ADMIN_GET_AUDIT_LOGS';
+export const ADMIN_SEARCH_AUDIT_LOGS = 'ADMIN_SEARCH_AUDIT_LOGS';
+export const ADMIN_EXPORT_AUDIT_LOGS_ACTION = 'ADMIN_EXPORT_AUDIT_LOGS_ACTION';
+export const ADMIN_GET_SETTINGS = 'ADMIN_GET_SETTINGS';
+export const ADMIN_CREATE_SETTING = 'ADMIN_CREATE_SETTING';
+export const ADMIN_UPDATE_SETTING = 'ADMIN_UPDATE_SETTING';
+export const ADMIN_DELETE_SETTING = 'ADMIN_DELETE_SETTING';
+```
+
+#### REPORT Domain
+```typescript
+export const REPORT_CREATE = 'REPORT_CREATE';
+export const REPORT_GET_MY_LIST = 'REPORT_GET_MY_LIST';
+export const REPORT_GET_ALL_LIST = 'REPORT_GET_ALL_LIST';
+export const REPORT_GET_DETAIL = 'REPORT_GET_DETAIL';
 ```
 
 ### Usage in Code
@@ -317,9 +428,9 @@ export const QUIZ_REMOVE_QUESTION = 'QUIZ_REMOVE_QUESTION';
 export const API_CONTRACTS = {
   AUTH_LOGIN: '/api/v1/auth/login',
   AUTH_REFRESH: '/api/v1/auth/refresh',
-  COURSE_LIST: '/api/v1/courses',
-  COURSE_GET_BY_SLUG: '/api/v1/courses/{slug}',
-  // ...
+  COURSE_GET_LIST: '/api/v1/courses',
+  COURSE_GET_DETAIL: '/api/v1/courses/{slug}',
+  // ... (all keys must match ENDPOINT_TO_CONTRACT_MAP.md)
 } as const;
 
 // Usage
@@ -380,6 +491,8 @@ src/features/
 
 ### Domain List
 
+Domains are derived from `ENDPOINT_TO_CONTRACT_MAP.md`. Only domains present in the map are listed:
+
 1. **auth** - Authentication, login, registration, password management
 2. **account** - User account management, profile, avatar
 3. **student** - Student-specific operations
@@ -394,8 +507,16 @@ src/features/
 12. **notifications** - User notifications
 13. **assessment** - Quizzes, questions, attempts
 14. **assignment** - Assignments and submissions
-15. **billing** - Payments, revenue, payouts
-16. **admin** - Admin-only operations
+15. **admin** - Admin-only operations
+16. **chapters** - Course chapters (course.content)
+17. **lessons** - Lessons (course.content)
+18. **resources** - Lesson resources (course.content)
+19. **files** - File storage (course.content)
+20. **tags** - Course tags
+21. **versions** - Course versions
+22. **reports** - Violation reports
+
+**Note:** Billing/payment domains are not present in the current endpoint map and should not be used until endpoints are implemented.
 
 ---
 
@@ -531,7 +652,7 @@ try {
 | Screen/Component | `PascalCase` | `CourseList`, `StudentDashboard` |
 | Service Method | `camelCase` | `getCourseBySlug`, `listCourses` |
 | React Hook | `use` + `camelCase` | `useCourse`, `useCreateCourse` |
-| Contract Key | `UPPER_SNAKE_CASE` | `AUTH_LOGIN`, `COURSE_LIST` |
+| Contract Key | `UPPER_SNAKE_CASE` | `AUTH_LOGIN`, `COURSE_GET_LIST` |
 | Type/Interface | `PascalCase` | `Course`, `CourseRequest`, `CourseResponse` |
 | Error Type | `PascalCase` + `Error` | `ApiError`, `NetworkError` |
 
