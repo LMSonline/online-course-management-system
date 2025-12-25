@@ -19,30 +19,59 @@
 
 ## Screen Names
 
-Use **PascalCase** for screen/component names.
+**Rule:** Screen/Page components MUST end with "Screen" suffix. Reusable components do NOT use "Screen" suffix.
 
-### Examples
+### Screen/Page Components (with "Screen" suffix)
 
-- `CourseList` - Course listing page
-- `CourseDetail` - Course detail page
-- `StudentDashboard` - Student dashboard
-- `TeacherDashboard` - Teacher dashboard
-- `EnrollmentForm` - Enrollment form
-- `ProfileSettings` - Profile settings page
-- `CategoryExplorer` - Category explorer page
-- `ProgressTracker` - Progress tracking page
-- `ReviewEditor` - Review editor component
+Use **PascalCase** with "Screen" suffix for full-page components that represent routes/pages.
+
+**Examples:**
+- `CourseListScreen` - Course listing page
+- `CourseDetailScreen` - Course detail page
+- `StudentDashboardScreen` - Student dashboard page
+- `TeacherDashboardScreen` - Teacher dashboard page
+- `EnrollmentFormScreen` - Enrollment form page
+- `ProfileSettingsScreen` - Profile settings page
+- `CategoryExplorerScreen` - Category explorer page
+- `ProgressTrackerScreen` - Progress tracking page
+
+### Reusable Components (no "Screen" suffix)
+
+Use **PascalCase** without "Screen" suffix for reusable UI components.
+
+**Examples:**
+- `CourseCard` - Reusable course card component
+- `RatingStars` - Reusable rating component
+- `ReviewEditor` - Reusable review editor component
+- `EnrollmentForm` - Reusable enrollment form component (if used in multiple places)
 
 ### Pattern
 
+**For Pages/Screens:**
+```
+<Domain><Action/Purpose>Screen
+```
+
+**For Reusable Components:**
 ```
 <Domain><Action/Purpose>
 ```
 
-Examples:
-- `Course` + `List` = `CourseList`
-- `Student` + `Dashboard` = `StudentDashboard`
-- `Enrollment` + `Form` = `EnrollmentForm`
+**Examples:**
+- `Course` + `List` + `Screen` = `CourseListScreen` (page)
+- `Student` + `Dashboard` + `Screen` = `StudentDashboardScreen` (page)
+- `Course` + `Card` = `CourseCard` (reusable component)
+- `Enrollment` + `Form` = `EnrollmentForm` (reusable component, or `EnrollmentFormScreen` if it's a full page)
+
+### Folder Structure
+
+**Pages/Screens:**
+- Next.js App Router: `src/app/{route}/page.tsx` (component name: `{Route}Screen`)
+- Example: `src/app/learner/courses/page.tsx` → component: `CoursesScreen`
+
+**Reusable Components:**
+- `src/core/components/{domain}/{ComponentName}.tsx`
+- Example: `src/core/components/courses/CourseCard.tsx` → component: `CourseCard`
 
 ---
 
@@ -319,6 +348,10 @@ export const QUIZ_SUBMIT_ANSWER_ACTION = 'QUIZ_SUBMIT_ANSWER_ACTION';
 export const QUIZ_FINISH_ACTION = 'QUIZ_FINISH_ACTION';
 ```
 
+#### QUESTION Domain
+
+**Note:** QUESTION domain is listed in `ENDPOINT_TO_CONTRACT_MAP.md` (line 56), but no QUESTION_* contract keys are currently documented in the endpoint mapping table. Question-related endpoints exist in the codebase (`QuestionController`, `QuestionBankController`) but are not yet mapped to contract keys.
+
 #### ASSIGNMENT Domain
 ```typescript
 export const ASSIGNMENT_CREATE = 'ASSIGNMENT_CREATE';
@@ -470,8 +503,8 @@ src/features/
 │   │   ├── course.types.ts
 │   │   └── catalog.types.ts
 │   └── components/
-│       ├── CourseCard.tsx
-│       └── CourseList.tsx
+│       ├── CourseCard.tsx (reusable component)
+│       └── CourseListScreen.tsx (page component)
 ├── enrollment/
 │   ├── services/
 │   │   └── enrollment.service.ts
@@ -505,7 +538,7 @@ Domains are derived from `ENDPOINT_TO_CONTRACT_MAP.md`. Only domains present in 
 10. **recommendations** - Course recommendations
 11. **comments** - Comments on courses/lessons
 12. **notifications** - User notifications
-13. **assessment** - Quizzes, questions, attempts
+13. **assessment** - Quizzes, questions, question banks, and quiz attempts
 14. **assignment** - Assignments and submissions
 15. **admin** - Admin-only operations
 16. **chapters** - Course chapters (course.content)
@@ -649,7 +682,8 @@ try {
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Screen/Component | `PascalCase` | `CourseList`, `StudentDashboard` |
+| Screen/Page Component | `PascalCase` + `Screen` | `CourseListScreen`, `StudentDashboardScreen` |
+| Reusable Component | `PascalCase` (no suffix) | `CourseCard`, `RatingStars` |
 | Service Method | `camelCase` | `getCourseBySlug`, `listCourses` |
 | React Hook | `use` + `camelCase` | `useCourse`, `useCreateCourse` |
 | Contract Key | `UPPER_SNAKE_CASE` | `AUTH_LOGIN`, `COURSE_GET_LIST` |

@@ -222,23 +222,29 @@ All other endpoints require authentication (Bearer token in `Authorization` head
 
 ### Success Response Wrapper
 
-All successful responses (200, 201, etc.) are automatically wrapped in `ApiResponse<T>` structure by `FormatRestResponse` advice.
+Most successful responses (200, 201, 204, etc.) are automatically wrapped in `ApiResponse<T>` structure by `FormatRestResponse` advice.
 
 **Code References:**
 - Response Wrapper: `backend/lms/src/main/java/vn/uit/lms/shared/dto/ApiResponse.java`
-- Response Formatter: `backend/lms/src/main/java/vn/uit/lms/shared/util/FormatRestResponse.java`
+- Response Formatter: `backend/lms/src/main/java/vn/uit/lms/shared/util/FormatRestResponse.java` (line 26-158)
+
+**Wrapping Rules (from FormatRestResponse.java):**
+
+Responses are wrapped UNLESS:
+1. Body is already an `ApiResponse` instance (line 86)
+2. Body is a `String` (line 86)
+3. HTTP status is >= 400 (error responses, line 91)
+4. Path starts with `/v3/api-docs` or `/swagger-ui` (Swagger endpoints, line 79-83)
 
 **Success Response Structure:**
 ```json
 {
   "success": true,
-  "status": 200,
-  "message": "Request processed successfully: [optional message from @ApiMessage]",
-  "code": "SUCCESS",
+  "status": <HTTP_STATUS_CODE>,
+  "message": "Request processed successfully: [optional message from @ApiMessage annotation]",
+  "code": "<STATUS_CODE>",
   "timestamp": "2025-12-25T10:15:30Z",
-  "data": {
-    // Actual response data (varies by endpoint)
-  },
+  "data": <ACTUAL_RESPONSE_DATA_OR_NULL>,
   "meta": {
     "author": "© 2025 Group 5 / VN.UIT.LMS",
     "license": "Proprietary API – All rights reserved",
@@ -247,7 +253,7 @@ All successful responses (200, 201, etc.) are automatically wrapped in `ApiRespo
 }
 ```
 
-**Example - Get Course:**
+**Example - Get Course (200 OK):**
 ```json
 {
   "success": true,
@@ -262,9 +268,84 @@ All successful responses (200, 201, etc.) are automatically wrapped in `ApiRespo
     "shortDescription": "Learn Java from scratch",
     "difficulty": "BEGINNER",
     "thumbnailUrl": "https://example.com/images/java-course.jpg"
+  },
+  "meta": {
+    "author": "© 2025 Group 5 / VN.UIT.LMS",
+    "license": "Proprietary API – All rights reserved",
+    "version": "v1.0.0"
   }
 }
 ```
+
+**Example - Create Course (201 Created):**
+```json
+{
+  "success": true,
+  "status": 201,
+  "message": "Resource created successfully: Course created successfully",
+  "code": "CREATED",
+  "timestamp": "2025-12-25T10:15:30Z",
+  "data": {
+    "id": 1,
+    "title": "Introduction to Java Programming",
+    "slug": "introduction-to-java-programming"
+  },
+  "meta": {
+    "author": "© 2025 Group 5 / VN.UIT.LMS",
+    "license": "Proprietary API – All rights reserved",
+    "version": "v1.0.0"
+  }
+}
+```
+
+**Example - Logout (200 OK with null data):**
+```json
+{
+  "success": true,
+  "status": 200,
+  "message": "Request processed successfully: Logout and revoke refresh token",
+  "code": "SUCCESS",
+  "timestamp": "2025-12-25T10:15:30Z",
+  "data": null,
+  "meta": {
+    "author": "© 2025 Group 5 / VN.UIT.LMS",
+    "license": "Proprietary API – All rights reserved",
+    "version": "v1.0.0"
+  }
+}
+```
+
+**Code Reference:** `AuthController.java#logout()` (line 172-177) returns `ResponseEntity.ok(null)`, which is wrapped with `data: null`.
+
+**Example - Delete Resource (204 No Content):**
+```json
+{
+  "success": true,
+  "status": 204,
+  "message": "No content",
+  "code": "NO_CONTENT",
+  "timestamp": "2025-12-25T10:15:30Z",
+  "data": null,
+  "meta": {
+    "author": "© 2025 Group 5 / VN.UIT.LMS",
+    "license": "Proprietary API – All rights reserved",
+    "version": "v1.0.0"
+  }
+}
+```
+
+**Code Reference:** Endpoints returning `ResponseEntity.noContent().build()` (e.g., `CourseController.java#deleteCourse()`, line 110-113) are wrapped with status 204 and `data: null`.
+
+### Unwrapped Responses (Exceptions)
+
+Some endpoints return responses that are NOT wrapped by `FormatRestResponse`:
+
+1. **Controllers returning `ApiResponse<?>` directly** - These are already wrapped and skipped by the formatter.
+   - Example: `SystemSettingController` methods return `ApiResponse<?>` directly (Ref: `SystemSettingController.java`)
+
+2. **String responses** - String responses are not wrapped (Ref: `FormatRestResponse.java` line 86)
+
+3. **Swagger/OpenAPI endpoints** - `/v3/api-docs/**` and `/swagger-ui/**` paths are excluded (Ref: `FormatRestResponse.java` line 79-83)
 
 ### Error Response Format
 
@@ -467,7 +548,7 @@ GET /api/v1/courses?filter=categoryName=Design;difficulty=BEGINNER&page=0&size=2
 
 ### Avatar Upload
 
-**Endpoint:** `POST /api/v1/accounts/me/avatar`
+**Endpoint:** `POST /api/v1/accounts/me/avatar` (Ref: `AccountController.java#uploadAvatar()`)
 
 **Content-Type:** `multipart/form-data`
 
@@ -479,37 +560,70 @@ GET /api/v1/courses?filter=categoryName=Design;difficulty=BEGINNER&page=0&size=2
 - **Allowed types:** `image/jpeg`, `image/png`, `image/webp`
 - **Storage:** Cloudinary (configured via `CloudinaryConfig`)
 
-**Response:** `200 OK`
+**Response:** `200 OK` (wrapped in `ApiResponse<UploadAvatarResponse>`)
+
+**Code Reference:** 
+- Controller: `backend/lms/src/main/java/vn/uit/lms/controller/auth/AccountController.java#uploadAvatar()` (line 71-82)
+- Response DTO: `backend/lms/src/main/java/vn/uit/lms/shared/dto/response/account/UploadAvatarResponse.java`
+- Wrapper: `FormatRestResponse.java` wraps the response (line 96-108)
+
+**Response Example:**
 ```json
 {
-  "avatarUrl": "https://res.cloudinary.com/.../avatar.jpg",
-  "message": "Avatar uploaded successfully"
+  "success": true,
+  "status": 200,
+  "message": "Request processed successfully: Upload avatar for authenticated user",
+  "code": "SUCCESS",
+  "timestamp": "2025-12-25T10:15:30Z",
+  "data": {
+    "avatarUrl": "https://res.cloudinary.com/.../avatar.jpg",
+    "thumbnailUrl": "https://res.cloudinary.com/.../avatar_thumb.jpg"
+  },
+  "meta": {
+    "author": "© 2025 Group 5 / VN.UIT.LMS",
+    "license": "Proprietary API – All rights reserved",
+    "version": "v1.0.0"
+  }
 }
 ```
 
-### File Storage (MinIO)
+**Note:** The response is automatically wrapped by `FormatRestResponse` since `AccountController.uploadAvatar()` returns `ResponseEntity<UploadAvatarResponse>` (not `ApiResponse` directly).
 
-**Endpoint:** `POST /api/v1/storage/upload`
+### File Storage
+
+**Endpoint:** `POST /api/v1/files/upload` (Ref: `FileStorageController.java#uploadFile()`)
 
 **Content-Type:** `multipart/form-data`
 
 **Request:**
-- `file` (MultipartFile) - File to upload
+- `file` (MultipartFile, required) - File to upload
+- `folderPath` (String, optional) - Folder path for organizing files
+- `storageProvider` (StorageProvider enum, optional) - MINIO or CLOUDINARY (auto-detect if not specified)
 
-**Storage:** MinIO (configured via `MinioConfig`)
-- **Bucket:** `lms-videos` (configurable)
-- **Max file size:** 2GB (configured in `application.yml`)
+**Storage:** Automatically determines storage provider based on file type (MinIO for videos, Cloudinary for images).
 
-**Response:** `200 OK`
+**Code Reference:** `backend/lms/src/main/java/vn/uit/lms/controller/course/content/FileStorageController.java` (line 33-47)
+
+**Response:** `201 Created` (wrapped in `ApiResponse<FileStorageResponse>`)
 ```json
 {
-  "fileId": 1,
-  "fileName": "video.mp4",
-  "fileSize": 1048576,
-  "downloadUrl": "https://minio.example.com/...",
-  "contentType": "video/mp4"
+  "success": true,
+  "status": 201,
+  "message": "Request processed successfully: File uploaded successfully",
+  "code": "CREATED",
+  "timestamp": "2025-12-25T10:15:30Z",
+  "data": {
+    "fileId": 1,
+    "fileName": "video.mp4",
+    "fileSize": 1048576,
+    "downloadUrl": "https://minio.example.com/...",
+    "contentType": "video/mp4",
+    "storageProvider": "MINIO"
+  }
 }
 ```
+
+**Note:** Max file size is 2GB (configured in `application.yml` `spring.servlet.multipart.max-file-size`).
 
 ---
 
