@@ -5,13 +5,11 @@ import {
   Clock, FileText, QrCode
 } from 'lucide-react';
 
-import { CertificateCard } from "@/core/components/admin/certificate/CertificateCard";
-import { CertificateVerifyTab } from "@/core/components/admin/certificate/CertificateVerifyTab";
-// import { CertificateAllTab } from "@/core/components/admin/certificate/CertificateAllTab";
-// FIX: Update the import path below if the file exists elsewhere, or create the file if missing.
-import { CertificateAllTab } from "@/core/components/admin/certificate/CertificateAllTab"; // <-- Update this path if needed
-import { CertificateStatsTab } from "@/core/components/admin/certificate/CertificateStatsTab";
-import { CertificateDetailModal } from "@/core/components/admin/certificate/CertificateDetailModal";
+import { CertificateCard } from "@/core/components/admin/cerfificate/CertificateCard";
+import { CertificateVerifyTab } from "@/core/components/admin/cerfificate/CertificateVerifyTab";
+import { CertificateAllTab } from "@/core/components/admin/cerfificate/CertificateAllTab";
+import { CertificateStatsTab } from "@/core/components/admin/cerfificate/CertificateStatsTab";
+import { CertificateDetailModal } from "@/core/components/admin/cerfificate/CertificateDetailModal";
 
 interface Certificate {
   id: string;
@@ -136,13 +134,13 @@ export default function AdminCertificatesPage() {
 
   const handleSearch = () => {
     setIsSearching(true);
-    
+
     // Simulate API call
     setTimeout(() => {
-      const found = certificates.find(c => 
+      const found = certificates.find(c =>
         c.certificateCode.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      
+
       setSearchResult(found || null);
       setIsSearching(false);
     }, 800);
@@ -164,7 +162,7 @@ export default function AdminCertificatesPage() {
       revoked: 'bg-red-900/30 text-red-400 border-red-700',
       expired: 'bg-gray-700 text-gray-300 border-gray-600'
     };
-    
+
     const icons = {
       valid: <CheckCircle className="w-3 h-3" />,
       revoked: <XCircle className="w-3 h-3" />,
@@ -191,11 +189,10 @@ export default function AdminCertificatesPage() {
       <div className="flex items-center gap-4 border-b border-gray-800 mb-8">
         <button
           onClick={() => setSelectedTab('verify')}
-          className={`px-4 py-3 font-medium transition-colors ${
-            selectedTab === 'verify' 
-              ? 'text-[#00ff00] border-b-2 border-[#00ff00]' 
+          className={`px-4 py-3 font-medium transition-colors ${selectedTab === 'verify'
+              ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
               : 'text-gray-400 hover:text-white'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
@@ -204,11 +201,10 @@ export default function AdminCertificatesPage() {
         </button>
         <button
           onClick={() => setSelectedTab('all')}
-          className={`px-4 py-3 font-medium transition-colors ${
-            selectedTab === 'all' 
-              ? 'text-[#00ff00] border-b-2 border-[#00ff00]' 
+          className={`px-4 py-3 font-medium transition-colors ${selectedTab === 'all'
+              ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
               : 'text-gray-400 hover:text-white'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
@@ -217,11 +213,10 @@ export default function AdminCertificatesPage() {
         </button>
         <button
           onClick={() => setSelectedTab('stats')}
-          className={`px-4 py-3 font-medium transition-colors ${
-            selectedTab === 'stats' 
-              ? 'text-[#00ff00] border-b-2 border-[#00ff00]' 
+          className={`px-4 py-3 font-medium transition-colors ${selectedTab === 'stats'
+              ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
               : 'text-gray-400 hover:text-white'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />

@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import CourseCard from "@/core/components/instructor/course-management/CourseCard";
-import CourseSearchBar from "@/core/components/instructor/course-management/CourseSearchBar";
-import CourseTabs from "@/core/components/instructor/course-management/CourseTabs";
-import NoCourses from "@/core/components/instructor/course-management/NoCourses";
+import CourseCard from "@/core/components/teacher/course-management/CourseCard";
+import CourseSearchBar from "@/core/components/teacher/course-management/CourseSearchBar";
+import CourseTabs from "@/core/components/teacher/course-management/CourseTabs";
+import NoCourses from "@/core/components/teacher/course-management/NoCourses";
 
 // ...existing code for types and mock data...
 
@@ -118,7 +118,7 @@ export default function MyCoursesPage() {
               <p className="text-gray-400">Manage and track all your courses</p>
             </div>
             <Link 
-              href="/instructor/create-course"
+              href="/teacher/create-course"
               className="flex items-center gap-2 px-6 py-3 bg-[#00ff00] hover:bg-[#00dd00] text-black rounded-lg font-medium transition-colors"
             >
               <Plus className="w-5 h-5" />

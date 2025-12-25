@@ -1,9 +1,10 @@
-import InstructorNavbar from "@/core/components/instructor/navbar/InstructorNavbar";
+import TeacherNavbar from "@/core/components/teacher/navbar/TeacherNavbar";
+
 
 export default function InstructorLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
-      <InstructorNavbar />
+        <TeacherNavbar />
       {children}
     </div>
   );

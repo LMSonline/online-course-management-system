@@ -11,26 +11,26 @@ export function AdminStatsRow({ overview }: Props) {
     {
       icon: Users,
       label: "Total users",
-      value: overview.totalUsers.toLocaleString(),
-      hint: `${overview.learners.toLocaleString()} learners · ${overview.teachers
+      value: (overview?.totalUsers ?? 0).toLocaleString(),
+      hint: `${(overview?.learners ?? 0).toLocaleString()} learners · ${overview?.teachers ?? 0
         } teachers`,
     },
     {
       icon: BookOpen,
       label: "Courses",
-      value: overview.activeCourses.toString(),
-      hint: `${overview.pendingCourses} pending approval`,
+      value: (overview?.activeCourses ?? 0).toString(),
+      hint: `${overview?.pendingCourses ?? 0} pending approval`,
     },
     {
       icon: DollarSign,
       label: "Revenue (this month)",
-      value: `$${overview.monthlyRevenue.toFixed(2)}`,
+      value: `$${(overview?.monthlyRevenue ?? 0).toFixed(2)}`,
       hint: "Before tax & platform fees",
     },
     {
       icon: UserCircle2,
       label: "Active teachers",
-      value: overview.teachers.toString(),
+      value: (overview?.teachers ?? 0).toString(),
       hint: "With at least one active course",
     },
   ];

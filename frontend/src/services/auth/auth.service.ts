@@ -16,42 +16,77 @@ import {
 
 const AUTH_PREFIX = "/auth";
 
-export const authService = {
-  // Login
-  login: async (payload: LoginRequest): Promise<LoginResponse> => {
-    const body: LoginRequest = {
-      ...payload,
-      deviceInfo:
-        payload.deviceInfo ??
-        (typeof navigator !== "undefined" ? navigator.userAgent : "unknown"),
-      ipAddress: payload.ipAddress ?? "127.0.0.1",
-    };
+/**
+ * Get device info from browser
+ */
+const getDeviceInfo = (): string => {
+  return typeof navigator !== "undefined" ? navigator.userAgent : "unknown";
+};
 
+/**
+ * Get default IP address placeholder
+ */
+const getDefaultIpAddress = (): string => {
+  return "127.0.0.1";
+};
+
+/**
+ * Enrich request payload with device info and IP address
+ */
+const enrichWithDeviceInfo = <T extends Partial<{ deviceInfo?: string; ipAddress?: string }>>(
+  payload: T
+): T => {
+  return {
+    ...payload,
+    deviceInfo: payload.deviceInfo ?? getDeviceInfo(),
+    ipAddress: payload.ipAddress ?? getDefaultIpAddress(),
+  };
+};
+
+export const authService = {
+  /**
+   * Authenticate user with email and password
+   */
+  login: async (payload: LoginRequest): Promise<LoginResponse> => {
+    const enrichedPayload = enrichWithDeviceInfo(payload);
+    
     const response = await axiosClient.post<ApiResponse<LoginResponse>>(
       `${AUTH_PREFIX}/login`,
-      body
+      enrichedPayload
     );
+    
     return unwrapResponse(response);
   },
 
-  // Register
+  /**
+   * Register a new user account
+   */
   register: async (payload: RegisterRequest): Promise<RegisterResponse> => {
     const response = await axiosClient.post<ApiResponse<RegisterResponse>>(
       `${AUTH_PREFIX}/register`,
       payload
     );
+    
     return unwrapResponse(response);
   },
 
-  // Verify Email
+  /**
+   * Verify user email with token
+   */
   verifyEmail: async (token: string): Promise<void> => {
     const response = await axiosClient.get<ApiResponse<void>>(
-      `${AUTH_PREFIX}/verify-email?token=${encodeURIComponent(token)}`
+      `${AUTH_PREFIX}/verify-email`,
+      {
+        params: { token }
+      }
     );
+    
     return unwrapResponse(response);
   },
 
-  // Resend Verification Email
+  /**
+   * Resend email verification link
+   */
   resendVerificationEmail: async (
     payload: ResendVerifyEmailRequest
   ): Promise<void> => {
@@ -59,72 +94,86 @@ export const authService = {
       `${AUTH_PREFIX}/resend-verification`,
       payload
     );
+    
     return unwrapResponse(response);
   },
 
-  // Logout
+  /**
+   * Logout user and invalidate refresh token
+   */
   logout: async (refreshToken: string): Promise<void> => {
     const response = await axiosClient.post<ApiResponse<void>>(
       `${AUTH_PREFIX}/logout`,
       { refreshToken }
     );
+    
     return unwrapResponse(response);
   },
 
-  // Refresh Token
-  refreshToken: async (
-    payload: RefreshTokenRequest
-  ): Promise<LoginResponse> => {
-    const body: RefreshTokenRequest = {
-      ...payload,
-      deviceInfo:
-        payload.deviceInfo ??
-        (typeof navigator !== "undefined" ? navigator.userAgent : "unknown"),
-      ipAddress: payload.ipAddress ?? "127.0.0.1",
-    };
-
+  /**
+   * Refresh access token using refresh token
+   */
+  refreshToken: async (payload: RefreshTokenRequest): Promise<LoginResponse> => {
+    const enrichedPayload = enrichWithDeviceInfo(payload);
+    
     const response = await axiosClient.post<ApiResponse<LoginResponse>>(
       `${AUTH_PREFIX}/refresh`,
-      body
+      enrichedPayload
     );
+    
     return unwrapResponse(response);
   },
 
-  // Forgot Password
+  /**
+   * Send password reset email
+   */
   forgotPassword: async (payload: ForgotPasswordRequest): Promise<void> => {
     const response = await axiosClient.post<ApiResponse<void>>(
       `${AUTH_PREFIX}/password/forgot`,
       payload
     );
+    
     return unwrapResponse(response);
   },
 
-  // Reset Password
+  /**
+   * Reset password with token
+   */
   resetPassword: async (
     payload: ResetPasswordRequest,
     token: string
   ): Promise<void> => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      `${AUTH_PREFIX}/password/reset?token=${encodeURIComponent(token)}`,
-      payload
+      `${AUTH_PREFIX}/password/reset`,
+      payload,
+      {
+        params: { token }
+      }
     );
+    
     return unwrapResponse(response);
   },
 
-  // Get Current User
+  /**
+   * Get current authenticated user
+   */
   getCurrentUser: async (): Promise<MeUser> => {
     const response = await axiosClient.get<ApiResponse<MeUser>>(
       `${AUTH_PREFIX}/me`
     );
+    
     return unwrapResponse(response);
   },
 
-  // Change Password
+  /**
+   * Change user password
+   */
   changePassword: async (payload: ChangePasswordRequest): Promise<void> => {
     const response = await axiosClient.put<ApiResponse<void>>(
       `${AUTH_PREFIX}/password/change`,
       payload
     );
+    
     return unwrapResponse(response);
   },
 };
