@@ -11,6 +11,8 @@ import {
   Bot,
   Menu,
   X,
+  Sun,
+  Moon, // thêm icon
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
@@ -44,6 +46,25 @@ export default function LearnerNavbar() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const [theme, setTheme] = useState<"light" | "dark">(
+    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light"
+  );
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!open) return;
@@ -157,6 +178,22 @@ export default function LearnerNavbar() {
         transition"
           >
             <Bot className="w-5 h-5" />
+          </button>
+
+          {/* Theme toggle button */}
+          <button
+            aria-label="Toggle theme"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 
+              bg-slate-900/60 text-slate-200 
+              hover:bg-slate-800/80 hover:text-[var(--brand-300)] 
+              transition"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {mounted && (
+              theme === "dark"
+                ? <Sun className="w-5 h-5" />
+                : <Moon className="w-5 h-5" />
+            )}
           </button>
 
           {/* Avatar learner – hiện để static, sau bind user data */}

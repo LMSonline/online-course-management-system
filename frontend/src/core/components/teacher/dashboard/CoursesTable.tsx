@@ -44,7 +44,7 @@ export function CoursesTable({ courses }: Props) {
               <th className="py-2 pr-4 font-medium">Course</th>
               <th className="py-2 pr-4 font-medium">Students</th>
               <th className="py-2 pr-4 font-medium">Rating</th>
-              <th className="py-2 pr-4 font-medium">Revenue</th>
+              {/* <th className="py-2 pr-4 font-medium">Revenue</th> */}
               <th className="py-2 pr-4 font-medium">Status</th>
               <th className="py-2 pl-2 font-medium text-right">Actions</th>
             </tr>
@@ -66,9 +66,9 @@ export function CoursesTable({ courses }: Props) {
                 <td className="py-3 pr-4 text-slate-100">
                   {c.rating.toFixed(1)}
                 </td>
-                <td className="py-3 pr-4 text-slate-100">
-                  ${c.revenue.toFixed(2)}
-                </td>
+                {/* <td className="py-3 pr-4 text-slate-100">
+                  ${c.revenue?.toFixed(2)}
+                </td> */}
                 <td className="py-3 pr-4">
                   <span
                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${statusColor[c.status]}`}
