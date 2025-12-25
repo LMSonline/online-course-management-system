@@ -110,3 +110,9 @@ export async function unlockAccount(id: number, reason?: string) {
     body: JSON.stringify(reason ? { reason } : {}),
   });
 }
+
+export async function getAllAccounts() {
+  return apiClient(`/admin/accounts`, {
+    method: "GET",
+  });
+}

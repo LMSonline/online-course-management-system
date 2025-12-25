@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Users, Lock, Unlock, MoreVertical } from "lucide-react";
-import { suspendAccount, unlockAccount } from "@/services/auth/auth.services";
+import { suspendAccount, unlockAccount, getAllAccounts } from "@/services/auth/auth.services";
 
 type Props = {
   recentUsers?: any[]; // Optional, will be replaced by API data
@@ -21,9 +21,9 @@ export function AdminUsersMain({ selectedTab, setSelectedTab, stats }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/v1/admin/accounts", { method: "GET" }).then(r => r.json());
-        const content = res?.data?.content || res?.content || [];
-        setUsers(content);
+        const res = await getAllAccounts();
+        const users = res?.data?.items || [];
+        setUsers(users);
       } catch (e) {
         setUsers([]);
         setError("Không thể tải danh sách người dùng.");
@@ -35,18 +35,18 @@ export function AdminUsersMain({ selectedTab, setSelectedTab, stats }: Props) {
 
   const defaultStats = {
     totalUsers: users.length,
-    learners: users.filter(u => u.role === "Learner").length,
-    instructors: users.filter(u => u.role === "Instructor").length,
-    suspended: users.filter(u => u.status === "suspended").length,
+    learners: users.filter(u => u.role === "STUDENT").length,
+    instructors: users.filter(u => u.role === "TEACHER").length,
+    suspended: users.filter(u => u.status === "SUSPENDED").length,
   };
   const _stats = stats || defaultStats;
 
   // Lọc user theo tab
   const filteredUsers = users.filter(user => {
     if (selectedTab === "all") return true;
-    if (selectedTab === "learners") return user.role === "Learner";
-    if (selectedTab === "instructors") return user.role === "Instructor";
-    if (selectedTab === "suspended") return user.status === "suspended";
+    if (selectedTab === "learners") return user.role === "STUDENT";
+    if (selectedTab === "instructors") return user.role === "TEACHER";
+    if (selectedTab === "suspended") return user.status === "SUSPENDED";
     return true;
   });
 
@@ -154,7 +154,7 @@ export function AdminUsersMain({ selectedTab, setSelectedTab, stats }: Props) {
           </thead>
           <tbody className="divide-y divide-gray-800">
             {filteredUsers.map((user) => (
-              <tr key={user.id} className="hover:bg-[#1a2237] transition-colors">
+              <tr key={user.accountId} className="hover:bg-[#1a2237] transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
