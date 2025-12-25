@@ -66,6 +66,18 @@ public class StudentController {
     }
 
     @Operation(
+            summary = "Get current student profile",
+            description = "Retrieve detailed information about the currently authenticated student. Requires STUDENT role."
+    )
+    @GetMapping("/me")
+    @ApiMessage("Get current student profile")
+    public ResponseEntity<StudentDetailResponse> getCurrentStudent() {
+        log.info("GET /api/v1/students/me");
+        StudentDetailResponse response = studentService.getCurrentStudent();
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
             summary = "Update student information",
             description = "Update student profile information. Students can only update their own profile, admins can update any student."
     )

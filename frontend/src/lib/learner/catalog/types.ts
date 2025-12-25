@@ -1,6 +1,7 @@
 // src/components/learner/catalog/types.ts
 export type CourseSummary = {
   id: string;
+  slug?: string;
   title: string;
   instructor: string;
   category: string;

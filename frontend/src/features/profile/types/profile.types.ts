@@ -3,18 +3,27 @@
  * Extended from profile.service.ts for consistency
  */
 
+export interface AccountProfileDetails {
+  fullName?: string;
+  bio?: string;
+  birthday?: string;
+  gender?: string;
+}
+
 export interface AccountProfileResponse {
   accountId: number;
   username: string;
   email: string;
-  fullName: string;
   status: string;
   avatarUrl: string | null;
   role: "STUDENT" | "TEACHER" | "ADMIN" | string;
-  birthday?: string;
-  bio?: string;
-  gender?: string;
   lastLoginAt?: string;
+  // Flattened helpers for existing UI usage
+  fullName?: string;
+  bio?: string;
+  birthday?: string;
+  gender?: string;
+  profile?: AccountProfileDetails;
 }
 
 export interface UpdateProfileRequest {

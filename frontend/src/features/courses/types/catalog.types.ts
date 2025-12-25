@@ -2,6 +2,7 @@
 
 export type CourseSummary = {
   id: string;
+  slug?: string;
   title: string;
   instructor: string;
   category: string;

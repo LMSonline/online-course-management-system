@@ -3,9 +3,10 @@
  * Note: Uses root path `/` instead of `/api/v1`
  */
 
-import axios from "axios";
 import { USE_MOCK } from "@/config/runtime";
 import { unwrapApiResponse } from "@/services/core/unwrap";
+import { apiClient } from "@/services/core/api";
+import { getAccessToken } from "@/services/core/token";
 
 const RECOMMENDATION_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "") || "http://localhost:8080";
 
@@ -37,10 +38,20 @@ export async function getRecommendations(studentId: number): Promise<Recommendat
     return Promise.resolve([]);
   }
 
-  const response = await axios.get<ApiResponse<Recommendation[]>>(
-    `${RECOMMENDATION_BASE_URL}/students/${studentId}/recommendations`
-  );
-  return unwrapApiResponse<Recommendation[]>(response.data);
+  const token = getAccessToken();
+  if (!token) {
+    return [];
+  }
+
+  try {
+    const response = await apiClient.get<ApiResponse<Recommendation[]>>(
+      `${RECOMMENDATION_BASE_URL}/students/${studentId}/recommendations`
+    );
+    return unwrapApiResponse<Recommendation[]>(response.data);
+  } catch (err) {
+    console.error("[Recommendation] Failed to fetch, returning empty:", err);
+    return [];
+  }
 }
 
 /**
@@ -54,6 +65,16 @@ export async function submitRecommendationFeedback(
     return Promise.resolve();
   }
 
-  await axios.post(`${RECOMMENDATION_BASE_URL}/recommendations/${recommendationId}/feedback`, feedback);
+  const token = getAccessToken();
+  if (!token) return;
+
+  try {
+    await apiClient.post(
+      `${RECOMMENDATION_BASE_URL}/recommendations/${recommendationId}/feedback`,
+      feedback
+    );
+  } catch (err) {
+    console.error("[Recommendation] submit feedback failed:", err);
+  }
 }
 

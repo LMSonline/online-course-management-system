@@ -1,14 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { SafeImage } from "@/components/shared/SafeImage";
 
 const categories = [
-  { title: "Development", img: "/images/categories/dev.png", href: "/explore?c=dev" },
-  { title: "Design", img: "/images/categories/design.png", href: "/explore?c=design" },
-  { title: "Business", img: "/images/categories/business.png", href: "/explore?c=business" },
-  { title: "AI & Data", img: "/images/categories/ai.png", href: "/explore?c=ai" },
+  { title: "Development", img: "/images/lesson_thum.png", href: "/explore?c=dev" },
+  { title: "Design", img: "/images/lesson_thum.png", href: "/explore?c=design" },
+  { title: "Business", img: "/images/lesson_thum.png", href: "/explore?c=business" },
+  { title: "AI & Data", img: "/images/lesson_thum.png", href: "/explore?c=ai" },
 ];
 
 export default function CategoryRow() {
@@ -24,7 +24,7 @@ export default function CategoryRow() {
           )}
         >
           <div className="relative aspect-[4/3]">
-            <Image
+            <SafeImage
               src={c.img}
               alt={c.title}
               fill

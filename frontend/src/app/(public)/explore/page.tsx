@@ -10,6 +10,7 @@ import { getCategoryTree } from "@/features/categories/services/categories.servi
 import type { CategoryResponseDto } from "@/features/categories/types/categories.types";
 import { listCourses } from "@/features/courses/services/courses.service";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function ExplorePage() {
   const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
@@ -18,19 +19,31 @@ export default function ExplorePage() {
 
   useEffect(() => {
     async function loadData() {
-      try {
-        setLoading(true);
-        const [cats, courseList] = await Promise.all([
-          getCategoryTree(),
-          listCourses({ size: 20 }),
-        ]);
-        setCategories(cats || []);
-        setCourses(courseList || []);
-      } catch (error: unknown) {
-        console.error("Failed to load explore data:", error);
-      } finally {
-        setLoading(false);
+      setLoading(true);
+      console.log("[Explore] Fetching data...");
+
+      const [catsResult, coursesResult] = await Promise.allSettled([
+        getCategoryTree(),
+        listCourses({ size: 20 }),
+      ]);
+
+      if (catsResult.status === "fulfilled") {
+        setCategories(catsResult.value || []);
+        console.log("[Explore] Categories response:", catsResult.value?.length || 0);
+      } else {
+        console.error("[Explore] Categories failed:", catsResult.reason);
+        setCategories([]);
       }
+
+      if (coursesResult.status === "fulfilled") {
+        setCourses(coursesResult.value || []);
+        console.log("[Explore] Courses response:", coursesResult.value?.length || 0);
+      } else {
+        console.error("[Explore] Courses failed:", coursesResult.reason);
+        setCourses([]);
+      }
+
+      setLoading(false);
     }
     loadData();
   }, []);
@@ -43,11 +56,22 @@ export default function ExplorePage() {
     );
   }
 
+  const hasCategories = Array.isArray(categories) && categories.length > 0;
+
   return (
     <div className="flex flex-col gap-20 pb-20">
       <HeroExplore />
       <TrendingTopics />
-      <ExploreCategoriesNew categories={categories} />
+      {hasCategories ? (
+        <ExploreCategoriesNew categories={categories} />
+      ) : (
+        <section className="px-4 sm:px-6 md:px-10 xl:px-16">
+          <EmptyState
+            title="No categories yet"
+            message="Categories have not been configured yet. Please check back later."
+          />
+        </section>
+      )}
       <FeaturedCollections />
       <PopularCoursesSection />
     </div>

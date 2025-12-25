@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Check } from "lucide-react";
 import Popup from "@/core/components/public/Popup";
-import {
-  loginUser,
-  resendVerificationEmail,
-} from "@/services/auth";
-import { getCurrentTeacher } from "@/features/instructor/services/instructor.service";
+import { loginUser, resendVerificationEmail } from "@/services/auth";
+import { getProfile } from "@/features/profile/services/profile.service";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,11 +31,15 @@ export default function LoginPage() {
       // res = ApiResponse<LoginResponse> = { success, status, message, code, data: { accessToken, refreshToken, user } }
       const payload = res.data; // This is LoginResponse
       const user = payload.user;
+      const profile = await getProfile();
 
       // 🔐 Tokens are already stored by auth.service.ts loginUser()
       // Update auth store
       const { useAuthStore } = await import("@/store/auth.store");
-      useAuthStore.getState().login(user);
+      useAuthStore.getState().login(user, profile, {
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
+      });
       
       // Store user in localStorage for backward compatibility
       if (typeof window !== "undefined") {
@@ -48,25 +49,17 @@ export default function LoginPage() {
       const username = user.username;
       const role = user.role;
 
-      // If user is a TEACHER, fetch teacher profile to get teacherId
-      if (role === "TEACHER") {
-        try {
-          const teacherProfile = await getCurrentTeacher();
-          if (typeof window !== "undefined") {
-            localStorage.setItem("teacherId", teacherProfile.id.toString());
-          }
-        } catch (err) {
-          // If teacher profile not found, log but don't block login
-          console.warn("Failed to fetch teacher profile:", err);
-          // Clear teacherId if it exists
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("teacherId");
-          }
-        }
-      } else {
-        // Clear teacherId for non-teachers
-        if (typeof window !== "undefined") {
+      // Persist IDs for backward compatibility with legacy code paths
+      if (typeof window !== "undefined") {
+        if (profile.profile?.teacherId != null) {
+          localStorage.setItem("teacherId", String(profile.profile.teacherId));
+        } else {
           localStorage.removeItem("teacherId");
+        }
+        if (profile.profile?.studentId != null) {
+          localStorage.setItem("studentId", String(profile.profile.studentId));
+        } else {
+          localStorage.removeItem("studentId");
         }
       }
 

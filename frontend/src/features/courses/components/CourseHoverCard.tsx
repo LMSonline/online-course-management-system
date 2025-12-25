@@ -153,7 +153,7 @@ export function CourseHoverCard({ course, isOpen, onClose, position }: CourseHov
 
         {/* View course link */}
         <Link
-          href={`/learner/courses/${course.id}`}
+          href={`/learner/courses/${course.slug ?? course.id}`}
           onClick={onClose}
           className="block text-center text-sm text-[var(--brand-400)] hover:text-[var(--brand-300)] transition"
         >

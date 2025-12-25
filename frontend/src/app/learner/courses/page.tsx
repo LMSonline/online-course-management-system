@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CourseGrid } from "@/core/components/learner/catalog/CourseGrid";
 import { getStudentCourses } from "@/features/learner/services/learner.service";
 import { getCurrentUserInfo } from "@/services/auth";
+import { getProfile } from "@/features/profile/services/profile.service";
 import type { CourseSummary } from "@/features/courses/types/catalog.types";
 
 export default function CoursesPage() {
@@ -20,10 +21,21 @@ export default function CoursesPage() {
           setError("This page is only available for students");
           return;
         }
-        const result = await getStudentCourses(user.accountId, 0, 50);
+
+        const profile = await getProfile();
+        const studentId = profile.profile?.studentId;
+        if (!studentId) {
+          setError("Student profile not found for current account.");
+          return;
+        }
+
+        const result = await getStudentCourses(studentId, 0, 50);
+        const items = result.items ?? [];
+
         setCourses(
-          result.items.map((c) => ({
+          items.map((c) => ({
             id: c.courseId.toString(),
+            slug: c.courseSlug,
             title: c.courseTitle,
             instructor: "",
             category: "",

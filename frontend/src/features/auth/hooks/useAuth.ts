@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/auth.store";
-import type { MeUser } from "@/services/auth";
 
 /**
  * Hook to access auth state and actions
@@ -22,16 +21,38 @@ export function useAuth() {
 
   return {
     user: store.user,
-    role: store.user?.role || null,
+    role: store.role,
     status: store.status,
     loading: store.loading,
     error: store.error,
-    isAuthenticated: store.status === "authenticated",
+    isAuthenticated: store.isAuthenticated,
     isGuest: store.status === "guest",
     fetchMe: store.fetchMe,
     login: store.login,
     logout: store.logout,
     setError: store.setError,
+  };
+}
+
+/**
+ * Lightweight hook to wait for auth bootstrap and access IDs
+ */
+export function useAuthBootstrap() {
+  const store = useAuthStore();
+
+  useEffect(() => {
+    if (!store.loaded && store.status === "unknown") {
+      store.bootstrapFromTokens();
+    }
+  }, [store.loaded, store.status, store.bootstrapFromTokens]);
+
+  return {
+    loaded: store.loaded,
+    isAuthenticated: store.isAuthenticated,
+    role: store.role,
+    userId: store.userId,
+    studentId: store.studentId,
+    teacherId: store.teacherId,
   };
 }
 

@@ -283,14 +283,14 @@ public class AccountService {
     public AccountProfileResponse getAccountProfile(Account account) {
         AccountProfileResponse.Profile profile = switch (account.getRole()) {
             case STUDENT -> {
-                Student student = studentRepository.findByAccount(account)
-                        .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
-                yield StudentMapper.toProfileResponse(student);
+                return studentRepository.findByAccount(account)
+                        .map(StudentMapper::toProfileResponse)
+                        .orElseGet(AccountProfileResponse.Profile::new);
             }
             case TEACHER -> {
-                Teacher teacher = teacherRepository.findByAccount(account)
-                        .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
-                yield TeacherMapper.toProfileResponse(teacher);
+                return teacherRepository.findByAccount(account)
+                        .map(TeacherMapper::toProfileResponse)
+                        .orElseGet(AccountProfileResponse.Profile::new);
             }
             case ADMIN -> new AccountProfileResponse.Profile();
         };

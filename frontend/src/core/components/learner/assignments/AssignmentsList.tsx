@@ -15,7 +15,7 @@ export function AssignmentsList({ items }: Props) {
   const handleOpen = (item: AssessmentSummary) => {
     // TODO: sau này điều hướng tới trang detail quiz/assignment cụ thể
     // tạm thời: đi tới trang course detail tương ứng
-    router.push(`/learner/courses/${item.courseId}`);
+    router.push(`/learner/courses/${item.courseSlug || item.courseId}`);
   };
 
   if (items.length === 0) {

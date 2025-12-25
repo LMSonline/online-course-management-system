@@ -20,10 +20,22 @@ export default function CategoryPage() {
       try {
         setLoading(true);
         setError(null);
-        const [catData, courseList] = await Promise.all([
-          getCategoryBySlug(slug),
-          listCourses({ category: slug, size: 50 }),
-        ]);
+        const catData = await getCategoryBySlug(slug);
+
+        // Try server-side filter by category name first; if it fails, fallback to unfiltered then client filter
+        let courseList: CourseSummary[] = [];
+        try {
+          const serverFiltered = await listCourses({ category: catData.name, size: 50 });
+          courseList = serverFiltered ?? [];
+        } catch (err) {
+          console.error("[Category] Server filter failed, retrying without filter:", err);
+          const all = await listCourses({ size: 100 });
+          courseList =
+            all?.filter((c) =>
+              c.category?.toLowerCase() === catData.name?.toLowerCase()
+            ) ?? [];
+        }
+
         setCategory(catData);
         setCourses(courseList);
       } catch (err: unknown) {

@@ -112,7 +112,7 @@ export default function CartPage() {
                 className="flex gap-4 p-4 rounded-xl border border-white/10 bg-slate-950/80"
               >
                 {/* Thumbnail */}
-                <Link href={`/learner/courses/${item.courseId}`} className="flex-shrink-0">
+                <Link href={`/learner/courses/${item.slug || item.courseId}`} className="flex-shrink-0">
                   {item.imageUrl ? (
                     <SafeImage
                       src={item.imageUrl}
@@ -128,7 +128,7 @@ export default function CartPage() {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <Link href={`/learner/courses/${item.courseId}`}>
+                  <Link href={`/learner/courses/${item.slug || item.courseId}`}>
                     <h3 className="text-base font-semibold text-slate-100 hover:text-[var(--brand-300)] transition line-clamp-2">
                       {item.title}
                     </h3>

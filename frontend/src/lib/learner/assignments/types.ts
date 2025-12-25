@@ -12,6 +12,7 @@ export type AssessmentStatus =
 export type AssessmentSummary = {
   id: string;
   courseId: string;
+  courseSlug?: string;
   courseTitle: string;
   courseLevel: "Beginner" | "Intermediate" | "Advanced";
   type: AssessmentType;

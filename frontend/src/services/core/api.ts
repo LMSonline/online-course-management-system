@@ -25,6 +25,19 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Temporary debug logging for /courses requests
+    if (process.env.NODE_ENV === "development") {
+      const url = `${config.baseURL || ""}${config.url || ""}`;
+      if (url.includes("/courses")) {
+        // eslint-disable-next-line no-console
+        console.debug("[api] /courses request", {
+          url,
+          params: config.params,
+        });
+      }
+    }
+
     return config;
   },
   (error) => {
@@ -42,6 +55,10 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line no-console
+        console.warn("[api] 401 received, attempting token refresh for", originalRequest.url || originalRequest.baseURL);
+      }
       originalRequest._retry = true;
 
       try {

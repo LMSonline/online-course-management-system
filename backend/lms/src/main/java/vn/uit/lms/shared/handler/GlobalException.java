@@ -41,7 +41,6 @@ public class GlobalException {
             UsernameAlreadyUsedException.class,
             BadCredentialsException.class,
             InvalidTokenException.class,
-            ResourceNotFoundException.class,
             UserNotActivatedException.class,
             HttpMessageNotReadableException.class,
             InvalidPasswordException.class,
@@ -66,6 +65,23 @@ public class GlobalException {
     }
 
     /**
+     * Handle not found resources as 404 instead of 400.
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotFound(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
+
+        ApiResponse<Object> res = new ApiResponse<>();
+        res.setSuccess(false);
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setCode(ErrorCode.RESOURCE_NOT_FOUND);
+        res.setMessage(ex.getMessage());
+        res.setTimestamp(Instant.now());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
+
+    /**
      * Handle validation errors when @Valid or @Validated fails on request body.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -87,6 +103,23 @@ public class GlobalException {
         res.setTimestamp(Instant.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    /**
+     * Handle access denied / unauthorized as 403.
+     */
+    @ExceptionHandler({AccessDeniedException.class, UnauthorizedException.class})
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(Exception ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+
+        ApiResponse<Object> res = new ApiResponse<>();
+        res.setSuccess(false);
+        res.setStatus(HttpStatus.FORBIDDEN.value());
+        res.setCode(ErrorCode.FORBIDDEN);
+        res.setMessage(ex.getMessage());
+        res.setTimestamp(Instant.now());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
     }
 
     /**

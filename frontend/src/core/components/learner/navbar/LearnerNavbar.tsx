@@ -18,6 +18,7 @@ import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProf
 import { useAssistantStore } from "@/core/components/public/store";
 import { getUnreadNotificationCount } from "@/features/community/services/community.service";
 import { useRouter } from "next/navigation";
+import { ExploreMegaMenu } from "@/core/components/public/ExploreMegaMenu";
 
 function NavItem({
   href,
@@ -41,12 +42,17 @@ function NavItem({
 export default function LearnerNavbar() {
   const openPopup = useAssistantStore((s) => s.openPopup);
   const router = useRouter();
+  const pathname = usePathname();
 
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const [exploreOpen, setExploreOpen] = useState(false);
+  const exploreBtnRef = useRef<HTMLButtonElement>(null);
+  const [exploreRect, setExploreRect] = useState<DOMRect | null>(null);
 
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -113,11 +119,28 @@ export default function LearnerNavbar() {
             </span>
           </Link>
 
-          <NavItem
-            href="/explore"
-            label="Explore"
-            className="hidden md:inline-flex"
-          />
+          <div className="relative hidden md:inline-flex">
+            <button
+              ref={exploreBtnRef}
+              className={cn(
+                "nav-link",
+                pathname?.startsWith("/explore") || pathname?.startsWith("/topic")
+                  ? "active"
+                  : ""
+              )}
+              onMouseEnter={() => {
+                setExploreOpen(true);
+                if (exploreBtnRef.current) setExploreRect(exploreBtnRef.current.getBoundingClientRect());
+              }}
+              onClick={() => {
+                const next = !exploreOpen;
+                setExploreOpen(next);
+                if (next && exploreBtnRef.current) setExploreRect(exploreBtnRef.current.getBoundingClientRect());
+              }}
+            >
+              Explore
+            </button>
+          </div>
         </div>
 
         {/* CENTER: big search bar giống Udemy */}
@@ -147,7 +170,7 @@ export default function LearnerNavbar() {
           <Link href="/teach" className="hidden lg:block nav-link">
             Instructor
           </Link>
-          <Link href="/my-learning" className="hidden md:block nav-link">
+          <Link href="/learner/my-learning" className="hidden md:block nav-link">
             My learning
           </Link>
 
@@ -208,6 +231,14 @@ export default function LearnerNavbar() {
           </div>
         </div>
       </div>
+
+      {/* Explore Mega Menu (portal) */}
+      <ExploreMegaMenu
+        isOpen={exploreOpen}
+        onClose={() => setExploreOpen(false)}
+        anchorRect={exploreRect}
+        anchorRef={exploreBtnRef}
+      />
 
       {/* MOBILE DRAWER */}
       <div
@@ -276,7 +307,7 @@ export default function LearnerNavbar() {
           {/* Quick links */}
           <div className="flex flex-col gap-1 mt-2">
             <NavItem href="/explore" label="Explore" />
-            <NavItem href="/my-learning" label="My learning" />
+            <NavItem href="/learner/my-learning" label="My learning" />
             <NavItem href="/business" label="LMS Business" />
             <NavItem href="/teach" label="Instructor" />
           </div>

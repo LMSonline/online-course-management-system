@@ -24,6 +24,8 @@ export default function Navbar() {
   const [exploreOpen, setExploreOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const exploreRef = useRef<HTMLDivElement>(null);
+  const exploreBtnRef = useRef<HTMLButtonElement>(null);
+  const [exploreRect, setExploreRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -55,21 +57,35 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div
+        <div
             ref={exploreRef}
             className="relative hidden md:block"
-            onMouseEnter={() => setExploreOpen(true)}
+            onMouseEnter={() => {
+              setExploreOpen(true);
+              if (exploreBtnRef.current) setExploreRect(exploreBtnRef.current.getBoundingClientRect());
+            }}
             onMouseLeave={() => setExploreOpen(false)}
           >
             <button
+              ref={exploreBtnRef}
               className={cn(
                 "nav-link",
                 pathname?.startsWith("/explore") || pathname?.startsWith("/topic") ? "active" : ""
               )}
+              onClick={() => {
+                const next = !exploreOpen;
+                setExploreOpen(next);
+                if (next && exploreBtnRef.current) setExploreRect(exploreBtnRef.current.getBoundingClientRect());
+              }}
             >
               Explore
             </button>
-            <ExploreMegaMenu isOpen={exploreOpen} onClose={() => setExploreOpen(false)} />
+            <ExploreMegaMenu
+              isOpen={exploreOpen}
+              onClose={() => setExploreOpen(false)}
+              anchorRect={exploreRect}
+              anchorRef={exploreBtnRef}
+            />
           </div>
         </div>
 
@@ -181,6 +197,7 @@ export default function Navbar() {
               onClick={() => {
                 setOpen(false);
                 setExploreOpen(!exploreOpen);
+              if (drawerRef.current) setExploreRect(drawerRef.current.getBoundingClientRect());
               }}
               className="nav-link"
             >
@@ -189,7 +206,12 @@ export default function Navbar() {
           </div>
           {exploreOpen && (
             <div className="mt-4 relative">
-              <ExploreMegaMenu isOpen={exploreOpen} onClose={() => setExploreOpen(false)} />
+            <ExploreMegaMenu
+              isOpen={exploreOpen}
+              onClose={() => setExploreOpen(false)}
+              anchorRect={exploreRect}
+              anchorRef={drawerRef}
+            />
             </div>
           )}
 

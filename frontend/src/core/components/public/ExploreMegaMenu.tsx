@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -13,9 +14,11 @@ import { Skeleton } from "@/components/ui/Skeleton";
 interface ExploreMegaMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  anchorRect: DOMRect | null;
+  anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
-export function ExploreMegaMenu({ isOpen, onClose }: ExploreMegaMenuProps) {
+export function ExploreMegaMenu({ isOpen, onClose, anchorRect, anchorRef }: ExploreMegaMenuProps) {
   const pathname = usePathname();
   const { categories, loading } = useCategoriesTree();
   const [activeCategory, setActiveCategory] = useState<CategoryResponseDto | null>(null);
@@ -40,7 +43,10 @@ export function ExploreMegaMenu({ isOpen, onClose }: ExploreMegaMenuProps) {
     if (!isOpen) return;
 
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedAnchor = anchorRef?.current?.contains(target);
+      if (clickedAnchor) return;
+      if (menuRef.current && !menuRef.current.contains(target)) {
         onClose();
       }
     }
@@ -60,12 +66,23 @@ export function ExploreMegaMenu({ isOpen, onClose }: ExploreMegaMenuProps) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !anchorRect) return null;
 
-  return (
+  const left = Math.max(12, anchorRect.left);
+  const top = anchorRect.bottom + 8; // little gap
+
+  const menu = (
     <div
       ref={menuRef}
-      className="absolute left-0 top-full mt-2 z-50 w-[720px] max-w-[90vw] rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+      style={{
+        position: "absolute",
+        left,
+        top,
+        zIndex: 2000,
+        width: "720px",
+        maxWidth: "90vw",
+      }}
+      className="rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-2xl overflow-hidden"
     >
       <div className="flex h-[500px] max-h-[80vh]">
         {/* Left Column: Top-level categories */}
@@ -176,5 +193,7 @@ export function ExploreMegaMenu({ isOpen, onClose }: ExploreMegaMenuProps) {
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? ReactDOM.createPortal(menu, document.body) : null;
 }
 

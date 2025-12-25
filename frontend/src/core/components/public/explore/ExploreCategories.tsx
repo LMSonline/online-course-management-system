@@ -3,12 +3,12 @@ import { SafeImage } from "@/components/shared/SafeImage";
 import type { CategoryResponseDto } from "@/features/categories/types/categories.types";
 
 const defaultCategories = [
-  { title: "Development", img: "/images/categories/dev.png", slug: "development" },
-  { title: "Design", img: "/images/categories/design.png", slug: "design" },
-  { title: "Business", img: "/images/categories/business.png", slug: "business" },
-  { title: "AI & Data", img: "/images/categories/ai.png", slug: "ai-data" },
-  { title: "Marketing", img: "/images/categories/marketing.png", slug: "marketing" },
-  { title: "Photography", img: "/images/categories/photo.png", slug: "photography" },
+  { title: "Development", img: "/images/lesson_thum.png", slug: "development" },
+  { title: "Design", img: "/images/lesson_thum.png", slug: "design" },
+  { title: "Business", img: "/images/lesson_thum.png", slug: "business" },
+  { title: "AI & Data", img: "/images/lesson_thum.png", slug: "ai-data" },
+  { title: "Marketing", img: "/images/lesson_thum.png", slug: "marketing" },
+  { title: "Photography", img: "/images/lesson_thum.png", slug: "photography" },
 ];
 
 interface ExploreCategoriesProps {
@@ -20,7 +20,7 @@ export default function ExploreCategories({ categories }: ExploreCategoriesProps
     ? categories.slice(0, 6).map((cat) => ({
         title: cat.name,
         slug: cat.slug,
-        img: cat.thumbnailUrl || "/images/categories/default.png",
+        img: cat.thumbnailUrl || "/images/lesson_thum.png",
       }))
     : defaultCategories;
 

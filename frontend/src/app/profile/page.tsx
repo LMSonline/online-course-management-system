@@ -182,7 +182,7 @@ export default function ProfileSettingsPage() {
       if (updated && user) {
         useAuthStore.getState().setUser({
           ...user,
-          fullName: updated.fullName,
+          fullName: updated.fullName || user.fullName,
           avatarUrl: updated.avatarUrl,
         });
       }
@@ -504,7 +504,7 @@ export default function ProfileSettingsPage() {
                 {avatarPreview || profile.avatarUrl ? (
                   <SafeImage
                     src={avatarPreview || profile.avatarUrl || ""}
-                    alt={profile.fullName}
+                    alt={profile.fullName || "User avatar"}
                     width={120}
                     height={120}
                     className="rounded-full border-2 border-white/20 object-cover"
@@ -512,7 +512,7 @@ export default function ProfileSettingsPage() {
                 ) : (
                   <div className="w-[120px] h-[120px] rounded-full bg-slate-800 border-2 border-white/20 flex items-center justify-center">
                     <span className="text-4xl text-slate-400">
-                      {profile.fullName.charAt(0).toUpperCase()}
+                      {(profile.fullName || "U").charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}

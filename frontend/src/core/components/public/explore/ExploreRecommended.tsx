@@ -4,17 +4,17 @@ const sample = [
   {
     title: "Mastering React",
     teacher: "John Doe",
-    image: "/images/courses/react.png",
+    image: "/images/lesson_thum.png",
     rating: 4.8,
-    price: "$19.99"
+    price: "$19.99",
   },
   {
     title: "UI/UX Design Bootcamp",
     teacher: "Sarah Lee",
-    image: "/images/courses/uiux.png",
+    image: "/images/lesson_thum.png",
     rating: 4.7,
-    price: "$14.99"
-  }
+    price: "$14.99",
+  },
 ];
 
 export default function ExploreRecommended() {

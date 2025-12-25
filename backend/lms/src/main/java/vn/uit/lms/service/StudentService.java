@@ -96,6 +96,21 @@ public class StudentService {
     }
 
     /**
+     * Get current student profile (authenticated student)
+     * - STUDENT: Can only view their own profile
+     */
+    public StudentDetailResponse getCurrentStudent() {
+        log.info("Fetching current student profile");
+
+        Account account = accountService.validateCurrentAccountByRole(Role.STUDENT);
+
+        Student student = studentRepository.findByAccount(account)
+                .orElseThrow(() -> new ResourceNotFoundException("Student profile not found for this account"));
+
+        return StudentMapper.toStudentDetailResponse(student);
+    }
+
+    /**
      * Update student information
      * - STUDENT: Can only update their own profile
      * - ADMIN: Can update any student

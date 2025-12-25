@@ -112,50 +112,41 @@ export async function listCourses(params?: CourseListParams): Promise<CourseSumm
   }
 
   try {
-    // Build query params - backend uses Spring Filter spec
     const queryParams: Record<string, string | number> = {
-      page: params?.page || 0,
-      size: params?.size || 20,
+      page: params?.page ?? 0,
+      size: params?.size ?? 20,
     };
-    
-    // Add category filter if provided (backend uses Spring Filter: categoryName==value)
-    if (params?.category) {
-      queryParams.filter = `categoryName==${params.category}`;
-    }
-    
-    // Add level filter if provided
-    if (params?.level) {
-      const existingFilter = queryParams.filter as string | undefined;
-      queryParams.filter = existingFilter 
-        ? `${existingFilter};difficulty==${params.level}`
-        : `difficulty==${params.level}`;
-    }
-    
-    // Add search filter if provided
-    if (params?.search) {
-      const existingFilter = queryParams.filter as string | undefined;
-      queryParams.filter = existingFilter
-        ? `${existingFilter};title=like=${params.search}`
-        : `title=like=${params.search}`;
+
+    // Build safe filter string for backend (single '=' operator)
+    const filters: string[] = [];
+
+    if (params?.category && params.category !== "All") {
+      filters.push(`categoryName=${params.category}`);
     }
 
-    const response = await apiClient.get<ApiResponse<PageResponse<CourseResponse>> | PageResponse<CourseResponse>>("/courses", {
-      params: queryParams,
-    });
-    
-    // Unwrap the response (handles both ApiResponse<PageResponse> and direct PageResponse)
-    const pageData = unwrapPage<CourseResponse>(response.data);
-    
-    // Safely transform backend response to frontend format
-    const items = pageData.items || [];
-    
-    return items.map((course) => ({
+    if (params?.level) {
+      filters.push(`difficulty=${params.level}`);
+    }
+
+    if (params?.search) {
+      // Simple contains-like search on title
+      filters.push(`title=${params.search}`);
+    }
+
+    if (filters.length > 0) {
+      // Backend expects a single filter string; join with ';' if multiple
+      queryParams.filter = filters.join(";");
+    }
+
+    const mapCourses = (items: CourseResponse[]) =>
+      (items || []).map((course) => ({
       id: course.id.toString(),
+        slug: course.slug,
       title: course.title,
       instructor: course.teacherName,
       category: course.categoryName,
       level: course.difficulty as "Beginner" | "Intermediate" | "Advanced",
-      rating: 4.5, // TODO: Get from reviews
+        rating: 4.5, // TODO: Get from reviews
       ratingCount: 0, // TODO: Get from reviews
       students: 0, // TODO: Get from enrollment count
       duration: "0h 0m", // TODO: Calculate from lessons
@@ -163,10 +154,54 @@ export async function listCourses(params?: CourseListParams): Promise<CourseSumm
       thumbColor: "from-blue-500 to-purple-600",
       priceLabel: "₫2,239,000",
     }));
+
+    const response = await apiClient.get<
+      ApiResponse<PageResponse<CourseResponse>> | PageResponse<CourseResponse>
+    >("/courses", {
+      params: queryParams,
+    });
+
+    const pageData = unwrapPage<CourseResponse>(response.data);
+    const mapped = mapCourses(pageData.items || []);
+    return mapped;
   } catch (error) {
     console.error("Failed to fetch courses:", error);
+    // Fallback: retry without filter, then client-filter
+    try {
+      const retry = await apiClient.get<
+        ApiResponse<PageResponse<CourseResponse>> | PageResponse<CourseResponse>
+      >("/courses", { params: { page: params?.page ?? 0, size: params?.size ?? 20 } });
+      const retryPage = unwrapPage<CourseResponse>(retry.data);
+      const mapped = retryPage.items
+        ? retryPage.items.map((course) => ({
+            id: course.id.toString(),
+            slug: course.slug,
+            title: course.title,
+            instructor: course.teacherName,
+            category: course.categoryName,
+            level: course.difficulty as "Beginner" | "Intermediate" | "Advanced",
+            rating: 4.5,
+            ratingCount: 0,
+            students: 0,
+            duration: "0h 0m",
+            lectures: 0,
+            thumbColor: "from-blue-500 to-purple-600",
+            priceLabel: "₫2,239,000",
+          }))
+        : [];
+
+      // Client-side filter if category provided
+      if (params?.category) {
+        return mapped.filter(
+          (c) => c.category?.toLowerCase() === (params.category as string).toLowerCase()
+        );
+      }
+      return mapped;
+    } catch (retryErr) {
+      console.error("Retry without filter also failed, returning mock:", retryErr);
     return COURSE_CATALOG_MOCK;
   }
+}
 }
 
 /**
