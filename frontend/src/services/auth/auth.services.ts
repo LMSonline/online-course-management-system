@@ -96,3 +96,23 @@ export async function changePassword(payload: {
     body: JSON.stringify(payload),
   });
 }
+
+export async function suspendAccount(id: number, reason?: string) {
+  return apiClient(`/admin/accounts/${id}/suspend`, {
+    method: "POST",
+    body: JSON.stringify(reason ? { reason } : {}),
+  });
+}
+
+export async function unlockAccount(id: number, reason?: string) {
+  return apiClient(`/admin/accounts/${id}/unlock`, {
+    method: "POST",
+    body: JSON.stringify(reason ? { reason } : {}),
+  });
+}
+
+export async function getAllAccounts() {
+  return apiClient(`/admin/accounts`, {
+    method: "GET",
+  });
+}
