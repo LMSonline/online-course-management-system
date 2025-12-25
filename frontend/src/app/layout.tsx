@@ -5,8 +5,6 @@ import AssistantWidget from "@/core/components/public/AssistantWidget";
 import { ReactQueryProvider } from "@/lib/providers/ReactQueryProvider";
 import { ToasterProvider } from "@/lib/providers/ToasterProvider";
 
-import Footer from "@/core/components/public/Footer";
-
 export const metadata: Metadata = {
   title: "LMS – Online Courses Learning",
   description: "Learn anything with LMS. Online courses and learning paths.",
@@ -29,7 +27,6 @@ export default function RootLayout({
             <ToasterProvider />
             {children}
             <AssistantWidget />
-            <Footer />
           </ThemeProvider>
         </ReactQueryProvider>
       </body>

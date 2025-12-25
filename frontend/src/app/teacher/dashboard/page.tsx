@@ -15,8 +15,8 @@ export default function TeacherDashboardPage() {
   const data = TEACHER_DASHBOARD_MOCK;
 
   return (
-    <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-6 md:py-8">
-      <section className="mx-auto w-full max-w-6xl xl:max-w-7xl space-y-5 md:space-y-6">
+    <div className="min-h-screen bg-slate-950 p-4 sm:p-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
         <TeacherDashboardHeader name="Teacher" />
 
         <StatsRow overview={data.overview} />
@@ -38,7 +38,7 @@ export default function TeacherDashboardPage() {
 
         {/* Course performance table */}
         <CoursesPerformanceTable courses={data.courses} />
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
