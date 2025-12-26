@@ -45,6 +45,9 @@ public class QuizService {
                 .passingScore(request.getPassingScore())
                 .build();
 
+        // Validate using rich domain logic
+        quiz.validate();
+
         quiz = quizRepository.save(quiz);
         return QuizMapper.toResponse(quiz);
     }
@@ -75,6 +78,9 @@ public class QuizService {
         quiz.setRandomizeOptions(request.getRandomizeOptions());
         quiz.setPassingScore(request.getPassingScore());
 
+        // Validate using rich domain logic
+        quiz.validate();
+
         quiz = quizRepository.save(quiz);
         return QuizMapper.toResponse(quiz);
     }
@@ -92,7 +98,7 @@ public class QuizService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
-        int currentOrder = quiz.getQuizQuestions() != null ? quiz.getQuizQuestions().size() : 0;
+        int currentOrder = quiz.getQuestionCount();
 
         for (Long questionId : request.getQuestionIds()) {
             Question question = questionRepository.findById(questionId)
@@ -112,16 +118,6 @@ public class QuizService {
             quizQuestionRepository.save(quizQuestion);
         }
 
-        // Refresh quiz to get updated questions
-        // Or just return updated response if we fetch again or manage list manually.
-        // Fetching again is safer.
-        // Since we are in transaction, we might need to flush or just rely on hibernate cache if configured well,
-        // but findById might return cached entity without new children if not managed carefully.
-        // Let's rely on repository to fetch fresh state or just return what we have if we added to list.
-        // But we didn't add to quiz.getQuizQuestions() list in memory.
-        // Ý nó nói là ta nên fetch lại để đảm bảo có dữ liệu mới nhất.
-
-        // Simple way:
         return getQuizById(quizId);
     }
 
@@ -130,10 +126,18 @@ public class QuizService {
         if (!quizRepository.existsById(quizId)) {
             throw new ResourceNotFoundException("Quiz not found");
         }
-        // We need to find the link
+        
         QuizQuestion quizQuestion = quizQuestionRepository.findByQuizIdAndQuestionId(quizId, questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found in this quiz"));
 
         quizQuestionRepository.delete(quizQuestion);
+    }
+
+    /**
+     * Get quiz entity
+     */
+    public Quiz getQuizEntity(Long id) {
+        return quizRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
     }
 }

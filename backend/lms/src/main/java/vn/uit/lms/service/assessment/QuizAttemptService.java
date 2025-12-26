@@ -16,7 +16,6 @@ import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.QuizAttemptMapper;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,28 +40,28 @@ public class QuizAttemptService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
-        // Calculate attempt number
-        // This is a bit naive, might need a repository method to count attempts for this student and quiz
-        // Assuming we can just count existing attempts + 1
-        // But we don't have a count method exposed in repository yet, let's assume we can fetch list or add method.
-        // For now, let's just fetch all and count. Not efficient but works for now.
-        // Or better, add countByStudentIdAndQuizId to repository.
-        // Since I cannot edit repository easily without seeing it, I will use findByStudentId and filter.
-        // Actually I can use findByStudentId from existing code.
-
-        // Wait, findByStudentId returns all attempts for student.
-        // Let's filter by quizId.
+        // Count existing attempts
         long attemptCount = quizAttemptRepository.findByStudentId(student.getId()).stream()
                 .filter(a -> a.getQuiz().getId().equals(quizId))
                 .count();
 
+        // Check if student can attempt using rich domain logic
+        if (!quiz.canAttempt((int) attemptCount)) {
+            throw new InvalidRequestException("Maximum attempts reached for this quiz");
+        }
+
         QuizAttempt attempt = QuizAttempt.builder()
                 .quiz(quiz)
                 .student(student)
-                .startedAt(Instant.now())
                 .attemptNumber((int) attemptCount + 1)
                 .status(QuizAttemptStatus.IN_PROGRESS)
                 .build();
+
+        // Use rich domain logic to start
+        attempt.start();
+
+        // Validate using rich domain logic
+        attempt.validate();
 
         attempt = quizAttemptRepository.save(attempt);
         return QuizAttemptMapper.toResponse(attempt);
@@ -88,8 +87,16 @@ public class QuizAttemptService {
             throw new InvalidRequestException("Attempt does not belong to this quiz");
         }
 
-        if (attempt.getFinishedAt() != null) {
-            throw new InvalidRequestException("Quiz attempt is already finished");
+        // Check if attempt is in progress using rich domain logic
+        if (!attempt.isInProgress()) {
+            throw new InvalidRequestException("Quiz attempt is not in progress");
+        }
+
+        // Check time limit using rich domain logic
+        if (attempt.isTimeExceeded()) {
+            attempt.abandon();
+            quizAttemptRepository.save(attempt);
+            throw new InvalidRequestException("Time limit exceeded for this quiz");
         }
 
         Question question = questionRepository.findById(request.getQuestionId())
@@ -108,13 +115,15 @@ public class QuizAttemptService {
         String selectedOptionIdsJson = null;
         if (request.getSelectedOptionIds() != null && !request.getSelectedOptionIds().isEmpty()) {
             try {
-                selectedOptionIdsJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(request.getSelectedOptionIds());
+                selectedOptionIdsJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(request.getSelectedOptionIds());
             } catch (Exception e) {
                 throw new InvalidRequestException("Invalid selectedOptionIds format");
             }
         }
 
-        Optional<QuizAttemptAnswer> existingAnswer = quizAttemptAnswerRepository.findByQuizAttemptIdAndQuestionId(attemptId, request.getQuestionId());
+        Optional<QuizAttemptAnswer> existingAnswer = quizAttemptAnswerRepository
+                .findByQuizAttemptIdAndQuestionId(attemptId, request.getQuestionId());
 
         QuizAttemptAnswer answer;
         if (existingAnswer.isPresent()) {
@@ -143,35 +152,43 @@ public class QuizAttemptService {
             throw new InvalidRequestException("Attempt does not belong to this quiz");
         }
 
-        if (attempt.getFinishedAt() != null) {
+        if (attempt.isCompleted()) {
             return QuizAttemptMapper.toResponse(attempt);
         }
 
-        attempt.setFinishedAt(Instant.now());
-        attempt.setStatus(QuizAttemptStatus.COMPLETED);
-
         // Calculate score
-        double score = 0;
-        List<QuizAttemptAnswer> answers = attempt.getAnswers();
-        if (answers != null) {
-            long correctCount = answers.stream()
-                    .filter(a -> a.getSelectedOption() != null && a.getSelectedOption().isCorrect())
-                    .count();
+        double score = calculateScore(attempt);
 
-            // Assuming total questions is based on quiz questions.
-            // If quiz has questions linked via QuizQuestion, we should count them.
-            // For now, let's assume score is just number of correct answers, or percentage if we knew total.
-            // Let's check Quiz entity. It has quizQuestions.
-            // Ý nó nói là QuizQuestions là số câu hỏi trong quiz.
-            int totalQuestions = attempt.getQuiz().getQuizQuestions().size();
-            if (totalQuestions > 0) {
-                score = ((double) correctCount / totalQuestions) * 10.0; // Scale to 10
-            }
-        }
-        attempt.setTotalScore(score);
+        // Use rich domain logic to finish
+        attempt.finish(score);
+
         attempt = quizAttemptRepository.save(attempt);
-
         return QuizAttemptMapper.toResponse(attempt);
+    }
+
+    private double calculateScore(QuizAttempt attempt) {
+        List<QuizAttemptAnswer> answers = attempt.getAnswers();
+        if (answers == null || answers.isEmpty()) {
+            return 0.0;
+        }
+
+        long correctCount = answers.stream()
+                .filter(a -> a.getSelectedOption() != null && a.getSelectedOption().isCorrect())
+                .count();
+
+        int totalQuestions = attempt.getQuiz().getQuestionCount();
+        if (totalQuestions == 0) {
+            return 0.0;
+        }
+
+        // Calculate score based on total points if available
+        Double totalPoints = attempt.getQuiz().getTotalPoints();
+        if (totalPoints != null && totalPoints > 0) {
+            return (double) correctCount / totalQuestions * totalPoints;
+        }
+
+        // Default: scale to 10
+        return (double) correctCount / totalQuestions * 10.0;
     }
 
     public List<QuizAttemptResponse> getStudentQuizAttempts(Long studentId) {
