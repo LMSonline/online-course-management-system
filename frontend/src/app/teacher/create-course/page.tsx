@@ -35,7 +35,7 @@ export default function CreateCoursePage() {
   } = useCreateCourse();
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto my-3">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-3">
