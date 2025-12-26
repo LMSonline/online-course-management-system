@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SubmissionFileService {
+    private static final int DOWNLOAD_URL_EXPIRY_SECONDS = 3600; // 1 hour
+    
     private final SubmissionFileRepository submissionFileRepository;
     private final SubmissionRepository submissionRepository;
     private final FileStorageService fileStorageService;
@@ -34,9 +36,14 @@ public class SubmissionFileService {
                     if (submissionFile.getFile() != null) {
                         String downloadUrl = fileStorageService.generateDownloadUrl(
                             submissionFile.getFile().getId(), 
-                            3600 // 1 hour
+                            DOWNLOAD_URL_EXPIRY_SECONDS
                         );
-                        response.setFileUrl(downloadUrl);
+                        // Build new response with download URL
+                        return SubmissionFileResponse.builder()
+                                .id(response.getId())
+                                .fileName(response.getFileName())
+                                .fileUrl(downloadUrl)
+                                .build();
                     }
                     return response;
                 })
@@ -67,10 +74,11 @@ public class SubmissionFileService {
         
         submissionFile = submissionFileRepository.save(submissionFile);
         
-        SubmissionFileResponse response = AssignmentMapper.toSubmissionFileResponse(submissionFile);
-        response.setFileUrl(fileStorageService.generateDownloadUrl(fileStorage.getId(), 3600));
-        
-        return response;
+        return SubmissionFileResponse.builder()
+                .id(submissionFile.getId())
+                .fileName(fileStorage.getOriginalName())
+                .fileUrl(fileStorageService.generateDownloadUrl(fileStorage.getId(), DOWNLOAD_URL_EXPIRY_SECONDS))
+                .build();
     }
 
     @Transactional

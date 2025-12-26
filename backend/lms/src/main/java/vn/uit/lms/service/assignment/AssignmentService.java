@@ -190,10 +190,13 @@ public class AssignmentService {
         Double lowestScore = scores.isEmpty() ? null :
                 scores.stream().min(Double::compare).orElse(null);
 
-        // For total students, we would need course enrollment data
-        // For now, use submitted count as a proxy
+        // For total students, ideally should come from course enrollment
+        // For now, use submitted count as total (assuming only students who submitted are counted)
+        // In production, this should be retrieved from course enrollment data
         int totalStudents = (int) submittedCount;
-        Double submissionRate = totalStudents > 0 ? (submittedCount * 100.0 / totalStudents) : 0.0;
+        // Submission rate would be meaningful if we had actual enrollment count
+        // Setting to 100% as all counted students have submitted (by definition)
+        Double submissionRate = 100.0;
 
         return AssignmentStatisticsResponse.builder()
                 .assignmentId(assignment.getId())
