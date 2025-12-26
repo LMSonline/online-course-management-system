@@ -39,9 +39,9 @@ public class CourseVersionController {
     @TeacherOnly
     public ResponseEntity<CourseVersionResponse> createCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
-            @Parameter(description = "Version details") @Valid @RequestBody CourseVersionRequest courseVersionRequest
-    ) {
-        CourseVersionResponse courseVersionResponse = courseVersionService.createCourseVersion(courseId, courseVersionRequest);
+            @Parameter(description = "Version details") @Valid @RequestBody CourseVersionRequest courseVersionRequest) {
+        CourseVersionResponse courseVersionResponse = courseVersionService.createCourseVersion(courseId,
+                courseVersionRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(courseVersionResponse);
     }
 
@@ -50,8 +50,7 @@ public class CourseVersionController {
     @GetMapping("/courses/{courseId}/versions")
     @TeacherOnly
     public ResponseEntity<List<CourseVersionResponse>> getCourseVersions(
-            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId
-    ){
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId) {
         List<CourseVersionResponse> listVersion = courseVersionService.getCourseVersions(courseId);
         return ResponseEntity.ok(listVersion);
     }
@@ -61,8 +60,7 @@ public class CourseVersionController {
     @GetMapping("/courses/{courseId}/versions/deleted")
     @TeacherOnly
     public ResponseEntity<List<CourseVersionResponse>> getDeletedCourseVersion(
-            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId
-    ){
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId) {
         List<CourseVersionResponse> listVersion = courseVersionService.getDeletedCourseVersions(courseId);
         return ResponseEntity.ok(listVersion);
     }
@@ -73,10 +71,31 @@ public class CourseVersionController {
     @TeacherOnly
     public ResponseEntity<CourseVersionResponse> getCourseVersionById(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
-            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
-    ){
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
         CourseVersionResponse response = courseVersionService.getCourseVersionById(courseId, versionId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Delete course version (only DRAFT, PENDING, REJECTED)")
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/courses/{courseId}/versions/{versionId}")
+    @TeacherOnly
+    public ResponseEntity<Void> deleteCourseVersion(
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
+        courseVersionService.deleteCourseVersion(courseId, versionId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get course versions by status")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/courses/{courseId}/versions/status/{status}")
+    @TeacherOnly
+    public ResponseEntity<List<CourseVersionResponse>> getCourseVersionsByStatus(
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Status") @PathVariable("status") String status) {
+        List<CourseVersionResponse> listVersion = courseVersionService.getCourseVersionsByStatus(courseId, status);
+        return ResponseEntity.ok(listVersion);
     }
 
     @Operation(summary = "Submit version for approval")
@@ -85,8 +104,7 @@ public class CourseVersionController {
     @TeacherOnly
     public ResponseEntity<CourseVersionResponse> submitApproval(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
-            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
-    ){
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
         CourseVersionResponse response = courseVersionService.submitCourseVersionToApprove(courseId, versionId);
         return ResponseEntity.ok(response);
     }
@@ -97,8 +115,7 @@ public class CourseVersionController {
     @AdminOnly
     public ResponseEntity<CourseVersionResponse> approveCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
-            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
-    ){
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
         CourseVersionResponse response = courseVersionService.approveCourseVersion(courseId, versionId);
         return ResponseEntity.ok(response);
     }
@@ -110,8 +127,7 @@ public class CourseVersionController {
     public ResponseEntity<CourseVersionResponse> rejectCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
-            @Parameter(description = "Rejection details") @Valid @RequestBody RejectRequest rejectRequest
-    ){
+            @Parameter(description = "Rejection details") @Valid @RequestBody RejectRequest rejectRequest) {
         CourseVersionResponse response = courseVersionService.rejectCourseVersion(courseId, versionId, rejectRequest);
         return ResponseEntity.ok(response);
     }
@@ -122,8 +138,7 @@ public class CourseVersionController {
     @TeacherOnly
     public ResponseEntity<CourseVersionResponse> publishCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
-            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
-    ){
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
         CourseVersionResponse response = courseVersionService.publishCourseVersion(courseId, versionId);
         return ResponseEntity.ok(response);
     }
@@ -134,8 +149,7 @@ public class CourseVersionController {
     @AdminOnly
     public ResponseEntity<PageResponse<CourseVersionResponse>> getAllPendingCourseVersions(
             @Parameter(hidden = true) @Filter Specification<CourseVersion> spec,
-            @Parameter(description = "Pagination parameters") Pageable pageable
-    ){
+            @Parameter(description = "Pagination parameters") Pageable pageable) {
         return ResponseEntity.ok(courseVersionService.getAllPendingCourseVersion(spec, pageable));
     }
 }

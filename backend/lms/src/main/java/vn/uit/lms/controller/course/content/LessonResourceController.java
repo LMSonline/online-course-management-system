@@ -16,6 +16,7 @@ import vn.uit.lms.shared.dto.request.resource.LessonResourceRequest;
 import vn.uit.lms.shared.dto.request.resource.ReorderResourcesRequest;
 import vn.uit.lms.shared.dto.response.resource.LessonResourceResponse;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.Authenticated;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 import java.util.List;
@@ -82,6 +83,7 @@ public class LessonResourceController {
     )
     @GetMapping
     @ApiMessage("Resources retrieved successfully")
+    @Authenticated
     public ResponseEntity<List<LessonResourceResponse>> getLessonResources(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId
@@ -96,6 +98,7 @@ public class LessonResourceController {
     )
     @GetMapping("/{resourceId}")
     @ApiMessage("Resource details retrieved successfully")
+    @Authenticated
     public ResponseEntity<LessonResourceResponse> getResourceById(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,

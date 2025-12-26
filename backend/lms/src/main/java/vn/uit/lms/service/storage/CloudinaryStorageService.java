@@ -23,6 +23,9 @@ public class CloudinaryStorageService {
     @Value("${app.avatar.folder}")
     private String baseFolder;
 
+    @Value("${app.course.thumbnail.folder:course_thumbnails}")
+    private String courseThumbnailFolder;
+
     public UploadResult uploadAvatar(MultipartFile file, Long userId, String existingPublicId) {
         try {
             String publicId = String.format("user_%d_avatar", userId);
@@ -47,6 +50,40 @@ public class CloudinaryStorageService {
 
         } catch (IOException e) {
             throw new UploadFileException("Failed to upload to Cloudinary");
+        } catch (Exception e) {
+            throw new UploadFileException("Cloudinary upload error: " + e.getMessage());
+        }
+    }
+
+    public UploadResult uploadCourseThumbnail(MultipartFile file, Long courseId, String existingPublicId) {
+        try {
+            String publicId = String.format("course_%d_thumbnail", courseId);
+
+            Map<String, Object> options = ObjectUtils.asMap(
+                    "public_id", publicId,
+                    "folder", courseThumbnailFolder,
+                    "overwrite", true,
+                    "resource_type", "image",
+                    "quality", "auto",
+                    "fetch_format", "auto"
+            );
+
+            // Upload (bytes)
+            Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), options);
+
+            String secureUrl = (String) result.get("secure_url");
+            String uploadedPublicId = (String) result.get("public_id");
+
+            // Delete old thumbnail if exists and is different
+            if (existingPublicId != null && !existingPublicId.equals(uploadedPublicId)) {
+                deleteByPublicId(existingPublicId);
+            }
+
+            // Return both url and public id
+            return new UploadResult(secureUrl, uploadedPublicId);
+
+        } catch (IOException e) {
+            throw new UploadFileException("Failed to upload course thumbnail to Cloudinary");
         } catch (Exception e) {
             throw new UploadFileException("Cloudinary upload error: " + e.getMessage());
         }

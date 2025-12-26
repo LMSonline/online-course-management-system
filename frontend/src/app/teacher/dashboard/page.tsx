@@ -15,7 +15,7 @@ export default function TeacherDashboardPage() {
   const data = TEACHER_DASHBOARD_MOCK;
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 sm:p-6">
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <TeacherDashboardHeader name="Teacher" />
 

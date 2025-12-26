@@ -14,6 +14,8 @@ import vn.uit.lms.service.course.content.FileStorageService;
 import vn.uit.lms.shared.constant.StorageProvider;
 import vn.uit.lms.shared.dto.response.storage.FileStorageResponse;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.Authenticated;
+import vn.uit.lms.shared.util.annotation.TeacherOrAdmin;
 
 import java.util.Map;
 
@@ -22,6 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Tag(name = "File Storage Management", description = "APIs for managing file uploads and downloads")
 @SecurityRequirement(name = "bearerAuth")
+@Authenticated
 public class FileStorageController {
 
     private final FileStorageService fileStorageService;
@@ -100,6 +103,7 @@ public class FileStorageController {
     )
     @DeleteMapping("/{id}")
     @ApiMessage("File deleted successfully")
+    @TeacherOrAdmin
     public ResponseEntity<Void> deleteFile(
             @Parameter(description = "File storage ID", required = true)
             @PathVariable Long id

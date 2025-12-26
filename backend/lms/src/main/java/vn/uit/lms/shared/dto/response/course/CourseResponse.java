@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.uit.lms.shared.constant.Difficulty;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -49,6 +51,9 @@ public class CourseResponse {
 
     @Schema(description = "Public version ID", example = "15")
     private Long publicVersionId;
+
+    @Schema(description = "List of tags associated with the course", example = "[\"Java\", \"Programming\", \"Backend\"]")
+    private List<String> tags;
 
 }
 

@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <ReactQueryProvider>
           <ThemeProvider
             attribute="class"

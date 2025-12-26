@@ -68,6 +68,9 @@ public class Course extends BaseEntity {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
+    @Column(name = "thumbnail_public_id")
+    private String thumbnailPublicId;
+
     private String seoKeywords;
 
     private String canonicalUrl;

@@ -20,6 +20,7 @@ import vn.uit.lms.shared.dto.response.enrollment.EnrollmentDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentStatsResponse;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
+import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 @RestController
@@ -93,6 +94,7 @@ public class EnrollmentController {
     )
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/enrollments/{id}")
+    @StudentOrTeacher
     public ResponseEntity<EnrollmentDetailResponse> getEnrollmentDetail(
             @Parameter(description = "Enrollment ID") @PathVariable Long id) {
         EnrollmentDetailResponse response = enrollmentService.getEnrollmentDetail(id);

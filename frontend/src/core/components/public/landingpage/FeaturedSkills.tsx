@@ -54,7 +54,7 @@ export default function FeaturedSkills() {
   const order = [index, (index + 1) % cards.length, (index + 2) % cards.length];
 
   return (
-  <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
+    <section className="w-full mt-6 px-4 sm:px-6 md:px-10 xl:px-16">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT: heading */}
         <div className="lg:col-span-4">
@@ -135,6 +135,7 @@ function ArticleCard({ title, learners, image, href, bg }: SkillCard) {
           src={image}
           alt={title}
           fill
+          sizes="(max-width: 768px) 100vw, 33vw"
           className="object-cover"
           priority={false}
         />

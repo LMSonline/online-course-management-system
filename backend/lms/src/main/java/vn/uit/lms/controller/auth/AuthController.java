@@ -23,6 +23,7 @@ import vn.uit.lms.shared.dto.response.auth.RegisterResponse;
 import vn.uit.lms.shared.dto.response.auth.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.Authenticated;
 
 /**
  * Authentication and authorization controller for user account operations.
@@ -234,6 +235,7 @@ public class AuthController {
     @GetMapping("/me")
     @ApiMessage("Get current logged-in user info")
     @SecurityRequirement(name = "bearerAuth")
+    @Authenticated
     public ResponseEntity<MeResponse> getCurrentUserInfo() {
         MeResponse userInfo = authService.getCurrentUserInfo();
         return ResponseEntity.ok(userInfo);
@@ -252,6 +254,7 @@ public class AuthController {
     @PutMapping("/password/change")
     @ApiMessage("Change password for logged-in user")
     @SecurityRequirement(name = "bearerAuth")
+    @Authenticated
     public ResponseEntity<Void> changePassword(
             @Parameter(description = "Old and new password details", required = true)
             @Valid @RequestBody ChangePasswordDTO changePasswordDTO) {

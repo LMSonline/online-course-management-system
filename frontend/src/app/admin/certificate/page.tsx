@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import {
   Award, Search, CheckCircle, XCircle, Download, ExternalLink,
@@ -190,8 +191,8 @@ export default function AdminCertificatesPage() {
         <button
           onClick={() => setSelectedTab('verify')}
           className={`px-4 py-3 font-medium transition-colors ${selectedTab === 'verify'
-              ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
-              : 'text-gray-400 hover:text-white'
+            ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
+            : 'text-gray-400 hover:text-white'
             }`}
         >
           <div className="flex items-center gap-2">
@@ -202,8 +203,8 @@ export default function AdminCertificatesPage() {
         <button
           onClick={() => setSelectedTab('all')}
           className={`px-4 py-3 font-medium transition-colors ${selectedTab === 'all'
-              ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
-              : 'text-gray-400 hover:text-white'
+            ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
+            : 'text-gray-400 hover:text-white'
             }`}
         >
           <div className="flex items-center gap-2">
@@ -214,8 +215,8 @@ export default function AdminCertificatesPage() {
         <button
           onClick={() => setSelectedTab('stats')}
           className={`px-4 py-3 font-medium transition-colors ${selectedTab === 'stats'
-              ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
-              : 'text-gray-400 hover:text-white'
+            ? 'text-[#00ff00] border-b-2 border-[#00ff00]'
+            : 'text-gray-400 hover:text-white'
             }`}
         >
           <div className="flex items-center gap-2">

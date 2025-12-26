@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.community.report.ViolationReportService;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.util.annotation.Authenticated;
 import vn.uit.lms.shared.dto.request.community.report.*;
 import vn.uit.lms.shared.dto.response.community.report.ViolationReportDetailResponse;
 import vn.uit.lms.shared.dto.response.community.report.ViolationReportResponse;
@@ -22,6 +23,7 @@ public class ViolationReportController {
     // USER: CREATE REPORT
     // -----------------------------
     @PostMapping("/reports")
+    @Authenticated
     public ResponseEntity<ViolationReportDetailResponse> create(
             @RequestBody ViolationReportCreateRequest req
     ) {
@@ -35,6 +37,7 @@ public class ViolationReportController {
     // USER: LIST THEIR OWN REPORTS
     // -----------------------------
     @GetMapping("/reports")
+    @Authenticated
     public ResponseEntity<PageResponse<ViolationReportResponse>> getMyReports(Pageable pageable) {
         var page = vrService.getMyReports(pageable);
         var pageResponse = PageResponse.<ViolationReportResponse>builder()
@@ -74,6 +77,7 @@ public class ViolationReportController {
     // DETAIL
     // -----------------------------
     @GetMapping("/reports/{id}")
+    @Authenticated
     public ResponseEntity<ViolationReportDetailResponse> getDetail(
             @PathVariable Long id
     ) {
