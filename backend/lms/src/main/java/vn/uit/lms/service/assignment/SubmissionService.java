@@ -40,31 +40,37 @@ public class SubmissionService {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
-        // Check if already submitted
-        // If we want to support multiple attempts, we should check if max attempts reached or if there is a pending submission.
-        // For now, let's assume one submission per assignment or just create new one.
-        // The request says attempt_number default 1.
-        // Let's count existing submissions.
-        long attemptCount = submissionRepository.findByAssignmentIdAndStudentId(assignmentId, student.getId()).isPresent() ? 1 : 0;
-        // Wait, findByAssignmentIdAndStudentId returns Optional<Submission>, so it assumes unique result.
-        // If we want multiple attempts, we need to change repository to return List or count.
-        // But I cannot change repository easily without seeing it.
-        // Assuming for now we stick to single submission logic or update it if repository allows.
-        // If the user wants attempt_number, it implies multiple attempts.
-        // But the repository method `findByAssignmentIdAndStudentId` suggests unique constraint or single result.
+        // Count existing attempts by this student
+        List<Submission> existingSubmissions = submissionRepository
+                .findByAssignmentIdAndStudentId(assignmentId, student.getId());
+        int attemptCount = existingSubmissions.size();
 
-        // Let's stick to the existing logic but set attemptNumber to 1.
-        if (submissionRepository.findByAssignmentIdAndStudentId(assignmentId, student.getId()).isPresent()) {
-            throw new InvalidRequestException("Assignment already submitted");
+        // Check if student can submit using rich domain logic
+        if (!assignment.canSubmit(attemptCount)) {
+            if (assignment.isPastDue()) {
+                throw new InvalidRequestException("Assignment is past due date");
+            } else {
+                throw new InvalidRequestException("Maximum attempts reached for this assignment");
+            }
+        }
+
+        // If there's a pending submission, don't allow new one
+        boolean hasPendingSubmission = existingSubmissions.stream()
+                .anyMatch(Submission::isPending);
+        if (hasPendingSubmission && !assignment.allowsMultipleAttempts()) {
+            throw new InvalidRequestException("You already have a pending submission for this assignment");
         }
 
         Submission submission = Submission.builder()
                 .assignment(assignment)
                 .student(student)
                 .submittedAt(Instant.now())
-                .attemptNumber(1)
+                .attemptNumber(attemptCount + 1)
                 .status(SubmissionStatus.PENDING)
                 .build();
+
+        // Validate using rich domain logic
+        submission.validate();
 
         submission = submissionRepository.save(submission);
         return AssignmentMapper.toSubmissionResponse(submission);
@@ -88,14 +94,8 @@ public class SubmissionService {
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
-        submission.setScore(request.getGrade());
-        submission.setGradedBy(account);
-        submission.setGradedAt(Instant.now());
-        submission.setStatus(SubmissionStatus.GRADED);
-
-        if (request.getFeedback() != null) {
-            submission.setFeedback(request.getFeedback());
-        }
+        // Use rich domain logic to grade
+        submission.grade(request.getGrade(), account, request.getFeedback());
 
         submission = submissionRepository.save(submission);
         return AssignmentMapper.toSubmissionResponse(submission);
@@ -106,7 +106,8 @@ public class SubmissionService {
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
-        submission.setFeedback(request.getFeedback());
+        // Use rich domain logic to add feedback
+        submission.addFeedback(request.getFeedback());
 
         submission = submissionRepository.save(submission);
         return AssignmentMapper.toSubmissionResponse(submission);
@@ -120,9 +121,21 @@ public class SubmissionService {
 
     @Transactional
     public void deleteSubmission(Long id) {
-        if (!submissionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Submission not found");
+        Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
+        
+        // Check if submission can be edited using rich domain logic
+        if (!submission.canBeEdited()) {
+            throw new InvalidRequestException("Cannot delete a graded or rejected submission");
         }
+        
         submissionRepository.deleteById(id);
+    }
+
+    /**
+     * Get submission count for a student on an assignment
+     */
+    public int getSubmissionCount(Long assignmentId, Long studentId) {
+        return submissionRepository.findByAssignmentIdAndStudentId(assignmentId, studentId).size();
     }
 }

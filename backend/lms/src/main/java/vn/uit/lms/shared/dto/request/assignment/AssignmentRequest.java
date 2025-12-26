@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import vn.uit.lms.shared.constant.AssignmentType;
 
+import java.time.Instant;
+
 @Data
 @Schema(description = "Request DTO for creating or updating an assignment")
 public class AssignmentRequest {
@@ -34,4 +36,7 @@ public class AssignmentRequest {
 
     @Schema(description = "Maximum number of submission attempts", example = "3")
     private Integer maxAttempts;
+
+    @Schema(description = "Due date for the assignment", example = "2024-12-31T23:59:59Z")
+    private Instant dueDate;
 }

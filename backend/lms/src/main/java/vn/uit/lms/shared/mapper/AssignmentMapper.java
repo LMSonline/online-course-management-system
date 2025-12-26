@@ -23,6 +23,7 @@ public class AssignmentMapper {
                 .totalPoints(assignment.getTotalPoints())
                 .timeLimitMinutes(assignment.getTimeLimitMinutes())
                 .maxAttempts(assignment.getMaxAttempts())
+                .dueDate(assignment.getDueDate())
                 .createdAt(assignment.getCreatedAt())
                 .updatedAt(assignment.getUpdatedAt())
                 .build();

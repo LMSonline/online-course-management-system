@@ -6,11 +6,13 @@ import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.shared.constant.AssignmentType;
 import vn.uit.lms.shared.entity.BaseEntity;
 
+import java.time.Instant;
 import java.util.List;
 
 @Entity
 @Table(name = "assignments")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -46,6 +48,82 @@ public class Assignment extends BaseEntity {
     @Builder.Default
     private Integer maxAttempts = 1;
 
+    @Column(name = "due_date")
+    private Instant dueDate;
+
     @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL)
     private List<Submission> submissions;
+
+    /**
+     * Check if assignment has a due date
+     */
+    public boolean hasDueDate() {
+        return dueDate != null;
+    }
+
+    /**
+     * Check if assignment is past due
+     */
+    public boolean isPastDue() {
+        return hasDueDate() && Instant.now().isAfter(dueDate);
+    }
+
+    /**
+     * Check if assignment has time limit
+     */
+    public boolean hasTimeLimit() {
+        return timeLimitMinutes != null && timeLimitMinutes > 0;
+    }
+
+    /**
+     * Check if assignment allows multiple attempts
+     */
+    public boolean allowsMultipleAttempts() {
+        return maxAttempts != null && maxAttempts > 1;
+    }
+
+    /**
+     * Validate assignment configuration
+     */
+    public void validate() {
+        if (title == null || title.isBlank()) {
+            throw new IllegalStateException("Assignment title is required");
+        }
+        if (totalPoints != null && totalPoints < 0) {
+            throw new IllegalStateException("Total points cannot be negative");
+        }
+        if (timeLimitMinutes != null && timeLimitMinutes < 0) {
+            throw new IllegalStateException("Time limit cannot be negative");
+        }
+        if (maxAttempts != null && maxAttempts < 1) {
+            throw new IllegalStateException("Max attempts must be at least 1");
+        }
+    }
+
+    /**
+     * Check if a student can submit based on their attempt count
+     */
+    public boolean canSubmit(int currentAttempts) {
+        if (isPastDue()) {
+            return false;
+        }
+        return maxAttempts == null || currentAttempts < maxAttempts;
+    }
+
+    /**
+     * Get remaining attempts for a student
+     */
+    public int getRemainingAttempts(int currentAttempts) {
+        if (maxAttempts == null) {
+            return -1; // Unlimited
+        }
+        return Math.max(0, maxAttempts - currentAttempts);
+    }
+
+    /**
+     * Check if assignment is graded type (not practice)
+     */
+    public boolean isGraded() {
+        return assignmentType != AssignmentType.PRACTICE;
+    }
 }

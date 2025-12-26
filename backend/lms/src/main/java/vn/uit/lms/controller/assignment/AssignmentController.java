@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.assignment.AssignmentService;
 import vn.uit.lms.shared.dto.request.assignment.AssignmentRequest;
+import vn.uit.lms.shared.util.annotation.StudentOnly;
 import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
@@ -49,5 +50,23 @@ public class AssignmentController {
     @TeacherOnly
     public ResponseEntity<?> getAssignmentSubmissions(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.getAssignmentSubmissions(id));
+    }
+
+    @GetMapping("/assignments/{id}/eligibility")
+    @StudentOnly
+    public ResponseEntity<?> checkEligibility(@PathVariable Long id) {
+        return ResponseEntity.ok(assignmentService.checkEligibility(id));
+    }
+
+    @GetMapping("/assignments/{id}/statistics")
+    @TeacherOnly
+    public ResponseEntity<?> getAssignmentStatistics(@PathVariable Long id) {
+        return ResponseEntity.ok(assignmentService.getAssignmentStatistics(id));
+    }
+
+    @GetMapping("/assignments/{assignmentId}/students/{studentId}/progress")
+    @StudentOrTeacher
+    public ResponseEntity<?> getStudentProgress(@PathVariable Long assignmentId, @PathVariable Long studentId) {
+        return ResponseEntity.ok(assignmentService.getStudentProgress(assignmentId, studentId));
     }
 }
