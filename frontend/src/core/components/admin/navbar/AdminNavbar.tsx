@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, BookOpen, Settings, FileText, User, LogOut } from "lucide-react";
+import { useLogout } from "@/hooks/useAuth";
 
 export default function AdminNavbar() {
   const pathname = usePathname();
-  const router = useRouter();
+  const { mutate: logout, isPending } = useLogout();
 
   const navItems = [
     { label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard size={18} /> },
@@ -34,9 +35,8 @@ export default function AdminNavbar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition ${
-                    active ? "text-red-400 bg-white/5" : "text-slate-300 hover:text-white"
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition ${active ? "text-red-400 bg-white/5" : "text-slate-300 hover:text-white"
+                    }`}
                 >
                   {item.icon} {item.label}
                 </Link>
@@ -47,14 +47,12 @@ export default function AdminNavbar() {
 
         {/* Logout */}
         <button
-          onClick={() => {
-            localStorage.clear();
-            router.replace("/login");
-          }}
-          className="flex items-center gap-1 text-red-400 hover:text-red-300 transition"
+          onClick={() => logout()}
+          disabled={isPending}
+          className="flex items-center gap-1 text-red-400 hover:text-red-300 transition disabled:opacity-50"
         >
           <LogOut size={18} />
-          Logout
+          {isPending ? "Logging out..." : "Logout"}
         </button>
 
       </nav>

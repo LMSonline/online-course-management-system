@@ -24,7 +24,11 @@ import vn.uit.lms.shared.dto.response.student.StudentResponse;
 import vn.uit.lms.shared.dto.response.teacher.TeacherDetailResponse;
 import vn.uit.lms.shared.dto.response.teacher.TeacherRevenueResponse;
 import vn.uit.lms.shared.dto.response.teacher.TeacherStatsResponse;
+import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.Authenticated;
+import vn.uit.lms.shared.util.annotation.TeacherOrAdmin;
+import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 @RestController
 @RequestMapping("/api/v1/teachers")
@@ -45,6 +49,7 @@ public class TeacherController {
     )
     @GetMapping("/{id}")
     @ApiMessage("Get teacher by ID")
+    @Authenticated
     public ResponseEntity<TeacherDetailResponse> getTeacherById(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id
@@ -60,6 +65,7 @@ public class TeacherController {
     )
     @GetMapping("/code/{code}")
     @ApiMessage("Get teacher by code")
+    @Authenticated
     public ResponseEntity<TeacherDetailResponse> getTeacherByCode(
             @Parameter(description = "Teacher code", required = true, example = "GV2024001")
             @PathVariable String code
@@ -75,6 +81,7 @@ public class TeacherController {
     )
     @PutMapping("/{id}")
     @ApiMessage("Update teacher information")
+    @TeacherOrAdmin
     public ResponseEntity<TeacherDetailResponse> updateTeacher(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id,
@@ -92,6 +99,7 @@ public class TeacherController {
     )
     @PutMapping(value = "/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload teacher avatar")
+    @TeacherOrAdmin
     public ResponseEntity<UploadAvatarResponse> uploadAvatar(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id,
@@ -109,6 +117,7 @@ public class TeacherController {
     )
     @PostMapping("/{id}/request-approval")
     @ApiMessage("Request teacher approval")
+    @TeacherOnly
     public ResponseEntity<TeacherDetailResponse> requestApproval(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id
@@ -124,6 +133,7 @@ public class TeacherController {
     )
     @PostMapping("/{id}/approve")
     @ApiMessage("Approve teacher")
+    @AdminOnly
     public ResponseEntity<TeacherDetailResponse> approveTeacher(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id,
@@ -142,6 +152,7 @@ public class TeacherController {
     )
     @PostMapping("/{id}/reject")
     @ApiMessage("Reject teacher")
+    @AdminOnly
     public ResponseEntity<TeacherDetailResponse> rejectTeacher(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id,
@@ -159,6 +170,7 @@ public class TeacherController {
     )
     @GetMapping("/{id}/courses")
     @ApiMessage("Get teacher's courses")
+    @Authenticated
     public ResponseEntity<PageResponse<CourseResponse>> getTeacherCourses(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id,
@@ -176,6 +188,7 @@ public class TeacherController {
     )
     @GetMapping("/{id}/students")
     @ApiMessage("Get teacher's students")
+    @TeacherOrAdmin
     public ResponseEntity<PageResponse<StudentResponse>> getTeacherStudents(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id,
@@ -193,6 +206,7 @@ public class TeacherController {
     )
     @GetMapping("/{id}/revenue")
     @ApiMessage("Get teacher's revenue")
+    @TeacherOrAdmin
     public ResponseEntity<TeacherRevenueResponse> getTeacherRevenue(
             @Parameter(description = "Teacher ID", required = true, example = "1")
             @PathVariable Long id

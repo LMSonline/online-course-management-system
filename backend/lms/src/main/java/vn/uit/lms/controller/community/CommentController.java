@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.community.comment.CommentService;
 import vn.uit.lms.shared.dto.request.community.comment.CommentCreateRequest;
 import vn.uit.lms.shared.dto.response.community.comment.CommentResponse;
+import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class CommentController {
     }
 
     @PostMapping("/courses/{courseId}/comments")
+    @StudentOrTeacher
     public ResponseEntity<CommentResponse> createCourseComment(
             @PathVariable Long courseId,
             @Valid @RequestBody CommentCreateRequest req
@@ -28,6 +30,7 @@ public class CommentController {
     }
 
     @PostMapping("/lessons/{lessonId}/comments")
+    @StudentOrTeacher
     public ResponseEntity<CommentResponse> createLessonComment(
             @PathVariable Long lessonId,
             @Valid @RequestBody CommentCreateRequest req
@@ -36,6 +39,7 @@ public class CommentController {
     }
 
     @PostMapping("/comments/{id}/reply")
+    @StudentOrTeacher
     public ResponseEntity<CommentResponse> replyToComment(
             @PathVariable Long id,
             @Valid @RequestBody CommentCreateRequest req
@@ -65,6 +69,7 @@ public class CommentController {
     }
 
     @PutMapping("/{id}")
+    @StudentOrTeacher
     public CommentResponse update(
             @PathVariable Long id,
             @RequestBody CommentCreateRequest req
@@ -73,6 +78,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/{id}")
+    @StudentOrTeacher
     public ResponseEntity<?> delete(@PathVariable Long id) {
         commentService.deleteComment(id);
         return ResponseEntity.ok().body("Comment deleted");

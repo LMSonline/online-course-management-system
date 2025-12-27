@@ -33,6 +33,7 @@ import vn.uit.lms.shared.util.JsonViewUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.Authenticated;
 
 import java.util.Optional;
 
@@ -55,6 +56,7 @@ public class AccountController {
     )
     @GetMapping("/accounts/me")
     @ApiMessage("Get profile of the authenticated user")
+    @Authenticated
     public ResponseEntity<vn.uit.lms.shared.dto.ApiResponse<Object>> getProfile() {
 
         AccountProfileResponse response = accountService.getProfile();
@@ -68,6 +70,7 @@ public class AccountController {
     )
     @PostMapping(value = "/accounts/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload avatar for authenticated user")
+    @Authenticated
     public ResponseEntity<UploadAvatarResponse> uploadAvatar(
             @Parameter(description = "Avatar image file (JPG, PNG, WEBP)", required = true)
             @RequestParam("file") MultipartFile file) {
@@ -87,6 +90,7 @@ public class AccountController {
     )
     @PutMapping("/accounts/me")
     @ApiMessage("Update profile for authenticated user")
+    @Authenticated
     public ResponseEntity<AccountProfileResponse> updateProfile(
             @Parameter(description = "Updated profile information", required = true)
             @Valid @RequestBody UpdateProfileRequest profileRequest) {

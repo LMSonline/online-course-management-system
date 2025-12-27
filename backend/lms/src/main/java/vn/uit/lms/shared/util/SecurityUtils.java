@@ -2,9 +2,7 @@ package vn.uit.lms.shared.util;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -19,7 +17,7 @@ import org.springframework.security.oauth2.core.ClaimAccessor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
-import vn.uit.lms.shared.dto.response.ResLoginDTO;
+import vn.uit.lms.shared.dto.response.auth.ResLoginDTO;
 
 /**
  * Utility class for Spring Security.

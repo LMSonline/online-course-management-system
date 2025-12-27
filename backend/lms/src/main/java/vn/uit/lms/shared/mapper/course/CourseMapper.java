@@ -81,6 +81,12 @@ public class CourseMapper {
             response.setTeacherName(course.getTeacher().getFullName());
         }
 
+        List<String> tagNames = course.getCourseTags().stream()
+                .map(CourseTag::getTag)
+                .map(tag -> tag.getName())
+                .collect(Collectors.toList());
+        response.setTags(tagNames);
+
         CourseVersion publicVersion = course.getVersionPublish();
         if (publicVersion != null) {
             response.setPublicVersionId(publicVersion.getId());

@@ -3,6 +3,7 @@ package vn.uit.lms.service.course;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
@@ -16,6 +17,7 @@ import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.TagRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.helper.SEOHelper;
+import vn.uit.lms.service.storage.CloudinaryStorageService;
 import vn.uit.lms.shared.annotation.Audit;
 import vn.uit.lms.shared.constant.AuditAction;
 import vn.uit.lms.shared.constant.CourseStatus;
@@ -38,6 +40,13 @@ import java.util.Objects;
 public class CourseService {
 
     private static final String PREFIX_CANONICAL_URL = "/courses";
+
+    @Value("${app.course.thumbnail.max-size-bytes:10485760}")
+    private long maxThumbnailSizeBytes;
+
+    @Value("#{'${app.course.thumbnail.allowed-content-types:image/jpeg,image/png,image/webp}'.split(',')}")
+    private List<String> allowedThumbnailContentTypes;
+
     private final CourseRepository courseRepository;
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
@@ -45,6 +54,7 @@ public class CourseService {
     private final StudentRepository studentRepository;
     private final SEOHelper seoHelper;
     private final AccountService accountService;
+    private final CloudinaryStorageService cloudinaryStorageService;
 
     public CourseService(CourseRepository courseRepository,
                          CategoryRepository categoryRepository,
@@ -52,7 +62,8 @@ public class CourseService {
                          TeacherRepository teacherRepository,
                          SEOHelper seoHelper,
                          AccountService accountService,
-                         StudentRepository studentRepository) {
+                         StudentRepository studentRepository,
+                         CloudinaryStorageService cloudinaryStorageService) {
         this.seoHelper = seoHelper;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
@@ -60,6 +71,7 @@ public class CourseService {
         this.teacherRepository = teacherRepository;
         this.accountService = accountService;
         this.studentRepository = studentRepository;
+        this.cloudinaryStorageService = cloudinaryStorageService;
     }
     public Course validateCourse(Long courseId) {
         return courseRepository.findByIdAndDeletedAtIsNull(courseId)
@@ -490,6 +502,51 @@ public class CourseService {
                 coursePage.hasNext(),
                 coursePage.hasPrevious()
         );
+    }
+
+    @Transactional
+    @EnableSoftDeleteFilter
+    @Audit(table = "courses", action = AuditAction.UPDATE)
+    public CourseDetailResponse uploadCourseThumbnail(Long courseId, org.springframework.web.multipart.MultipartFile file) {
+        // Validate course exists
+        Course course = validateCourse(courseId);
+
+        // Verify teacher owns the course
+        verifyTeacher(course);
+
+        // Validate file
+        if (file == null || file.isEmpty()) {
+            throw new InvalidRequestException("File is required");
+        }
+
+        // Validate file size
+        if (file.getSize() > maxThumbnailSizeBytes) {
+            throw new InvalidRequestException(
+                String.format("File size exceeds maximum allowed size of %d bytes", maxThumbnailSizeBytes)
+            );
+        }
+
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !allowedThumbnailContentTypes.contains(contentType)) {
+            throw new InvalidRequestException(
+                String.format("Invalid file type. Allowed types: %s", String.join(", ", allowedThumbnailContentTypes))
+            );
+        }
+
+        // Upload to Cloudinary
+        CloudinaryStorageService.UploadResult result = cloudinaryStorageService.uploadCourseThumbnail(
+                file,
+                courseId,
+                course.getThumbnailPublicId()
+        );
+
+        // Update course with new thumbnail URL and public ID
+        course.setThumbnailUrl(result.getUrl());
+        course.setThumbnailPublicId(result.getPublicId());
+
+        Course savedCourse = courseRepository.save(course);
+        return CourseMapper.toCourseDetailResponse(savedCourse);
     }
 
 }

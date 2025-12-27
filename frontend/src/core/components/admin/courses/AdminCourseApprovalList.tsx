@@ -92,9 +92,9 @@ function CourseApprovalCard({
           {item.lecturesCount} lectures
         </p>
         <p className="mt-1 text-[11px] text-slate-500">
-          Instructor:{" "}
-          <span className="text-slate-100">{item.instructorName}</span> (
-          {item.instructorEmail}) · Submitted at {item.submittedAt}
+          Teacher:{" "}
+          <span className="text-slate-100">{item.teacherName}</span> (
+          {item.teacherEmail}) · Submitted at {item.submittedAt}
         </p>
         <p className="mt-1 text-[11px] text-[var(--brand-200)]">
           Price: ${item.price.toFixed(2)} (one-time)

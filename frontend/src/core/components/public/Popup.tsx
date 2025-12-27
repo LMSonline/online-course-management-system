@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { X } from "lucide-react";
 
-type PopupType = "success" | "error" | "warning" | "info";
+export type PopupType = "success" | "error" | "warning" | "info";
 
 interface PopupProps {
   title?: string;
@@ -18,7 +18,7 @@ export default function Popup({
   title = "",
   message = "",
   actions = null,
-  onClose = () => {},
+  onClose = () => { },
   open = true,
   type = "info",
 }: PopupProps) {

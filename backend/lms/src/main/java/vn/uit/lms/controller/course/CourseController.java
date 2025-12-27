@@ -9,8 +9,10 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.service.course.CourseService;
 import vn.uit.lms.shared.dto.PageResponse;
@@ -121,6 +123,17 @@ public class CourseController {
             @Parameter(description = "Course ID") @PathVariable Long id) {
         CourseDetailResponse restoredCourse = courseService.restoreCourse(id);
         return ResponseEntity.ok(restoredCourse);
+    }
+
+    @Operation(summary = "Upload course thumbnail")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping(value = "/teacher/courses/{id}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @TeacherOnly
+    public ResponseEntity<CourseDetailResponse> uploadCourseThumbnail(
+            @Parameter(description = "Course ID") @PathVariable Long id,
+            @Parameter(description = "Thumbnail image file", required = true) @RequestParam("file") MultipartFile file) {
+        CourseDetailResponse updatedCourse = courseService.uploadCourseThumbnail(id, file);
+        return ResponseEntity.ok(updatedCourse);
     }
 
     @Operation(summary = "Get my courses (Teacher)")

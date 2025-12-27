@@ -18,6 +18,7 @@ import vn.uit.lms.shared.dto.request.course.content.UpdateVideoRequest;
 import vn.uit.lms.shared.dto.response.course.content.LessonDTO;
 import vn.uit.lms.shared.dto.response.course.content.RequestUploadUrlResponse;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.Authenticated;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class LessonController {
     @Operation(summary = "Get all lessons of a chapter", description = "Retrieve all lessons in a specific chapter")
     @GetMapping("/chapters/{chapterId}/lessons")
     @ApiMessage("Lessons retrieved successfully")
+    @Authenticated
     public ResponseEntity<List<LessonDTO>> getLessonsByChapter(
             @Parameter(description = "Chapter ID", required = true) @PathVariable("chapterId") Long chapterId
     ){
@@ -57,6 +59,7 @@ public class LessonController {
     @Operation(summary = "Get lesson details", description = "Retrieve detailed information about a specific lesson")
     @GetMapping("/lessons/{id}")
     @ApiMessage("Lesson details retrieved successfully")
+    @Authenticated
     public ResponseEntity<LessonDTO> getLessonById(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("id") Long id
     ) {
@@ -125,6 +128,7 @@ public class LessonController {
     @Operation(summary = "Get video streaming URL", description = "Get a presigned URL for streaming a lesson's video")
     @GetMapping("/lessons/{lessonId}/video/stream-url")
     @ApiMessage("Streaming URL generated successfully")
+    @Authenticated
     public ResponseEntity<Map<String, String>> getVideoStreamingUrl(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("lessonId") Long lessonId
     ) {

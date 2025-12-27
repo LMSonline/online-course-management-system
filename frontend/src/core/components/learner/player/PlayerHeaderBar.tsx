@@ -3,9 +3,9 @@
 
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import type { PlayerCourseMeta } from "@/lib/learner/player/types";
+import type { PlayerCourse } from "@/lib/learner/player/types";
 
-export function PlayerHeaderBar({ course }: { course: PlayerCourseMeta }) {
+export function PlayerHeaderBar({ course }: { course: PlayerCourse }) {
   return (
     <header className="flex h-12 md:h-14 items-center justify-between border-b border-white/10 bg-slate-950/95 px-3 sm:px-5 lg:px-8 backdrop-blur">
       <div className="flex items-center gap-3 min-w-0">

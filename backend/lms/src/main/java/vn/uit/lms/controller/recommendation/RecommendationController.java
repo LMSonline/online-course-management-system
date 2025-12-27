@@ -7,6 +7,8 @@ import vn.uit.lms.service.recommendation.RecommendationService;
 import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.dto.request.recommendation.RecommendationFeedbackRequest;
 import vn.uit.lms.shared.util.SecurityUtils;
+import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.util.annotation.StudentOnly;
 
 import java.time.Instant;
 
@@ -18,6 +20,7 @@ public class RecommendationController {
     private final RecommendationService service;
 
     @GetMapping("/students/{studentId}/recommendations")
+    @StudentOnly
     public ApiResponse<?> getRecommendations(@PathVariable Long studentId) {
 
         return ApiResponse.builder()
@@ -36,6 +39,7 @@ public class RecommendationController {
     }
 
     @PostMapping("/recommendations/{id}/feedback")
+    @StudentOnly
     public ApiResponse<?> giveFeedback(
             @PathVariable Long id,
             @RequestBody RecommendationFeedbackRequest req
@@ -63,6 +67,7 @@ public class RecommendationController {
     }
 
     @GetMapping("/admin/recommendations/stats")
+    @AdminOnly
     public ApiResponse<?> getStats() {
 
         return ApiResponse.builder()

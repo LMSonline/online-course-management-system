@@ -12,6 +12,7 @@ import vn.uit.lms.service.course.content.ChapterService;
 import vn.uit.lms.shared.dto.request.course.content.ChapterRequest;
 import vn.uit.lms.shared.dto.request.course.content.ChapterReorderRequest;
 import vn.uit.lms.shared.dto.response.course.content.ChapterDto;
+import vn.uit.lms.shared.util.annotation.Authenticated;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 import java.util.List;
@@ -42,6 +43,7 @@ public class ChapterController {
 
     @Operation(summary = "Get all chapters")
     @GetMapping("/courses/{courseId}/versions/{versionId}/chapters")
+    @Authenticated
     public ResponseEntity<List<ChapterDto>> getListChapters(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
@@ -51,6 +53,7 @@ public class ChapterController {
 
     @Operation(summary = "Get chapter details")
     @GetMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
+    @Authenticated
     public ResponseEntity<ChapterDto> getDetailChapter(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,

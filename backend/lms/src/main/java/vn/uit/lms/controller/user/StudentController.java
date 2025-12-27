@@ -19,6 +19,8 @@ import vn.uit.lms.shared.dto.request.student.UpdateStudentRequest;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.dto.response.student.*;
 import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.util.annotation.StudentOrAdmin;
+import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 
 import java.util.Optional;
 
@@ -41,6 +43,7 @@ public class StudentController {
     )
     @GetMapping("/{id}")
     @ApiMessage("Get student by ID")
+    @StudentOrTeacher
     public ResponseEntity<StudentDetailResponse> getStudentById(
             @Parameter(description = "Student ID", required = true, example = "1")
             @PathVariable Long id
@@ -56,6 +59,7 @@ public class StudentController {
     )
     @GetMapping("/code/{code}")
     @ApiMessage("Get student by code")
+    @StudentOrTeacher
     public ResponseEntity<StudentDetailResponse> getStudentByCode(
             @Parameter(description = "Student code", required = true, example = "SV2024001")
             @PathVariable String code
@@ -71,6 +75,7 @@ public class StudentController {
     )
     @PutMapping("/{id}")
     @ApiMessage("Update student information")
+    @StudentOrAdmin
     public ResponseEntity<StudentDetailResponse> updateStudent(
             @Parameter(description = "Student ID", required = true, example = "1")
             @PathVariable Long id,
@@ -88,6 +93,7 @@ public class StudentController {
     )
     @PutMapping(value = "/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload student avatar")
+    @StudentOrAdmin
     public ResponseEntity<UploadAvatarResponse> uploadAvatar(
             @Parameter(description = "Student ID", required = true, example = "1")
             @PathVariable Long id,
