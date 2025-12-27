@@ -12,17 +12,19 @@ import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
  * Auth Bootstrap Hook
  * 
  * Implements 2-step hydration:
- * 1. AUTH_ME -> get accountId + role
- * 2. STUDENT_GET_ME / TEACHER_GET_ME -> get studentId / teacherId
+ * 1. AUTH_ME (/accounts/me) -> get accountId + role + profile.studentId/teacherId (if available)
+ * 2. STUDENT_GET_ME / TEACHER_GET_ME -> get studentId / teacherId (only if not in profile)
  * 
  * ADMIN only needs step 1.
+ * 
+ * IMPORTANT: If /accounts/me returns profile.studentId, we skip /students/me call.
  */
 export function useAuthBootstrap() {
-  const { setAuth, setStudentId, setTeacherId, accountId, role } = useAuthStore();
+  const { setAuth, setStudentId, setTeacherId, accountId, role, studentId, teacherId } = useAuthStore();
 
-  // Step 1: Get account info (AUTH_ME)
+  // Step 1: Get account info (AUTH_ME) - only if we have token and no accountId
   const hasToken = !!tokenStorage.getAccessToken();
-  const shouldFetchAuth = hasToken || !!accountId;
+  const shouldFetchAuth = hasToken && !accountId;
 
   const {
     data: accountData,
@@ -31,17 +33,22 @@ export function useAuthBootstrap() {
   } = useQuery({
     queryKey: [CONTRACT_KEYS.AUTH_ME],
     queryFn: authService.getCurrentUser,
-    enabled: shouldFetchAuth && !accountId, // Only fetch if we don't have accountId
-    retry: false,
+    enabled: shouldFetchAuth,
+    retry: 0, // No retry on error
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Step 2a: Get student profile (if role is STUDENT)
+  // Step 2a: Get student profile (only if role is STUDENT AND studentId not in profile AND not already set)
+  const internalRole = accountData ? mapBackendRoleToInternal(accountData.role) : role;
+  const studentIdFromProfile = accountData?.profile?.studentId;
   const shouldFetchStudent =
-    (accountData?.role === "USER" || role === "STUDENT") &&
+    internalRole === "STUDENT" &&
     !!accountData &&
-    !useAuthStore.getState().studentId;
+    !studentIdFromProfile && // Skip if studentId is in profile
+    !studentId; // Skip if already set
 
   const {
     data: studentData,
@@ -50,16 +57,20 @@ export function useAuthBootstrap() {
     queryKey: [CONTRACT_KEYS.STUDENT_GET_ME],
     queryFn: studentService.getMe,
     enabled: shouldFetchStudent,
-    retry: false,
+    retry: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  // Step 2b: Get teacher profile (if role is TEACHER)
+  // Step 2b: Get teacher profile (only if role is TEACHER AND teacherId not in profile AND not already set)
+  const teacherIdFromProfile = accountData?.profile?.teacherId;
   const shouldFetchTeacher =
-    (accountData?.role === "CREATOR" || role === "TEACHER") &&
+    internalRole === "TEACHER" &&
     !!accountData &&
-    !useAuthStore.getState().teacherId;
+    !teacherIdFromProfile && // Skip if teacherId is in profile
+    !teacherId; // Skip if already set
 
   const {
     data: teacherData,
@@ -68,7 +79,9 @@ export function useAuthBootstrap() {
     queryKey: [CONTRACT_KEYS.TEACHER_GET_ME],
     queryFn: teacherService.getMe,
     enabled: shouldFetchTeacher,
-    retry: false,
+    retry: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -77,6 +90,17 @@ export function useAuthBootstrap() {
   useEffect(() => {
     if (accountData) {
       const internalRole = mapBackendRoleToInternal(accountData.role);
+      
+      // DEV: Log bootstrap state
+      if (process.env.NODE_ENV === "development") {
+        console.log("[AuthBootstrap] AUTH_ME success:", {
+          accountId: accountData.accountId,
+          role: accountData.role,
+          internalRole,
+          profile: accountData.profile,
+        });
+      }
+      
       setAuth({
         accountId: accountData.accountId,
         role: internalRole,
@@ -85,19 +109,40 @@ export function useAuthBootstrap() {
         username: accountData.username,
         avatarUrl: accountData.avatarUrl ?? null,
       });
-    }
-  }, [accountData, setAuth]);
 
-  // Update studentId when student data arrives
+      // Extract studentId/teacherId from profile if available (avoids extra API call)
+      if (accountData.profile?.studentId) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[AuthBootstrap] studentId from profile:", accountData.profile.studentId);
+        }
+        setStudentId(accountData.profile.studentId);
+      }
+      
+      if (accountData.profile?.teacherId) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[AuthBootstrap] teacherId from profile:", accountData.profile.teacherId);
+        }
+        setTeacherId(accountData.profile.teacherId);
+      }
+    }
+  }, [accountData, setAuth, setStudentId, setTeacherId]);
+
+  // Update studentId when student data arrives (fallback if not in profile)
   useEffect(() => {
     if (studentData) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[AuthBootstrap] studentId from /students/me:", studentData.id);
+      }
       setStudentId(studentData.id);
     }
   }, [studentData, setStudentId]);
 
-  // Update teacherId when teacher data arrives
+  // Update teacherId when teacher data arrives (fallback if not in profile)
   useEffect(() => {
     if (teacherData) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[AuthBootstrap] teacherId from /teachers/me:", teacherData.id);
+      }
       setTeacherId(teacherData.id);
     }
   }, [teacherData, setTeacherId]);
@@ -107,7 +152,15 @@ export function useAuthBootstrap() {
     isLoadingAccount || isLoadingStudent || isLoadingTeacher;
 
   const isReady = (() => {
-    if (!accountData) return false;
+    if (!hasToken) {
+      // No token = guest, ready immediately
+      return true;
+    }
+    
+    if (!accountData) {
+      return false; // Still loading account data
+    }
+    
     const currentRole = mapBackendRoleToInternal(accountData.role);
     
     if (currentRole === "ADMIN") {
@@ -115,15 +168,33 @@ export function useAuthBootstrap() {
     }
     
     if (currentRole === "STUDENT") {
-      return !!studentData; // Student needs studentId
+      // Student needs studentId (from profile or /students/me)
+      return !!(studentIdFromProfile || studentId || studentData);
     }
     
     if (currentRole === "TEACHER") {
-      return !!teacherData; // Teacher needs teacherId
+      // Teacher needs teacherId (from profile or /teachers/me)
+      return !!(teacherIdFromProfile || teacherId || teacherData);
     }
     
     return false;
   })();
+
+  // DEV: Log bootstrap state transitions
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[AuthBootstrap] State:", {
+        hasToken,
+        isLoading,
+        isReady,
+        accountId,
+        role: internalRole,
+        studentId: studentIdFromProfile || studentId,
+        teacherId: teacherIdFromProfile || teacherId,
+        error: accountError?.message,
+      });
+    }
+  }, [hasToken, isLoading, isReady, accountId, internalRole, studentIdFromProfile, studentId, teacherIdFromProfile, teacherId, accountError]);
 
   return {
     isLoading,

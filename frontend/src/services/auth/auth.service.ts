@@ -160,10 +160,12 @@ export const authService = {
 
   /**
    * Get current authenticated user
+   * Endpoint: GET /api/v1/accounts/me
+   * Returns: accountId, role, profile.studentId (if STUDENT), profile.teacherId (if TEACHER)
    */
   getCurrentUser: async (): Promise<MeUser> => {
     const response = await axiosClient.get<ApiResponse<MeUser>>(
-      `${AUTH_PREFIX}/me`,
+      "/accounts/me",
       {
         contractKey: CONTRACT_KEYS.AUTH_ME,
       }
