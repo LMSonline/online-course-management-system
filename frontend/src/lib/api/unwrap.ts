@@ -3,7 +3,8 @@ import { ApiResponse } from "./api.types";
 import { AppError } from "./api.error";
 
 export function unwrapResponse<T>(
-  res: AxiosResponse<ApiResponse<T>>
+  res: AxiosResponse<ApiResponse<T>>,
+  contractKey?: string
 ): T {
   const body = res.data;
 
@@ -11,7 +12,8 @@ export function unwrapResponse<T>(
     throw new AppError(
       body.message || "Request failed",
       body.status ?? res.status ?? 500,
-      body.code ?? "UNKNOWN_ERROR"
+      body.code ?? "UNKNOWN_ERROR",
+      contractKey
     );
   }
 

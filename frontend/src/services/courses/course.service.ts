@@ -1,6 +1,7 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import { RejectRequest } from "../account/account.types";
 import {
   CourseRequest,
@@ -50,30 +51,50 @@ export const courseService = {
 
   /**
    * Get course by slug
+   * Contract Key: COURSE_GET_DETAIL
    */
   getCourseBySlug: async (slug: string): Promise<CourseDetailResponse> => {
     const response = await axiosClient.get<ApiResponse<CourseDetailResponse>>(
-      `${COURSE_PREFIX}/${slug}`
+      `${COURSE_PREFIX}/${slug}`,
+      {
+        contractKey: CONTRACT_KEYS.COURSE_GET_DETAIL,
+      }
     );
 
-    return unwrapResponse(response);
+    return unwrapResponse(response, CONTRACT_KEYS.COURSE_GET_DETAIL);
   },
 
   /**
    * Get all active courses
+   * Contract Key: COURSE_GET_LIST
+   * Supports: page, size, q (search), sort, category (categorySlug)
    */
   getCoursesActive: async (
-    page?: number,
-    size?: number,
-    filter?: string
+    params?: {
+      page?: number;
+      size?: number;
+      q?: string;
+      sort?: string;
+      category?: string;
+      filter?: string;
+    }
   ): Promise<PageResponse<CourseResponse>> => {
+    const queryParams: Record<string, any> = {};
+    if (params?.page !== undefined) queryParams.page = params.page;
+    if (params?.size !== undefined) queryParams.size = params.size;
+    if (params?.q) queryParams.q = params.q;
+    if (params?.sort) queryParams.sort = params.sort;
+    if (params?.category) queryParams.category = params.category;
+    if (params?.filter) queryParams.filter = params.filter;
+
     const response = await axiosClient.get<
       ApiResponse<PageResponse<CourseResponse>>
     >(COURSE_PREFIX, {
-      params: { page, size, filter },
+      params: queryParams,
+      contractKey: CONTRACT_KEYS.COURSE_GET_LIST,
     });
 
-    return unwrapResponse(response);
+    return unwrapResponse(response, CONTRACT_KEYS.COURSE_GET_LIST);
   },
 
   /**

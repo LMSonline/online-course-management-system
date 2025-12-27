@@ -1,8 +1,8 @@
-import {  CategoryRequest,
-  CategoryResponse, } from "./course.types";
+import { CategoryRequest, CategoryResponse } from "./course.types";
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 const CATEGORY_PREFIX = "/categories";
 const ADMIN_CATEGORY_PREFIX = "/admin/categories";
 
@@ -45,13 +45,17 @@ export const categoryService = {
 
   /**
    * Get category tree
+   * Contract Key: CATEGORY_GET_TREE
    */
   getCategoryTree: async (): Promise<CategoryResponse[]> => {
     const response = await axiosClient.get<ApiResponse<CategoryResponse[]>>(
-      `${CATEGORY_PREFIX}/tree`
+      `${CATEGORY_PREFIX}/tree`,
+      {
+        contractKey: CONTRACT_KEYS.CATEGORY_GET_TREE,
+      }
     );
 
-    return unwrapResponse(response);
+    return unwrapResponse(response, CONTRACT_KEYS.CATEGORY_GET_TREE);
   },
 
   /**
@@ -100,12 +104,16 @@ export const categoryService = {
 
   /**
    * Get category by slug
+   * Contract Key: CATEGORY_GET_BY_SLUG
    */
   getCategoryBySlug: async (slug: string): Promise<CategoryResponse> => {
     const response = await axiosClient.get<ApiResponse<CategoryResponse>>(
-      `${CATEGORY_PREFIX}/slug/${slug}`
+      `${CATEGORY_PREFIX}/slug/${slug}`,
+      {
+        contractKey: CONTRACT_KEYS.CATEGORY_GET_BY_SLUG,
+      }
     );
 
-    return unwrapResponse(response);
+    return unwrapResponse(response, CONTRACT_KEYS.CATEGORY_GET_BY_SLUG);
   },
 };
