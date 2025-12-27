@@ -1,19 +1,19 @@
 /**
  * QuizAttemptPlayScreen
- * Route: /quizzes/:quizId/attempts/:attemptId
+ * Route: /quizzes/:id/attempts/:attemptId
  * Layout: AuthenticatedLayout
  * Guard: requireStudent
  */
 export default function QuizAttemptPlayScreen({
   params,
 }: {
-  params: { quizId: string; attemptId: string };
+  params: { id: string; attemptId: string };
 }) {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1>QuizAttemptPlayScreen</h1>
       <p className="text-gray-600 dark:text-gray-400 mt-2">
-        Quiz ID: {params.quizId}, Attempt ID: {params.attemptId}
+        Quiz ID: {params.id}, Attempt ID: {params.attemptId}
       </p>
       <div className="mt-4">
         <h2 className="font-semibold">TODO:</h2>

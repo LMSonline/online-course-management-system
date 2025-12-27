@@ -1,22 +1,22 @@
 /**
  * CourseRatingSummaryScreen
- * Route: /courses/:courseId/rating-summary
+ * Route: /courses/:slug/rating-summary
  * Layout: PublicLayout
  * Guard: none
  * 
  * TODO: Initial queries from Per-screenDataContract.md
- * - GET /courses/:courseId/rating-summary
+ * - GET /courses/:slug/rating-summary
  */
 export default function CourseRatingSummaryScreen({
   params,
 }: {
-  params: { courseId: string };
+  params: { slug: string };
 }) {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1>CourseRatingSummaryScreen</h1>
       <p className="text-gray-600 dark:text-gray-400 mt-2">
-        Course ID: {params.courseId}
+        Course slug: {params.slug}
       </p>
       <div className="mt-4">
         <h2 className="font-semibold">TODO:</h2>
