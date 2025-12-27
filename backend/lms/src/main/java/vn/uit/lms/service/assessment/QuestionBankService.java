@@ -67,4 +67,48 @@ public class QuestionBankService {
         }
         questionBankRepository.deleteById(id);
     }
+
+    /**
+     * Get all question banks (for admin/teacher)
+     */
+    public List<QuestionBankResponse> getAllQuestionBanks() {
+        return questionBankRepository.findAll().stream()
+                .map(QuestionBankMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Search question banks by name
+     */
+    public List<QuestionBankResponse> searchQuestionBanks(String keyword) {
+        return questionBankRepository.findAll().stream()
+                .filter(qb -> qb.getName().toLowerCase().contains(keyword.toLowerCase()))
+                .map(QuestionBankMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Clone question bank (for teachers)
+     */
+    @Transactional
+    public QuestionBankResponse cloneQuestionBank(Long questionBankId, Long targetTeacherId) {
+        QuestionBank sourceBank = questionBankRepository.findById(questionBankId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question bank not found"));
+
+        Teacher targetTeacher = teacherRepository.findById(targetTeacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target teacher not found"));
+
+        QuestionBank clonedBank = QuestionBank.builder()
+                .name(sourceBank.getName() + " (Copy)")
+                .description(sourceBank.getDescription())
+                .teacher(targetTeacher)
+                .build();
+
+        clonedBank = questionBankRepository.save(clonedBank);
+
+        // Note: Questions are not automatically cloned as they reference the original bank
+        // If you want to clone questions too, you'd need to implement that separately
+
+        return QuestionBankMapper.toResponse(clonedBank);
+    }
 }

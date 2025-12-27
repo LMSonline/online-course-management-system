@@ -20,36 +20,36 @@ const typeIcon: Record<TeachingTask["type"], React.ComponentType<any>> = {
 
 export function TeachingTasks({ tasks }: Props) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5 space-y-3">
+    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm md:text-base font-semibold text-slate-50">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
           Teaching tasks
         </h2>
-        <p className="text-[11px] text-slate-400">
-          Items that may need your attention.
+        <p className="text-xs text-slate-600 dark:text-slate-400">
+          Items needing attention
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {tasks.map((t) => {
           const Icon = typeIcon[t.type];
           return (
             <div
               key={t.id}
-              className="flex items-start gap-3 rounded-xl border border-white/10 bg-slate-950/80 px-3 py-2.5"
+              className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-4"
             >
-              <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--brand-600)]/15 text-[var(--brand-200)]">
-                <Icon className="w-4 h-4" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30">
+                <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-50">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
                   {typeLabel[t.type]} · {t.courseTitle}
                 </p>
-                <p className="mt-0.5 text-[11px] text-slate-400">
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                   {t.summary}
                 </p>
               </div>
-              <p className="ml-2 text-[11px] text-[var(--brand-200)] whitespace-nowrap">
+              <p className="ml-2 text-xs text-orange-600 dark:text-orange-400 font-medium whitespace-nowrap">
                 {t.dueLabel}
               </p>
             </div>
@@ -57,7 +57,7 @@ export function TeachingTasks({ tasks }: Props) {
         })}
 
         {tasks.length === 0 && (
-          <p className="text-[11px] text-slate-500">
+          <p className="text-sm text-slate-600 dark:text-slate-400 text-center py-4">
             You have no pending tasks. 🎉
           </p>
         )}

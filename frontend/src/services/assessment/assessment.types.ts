@@ -47,6 +47,7 @@ export interface QuizResponse {
 
 export type QuestionType =
   | "MULTIPLE_CHOICE"
+  | "MULTI_SELECT"
   | "TRUE_FALSE"
   | "SHORT_ANSWER"
   | "ESSAY";
@@ -54,35 +55,32 @@ export type QuestionType =
 export type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD";
 
 export interface AnswerOptionRequest {
-  optionText: string;
+  content: string;
   isCorrect: boolean;
-  explanation?: string;
+  orderIndex?: number;
 }
 
 export interface AnswerOptionResponse {
   id: number;
-  optionText: string;
+  content: string;
   isCorrect: boolean;
-  explanation?: string;
-  order: number;
+  orderIndex: number;
 }
 
 export interface QuestionRequest {
-  questionText: string;
-  questionType: QuestionType;
-  difficulty?: QuestionDifficulty;
-  points?: number;
-  explanation?: string;
+  content: string;
+  type: QuestionType;
+  metadata?: string; // JSON string for additional data like difficulty
+  maxPoints?: number;
   answerOptions?: AnswerOptionRequest[];
 }
 
 export interface QuestionResponse {
   id: number;
-  questionText: string;
-  questionType: QuestionType;
-  difficulty: QuestionDifficulty;
-  points: number;
-  explanation?: string;
+  content: string;
+  type: QuestionType;
+  metadata?: string;
+  maxPoints: number;
   questionBankId: number;
   answerOptions?: AnswerOptionResponse[];
   createdAt: string;
@@ -96,19 +94,13 @@ export interface QuestionResponse {
 export interface QuestionBankRequest {
   name: string;
   description?: string;
-  subject?: string;
-  isPublic?: boolean;
 }
 
 export interface QuestionBankResponse {
   id: number;
   name: string;
   description?: string;
-  subject?: string;
   teacherId: number;
-  teacherName?: string;
-  isPublic: boolean;
-  totalQuestions?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -176,4 +168,28 @@ export interface StudentQuizResultResponse {
   bestScore?: number;
   lastAttemptAt?: string;
   passed: boolean;
+}
+
+// ===========================
+// Quiz Eligibility & Statistics Types
+// ===========================
+
+export interface QuizEligibilityResponse {
+  eligible: boolean;
+  reason?: string;
+  remainingAttempts?: number;
+  nextAttemptAvailable?: string;
+}
+
+export interface QuizStatisticsResponse {
+  quizId: number;
+  quizTitle: string;
+  totalAttempts: number;
+  totalStudents: number;
+  completedAttempts: number;
+  averageScore: number;
+  highestScore: number;
+  lowestScore: number;
+  passingRate: number;
+  averageTimeSpent?: number;
 }

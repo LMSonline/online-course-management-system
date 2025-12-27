@@ -140,38 +140,56 @@ export function ImprovedCourseCard({
                 </div>
 
                 {/* Actions - Fixed at bottom */}
-                <div className="mt-auto pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                    <Link
-                        href={`/teacher/courses/${course.slug}`}
-                        className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors text-center"
-                    >
-                        Manage
-                    </Link>
-                    <button
-                        onClick={() => toggleStatusMutation.mutate()}
-                        disabled={toggleStatusMutation.isPending}
-                        className={`px-3 py-2 rounded-xl transition-colors ${course.isClosed
-                            ? "bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400"
-                            : "bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400"
-                            }`}
-                        title={course.isClosed ? "Open Course" : "Close Course"}
-                    >
-                        {course.isClosed ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                    </button>
-                    <Link
-                        href={`/teacher/courses/${course.slug}/edit`}
-                        className="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl transition-colors"
-                        title="Edit"
-                    >
-                        <Edit className="w-4 h-4" />
-                    </Link>
-                    <button
-                        onClick={() => onDelete(course.id)}
-                        className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl transition-colors"
-                        title="Delete"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                <div className="mt-auto pt-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={`/teacher/courses/${course.slug}`}
+                            className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors text-center"
+                        >
+                            Manage
+                        </Link>
+                        <button
+                            onClick={() => toggleStatusMutation.mutate()}
+                            disabled={toggleStatusMutation.isPending}
+                            className={`px-3 py-2 rounded-xl transition-colors ${course.isClosed
+                                ? "bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400"
+                                : "bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400"
+                                }`}
+                            title={course.isClosed ? "Open Course" : "Close Course"}
+                        >
+                            {course.isClosed ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                        </button>
+                        <Link
+                            href={`/teacher/courses/${course.slug}/edit`}
+                            className="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl transition-colors"
+                            title="Edit"
+                        >
+                            <Edit className="w-4 h-4" />
+                        </Link>
+                        <button
+                            onClick={() => onDelete(course.id)}
+                            className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl transition-colors"
+                            title="Delete"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Quick Links */}
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={`/teacher/courses/${course.slug}/analytics`}
+                            className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors text-center"
+                        >
+                            Stats
+                        </Link>
+                        <Link
+                            href={`/teacher/courses/${course.slug}/students`}
+                            className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors text-center"
+                        >
+                            Students
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

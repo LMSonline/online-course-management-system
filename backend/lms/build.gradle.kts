@@ -41,9 +41,14 @@ dependencies {
 	implementation("org.mapstruct:mapstruct:1.5.5.Final")
 	implementation("com.cloudinary:cloudinary-http5:2.0.0")
 	implementation("com.github.slugify:slugify:3.0.7")
+	implementation("com.ibm.icu:icu4j:76.1")
 	implementation("org.springframework.boot:spring-boot-starter-amqp")
 	implementation("io.minio:minio:8.5.17")
 	implementation("org.apache.poi:poi-ooxml:5.2.5")
+	implementation("com.github.javafaker:javafaker:1.0.2") {
+		exclude(group = "org.yaml", module = "snakeyaml")
+	}
+	implementation("org.yaml:snakeyaml:2.2")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 	compileOnly("org.projectlombok:lombok")

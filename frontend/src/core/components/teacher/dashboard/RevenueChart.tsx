@@ -17,38 +17,38 @@ type Props = {
 
 export function RevenueChart({ data }: Props) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5 space-y-3">
+    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm md:text-base font-semibold text-slate-50">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
           Revenue over time
         </h2>
-        <p className="text-[11px] text-slate-400">
-          Monthly estimated revenue (mock data).
+        <p className="text-xs text-slate-600 dark:text-slate-400">
+          Monthly revenue trend
         </p>
       </div>
 
-      <div className="h-52 md:h-64">
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}
             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" />
             <XAxis
               dataKey="month"
-              tick={{ fontSize: 11, fill: "#9ca3af" }}
+              tick={{ fontSize: 11, fill: "#64748b" }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#9ca3af" }}
+              tick={{ fontSize: 11, fill: "#64748b" }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#020617",
-                border: "1px solid rgba(148, 163, 184, 0.4)",
+                backgroundColor: "#1e293b",
+                border: "1px solid #334155",
                 borderRadius: "0.75rem",
                 fontSize: 12,
                 color: "white",
@@ -57,10 +57,10 @@ export function RevenueChart({ data }: Props) {
             <Line
               type="monotone"
               dataKey="revenue"
-              stroke="#22c55e" // brand green
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
+              stroke="#8b5cf6"
+              strokeWidth={3}
+              dot={{ r: 4, fill: "#8b5cf6" }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>

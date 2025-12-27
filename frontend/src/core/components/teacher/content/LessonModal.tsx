@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, FileText, Video, FileQuestion, Award, Upload, Loader2 } from "lucide-react";
+import { X, FileText, Video, FileQuestion, Award, Upload, Loader2, Paperclip, Trash2 } from "lucide-react";
 import { CreateLessonRequest, UpdateLessonRequest, LessonType } from "@/services/courses/content/lesson.types";
 
 interface LessonModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: CreateLessonRequest | UpdateLessonRequest) => void;
+    onSubmit: (data: CreateLessonRequest | UpdateLessonRequest, attachments?: File[]) => void;
     initialData?: UpdateLessonRequest & { id?: number };
     isLoading?: boolean;
     mode: "create" | "edit";
@@ -38,6 +38,7 @@ export const LessonModal = ({
     const [isPreview, setIsPreview] = useState(false);
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [showVideoUpload, setShowVideoUpload] = useState(false);
+    const [attachments, setAttachments] = useState<File[]>([]);
 
     useEffect(() => {
         if (initialData) {
@@ -51,6 +52,7 @@ export const LessonModal = ({
             setShortDescription("");
             setIsPreview(false);
             setVideoFile(null);
+            setAttachments([]);
             setShowVideoUpload(false);
         }
     }, [initialData, isOpen]);
@@ -68,8 +70,18 @@ export const LessonModal = ({
                 data.isPreview = isPreview;
             }
 
-            onSubmit(data);
+            onSubmit(data, attachments.length > 0 ? attachments : undefined);
         }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setAttachments([...attachments, ...files]);
+        e.target.value = "";
+    };
+
+    const removeAttachment = (index: number) => {
+        setAttachments(attachments.filter((_, i) => i !== index));
     };
 
     const handleVideoUpload = () => {
@@ -127,18 +139,18 @@ export const LessonModal = ({
                                         onClick={() => setType(lessonType.value)}
                                         disabled={mode === "edit"}
                                         className={`p-4 rounded-xl border-2 text-left transition-all ${type === lessonType.value
-                                                ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-950/20"
-                                                : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                                            ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-950/20"
+                                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                                             } ${mode === "edit" ? "opacity-50 cursor-not-allowed" : ""}`}
                                     >
                                         <div className="flex items-center gap-3 mb-2">
                                             <TypeIcon className={`w-5 h-5 ${type === lessonType.value
-                                                    ? "text-indigo-600 dark:text-indigo-400"
-                                                    : "text-slate-600 dark:text-slate-400"
+                                                ? "text-indigo-600 dark:text-indigo-400"
+                                                : "text-slate-600 dark:text-slate-400"
                                                 }`} />
                                             <span className={`font-semibold ${type === lessonType.value
-                                                    ? "text-indigo-900 dark:text-indigo-100"
-                                                    : "text-slate-900 dark:text-white"
+                                                ? "text-indigo-900 dark:text-indigo-100"
+                                                : "text-slate-900 dark:text-white"
                                                 }`}>
                                                 {lessonType.label}
                                             </span>
@@ -182,6 +194,72 @@ export const LessonModal = ({
                             disabled={isLoading}
                         />
                     </div>
+
+                    {/* File Attachments (Create mode only) */}
+                    {mode === "create" && (
+                        <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <Paperclip className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Attachments
+                                    </h3>
+                                </div>
+                                <label className="cursor-pointer text-sm px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors inline-flex items-center gap-2">
+                                    <Upload className="w-4 h-4" />
+                                    Add Files
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                        disabled={isLoading}
+                                    />
+                                </label>
+                            </div>
+
+                            {attachments.length > 0 ? (
+                                <div className="space-y-2">
+                                    {attachments.map((file, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+                                        >
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                                                        {file.name}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(index)}
+                                                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded transition-colors flex-shrink-0"
+                                                disabled={isLoading}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg">
+                                    <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        No attachments yet
+                                    </p>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                                        Add PDFs, documents, or other learning materials
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Preview Toggle (Edit mode only) */}
                     {mode === "edit" && type === "VIDEO" && (

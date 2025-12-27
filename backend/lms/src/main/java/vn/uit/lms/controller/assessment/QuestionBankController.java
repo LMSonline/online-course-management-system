@@ -10,6 +10,7 @@ import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 public class QuestionBankController {
     private final QuestionBankService questionBankService;
 
@@ -42,5 +43,23 @@ public class QuestionBankController {
     public ResponseEntity<?> deleteQuestionBank(@PathVariable Long id) {
         questionBankService.deleteQuestionBank(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/question-banks")
+    @TeacherOnly
+    public ResponseEntity<?> getAllQuestionBanks() {
+        return ResponseEntity.ok(questionBankService.getAllQuestionBanks());
+    }
+
+    @GetMapping("/question-banks/search")
+    @TeacherOnly
+    public ResponseEntity<?> searchQuestionBanks(@RequestParam String keyword) {
+        return ResponseEntity.ok(questionBankService.searchQuestionBanks(keyword));
+    }
+
+    @PostMapping("/question-banks/{id}/clone")
+    @TeacherOnly
+    public ResponseEntity<?> cloneQuestionBank(@PathVariable Long id, @RequestParam Long targetTeacherId) {
+        return ResponseEntity.ok(questionBankService.cloneQuestionBank(id, targetTeacherId));
     }
 }

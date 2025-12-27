@@ -5,18 +5,21 @@ type Props = {
 
 export function TeacherDashboardHeader({ name = "Teacher" }: Props) {
   return (
-    <header className="mb-5 md:mb-7">
-      <p className="inline-flex items-center rounded-full border border-[var(--brand-600)]/40 bg-[var(--brand-600)]/10 px-3 py-1 text-[11px] font-medium text-[var(--brand-200)] uppercase tracking-wide">
-        Teacher dashboard
-      </p>
+    <header>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-full">
+          <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">
+            Teacher Dashboard
+          </p>
+        </div>
+      </div>
 
-      <h1 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight">
+      <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
         Hi, {name}. Let&apos;s teach today.
       </h1>
 
-      <p className="mt-2 text-sm md:text-[15px] text-slate-300 max-w-2xl">
-        Overview of your teaching activity: courses, assignments, Q&amp;A and
-        earnings – all in one place.
+      <p className="mt-2 text-slate-600 dark:text-slate-400">
+        Overview of your teaching activity: courses, assignments, Q&amp;A and earnings – all in one place.
       </p>
     </header>
   );

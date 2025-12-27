@@ -14,8 +14,11 @@ import {
     Download,
 } from "lucide-react";
 import { courseService } from "@/services/courses/course.service";
+import { analyticsService } from "@/services/courses/analytics.service";
 import { CourseDetailResponse } from "@/services/courses/course.types";
+import { CourseAnalyticsResponse } from "@/services/courses/analytics.types";
 import { CourseManagementLayout } from "@/core/components/teacher/courses/CourseManagementLayout";
+import { toast } from "sonner";
 
 export default function CourseAnalyticsPage() {
     const params = useParams();
@@ -26,6 +29,14 @@ export default function CourseAnalyticsPage() {
         queryKey: ["course-detail", slug],
         queryFn: () => courseService.getCourseBySlug(slug),
     });
+
+    // TODO: Uncomment when backend API is ready
+    // Fetch analytics data
+    // const { data: analytics, isLoading: loadingAnalytics } = useQuery<CourseAnalyticsResponse>({
+    //     queryKey: ["course-analytics", course?.id],
+    //     queryFn: () => analyticsService.getCourseAnalytics(course!.id),
+    //     enabled: !!course?.id,
+    // });
 
     if (!course) {
         return (
@@ -55,6 +66,27 @@ export default function CourseAnalyticsPage() {
         },
     };
 
+    const handleExportReport = async () => {
+        if (!course?.id) return;
+
+        try {
+            toast.info("Export functionality will be available when API is ready");
+            // TODO: Uncomment when API is ready
+            // const blob = await analyticsService.exportAnalyticsReport(course.id, "PDF");
+            // const url = window.URL.createObjectURL(blob);
+            // const a = document.createElement("a");
+            // a.href = url;
+            // a.download = `${course.slug}-analytics-report.pdf`;
+            // document.body.appendChild(a);
+            // a.click();
+            // window.URL.revokeObjectURL(url);
+            // document.body.removeChild(a);
+            // toast.success("Report exported successfully!");
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to export report");
+        }
+    };
+
     return (
         <CourseManagementLayout course={course}>
             <div className="space-y-6">
@@ -68,7 +100,10 @@ export default function CourseAnalyticsPage() {
                             Track performance and student engagement
                         </p>
                     </div>
-                    <button className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-lg">
+                    <button
+                        onClick={handleExportReport}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-lg"
+                    >
                         <Download className="w-5 h-5" />
                         Export Report
                     </button>

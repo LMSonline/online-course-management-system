@@ -6,12 +6,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import java.util.List;
 
-/**
- * Global CORS configuration.
- * Allows frontend clients (running on different origins) to call backend APIs safely.
- */
 @Configuration
 public class CorsConfig {
 
@@ -19,33 +15,34 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-//         Allowed frontend origins (development and local testing)
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:4173",
-                "http://localhost:5173",
-                "http://192.168.1.68:5173"
+
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://192.168.*.*:*"
         ));
 
-        // Allowed HTTP methods
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Allowed request headers
-        config.setAllowedHeaders(Arrays.asList(
-                "Authorization", "Content-Type", "Accept", "X-Requested-With", "x-no-retry"
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
 
-        // Allow cookies / authorization headers to be sent
+        config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of(
+                "Authorization",
+                "ETag",
+                "Location",
+                "Content-Disposition"
+        ));
+
         config.setAllowCredentials(true);
 
-        // Cache preflight (OPTIONS) response for 1 hour
         config.setMaxAge(3600L);
 
-        // Apply configuration to all API endpoints
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
         return source;
     }
 }
-

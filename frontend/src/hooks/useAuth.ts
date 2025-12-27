@@ -250,3 +250,18 @@ export const useResendVerificationEmail = () => {
     },
   });
 };
+
+// Main useAuth Hook - provides current user data and state
+export const useAuth = () => {
+  const { data: user, isLoading, error } = useCurrentUser();
+  const logout = useLogout();
+
+  return {
+    user: user || null,
+    isLoading,
+    isAuthenticated: !!user,
+    error,
+    logout: logout.mutate,
+    isLoggingOut: logout.isPending,
+  };
+};

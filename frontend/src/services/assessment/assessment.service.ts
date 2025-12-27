@@ -13,6 +13,8 @@ import {
   AddQuestionsRequest,
   AnswerOptionRequest,
   QuizResultResponse,
+  QuizEligibilityResponse,
+  QuizStatisticsResponse,
 } from "./assessment.types";
 
 export const assessmentService = {
@@ -111,6 +113,28 @@ export const assessmentService = {
   getQuizResults: async (id: number): Promise<QuizResultResponse> => {
     const response = await axiosClient.get<ApiResponse<QuizResultResponse>>(
       `/quizzes/${id}/results`
+    );
+    return unwrapResponse(response);
+  },
+
+  /**
+   * Check quiz eligibility (Student only)
+   */
+  checkQuizEligibility: async (
+    id: number
+  ): Promise<QuizEligibilityResponse> => {
+    const response = await axiosClient.get<
+      ApiResponse<QuizEligibilityResponse>
+    >(`/quizzes/${id}/eligibility`);
+    return unwrapResponse(response);
+  },
+
+  /**
+   * Get quiz statistics (Teacher only)
+   */
+  getQuizStatistics: async (id: number): Promise<QuizStatisticsResponse> => {
+    const response = await axiosClient.get<ApiResponse<QuizStatisticsResponse>>(
+      `/quizzes/${id}/statistics`
     );
     return unwrapResponse(response);
   },

@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 public class QuestionController {
     private final QuestionService questionService;
 
@@ -51,5 +52,44 @@ public class QuestionController {
     @TeacherOnly
     public ResponseEntity<?> manageAnswerOptions(@PathVariable Long id, @RequestBody @Valid List<AnswerOptionRequest> request) {
         return ResponseEntity.ok(questionService.manageAnswerOptions(id, request));
+    }
+
+    @GetMapping("/question-banks/{bankId}/questions/search")
+    @TeacherOnly
+    public ResponseEntity<?> searchQuestions(@PathVariable Long bankId, @RequestParam String keyword) {
+        return ResponseEntity.ok(questionService.searchQuestions(bankId, keyword));
+    }
+
+    @GetMapping("/question-banks/{bankId}/questions/by-type")
+    @TeacherOnly
+    public ResponseEntity<?> getQuestionsByType(
+            @PathVariable Long bankId,
+            @RequestParam vn.uit.lms.shared.constant.QuestionType type) {
+        return ResponseEntity.ok(questionService.getQuestionsByType(bankId, type));
+    }
+
+    @PostMapping("/questions/{id}/clone")
+    @TeacherOnly
+    public ResponseEntity<?> cloneQuestion(@PathVariable Long id, @RequestParam Long targetBankId) {
+        return ResponseEntity.ok(questionService.cloneQuestion(id, targetBankId));
+    }
+
+    @DeleteMapping("/questions/bulk")
+    @TeacherOnly
+    public ResponseEntity<?> bulkDeleteQuestions(@RequestBody List<Long> questionIds) {
+        questionService.bulkDeleteQuestions(questionIds);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/questions/{id}/max-points")
+    @TeacherOnly
+    public ResponseEntity<?> updateMaxPoints(@PathVariable Long id, @RequestParam Double maxPoints) {
+        return ResponseEntity.ok(questionService.updateMaxPoints(id, maxPoints));
+    }
+
+    @GetMapping("/question-banks/{bankId}/questions/count")
+    @TeacherOnly
+    public ResponseEntity<?> getQuestionCount(@PathVariable Long bankId) {
+        return ResponseEntity.ok(questionService.getQuestionCount(bankId));
     }
 }

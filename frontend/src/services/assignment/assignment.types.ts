@@ -92,3 +92,44 @@ export interface SubmissionFileResponse {
 export interface UploadSubmissionFileRequest {
   file: File;
 }
+
+// ===========================
+// Assignment Eligibility & Statistics Types
+// ===========================
+
+export interface AssignmentEligibilityResponse {
+  eligible: boolean;
+  reason?: string;
+  dueDate?: string;
+  isLate?: boolean;
+  canSubmit?: boolean;
+}
+
+export interface AssignmentStatisticsResponse {
+  assignmentId: number;
+  assignmentTitle: string;
+  totalStudents: number;
+  submittedCount: number;
+  gradedCount: number;
+  averageScore?: number;
+  highestScore?: number;
+  lowestScore?: number;
+  onTimeSubmissions: number;
+  lateSubmissions: number;
+  submissionRate: number;
+}
+
+export interface StudentProgressResponse {
+  assignmentId: number;
+  assignmentTitle: string;
+  studentId: number;
+  studentName: string;
+  studentCode?: string;
+  status: SubmissionStatus;
+  submittedAt?: string;
+  score?: number;
+  maxScore?: number;
+  isLate: boolean;
+  feedback?: string;
+  filesCount?: number;
+}
