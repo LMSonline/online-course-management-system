@@ -1,6 +1,7 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import {
   LoginRequest,
   RegisterRequest,
@@ -52,7 +53,10 @@ export const authService = {
     
     const response = await axiosClient.post<ApiResponse<LoginResponse>>(
       `${AUTH_PREFIX}/login`,
-      enrichedPayload
+      enrichedPayload,
+      {
+        contractKey: CONTRACT_KEYS.AUTH_LOGIN,
+      }
     );
     
     return unwrapResponse(response);
@@ -159,7 +163,10 @@ export const authService = {
    */
   getCurrentUser: async (): Promise<MeUser> => {
     const response = await axiosClient.get<ApiResponse<MeUser>>(
-      `${AUTH_PREFIX}/me`
+      `${AUTH_PREFIX}/me`,
+      {
+        contractKey: CONTRACT_KEYS.AUTH_ME,
+      }
     );
     
     return unwrapResponse(response);

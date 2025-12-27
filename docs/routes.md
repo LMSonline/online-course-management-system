@@ -300,103 +300,204 @@ Revenue → /admin/reports/revenue
 
 Statistics → /admin/statistics
 
-5) Route-level prefetch (để FE "mượt")
+5) Layout variants
+5.1 PublicLayout (default)
+
+Áp cho toàn bộ route public/SEO:
+
+Header:
+
+Logo → /
+
+SearchBar (submit) → /search?q=...
+
+Categories link → /categories
+
+Tags link → /tags
+
+AuthStatus:
+
+guest: Login /login, Register /register
+
+logged-in: Avatar menu (Profile /me/profile, My learning /my-learning, Teacher /teacher/courses nếu creator, Admin /admin nếu admin, Logout)
+
+Footer
+
+<Outlet />
+
+Rule: PublicLayout vẫn có thể render khi user đã login (để xem course public), nhưng CTA sẽ chuyển sang flow auth/enroll.
+
+5.2 PublicMinimalLayout (auth pages)
+
+Áp cho: /login, /register, /forgot-password, /reset-password
+
+Minimal header:
+
+Back to Home → /
+
+(optional) Logo
+
+Không render SearchBar/Categories/Tags (tránh user rẽ nhánh khi đang auth)
+
+<Outlet />
+
+5.3 AuthenticatedLayout (Student/User)
+
+Áp cho route guard: requireStudent và một số route requireAuth (account settings/profile).
+
+Top bar: user menu + notifications shortcut + logout
+
+Left nav (student):
+
+My Learning → /my-learning
+
+Wishlist → /wishlist
+
+Notifications → /notifications
+
+Profile → /me/profile
+
+Settings → /settings
+
+<Outlet />
+
+Note: Route /me (AuthMeScreen) và /me/profile* dùng requireAuth (account-level).
+Các route học tập/enrollment/review/comment dùng requireStudent (cần studentId).
+
+5.4 CreatorLayout (Teacher/Instructor)
+
+Áp cho guard: requireCreator
+
+Left nav (creator):
+
+Teacher Me → /teachers/me
+
+Stats → /teachers/:id/stats (id = teacherId)
+
+Revenue → /teachers/:id/revenue (id = teacherId)
+
+Courses → /teacher/courses
+
+Contextual nav (trong course manage):
+
+Versions → /courses/:courseId/versions
+
+Enrollments → /courses/:courseId/enrollments
+
+Curriculum → /courses/:courseId/versions/:versionId/chapters
+
+<Outlet />
+
+Critical: :id trong stats/revenue = teacherId, không dùng accountId.
+
+5.5 AdminLayout
+
+Áp cho guard: requireAdmin
+
+Left nav:
+
+Dashboard → /admin
+
+Users → /admin/users
+
+Audit logs → /admin/audit-logs
+
+Categories → /admin/categories
+
+Tags → /admin/tags
+
+Reports → /admin/reports
+
+Revenue → /admin/reports/revenue
+
+Statistics → /admin/statistics
+
+<Outlet />
+
+6) Route-level data prefetch (để nối API “ngon”)
+6.1 Global bootstrap / hydrate (bắt buộc vì accountId ≠ studentId ≠ teacherId)
+
+Chạy một lần khi app mount (hoặc sau login):
+
+AUTH_ME → lấy accountId, role
+
+Nếu role có student: STUDENT_GET_ME → lấy studentId
+
+Nếu role có creator: TEACHER_GET_ME → lấy teacherId
+
+Chỉ sau khi hydrate xong studentId/teacherId mới bật prefetch cho các route requireStudent/requireCreator.
+
+6.2 Prefetch rules (React Query / SWR)
+
+Prefetch theo route + contractKey (không invent endpoint).
+
+Public routes: prefetch luôn (không cần token).
+
+Protected routes: prefetch sau khi requireStudent/requireCreator/requireAdmin pass.
+
+Pagination list: prefetch page 1 hoặc cursor đầu.
+
+6.3 Prefetch map (theo routes hiện tại)
 Public
-
-/: prefetch trending courses + category tree
-
-/search: prefetch courses list with q
-
-/categories: prefetch category tree
-
-/categories/:slug: prefetch category detail + courses by category
-
-/courses/:slug: prefetch course detail + rating summary
-
-/courses/:slug/reviews: prefetch review list + rating summary
-
-/tags: prefetch tags list
-
-Student
-
-/students/me: prefetch STUDENT_GET_ME
-
-/my-learning: prefetch STUDENT_GET_ME + enrollments (dùng studentId từ STUDENT_GET_ME)
-
-/learn/:courseSlug: prefetch course detail + curriculum + progress overview
-
-/learn/:courseSlug/progress: prefetch progress overview
-
-/learn/:courseSlug/lessons/:lessonId: prefetch lesson detail + stream-url + resources + first page comments
-
-/notifications: prefetch notifications list
-
-/quizzes/:id: prefetch quiz detail
-
-/assignments/:id: prefetch assignment detail
-
-/submissions/:id: prefetch submission detail
-
-Creator
-
-/teachers/me: prefetch TEACHER_GET_ME
-
-/teachers/:id/stats: prefetch teacher stats (dùng teacherId từ TEACHER_GET_ME)
-
-/teachers/:id/revenue: prefetch teacher revenue (dùng teacherId từ TEACHER_GET_ME)
-
-/teacher/courses: prefetch teacher course list
-
-/courses/:courseId/versions: prefetch versions
-
-/courses/:courseId/versions/:versionId/chapters: prefetch chapters + lessons counts
-
-/lessons/:lessonId/video: prefetch lesson detail then request upload url when user selects file
-
-Admin
-
-/admin: prefetch statistics + revenue report
-
-/admin/users: prefetch users list
-
-/admin/audit-logs: prefetch logs list
-
-/admin/categories: prefetch category tree
-
-/admin/tags: prefetch tags list
-
-/admin/reports: prefetch reports list
-
-5.1 Hydrate profile after login/app boot
-
-Sau login hoặc app boot: AUTH_ME → STUDENT_GET_ME (nếu role USER) hoặc TEACHER_GET_ME (nếu role CREATOR) để hydrate studentId/teacherId.
-
-6) Guards implementation notes (React Router example)
-
-RequireAuth: check accessToken hợp lệ; call AUTH_ME để hydrate accountId + role. Nếu chưa có → redirect /login?next=...
-
-RequireStudent: requireAuth + kiểm tra role includes USER/STUDENT + studentId != null (từ STUDENT_GET_ME). Nếu studentId null → show error + retry STUDENT_GET_ME.
-
-RequireCreator: requireAuth + kiểm tra role includes CREATOR/TEACHER + teacherId != null (từ TEACHER_GET_ME). Nếu teacherId null → redirect /teachers/me hoặc show "Complete teacher profile".
-
-RequireAdmin: requireAuth + kiểm tra role == ADMIN. Nếu sai → /403 hoặc redirect /.
-
-Lưu ý: Tuyệt đối không dùng accountId thay cho studentId/teacherId khi construct routes với :id (ví dụ: /teachers/:id/stats phải dùng teacherId, không dùng accountId).
-
-If API returns 401 mid-session → refresh token flow (client) rồi retry request; nếu refresh fail → logout + redirect /login?next=....
-
----
-
-## Change Log
-
-- **Updated Guards section (2.2-2.5)**: Added requireStudent, requireCreator, requireAdmin with domain ID checks (studentId/teacherId from profile endpoints, not accountId).
-- **Added missing Public routes**: TagListScreen (/tags), fixed screen names (CategoryTreeScreen, CourseDetailScreen, CourseReviewsPublicScreen).
-- **Added missing Student routes**: StudentMeScreen (/students/me), EnrollmentDetailScreen, CourseProgressOverviewScreen, LessonPlayerScreen (updated path), LessonQuizzesScreen, QuizDetailScreen, QuizAttemptPlayScreen, LessonAssignmentsScreen, AssignmentDetailScreen, SubmitAssignmentScreen, SubmissionDetailScreen, RecommendationScreen, RecommendationFeedbackScreen, MyReportsScreen, SubmitReportScreen, ReportDetailScreen, AuthMeScreen, ProfileScreen (/me/profile), ProfileEditScreen (/me/profile/edit), UploadAvatarScreen (/me/avatar).
-- **Updated Student routes guards**: Changed from requireAuth to requireStudent for all student-specific routes.
-- **Updated Teacher routes guards**: Changed from requireRole(creator) to requireCreator, added explicit notes that :id = teacherId (NOT accountId) for stats/revenue routes.
-- **Updated Admin routes guards**: Changed from requireRole(admin) to requireAdmin.
-- **Updated Navigation map (4.2.1)**: Added after-login redirect logic by role (USER→/my-learning, CREATOR→/teacher/courses, ADMIN→/admin) and note about profile hydration.
-- **Updated Navigation map (4.5)**: Added explicit note to use teacherId from TEACHER_GET_ME (not accountId) for stats/revenue routes.
-- **Updated Prefetch section (5)**: Added missing routes, added section 5.1 about profile hydration after login/app boot (AUTH_ME → STUDENT_GET_ME/TEACHER_GET_ME).
-- **Updated Guards implementation notes (6)**: Clarified requireStudent, requireCreator, requireAdmin logic, added critical note about never using accountId in place of studentId/teacherId for route construction.
-
+Route	Prefetch contracts	Notes
+/	COURSE_GET_LIST(trending) + CATEGORY_GET_TREE	Home load nhanh
+/search?q=	COURSE_GET_LIST(q)	debounce query
+/categories	CATEGORY_GET_TREE	
+/categories/:slug	CATEGORY_GET_BY_SLUG + COURSE_GET_LIST(category=:slug)	
+/courses	COURSE_GET_LIST(page=1)	list browse
+/courses/:slug	COURSE_GET_DETAIL(slug) + REVIEW_GET_RATING_SUMMARY	CTA enroll/login
+/courses/:slug/reviews	REVIEW_GET_COURSE_LIST(courseId) + (optional) REVIEW_GET_RATING_SUMMARY	
+/tags	TAG_GET_LIST(page=1)	
+/teachers/:id	TEACHER_GET_BY_ID(id)	id=teacherId
+/lessons/:id	LESSON_GET_BY_ID(id)	preview
+/lessons/:lessonId/comments	COMMENT_GET_LESSON_LIST(page=1)	
+/courses/:courseId/comments	COMMENT_GET_COURSE_LIST(page=1)	
+Auth pages (minimal)
+Route	Prefetch contracts	Notes
+/login	(none)	submit → AUTH_LOGIN
+/register	(none)	submit → AUTH_REGISTER
+/forgot-password	(none)	submit → AUTH_FORGOT_PASSWORD (nếu có)
+/reset-password	AUTH_RESET_VALIDATE (optional)	validate token nếu BE hỗ trợ
+Student (requireStudent)
+Route	Prefetch contracts	Notes
+/students/me	STUDENT_GET_ME	thường hydrate đã có
+/my-learning	STUDENT_GET_ME + ENROLLMENT_GET_STUDENT_LIST(studentId,page=1)	studentId bắt buộc
+/enrollments/:id	ENROLLMENT_GET_DETAIL	
+/notifications	NOTIFICATION_GET_LIST(page=1)	
+/learn/:courseSlug	COURSE_GET_DETAIL(slug) + curriculum (CHAPTER_GET_*) + progress overview (PROGRESS_*)	nếu có
+/learn/:courseSlug/progress	progress overview contracts	
+/learn/:courseSlug/lessons/:lessonId	LESSON_GET_BY_ID + LESSON_GET_VIDEO_STREAM_URL + RESOURCE_GET_BY_LESSON + COMMENT_GET_LESSON_LIST(page=1)	
+/learn/:courseSlug/quizzes	quiz list contracts (QUIZ_GET_*)	
+/learn/:courseSlug/quizzes/:quizId/attempt	QUIZ_START_ACTION (on enter)	start attempt
+/lessons/:lessonId/quizzes	QUIZ_GET_BY_LESSON	
+/quizzes/:id	QUIZ_GET_BY_ID	
+/quizzes/:quizId/attempts/:attemptId	attempt detail (nếu có)	resume/play
+/lessons/:lessonId/assignments	ASSIGNMENT_GET_BY_LESSON	
+/assignments/:id	ASSIGNMENT_GET_BY_ID	
+/assignments/:assignmentId/submit	ASSIGNMENT_GET_BY_ID	upload file on demand
+/submissions/:id	SUBMISSION_GET_BY_ID	
+/courses/:courseId/reviews/new	(optional) REVIEW_GET_RATING_SUMMARY	submit: REVIEW_CREATE
+/courses/:courseId/comments/new	(optional) COURSE_GET_DETAIL	submit: COMMENT_CREATE_COURSE
+/lessons/:lessonId/comments/new	(optional) LESSON_GET_BY_ID	submit: COMMENT_CREATE_LESSON
+/comments/:id/edit	comment detail (nếu có)	submit: COMMENT_UPDATE
+Creator (requireCreator)
+Route	Prefetch contracts	Notes
+/teachers/me	TEACHER_GET_ME	hydrate teacherId
+/teachers/:id/stats	TEACHER_GET_STATS(id=teacherId)	id=teacherId
+/teachers/:id/revenue	TEACHER_GET_REVENUE(id=teacherId)	id=teacherId
+/teacher/courses	COURSE_GET_TEACHER_LIST(page=1)	
+/teacher/courses/:id/edit	COURSE_GET_DETAIL(id)	
+/courses/:courseId/versions	VERSION_GET_LIST(page=1)	
+/courses/:courseId/versions/:versionId/chapters	CHAPTER_GET_BY_VERSION (+ lesson counts nếu có)	
+/lessons/:lessonId/video	LESSON_GET_BY_ID	upload-url chỉ gọi khi chọn file: LESSON_GET_VIDEO_UPLOAD_URL
+Admin (requireAdmin)
+Route	Prefetch contracts	Notes
+/admin	ADMIN_GET_STATISTICS + ADMIN_GET_REVENUE_REPORT	
+/admin/users	ADMIN_GET_USERS_LIST(page=1)	
+/admin/audit-logs	ADMIN_GET_AUDIT_LOGS_LIST(page=1)	
+/admin/categories	CATEGORY_GET_TREE	
+/admin/tags	TAG_GET_LIST(page=1)	
+/admin/reports	REPORT_GET_ALL_LIST(page=1)	
+/admin/reports/revenue	ADMIN_GET_REVENUE_REPORT	
+/admin/statistics	ADMIN_GET_STATISTICS	
+/admin/courses/:courseId/versions/:versionId/review	VERSION_GET_DETAIL (+ curriculum snapshot optional)	approve/reject on demand

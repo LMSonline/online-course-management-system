@@ -11,11 +11,15 @@ import {
   MeUser,
 } from "@/services/auth/auth.types";
 import { tokenStorage } from "@/lib/api/tokenStorage";
+import { useAuthStore } from "@/lib/auth/authStore";
+import { mapBackendRoleToInternal } from "@/lib/auth/roleMap";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 
 // Login Hook
 export const useLogin = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { setAuth } = useAuthStore();
 
   return useMutation<
     LoginResponse,
@@ -27,29 +31,35 @@ export const useLogin = () => {
       // Store tokens
       tokenStorage.setTokens(data.accessToken, data.refreshToken);
 
-      // Store user info
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
+      // Set minimal auth info in store (accountId, role, email, fullName)
+      const internalRole = mapBackendRoleToInternal(data.user.role);
+      setAuth({
+        accountId: data.user.id,
+        role: internalRole,
+        email: data.user.email,
+        fullName: data.user.fullName ?? null,
+        username: data.user.username,
+        avatarUrl: data.user.avatarUrl ?? null,
+      });
 
-      // Cache user data
-      queryClient.setQueryData(["currentUser"], data.user);
+      // Invalidate AUTH_ME to trigger bootstrap flow
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.AUTH_ME] });
 
       toast.success("Login successful!");
 
-      // Redirect based on role with small delay to ensure token is set
+      // Redirect based on role
+      // Note: Domain IDs (studentId/teacherId) will be hydrated by useAuthBootstrap
       setTimeout(() => {
-        // Use redirect URL if provided, otherwise use default dashboard
         if (variables.redirectUrl) {
           router.replace(variables.redirectUrl);
         } else {
-          const role = data.user.role;
+          const role = internalRole;
           if (role === "ADMIN") {
-            router.replace("/admin/dashboard");
+            router.replace("/admin");
           } else if (role === "TEACHER") {
-            router.replace("/teacher/dashboard");
+            router.replace("/teacher/courses");
           } else {
-            router.replace("/learner/dashboard");
+            router.replace("/my-learning");
           }
         }
       }, 150);
@@ -100,6 +110,7 @@ export const useRegister = () => {
 export const useLogout = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { clear: clearAuthStore } = useAuthStore();
 
   return useMutation<void, AppError>({
     mutationFn: async () => {
@@ -109,13 +120,13 @@ export const useLogout = () => {
       }
     },
     onSuccess: () => {
-      // Clear all stored data
+      // Clear auth store (accountId, role, studentId, teacherId)
+      clearAuthStore();
+      
+      // Clear tokens
       tokenStorage.clear();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-      }
-
-      // Clear all queries
+      
+      // Clear all React Query cache
       queryClient.clear();
 
       toast.success("Logged out successfully");
@@ -123,10 +134,8 @@ export const useLogout = () => {
     },
     onError: (error) => {
       // Even if logout fails on server, clear local data
+      clearAuthStore();
       tokenStorage.clear();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-      }
       queryClient.clear();
 
       console.error("Logout error:", error);
@@ -138,13 +147,27 @@ export const useLogout = () => {
 
 // Get Current User Hook
 export const useCurrentUser = (enabled: boolean = true) => {
+  const { setAuth } = useAuthStore();
+
   return useQuery<MeUser, AppError>({
-    queryKey: ["currentUser"],
+    queryKey: [CONTRACT_KEYS.AUTH_ME],
     queryFn: authService.getCurrentUser,
     enabled: enabled && !!tokenStorage.getAccessToken(),
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    onSuccess: (data) => {
+      // Update auth store when data is fetched
+      const internalRole = mapBackendRoleToInternal(data.role);
+      setAuth({
+        accountId: data.accountId,
+        role: internalRole,
+        email: data.email,
+        fullName: data.fullName ?? null,
+        username: data.username,
+        avatarUrl: data.avatarUrl ?? null,
+      });
+    },
   });
 };
 
