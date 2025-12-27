@@ -11,12 +11,15 @@ import vn.uit.lms.service.billing.PaymentService;
 import vn.uit.lms.shared.constant.PaymentStatus;
 import vn.uit.lms.shared.dto.request.billing.CreatePaymentRequest;
 import vn.uit.lms.shared.dto.request.billing.RefundRequest;
+import vn.uit.lms.shared.dto.response.billing.CoursePaymentStatsResponse;
 import vn.uit.lms.shared.dto.response.billing.PaymentTransactionResponse;
+import vn.uit.lms.shared.dto.response.billing.PaymentUrlResponse;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
 import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,7 +35,7 @@ public class PaymentController {
      */
     @PostMapping("/create-payment")
     @StudentOnly
-    public ResponseEntity<?> createPayment(
+    public ResponseEntity<PaymentUrlResponse> createPayment(
             @RequestBody @Valid CreatePaymentRequest request,
             HttpServletRequest httpRequest
     ) {
@@ -44,7 +47,7 @@ public class PaymentController {
      * This endpoint is called by payment gateway (VNPay, ZaloPay, etc.)
      */
     @PostMapping("/verify-payment")
-    public ResponseEntity<?> verifyPayment(@RequestParam Map<String, String> params) {
+    public ResponseEntity<PaymentTransactionResponse> verifyPayment(@RequestParam Map<String, String> params) {
         return ResponseEntity.ok(paymentService.verifyPayment(params));
     }
 
@@ -53,7 +56,7 @@ public class PaymentController {
      */
     @GetMapping("/{id}")
     @StudentOrTeacher
-    public ResponseEntity<?> getPaymentById(@PathVariable Long id) {
+    public ResponseEntity<PaymentTransactionResponse> getPaymentById(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.getPaymentById(id));
     }
 
@@ -76,7 +79,7 @@ public class PaymentController {
      */
     @GetMapping("/my-history")
     @StudentOnly
-    public ResponseEntity<?> getMyPaymentHistory() {
+    public ResponseEntity<List<PaymentTransactionResponse>> getMyPaymentHistory() {
         return ResponseEntity.ok(paymentService.getMyPaymentHistory());
     }
 
@@ -85,7 +88,7 @@ public class PaymentController {
      */
     @PostMapping("/{id}/refund")
     @AdminOnly
-    public ResponseEntity<?> refundPayment(
+    public ResponseEntity<PaymentTransactionResponse> refundPayment(
             @PathVariable Long id,
             @RequestBody @Valid RefundRequest request
     ) {
@@ -97,7 +100,7 @@ public class PaymentController {
      */
     @GetMapping("/students/{studentId}/payment-history")
     @AdminOnly
-    public ResponseEntity<?> getStudentPaymentHistory(@PathVariable Long studentId) {
+    public ResponseEntity<List<PaymentTransactionResponse>> getStudentPaymentHistory(@PathVariable Long studentId) {
         return ResponseEntity.ok(paymentService.getStudentPaymentHistory(studentId));
     }
 
@@ -106,7 +109,7 @@ public class PaymentController {
      */
     @GetMapping("/courses/{courseId}/payment-stats")
     @TeacherOnly
-    public ResponseEntity<?> getCoursePaymentStats(@PathVariable Long courseId) {
+    public ResponseEntity<CoursePaymentStatsResponse> getCoursePaymentStats(@PathVariable Long courseId) {
         return ResponseEntity.ok(paymentService.getCoursePaymentStats(courseId));
     }
 }

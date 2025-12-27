@@ -1,125 +1,228 @@
-import { useState, useEffect, useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { assignmentService } from "@/services/assignment/assignment.service";
 import {
-  AssignmentResponse,
-  SubmissionResponse,
+  AssignmentRequest,
   GradeSubmissionRequest,
-  AssignmentStatisticsResponse,
+  FeedbackSubmissionRequest,
 } from "@/services/assignment/assignment.types";
+import { toast } from "sonner";
 
-interface UseAssignmentManagementOptions {
-  assignmentId: number;
-  autoLoad?: boolean;
+/**
+ * Hook để lấy danh sách assignments theo lesson
+ */
+export function useAssignmentsByLesson(lessonId: number | null) {
+  return useQuery({
+    queryKey: ["assignments", "lesson", lessonId],
+    queryFn: () =>
+      lessonId
+        ? assignmentService.getAssignmentsByLesson(lessonId)
+        : Promise.resolve([]),
+    enabled: !!lessonId,
+  });
 }
 
-export function useAssignmentManagement({
-  assignmentId,
-  autoLoad = true,
-}: UseAssignmentManagementOptions) {
-  const [assignment, setAssignment] = useState<AssignmentResponse | null>(null);
-  const [submissions, setSubmissions] = useState<SubmissionResponse[]>([]);
-  const [statistics, setStatistics] =
-    useState<AssignmentStatisticsResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Hook để lấy chi tiết một assignment
+ */
+export function useAssignmentById(assignmentId: number | null) {
+  return useQuery({
+    queryKey: ["assignment", assignmentId],
+    queryFn: () =>
+      assignmentId
+        ? assignmentService.getAssignmentById(assignmentId)
+        : Promise.reject("No assignment ID"),
+    enabled: !!assignmentId,
+  });
+}
 
-  // Load assignment details
-  const loadAssignment = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await assignmentService.getAssignmentById(assignmentId);
-      setAssignment(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load assignment");
-      console.error("Failed to load assignment:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [assignmentId]);
+/**
+ * Hook để tạo assignment
+ */
+export function useCreateAssignment(lessonId: number) {
+  const queryClient = useQueryClient();
 
-  // Load submissions
-  const loadSubmissions = useCallback(async () => {
-    try {
-      const data = await assignmentService.getSubmissionsByAssignment(
-        assignmentId
-      );
-      setSubmissions(data);
-    } catch (err: any) {
-      console.error("Failed to load submissions:", err);
-    }
-  }, [assignmentId]);
-
-  // Load statistics
-  const loadStatistics = useCallback(async () => {
-    try {
-      const data = await assignmentService.getAssignmentStatistics(
-        assignmentId
-      );
-      setStatistics(data);
-    } catch (err: any) {
-      console.error("Failed to load statistics:", err);
-    }
-  }, [assignmentId]);
-
-  // Auto-load on mount
-  useEffect(() => {
-    if (autoLoad && assignmentId) {
-      loadAssignment();
-      loadSubmissions();
-      loadStatistics();
-    }
-  }, [autoLoad, assignmentId, loadAssignment, loadSubmissions, loadStatistics]);
-
-  // Grade submission
-  const gradeSubmission = useCallback(
-    async (submissionId: number, payload: GradeSubmissionRequest) => {
-      try {
-        setLoading(true);
-        setError(null);
-        const graded = await assignmentService.gradeSubmission(
-          submissionId,
-          payload
-        );
-        setSubmissions((prev) =>
-          prev.map((sub) => (sub.id === submissionId ? graded : sub))
-        );
-        // Reload statistics after grading
-        await loadStatistics();
-        return graded;
-      } catch (err: any) {
-        setError(err.message || "Failed to grade submission");
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+  return useMutation({
+    mutationFn: (payload: AssignmentRequest) =>
+      assignmentService.createAssignment(lessonId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["assignments", "lesson", lessonId],
+      });
+      toast.success("Assignment created successfully");
     },
-    [loadStatistics]
-  );
-
-  // Download submission files
-  const getSubmissionFiles = useCallback(async (submissionId: number) => {
-    try {
-      const files = await assignmentService.getSubmissionFiles(submissionId);
-      return files;
-    } catch (err: any) {
-      console.error("Failed to get submission files:", err);
-      throw err;
-    }
-  }, []);
-
-  return {
-    assignment,
-    submissions,
-    statistics,
-    loading,
-    error,
-    refresh: () => {
-      loadAssignment();
-      loadSubmissions();
-      loadStatistics();
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to create assignment");
     },
-    gradeSubmission,
-    getSubmissionFiles,
-  };
+  });
+}
+
+/**
+ * Hook để cập nhật assignment
+ */
+export function useUpdateAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: AssignmentRequest }) =>
+      assignmentService.updateAssignment(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["assignment", data.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["assignments", "lesson", data.lessonId],
+      });
+      toast.success("Assignment updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update assignment");
+    },
+  });
+}
+
+/**
+ * Hook để xóa assignment
+ */
+export function useDeleteAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => assignmentService.deleteAssignment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      toast.success("Assignment deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to delete assignment");
+    },
+  });
+}
+
+/**
+ * Hook để lấy danh sách submissions của một assignment
+ */
+export function useAssignmentSubmissions(assignmentId: number | null) {
+  return useQuery({
+    queryKey: ["submissions", "assignment", assignmentId],
+    queryFn: () =>
+      assignmentId
+        ? assignmentService.getAssignmentSubmissions(assignmentId)
+        : Promise.resolve([]),
+    enabled: !!assignmentId,
+  });
+}
+
+/**
+ * Hook để lấy chi tiết một submission
+ */
+export function useSubmissionById(submissionId: number | null) {
+  return useQuery({
+    queryKey: ["submission", submissionId],
+    queryFn: () =>
+      submissionId
+        ? assignmentService.getSubmissionById(submissionId)
+        : Promise.reject("No submission ID"),
+    enabled: !!submissionId,
+  });
+}
+
+/**
+ * Hook để chấm điểm submission
+ */
+export function useGradeSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: GradeSubmissionRequest;
+    }) => assignmentService.gradeSubmission(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["submission", data.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["submissions", "assignment", data.assignmentId],
+      });
+      toast.success("Submission graded successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to grade submission");
+    },
+  });
+}
+
+/**
+ * Hook để thêm feedback cho submission
+ */
+export function useFeedbackSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: FeedbackSubmissionRequest;
+    }) => assignmentService.feedbackSubmission(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["submission", data.id] });
+      toast.success("Feedback added successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to add feedback");
+    },
+  });
+}
+
+/**
+ * Hook để lấy thống kê assignment
+ */
+export function useAssignmentStatistics(assignmentId: number | null) {
+  return useQuery({
+    queryKey: ["assignment", "statistics", assignmentId],
+    queryFn: () =>
+      assignmentId
+        ? assignmentService.getAssignmentStatistics(assignmentId)
+        : Promise.reject("No assignment ID"),
+    enabled: !!assignmentId,
+  });
+}
+
+/**
+ * Hook để upload submission file
+ */
+export function useUploadSubmissionFile(submissionId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) =>
+      assignmentService.uploadSubmissionFile(submissionId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["submission", submissionId] });
+      toast.success("File uploaded successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to upload file");
+    },
+  });
+}
+
+/**
+ * Hook để xóa submission file
+ */
+export function useDeleteSubmissionFile(submissionId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (fileId: number) =>
+      assignmentService.deleteSubmissionFile(submissionId, fileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["submission", submissionId] });
+      toast.success("File deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to delete file");
+    },
+  });
 }

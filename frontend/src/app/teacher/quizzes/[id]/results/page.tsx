@@ -1,207 +1,228 @@
 "use client";
 
-import React from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useQuizResults } from "@/hooks/teacher/useQuizResults";
-import { ArrowLeft, Download, TrendingUp, Users, Award, Clock } from "lucide-react";
+import { useQuizById, useQuizStatistics, useQuizResults } from "@/hooks/teacher";
+import { ArrowLeft, Download, TrendingUp, Users, Award, Clock, Target } from "lucide-react";
+import Button from "@/core/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/Card";
+import Table, {
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/core/components/ui/Table";
+import Badge from "@/core/components/ui/Badge";
+import { formatDistanceToNow } from "date-fns";
 
 export default function QuizResultsPage() {
     const router = useRouter();
     const params = useParams();
     const quizId = Number(params.id);
 
-    const { quiz, results, statistics, loading, error, exportToCSV } = useQuizResults({
-        quizId,
-    });
+    // API Hooks
+    const { data: quiz, isLoading: quizLoading } = useQuizById(quizId);
+    const { data: statistics, isLoading: statsLoading } = useQuizStatistics(quizId);
+    const { data: results, isLoading: resultsLoading } = useQuizResults(quizId);
 
-    if (loading) {
+    const isLoading = quizLoading || statsLoading || resultsLoading;
+
+    const exportToCSV = () => {
+        if (!results) return;
+
+        const headers = [
+            "Student Name",
+            "Student Code",
+            "Attempts",
+            "Best Score",
+            "Last Attempt",
+            "Status",
+        ];
+
+        const rows = results.studentResults.map((student) => [
+            student.studentName,
+            student.studentCode || "",
+            student.attempts.toString(),
+            student.bestScore?.toFixed(1) || "",
+            student.lastAttemptAt || "",
+            student.passed ? "Passed" : "Failed",
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map((row) => row.join(",")),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `quiz-${quizId}-results.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
-    if (!results) {
+    if (!quiz || !results) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="container mx-auto py-8">
                 <div className="text-center">
-                    <p className="text-gray-500">No results found</p>
+                    <h1 className="text-2xl font-bold mb-4">No results found</h1>
+                    <Button onClick={() => router.back()}>Go Back</Button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto py-8 space-y-6">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <button
-                        onClick={() => router.push("/teacher/quizzes")}
-                        className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-                    >
-                        <ArrowLeft className="h-5 w-5 mr-2" />
-                        Back to Quizzes
-                    </button>
-
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">{quiz?.title || results?.quizTitle}</h1>
-                            <p className="mt-1 text-sm text-gray-500">Quiz Results & Analytics</p>
-                        </div>
-                        <button
-                            onClick={exportToCSV}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                        >
-                            <Download className="h-5 w-5 mr-2" />
-                            Export CSV
-                        </button>
-                    </div>
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => router.back()}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex-1">
+                    <h1 className="text-3xl font-bold">{quiz.title}</h1>
+                    <p className="text-muted-foreground">Quiz Results & Analytics</p>
                 </div>
+                <Button onClick={exportToCSV} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                </Button>
             </div>
 
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Statistics Cards */}
-                {statistics && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Total Attempts</p>
-                                    <p className="text-3xl font-bold text-purple-600">
-                                        {statistics.totalAttempts}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <Clock className="h-6 w-6 text-purple-600" />
-                                </div>
-                            </div>
-                        </div>
+            {/* Statistics Cards */}
+            {statistics && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Attempts</CardTitle>
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{statistics.totalAttempts}</div>
+                            <p className="text-xs text-muted-foreground">
+                                {statistics.completedAttempts} completed
+                            </p>
+                        </CardContent>
+                    </Card>
 
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Average Score</p>
-                                    <p className="text-3xl font-bold text-blue-600">
-                                        {statistics.averageScore.toFixed(1)}%
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <TrendingUp className="h-6 w-6 text-blue-600" />
-                                </div>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {statistics.averageScore.toFixed(1)}%
                             </div>
-                        </div>
+                            <p className="text-xs text-muted-foreground">
+                                High: {statistics.highestScore}% / Low: {statistics.lowestScore}%
+                            </p>
+                        </CardContent>
+                    </Card>
 
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Passing Rate</p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {statistics.passingRate.toFixed(1)}%
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                    <Award className="h-6 w-6 text-green-600" />
-                                </div>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Passing Rate</CardTitle>
+                            <Award className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-green-600">
+                                {statistics.passingRate.toFixed(1)}%
                             </div>
-                        </div>
+                            <p className="text-xs text-muted-foreground">
+                                {quiz.passingScore}% required to pass
+                            </p>
+                        </CardContent>
+                    </Card>
 
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Students</p>
-                                    <p className="text-3xl font-bold text-indigo-600">
-                                        {statistics.totalStudents}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                                    <Users className="h-6 w-6 text-indigo-600" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Students</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{statistics.totalStudents}</div>
+                            <p className="text-xs text-muted-foreground">
+                                {statistics.averageTimeSpent
+                                    ? `Avg time: ${Math.round(statistics.averageTimeSpent / 60)} min`
+                                    : "No time data"}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
-                {/* Student Results Table */}
-                {results && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h2 className="text-lg font-semibold text-gray-900">Student Results</h2>
+            {/* Student Results Table */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Student Results</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {results.studentResults.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <Users className="h-12 w-12 mx-auto mb-4" />
+                            <p>No student submissions yet</p>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Student
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Student Code
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Attempts
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Best Score
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Last Attempt
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                    ) : (
+                        <div className="border rounded-lg">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Student</TableHead>
+                                        <TableHead>Student Code</TableHead>
+                                        <TableHead>Attempts</TableHead>
+                                        <TableHead>Best Score</TableHead>
+                                        <TableHead>Last Attempt</TableHead>
+                                        <TableHead>Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {results.studentResults.map((student) => (
-                                        <tr key={student.studentId} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {student.studentName}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">
-                                                    {student.studentCode || "-"}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{student.attempts}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {student.bestScore !== undefined && student.bestScore !== null
-                                                        ? `${student.bestScore.toFixed(1)}%`
-                                                        : "-"}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">
-                                                    {student.lastAttemptAt
-                                                        ? new Date(student.lastAttemptAt).toLocaleDateString()
-                                                        : "-"}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${student.passed
-                                                        ? "bg-green-100 text-green-800"
-                                                        : "bg-red-100 text-red-800"
-                                                        }`}
+                                        <TableRow key={student.studentId}>
+                                            <TableCell className="font-medium">{student.studentName}</TableCell>
+                                            <TableCell>{student.studentCode || "-"}</TableCell>
+                                            <TableCell>{student.attempts}</TableCell>
+                                            <TableCell className="font-medium">
+                                                {student.bestScore !== undefined && student.bestScore !== null
+                                                    ? `${student.bestScore.toFixed(1)}%`
+                                                    : "-"}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {student.lastAttemptAt
+                                                    ? formatDistanceToNow(new Date(student.lastAttemptAt), {
+                                                        addSuffix: true,
+                                                    })
+                                                    : "-"}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={student.passed ? "default" : "destructive"}
+                                                    className={
+                                                        student.passed
+                                                            ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                                            : ""
+                                                    }
                                                 >
                                                     {student.passed ? "Passed" : "Failed"}
-                                                </span>
-                                            </td>
-                                        </tr>
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }

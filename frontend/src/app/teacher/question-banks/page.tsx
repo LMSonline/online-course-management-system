@@ -1,9 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { assessmentService } from "@/services/assessment/assessment.service";
-import { QuestionBankResponse } from "@/services/assessment/assessment.types";
+import Button from "@/core/components/ui/Button";
+import Input from "@/core/components/ui/Input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/Card";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/core/components/ui/Dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/core/components/ui/AlertDialog";
+import {
+    useQuestionBanksByTeacher,
+    useCreateQuestionBank,
+    useUpdateQuestionBank,
+    useDeleteQuestionBank,
+} from "@/hooks/teacher";
 import { useTeacherId } from "@/hooks/useProfile";
 import {
     BookOpen,
@@ -11,321 +34,286 @@ import {
     Search,
     Edit,
     Trash2,
-    MoreVertical,
-    Filter,
-    Grid,
-    List,
+    FileQuestion,
 } from "lucide-react";
-import { QuestionBankDialog } from "@/core/components/teacher/question-banks";
+import {
+    QuestionBankRequest,
+    QuestionBankResponse,
+} from "@/services/assessment/assessment.types";
+import { useForm } from "react-hook-form";
+import Label from "@/core/components/ui/Label";
+import Textarea from "@/core/components/ui/Textarea";
+import { formatDistanceToNow } from "date-fns";
+
+// Question Bank Form Component
+function QuestionBankForm({
+    initialData,
+    onSubmit,
+    onCancel,
+    isSubmitting,
+}: {
+    initialData?: QuestionBankResponse;
+    onSubmit: (data: QuestionBankRequest) => void;
+    onCancel: () => void;
+    isSubmitting: boolean;
+}) {
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<QuestionBankRequest>({
+        defaultValues: initialData || {
+            name: "",
+            description: "",
+        },
+    });
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="name">
+                    Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                    id="name"
+                    {...register("name", { required: "Name is required" })}
+                    placeholder="e.g., JavaScript Fundamentals"
+                />
+                {errors.name && (
+                    <p className="text-sm text-red-500">{errors.name.message}</p>
+                )}
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                    id="description"
+                    {...register("description")}
+                    placeholder="Describe this question bank..."
+                    rows={3}
+                />
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4">
+                <Button type="button" variant="outline" onClick={onCancel}>
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : initialData ? "Update" : "Create"}
+                </Button>
+            </div>
+        </form>
+    );
+}
 
 export default function QuestionBanksPage() {
     const router = useRouter();
     const teacherId = useTeacherId();
-    const [questionBanks, setQuestionBanks] = useState<QuestionBankResponse[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showDialog, setShowDialog] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingBank, setEditingBank] = useState<QuestionBankResponse | null>(
         null
     );
-    const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+    const [deletingBank, setDeletingBank] = useState<QuestionBankResponse | null>(
+        null
+    );
+    const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        if (teacherId) {
-            loadQuestionBanks();
-        }
-    }, [teacherId]);
-
-    const loadQuestionBanks = async () => {
-        if (!teacherId) return;
-
-        try {
-            setLoading(true);
-            const data = await assessmentService.getQuestionBanksByTeacher(
-                teacherId
-            );
-            setQuestionBanks(data);
-        } catch (error) {
-            console.error("Failed to load question banks:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // API Hooks
+    const { data: questionBanks = [], isLoading } = useQuestionBanksByTeacher(teacherId ?? null);
+    const createMutation = useCreateQuestionBank(teacherId || 0);
+    const updateMutation = useUpdateQuestionBank();
+    const deleteMutation = useDeleteQuestionBank();
 
     const handleCreateBank = () => {
         setEditingBank(null);
-        setShowDialog(true);
+        setIsFormOpen(true);
     };
 
     const handleEditBank = (bank: QuestionBankResponse) => {
         setEditingBank(bank);
-        setShowDialog(true);
+        setIsFormOpen(true);
     };
 
-    const handleDeleteBank = async (id: number) => {
-        try {
-            await assessmentService.deleteQuestionBank(id);
-            setQuestionBanks(questionBanks.filter((bank) => bank.id !== id));
-            setDeleteConfirm(null);
-        } catch (error) {
-            console.error("Failed to delete question bank:", error);
+    const handleFormSubmit = async (data: QuestionBankRequest) => {
+        if (editingBank) {
+            await updateMutation.mutateAsync({ id: editingBank.id, payload: data });
+        } else {
+            await createMutation.mutateAsync(data);
         }
+        setIsFormOpen(false);
+        setEditingBank(null);
     };
 
-    const handleDialogSuccess = () => {
-        setShowDialog(false);
-        setEditingBank(null);
-        loadQuestionBanks();
+    const handleDeleteBank = async () => {
+        if (deletingBank) {
+            await deleteMutation.mutateAsync(deletingBank.id);
+            setDeletingBank(null);
+        }
     };
 
     const filteredBanks = questionBanks.filter((bank) =>
         bank.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto py-8 px-4 space-y-6 ">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Question Banks
-                            </h1>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Manage your collection of questions for quizzes and assessments
-                            </p>
-                        </div>
-                        <button
-                            onClick={handleCreateBank}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
-                        >
-                            <Plus className="h-5 w-5 mr-2" />
-                            New Question Bank
-                        </button>
-                    </div>
-
-                    {/* Search and Filters */}
-                    <div className="flex items-center space-x-4">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search question banks..."
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        {/* View Toggle */}
-                        <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded ${viewMode === "grid"
-                                    ? "bg-white shadow-sm text-purple-600"
-                                    : "text-gray-600 hover:text-gray-900"
-                                    }`}
-                            >
-                                <Grid className="h-5 w-5" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode("list")}
-                                className={`p-2 rounded ${viewMode === "list"
-                                    ? "bg-white shadow-sm text-purple-600"
-                                    : "text-gray-600 hover:text-gray-900"
-                                    }`}
-                            >
-                                <List className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold">Question Banks</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Manage your collection of questions for quizzes
+                    </p>
                 </div>
+                <Button onClick={handleCreateBank}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Question Bank
+                </Button>
             </div>
 
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {filteredBanks.length === 0 ? (
-                    <div className="text-center py-12">
-                        <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">
-                            No question banks
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Get started by creating a new question bank.
-                        </p>
-                        <div className="mt-6">
-                            <button
-                                onClick={handleCreateBank}
-                                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
-                            >
-                                <Plus className="h-5 w-5 mr-2" />
-                                New Question Bank
-                            </button>
-                        </div>
-                    </div>
-                ) : viewMode === "grid" ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredBanks.map((bank) => (
-                            <div
-                                key={bank.id}
-                                className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-                            >
-                                <div className="p-6">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex-1">
-                                            <h3
-                                                className="text-lg font-semibold text-gray-900 hover:text-purple-600 cursor-pointer"
-                                                onClick={() =>
-                                                    router.push(`/teacher/question-banks/${bank.id}`)
-                                                }
-                                            >
-                                                {bank.name}
-                                            </h3>
-                                            {bank.description && (
-                                                <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                                                    {bank.description}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="relative ml-2">
-                                            <button
-                                                onClick={() =>
-                                                    setDeleteConfirm(
-                                                        deleteConfirm === bank.id ? null : bank.id
-                                                    )
-                                                }
-                                                className="text-gray-400 hover:text-gray-600"
-                                            >
-                                                <MoreVertical className="h-5 w-5" />
-                                            </button>
-                                            {deleteConfirm === bank.id && (
-                                                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                                                    <div className="py-1">
-                                                        <button
-                                                            onClick={() => handleEditBank(bank)}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                        >
-                                                            <Edit className="h-4 w-4 mr-2" />
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteBank(bank.id)}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+            {/* Search */}
+            <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search question banks..."
+                    value={searchTerm}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                />
+            </div>
 
-                                    <div className="flex items-center justify-between text-sm text-gray-500">
-                                        <span className="flex items-center">
-                                            <BookOpen className="h-4 w-4 mr-1" />
-                                            Questions
-                                        </span>
-                                        <span className="text-xs">
-                                            {new Date(bank.createdAt).toLocaleDateString()}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-4 pt-4 border-t border-gray-200">
-                                        <button
-                                            onClick={() =>
-                                                router.push(`/teacher/question-banks/${bank.id}`)
-                                            }
-                                            className="w-full text-center px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors"
-                                        >
-                                            Manage Questions
-                                        </button>
+            {/* Question Banks Grid */}
+            {filteredBanks.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">
+                        {searchTerm ? "No question banks found" : "No question banks yet"}
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                        {searchTerm
+                            ? "Try a different search term"
+                            : "Create your first question bank to organize your questions"}
+                    </p>
+                    {!searchTerm && (
+                        <Button onClick={handleCreateBank}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Question Bank
+                        </Button>
+                    )}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredBanks.map((bank) => (
+                        <Card
+                            key={bank.id}
+                            className="hover:shadow-md transition-shadow cursor-pointer"
+                            onClick={() => router.push(`/teacher/question-banks/${bank.id}`)}
+                        >
+                            <CardHeader>
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <CardTitle className="text-lg">{bank.name}</CardTitle>
+                                        {bank.description && (
+                                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                                {bank.description}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-                        <ul className="divide-y divide-gray-200">
-                            {filteredBanks.map((bank) => (
-                                <li key={bank.id} className="p-6 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3
-                                                className="text-lg font-semibold text-gray-900 hover:text-purple-600 cursor-pointer"
-                                                onClick={() =>
-                                                    router.push(`/teacher/question-banks/${bank.id}`)
-                                                }
-                                            >
-                                                {bank.name}
-                                            </h3>
-                                            {bank.description && (
-                                                <p className="mt-1 text-sm text-gray-500">
-                                                    {bank.description}
-                                                </p>
-                                            )}
-                                            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                                                <span className="flex items-center">
-                                                    <BookOpen className="h-4 w-4 mr-1" />
-                                                    Questions
-                                                </span>
-                                                <span className="text-xs">
-                                                    Created {new Date(bank.createdAt).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center space-x-2 ml-4">
-                                            <button
-                                                onClick={() =>
-                                                    router.push(`/teacher/question-banks/${bank.id}`)
-                                                }
-                                                className="px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors"
-                                            >
-                                                Manage
-                                            </button>
-                                            <button
-                                                onClick={() => handleEditBank(bank)}
-                                                className="p-2 text-gray-400 hover:text-gray-600 rounded-md"
-                                            >
-                                                <Edit className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteBank(bank.id)}
-                                                className="p-2 text-gray-400 hover:text-red-600 rounded-md"
-                                            >
-                                                <Trash2 className="h-5 w-5" />
-                                            </button>
-                                        </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                        <FileQuestion className="h-4 w-4" />
+                                        <span>Questions</span>
                                     </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
+                                    <span>
+                                        {formatDistanceToNow(new Date(bank.createdAt), {
+                                            addSuffix: true,
+                                        })}
+                                    </span>
+                                </div>
 
-            {/* Dialog */}
-            {showDialog && (
-                <QuestionBankDialog
-                    bank={editingBank}
-                    onClose={() => {
-                        setShowDialog(false);
-                        setEditingBank(null);
-                    }}
-                    onSuccess={handleDialogSuccess}
-                />
+                                <div className="flex gap-2 mt-4 pt-4 border-t">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditBank(bank);
+                                        }}
+                                    >
+                                        <Edit className="h-4 w-4 mr-1" />
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeletingBank(bank);
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             )}
+
+            {/* Create/Edit Dialog */}
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            {editingBank ? "Edit Question Bank" : "Create Question Bank"}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <QuestionBankForm
+                        initialData={editingBank || undefined}
+                        onSubmit={handleFormSubmit}
+                        onCancel={() => setIsFormOpen(false)}
+                        isSubmitting={createMutation.isPending || updateMutation.isPending}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog
+                open={!!deletingBank}
+                onOpenChange={(open) => !open && setDeletingBank(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Question Bank</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete "{deletingBank?.name}"? This will also
+                            delete all questions in this bank and cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteBank}
+                            className="bg-red-500 hover:bg-red-600"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

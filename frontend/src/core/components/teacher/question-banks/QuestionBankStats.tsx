@@ -15,7 +15,7 @@ export function QuestionBankStats({
     const stats = calculateBankStats(questions);
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 ">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
                 Question Bank Statistics

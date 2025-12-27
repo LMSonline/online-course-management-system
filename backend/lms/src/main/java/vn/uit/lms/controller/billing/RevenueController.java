@@ -4,9 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.billing.RevenueService;
+import vn.uit.lms.shared.dto.response.billing.MonthlyRevenueResponse;
+import vn.uit.lms.shared.dto.response.billing.PaymentTransactionResponse;
+import vn.uit.lms.shared.dto.response.billing.RevenueBreakdownResponse;
+import vn.uit.lms.shared.dto.response.billing.TeacherRevenueResponse;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 import java.time.YearMonth;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -20,7 +25,7 @@ public class RevenueController {
      */
     @GetMapping("/teachers/{teacherId}/revenue")
     @TeacherOnly
-    public ResponseEntity<?> getTeacherRevenue(@PathVariable Long teacherId) {
+    public ResponseEntity<TeacherRevenueResponse> getTeacherRevenue(@PathVariable Long teacherId) {
         return ResponseEntity.ok(revenueService.getTeacherRevenue(teacherId));
     }
 
@@ -29,7 +34,7 @@ public class RevenueController {
      */
     @GetMapping("/my-revenue")
     @TeacherOnly
-    public ResponseEntity<?> getMyRevenue() {
+    public ResponseEntity<TeacherRevenueResponse> getMyRevenue() {
         return ResponseEntity.ok(revenueService.getMyRevenue());
     }
 
@@ -38,7 +43,7 @@ public class RevenueController {
      */
     @GetMapping("/teachers/{teacherId}/revenue/breakdown")
     @TeacherOnly
-    public ResponseEntity<?> getRevenueBreakdown(@PathVariable Long teacherId) {
+    public ResponseEntity<RevenueBreakdownResponse> getRevenueBreakdown(@PathVariable Long teacherId) {
         return ResponseEntity.ok(revenueService.getRevenueBreakdown(teacherId));
     }
 
@@ -47,7 +52,7 @@ public class RevenueController {
      */
     @GetMapping("/my-revenue/breakdown")
     @TeacherOnly
-    public ResponseEntity<?> getMyRevenueBreakdown() {
+    public ResponseEntity<RevenueBreakdownResponse> getMyRevenueBreakdown() {
         return ResponseEntity.ok(revenueService.getMyRevenueBreakdown());
     }
 
@@ -56,7 +61,7 @@ public class RevenueController {
      */
     @GetMapping("/teachers/{teacherId}/revenue/monthly")
     @TeacherOnly
-    public ResponseEntity<?> getMonthlyRevenue(
+    public ResponseEntity<MonthlyRevenueResponse> getMonthlyRevenue(
             @PathVariable Long teacherId,
             @RequestParam(required = false) String period
     ) {
@@ -69,7 +74,7 @@ public class RevenueController {
      */
     @GetMapping("/my-revenue/monthly")
     @TeacherOnly
-    public ResponseEntity<?> getMyMonthlyRevenue(@RequestParam(required = false) String period) {
+    public ResponseEntity<MonthlyRevenueResponse> getMyMonthlyRevenue(@RequestParam(required = false) String period) {
         return ResponseEntity.ok(revenueService.getMyMonthlyRevenue(period));
     }
 
@@ -78,7 +83,7 @@ public class RevenueController {
      */
     @GetMapping("/teachers/{teacherId}/payment-transactions")
     @TeacherOnly
-    public ResponseEntity<?> getTeacherPaymentTransactions(@PathVariable Long teacherId) {
+    public ResponseEntity<List<PaymentTransactionResponse>> getTeacherPaymentTransactions(@PathVariable Long teacherId) {
         return ResponseEntity.ok(revenueService.getTeacherPaymentTransactions(teacherId));
     }
 
@@ -87,7 +92,7 @@ public class RevenueController {
      */
     @GetMapping("/my-payment-transactions")
     @TeacherOnly
-    public ResponseEntity<?> getMyPaymentTransactions() {
+    public ResponseEntity<List<PaymentTransactionResponse>> getMyPaymentTransactions() {
         return ResponseEntity.ok(revenueService.getMyPaymentTransactions());
     }
 }

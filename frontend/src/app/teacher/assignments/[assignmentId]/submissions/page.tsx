@@ -1,355 +1,367 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
-import { useAssignmentManagement } from "@/hooks/teacher/useAssignmentManagement";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Button from "@/core/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/Card";
+import Table, {
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/core/components/ui/Table";
+import Badge from "@/core/components/ui/Badge";
+import Input from "@/core/components/ui/Input";
 import {
-    FileText,
+    useAssignmentById,
+    useAssignmentSubmissions,
+    useAssignmentStatistics,
+} from "@/hooks/teacher";
+import {
+    ArrowLeft,
     Download,
-    CheckCircle,
+    Users,
+    CheckCircle2,
     Clock,
-    XCircle,
+    FileText,
     Search,
-    Filter,
+    AlertCircle,
 } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
+import { SubmissionStatus } from "@/services/assignment/assignment.types";
 
 export default function AssignmentSubmissionsPage() {
     const params = useParams();
+    const router = useRouter();
     const assignmentId = Number(params.assignmentId);
 
-    const {
-        assignment,
-        submissions,
-        statistics,
-        loading,
-        error,
-        gradeSubmission,
-        getSubmissionFiles,
-    } = useAssignmentManagement({ assignmentId });
-
     const [searchTerm, setSearchTerm] = useState("");
-    const [filterStatus, setFilterStatus] = useState<string>("ALL");
-    const [selectedSubmission, setSelectedSubmission] = useState<number | null>(null);
-    const [gradingScore, setGradingScore] = useState("");
-    const [gradingFeedback, setGradingFeedback] = useState("");
+    const [filterStatus, setFilterStatus] = useState<SubmissionStatus | "ALL">("ALL");
 
-    // Filter submissions
-    const filteredSubmissions = submissions.filter((sub) => {
-        const matchesSearch =
-            !searchTerm ||
-            sub.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            sub.studentCode?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter =
-            filterStatus === "ALL" || sub.status === filterStatus;
-        return matchesSearch && matchesFilter;
-    });
+    // API Hooks
+    const { data: assignment, isLoading: assignmentLoading } =
+        useAssignmentById(assignmentId);
+    const { data: submissions = [], isLoading: submissionsLoading } =
+        useAssignmentSubmissions(assignmentId);
+    const { data: statistics, isLoading: statsLoading } =
+        useAssignmentStatistics(assignmentId);
 
-    // Get status badge
-    const getStatusBadge = (status: string) => {
-        const styles = {
-            SUBMITTED: "bg-blue-100 text-blue-800",
-            GRADED: "bg-green-100 text-green-800",
-            LATE: "bg-orange-100 text-orange-800",
-            DRAFT: "bg-gray-100 text-gray-800",
-        };
-        return (
-            <span
-                className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles] || "bg-gray-100 text-gray-800"
-                    }`}
-            >
-                {status}
-            </span>
+    const isLoading = assignmentLoading || submissionsLoading || statsLoading;
+
+    const handleViewSubmission = (submissionId: number) => {
+        router.push(
+            `/teacher/assignments/${assignmentId}/submissions/${submissionId}`
         );
     };
 
-    // Handle grading
-    const handleGrade = async (submissionId: number) => {
-        if (!gradingScore) {
-            alert("Please enter a score");
-            return;
-        }
+    const exportToCSV = () => {
+        if (!submissions) return;
 
-        try {
-            await gradeSubmission(submissionId, {
-                score: Number(gradingScore),
-                feedback: gradingFeedback,
-            });
-            setSelectedSubmission(null);
-            setGradingScore("");
-            setGradingFeedback("");
-        } catch (error) {
-            console.error("Failed to grade submission:", error);
-        }
+        const headers = [
+            "Student Name",
+            "Student Code",
+            "Status",
+            "Submitted At",
+            "Score",
+            "Is Late",
+        ];
+
+        const rows = submissions.map((sub) => [
+            sub.studentName || "",
+            sub.studentCode || "",
+            sub.status,
+            sub.submittedAt
+                ? format(new Date(sub.submittedAt), "yyyy-MM-dd HH:mm:ss")
+                : "",
+            sub.score?.toString() || "",
+            sub.isLate ? "Yes" : "No",
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map((row) => row.join(",")),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `assignment-${assignmentId}-submissions.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
-    if (loading && !assignment) {
+    const getStatusBadge = (status: SubmissionStatus, isLate: boolean) => {
+        const statusConfig = {
+            DRAFT: { variant: "secondary" as const, label: "Draft" },
+            SUBMITTED: {
+                variant: "default" as const,
+                label: "Submitted",
+                className: isLate ? "bg-orange-100 text-orange-800" : "",
+            },
+            GRADED: {
+                variant: "default" as const,
+                label: "Graded",
+                className: "bg-green-100 text-green-800",
+            },
+            RETURNED: { variant: "outline" as const, label: "Returned" },
+            LATE: { variant: "destructive" as const, label: "Late" },
+        };
+        const config = statusConfig[status] || statusConfig.DRAFT;
+        const badgeClassName = 'className' in config ? config.className : '';
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <Badge variant={config.variant} className={badgeClassName}>
+                {config.label}
+                {isLate && status === "SUBMITTED" && (
+                    <AlertCircle className="h-3 w-3 ml-1" />
+                )}
+            </Badge>
+        );
+    };
+
+    const filteredSubmissions = submissions.filter((sub) => {
+        const matchesSearch =
+            (sub.studentName?.toLowerCase() || "").includes(
+                searchTerm.toLowerCase()
+            ) ||
+            (sub.studentCode?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+
+        const matchesFilter = filterStatus === "ALL" || sub.status === filterStatus;
+
+        return matchesSearch && matchesFilter;
+    });
+
+    const needsGradingCount = submissions.filter(
+        (s) => s.status === "SUBMITTED"
+    ).length;
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (!assignment) {
+        return (
+            <div className="container mx-auto py-8">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold mb-4">Assignment not found</h1>
+                    <Button onClick={() => router.back()}>Go Back</Button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="container mx-auto py-8 space-y-6">
             {/* Header */}
-            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 py-6">
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                            Grade Assignments
-                        </h1>
-                        <p className="text-slate-600 dark:text-slate-400 mt-1">
-                            Review and grade student submissions
-                        </p>
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => router.back()}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex-1">
+                    <h1 className="text-3xl font-bold">{assignment.title}</h1>
+                    <p className="text-muted-foreground">
+                        Assignment Submissions & Grading
+                    </p>
+                </div>
+                <Button onClick={exportToCSV} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                </Button>
+            </div>
+
+            {/* Statistics Cards */}
+            {statistics && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Total Students
+                            </CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{statistics.totalStudents}</div>
+                            <p className="text-xs text-muted-foreground">
+                                Enrolled in course
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Submission Rate
+                            </CardTitle>
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {statistics.submissionRate.toFixed(0)}%
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {statistics.submittedCount} of {statistics.totalStudents} submitted
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Needs Grading</CardTitle>
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-orange-600">
+                                {needsGradingCount}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {statistics.gradedCount} already graded
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {statistics.averageScore
+                                    ? `${statistics.averageScore.toFixed(1)}/${assignment.maxScore}`
+                                    : "-"}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {statistics.highestScore !== undefined &&
+                                    statistics.lowestScore !== undefined
+                                    ? `Range: ${statistics.lowestScore}-${statistics.highestScore}`
+                                    : "No grades yet"}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Filters */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Submissions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex gap-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search by student name or code..."
+                                value={searchTerm}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                        <select
+                            value={filterStatus}
+                            onChange={(e) =>
+                                setFilterStatus(e.target.value as SubmissionStatus | "ALL")
+                            }
+                            className="flex h-10 w-[180px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="ALL">All Submissions</option>
+                            <option value="SUBMITTED">Needs Grading</option>
+                            <option value="GRADED">Graded</option>
+                            <option value="DRAFT">Draft</option>
+                            <option value="LATE">Late</option>
+                        </select>
                     </div>
 
-                    {/* Statistics Cards */}
-                    {statistics && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                                            Submissions ({statistics.submittedCount})
-                                        </p>
-                                        <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
-                                            of {statistics.totalStudents} total students
-                                        </p>
-                                    </div>
-                                    <CheckCircle className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                                            Graded ({statistics.gradedCount})
-                                        </p>
-                                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                                            {statistics.gradedCount > 0
-                                                ? `${Math.round((statistics.gradedCount / statistics.submittedCount) * 100)}% complete`
-                                                : "No grading yet"}
-                                        </p>
-                                    </div>
-                                    <FileText className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border border-orange-200 dark:border-orange-800 p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-orange-700 dark:text-orange-300">
-                                            Pending ({statistics.submittedCount - statistics.gradedCount})
-                                        </p>
-                                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                            Awaiting review
-                                        </p>
-                                    </div>
-                                    <Clock className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-                                </div>
-                            </div>
+                    {/* Submissions Table */}
+                    {filteredSubmissions.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <FileText className="h-12 w-12 mx-auto mb-4" />
+                            <p>
+                                {searchTerm || filterStatus !== "ALL"
+                                    ? "No submissions match your filters"
+                                    : "No submissions yet"}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="border rounded-lg">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Student</TableHead>
+                                        <TableHead>Student Code</TableHead>
+                                        <TableHead>Submitted At</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Score</TableHead>
+                                        <TableHead>Files</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredSubmissions.map((submission) => (
+                                        <TableRow
+                                            key={submission.id}
+                                            className="cursor-pointer hover:bg-muted/50"
+                                            onClick={() => handleViewSubmission(submission.id)}
+                                        >
+                                            <TableCell className="font-medium">
+                                                {submission.studentName}
+                                            </TableCell>
+                                            <TableCell>{submission.studentCode || "-"}</TableCell>
+                                            <TableCell>
+                                                {submission.submittedAt ? (
+                                                    <span className="text-sm">
+                                                        {formatDistanceToNow(
+                                                            new Date(submission.submittedAt),
+                                                            { addSuffix: true }
+                                                        )}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">-</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {getStatusBadge(submission.status, submission.isLate)}
+                                            </TableCell>
+                                            <TableCell>
+                                                {submission.score !== undefined &&
+                                                    submission.score !== null ? (
+                                                    <span className="font-medium">
+                                                        {submission.score}/{assignment.maxScore}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">-</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {submission.files && submission.files.length > 0 ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <FileText className="h-4 w-4" />
+                                                        {submission.files.length}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground">0</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm">
+                                                    {submission.status === "SUBMITTED"
+                                                        ? "Grade"
+                                                        : "View"}
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         </div>
                     )}
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Submission Details Card - Featured Student */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    {/* Submissions List */}
-                    <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
-                        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
-                            <h3 className="font-bold text-slate-900 dark:text-white">
-                                Submissions ({filteredSubmissions.length})
-                            </h3>
-                        </div>
-
-                        <div className="p-4">
-                            <div className="relative mb-4">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search students..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                            </div>
-
-                            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                                {filteredSubmissions.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <FileText className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                                            No submissions found
-                                        </p>
-                                    </div>
-                                ) : (
-                                    filteredSubmissions.map((submission) => (
-                                        <button
-                                            key={submission.id}
-                                            onClick={() => setSelectedSubmission(submission.id)}
-                                            className={`w-full p-4 rounded-xl text-left transition-all ${selectedSubmission === submission.id
-                                                    ? "bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-600 dark:border-indigo-400"
-                                                    : "bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600"
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <img
-                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(submission.studentName || '')}&background=6366f1&color=fff`}
-                                                    alt={submission.studentName}
-                                                    className="w-10 h-10 rounded-full"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-semibold text-sm text-slate-900 dark:text-white truncate">
-                                                        {submission.studentName}
-                                                    </h4>
-                                                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                                                        {submission.submittedAt
-                                                            ? new Date(submission.submittedAt).toLocaleDateString()
-                                                            : "Not submitted"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                {getStatusBadge(submission.status)}
-                                                {submission.status === "SUBMITTED" && (
-                                                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-semibold rounded">
-                                                        Pending
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </button>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Submission Details Panel */}
-                    <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg">
-                        {selectedSubmission ? (
-                            <>
-                                {(() => {
-                                    const submission = filteredSubmissions.find(s => s.id === selectedSubmission);
-                                    if (!submission) return null;
-
-                                    return (
-                                        <div className="p-6">
-                                            <div className="flex items-start gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-                                                <img
-                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(submission.studentName || '')}&background=6366f1&color=fff`}
-                                                    alt={submission.studentName}
-                                                    className="w-16 h-16 rounded-full"
-                                                />
-                                                <div className="flex-1">
-                                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                                                        {submission.studentName}
-                                                    </h2>
-                                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                                                        Submitted on {submission.submittedAt
-                                                            ? new Date(submission.submittedAt).toLocaleString()
-                                                            : "N/A"}
-                                                    </p>
-                                                </div>
-                                                {getStatusBadge(submission.status)}
-                                            </div>
-
-                                            {/* Submission Content */}
-                                            <div className="mb-6">
-                                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
-                                                    Submission
-                                                </h3>
-                                                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                                                        I have completed the responsive design project. Please find the attached files.
-                                                    </p>
-                                                </div>
-
-                                                {/* Attachment */}
-                                                {submission.files && submission.files.length > 0 && (
-                                                    <div className="mt-4">
-                                                        {submission.files.map((file: any, idx: number) => (
-                                                            <div
-                                                                key={idx}
-                                                                className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                                                    <span className="text-sm text-slate-900 dark:text-white">
-                                                                        {file.name || "responsive-portfolio.zip"}
-                                                                    </span>
-                                                                </div>
-                                                                <button className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                                                                    <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Grading Section */}
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
-                                                        Score (out of {assignment?.maxScore || 100}) <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={gradingScore}
-                                                        onChange={(e) => setGradingScore(e.target.value)}
-                                                        min="0"
-                                                        max={assignment?.maxScore || 100}
-                                                        placeholder="Enter score"
-                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
-                                                        Feedback
-                                                    </label>
-                                                    <textarea
-                                                        value={gradingFeedback}
-                                                        onChange={(e) => setGradingFeedback(e.target.value)}
-                                                        rows={6}
-                                                        placeholder="Provide detailed feedback to the student..."
-                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                                                    />
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleGrade(selectedSubmission)}
-                                                    disabled={!gradingScore}
-                                                    className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Save Grade
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-                            </>
-                        ) : (
-                            <div className="flex items-center justify-center h-full min-h-[600px]">
-                                <div className="text-center">
-                                    <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                                        Select a Submission
-                                    </h3>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                                        Choose a student submission from the list to review and grade
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

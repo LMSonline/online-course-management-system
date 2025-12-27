@@ -1,358 +1,397 @@
 "use client";
 
-import { use, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Button from "@/core/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/Card";
+import Input from "@/core/components/ui/Input";
+import Label from "@/core/components/ui/Label";
+import Textarea from "@/core/components/ui/Textarea";
+import Badge from "@/core/components/ui/Badge";
+import {
+    useSubmissionById,
+    useGradeSubmission,
+    useAssignmentById,
+    useAssignmentSubmissions,
+} from "@/hooks/teacher";
 import {
     ArrowLeft,
-    User,
-    Calendar,
-    FileText,
     Download,
-    Save,
-    CheckCircle,
+    FileText,
+    Clock,
+    AlertCircle,
+    CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { formatDistanceToNow, format } from "date-fns";
 
-// Mock API calls
-const fetchSubmissionDetail = async (assignmentId: string, submissionId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+export default function GradingPage() {
+    const params = useParams();
+    const router = useRouter();
+    const submissionId = Number(params.submissionId);
+    const assignmentId = Number(params.assignmentId);
 
-    return {
-        id: submissionId,
-        assignmentId,
-        assignmentTitle: "React Hooks Deep Dive",
-        studentName: "John Davis",
-        studentAvatar: "https://ui-avatars.com/api/?name=John+Davis&background=6366f1&color=fff",
-        studentEmail: "john.d@example.com",
-        submittedAt: "Apr 12, 2024 3:45 PM",
-        maxPoints: 100,
-        currentScore: 85,
-        currentFeedback: "Great work on implementing custom hooks! Your code is clean and well-organized.",
-        content: `# React Hooks Project
+    const [score, setScore] = useState("");
+    const [feedback, setFeedback] = useState("");
 
-## Overview
-This project demonstrates advanced usage of React Hooks including custom hooks, useReducer, useContext, and performance optimization techniques.
+    // API Hooks
+    const { data: submission, isLoading: submissionLoading } =
+        useSubmissionById(submissionId);
+    const { data: assignment, isLoading: assignmentLoading } =
+        useAssignmentById(assignmentId);
+    const { data: allSubmissions = [] } = useAssignmentSubmissions(assignmentId);
+    const gradeMutation = useGradeSubmission();
 
-## Features Implemented
-1. Custom hooks for data fetching
-2. useReducer for complex state management
-3. useContext for global state
-4. useMemo and useCallback for optimization
-5. Custom useDebounce hook
+    // Find current submission index
+    const currentIndex = allSubmissions.findIndex((s) => s.id === submissionId);
+    const hasNext = currentIndex < allSubmissions.length - 1;
+    const hasPrevious = currentIndex > 0;
 
-## Code Quality
-- Clean code structure
-- Proper error handling
-- TypeScript implementation
-- Unit tests included
+    // Load existing grade if available
+    useEffect(() => {
+        if (submission?.score !== undefined && submission?.score !== null) {
+            setScore(submission.score.toString());
+        }
+        if (submission?.feedback) {
+            setFeedback(submission.feedback);
+        }
+    }, [submission]);
 
-## Screenshots and Demo
-[Link to deployed project](https://example.com/demo)
+    const handleSubmitGrade = async () => {
+        const scoreValue = Number(score);
 
-## Repository
-[GitHub Repository](https://github.com/johndavis/react-hooks-project)`,
-        attachments: [
-            { name: "project-screenshots.pdf", url: "#", size: "2.5 MB" },
-            { name: "source-code.zip", url: "#", size: "5.1 MB" },
-        ],
-        attemptNumber: 1,
-        maxAttempts: 3,
-        gradingHistory: [
-            {
-                gradedAt: "Apr 12, 2024 5:30 PM",
-                score: 85,
-                feedback: "Great work on implementing custom hooks!",
-                gradedBy: "Prof. Sarah",
-            },
-        ],
-    };
-};
-
-const saveGrade = async (data: { submissionId: string; score: number; feedback: string }) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return { success: true };
-};
-
-export default function GradeSubmissionPage({
-    params,
-}: {
-    params: Promise<{ assignmentId: string; submissionId: string }>;
-}) {
-    const { assignmentId, submissionId } = use(params);
-    const queryClient = useQueryClient();
-
-    const { data: submission, isLoading } = useQuery({
-        queryKey: ["submission", assignmentId, submissionId],
-        queryFn: () => fetchSubmissionDetail(assignmentId, submissionId),
-    });
-
-    const [score, setScore] = useState(submission?.currentScore || 0);
-    const [feedback, setFeedback] = useState(submission?.currentFeedback || "");
-
-    const gradeMutation = useMutation({
-        mutationFn: saveGrade,
-        onSuccess: () => {
-            toast.success("Grade saved successfully!");
-            queryClient.invalidateQueries({ queryKey: ["submission", assignmentId, submissionId] });
-            queryClient.invalidateQueries({ queryKey: ["assignment", assignmentId] });
-        },
-        onError: () => {
-            toast.error("Failed to save grade");
-        },
-    });
-
-    const handleSaveGrade = () => {
-        if (score < 0 || score > (submission?.maxPoints || 100)) {
-            toast.error(`Score must be between 0 and ${submission?.maxPoints}`);
+        // Validation
+        if (!score || isNaN(scoreValue)) {
+            alert("Please enter a valid score");
             return;
         }
 
-        gradeMutation.mutate({
-            submissionId,
-            score,
-            feedback,
+        if (assignment && assignment.maxScore && scoreValue > assignment.maxScore) {
+            alert(`Score cannot exceed maximum score of ${assignment.maxScore}`);
+            return;
+        }
+
+        if (scoreValue < 0) {
+            alert("Score cannot be negative");
+            return;
+        }
+
+        await gradeMutation.mutateAsync({
+            id: submissionId,
+            payload: {
+                score: scoreValue,
+                feedback: feedback || undefined,
+            },
         });
     };
 
+    const handleNextStudent = () => {
+        if (hasNext) {
+            const nextSubmission = allSubmissions[currentIndex + 1];
+            router.push(
+                `/teacher/assignments/${assignmentId}/submissions/${nextSubmission.id}`
+            );
+        }
+    };
+
+    const handlePreviousStudent = () => {
+        if (hasPrevious) {
+            const previousSubmission = allSubmissions[currentIndex - 1];
+            router.push(
+                `/teacher/assignments/${assignmentId}/submissions/${previousSubmission.id}`
+            );
+        }
+    };
+
+    const isLoading = submissionLoading || assignmentLoading;
+
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
-    if (!submission) {
+    if (!submission || !assignment) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="container mx-auto py-8">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Submission Not Found</h2>
+                    <h1 className="text-2xl font-bold mb-4">Submission not found</h1>
+                    <Button onClick={() => router.back()}>Go Back</Button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="flex items-center gap-4">
-                    <Link
-                        href={`/teacher/assignments/${assignmentId}`}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                    </Link>
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Grade Submission</h1>
-                        <p className="text-slate-600 dark:text-slate-400">{submission.assignmentTitle}</p>
-                    </div>
+        <div className="container mx-auto py-8 space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => router.back()}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex-1">
+                    <h1 className="text-3xl font-bold">{assignment.title}</h1>
+                    <p className="text-muted-foreground">Grade Submission</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Student Info */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-6"
-                        >
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Student Information</h2>
-                            <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full overflow-hidden">
-                                    <img src={submission.studentAvatar} alt={submission.studentName} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{submission.studentName}</h3>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">{submission.studentEmail}</p>
-                                    <div className="flex items-center gap-4 mt-2">
-                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                            <Calendar className="w-4 h-4" />
-                                            {submission.submittedAt}
-                                        </div>
-                                        <div className="text-sm text-slate-500 dark:text-slate-400">
-                                            Attempt {submission.attemptNumber}/{submission.maxAttempts}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
+                {/* Navigation */}
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePreviousStudent}
+                        disabled={!hasPrevious}
+                    >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        {currentIndex + 1} of {allSubmissions.length}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNextStudent}
+                        disabled={!hasNext}
+                    >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                </div>
+            </div>
 
-                        {/* Submission Content */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-6"
-                        >
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Submission Content</h2>
-                            <div className="prose dark:prose-invert max-w-none">
-                                <pre className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
-                                    {submission.content}
-                                </pre>
+            {/* Main Content - Split View */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left: Submission Details & Files (70%) */}
+                <div className="lg:col-span-2 space-y-4">
+                    {/* Student Info Card */}
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <CardTitle>{submission.studentName}</CardTitle>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        {submission.studentCode}
+                                    </p>
+                                </div>
+                                <Badge
+                                    variant={submission.isLate ? "destructive" : "default"}
+                                    className={
+                                        submission.isLate
+                                            ? "bg-orange-100 text-orange-800"
+                                            : "bg-green-100 text-green-800"
+                                    }
+                                >
+                                    {submission.isLate ? (
+                                        <>
+                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                            Late Submission
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                            On Time
+                                        </>
+                                    )}
+                                </Badge>
                             </div>
-                        </motion.div>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">Submitted:</span>
+                                <span className="font-medium">
+                                    {submission.submittedAt
+                                        ? formatDistanceToNow(new Date(submission.submittedAt), {
+                                            addSuffix: true,
+                                        })
+                                        : "Not submitted"}
+                                </span>
+                            </div>
+                            {submission.submittedAt && (
+                                <p className="text-xs text-muted-foreground">
+                                    {format(new Date(submission.submittedAt), "PPpp")}
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                        {/* Attachments */}
-                        {submission.attachments.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-6"
-                            >
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Attachments</h2>
-                                <div className="space-y-3">
-                                    {submission.attachments.map((attachment, index) => (
+                    {/* Submitted Files Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Submitted Files</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {submission.files && submission.files.length > 0 ? (
+                                <div className="space-y-2">
+                                    {submission.files.map((file, index) => (
                                         <div
-                                            key={index}
-                                            className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                            key={file.id || index}
+                                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-                                                    <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                                </div>
+                                                <FileText className="h-5 w-5 text-blue-500" />
                                                 <div>
-                                                    <p className="font-medium text-slate-900 dark:text-white">{attachment.name}</p>
-                                                    <p className="text-sm text-slate-500 dark:text-slate-400">{attachment.size}</p>
+                                                    <p className="font-medium text-sm">{file.fileName}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {file.fileSize
+                                                            ? `${(file.fileSize / 1024).toFixed(2)} KB`
+                                                            : "Unknown size"}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <a
-                                                href={attachment.url}
-                                                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
-                                                download
+                                                href={file.fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
                                             >
-                                                <Download className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                                                <Button variant="ghost" size="sm">
+                                                    <Download className="h-4 w-4" />
+                                                </Button>
                                             </a>
                                         </div>
                                     ))}
                                 </div>
-                            </motion.div>
-                        )}
-
-                        {/* Grading History */}
-                        {submission.gradingHistory.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-6"
-                            >
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Grading History</h2>
-                                <div className="space-y-4">
-                                    {submission.gradingHistory.map((history, index) => (
-                                        <div
-                                            key={index}
-                                            className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg"
-                                        >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <p className="font-semibold text-slate-900 dark:text-white">
-                                                    Score: {history.score}/{submission.maxPoints}
-                                                </p>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400">{history.gradedAt}</p>
-                                            </div>
-                                            <p className="text-sm text-slate-700 dark:text-slate-300 mb-1">{history.feedback}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">Graded by {history.gradedBy}</p>
-                                        </div>
-                                    ))}
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <FileText className="h-12 w-12 mx-auto mb-2" />
+                                    <p>No files submitted</p>
                                 </div>
-                            </motion.div>
-                        )}
-                    </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                    {/* Grading Panel */}
-                    <div className="lg:col-span-1">
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 sticky top-6"
-                        >
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5" />
-                                Grade Submission
-                            </h2>
+                    {/* Previous Feedback (if already graded) */}
+                    {submission.status === "GRADED" && submission.feedback && (
+                        <Card className="border-green-200 bg-green-50/50">
+                            <CardHeader>
+                                <CardTitle className="text-green-800">
+                                    Previous Feedback
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-green-700 whitespace-pre-wrap">
+                                    {submission.feedback}
+                                </p>
+                                {submission.gradedAt && (
+                                    <p className="text-xs text-green-600 mt-2">
+                                        Graded {formatDistanceToNow(new Date(submission.gradedAt), { addSuffix: true })}
+                                        {submission.graderName && ` by ${submission.graderName}`}
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
 
-                            <div className="space-y-6">
-                                {/* Score Input */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Score (out of {submission.maxPoints})
-                                    </label>
-                                    <input
+                {/* Right: Grading Panel (30%) */}
+                <div className="space-y-4">
+                    <Card className="sticky top-4">
+                        <CardHeader>
+                            <CardTitle>Grade Submission</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Score Input */}
+                            <div className="space-y-2">
+                                <Label htmlFor="score">
+                                    Score <span className="text-red-500">*</span>
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="score"
                                         type="number"
-                                        min="0"
-                                        max={submission.maxPoints}
                                         value={score}
-                                        onChange={(e) => setScore(Number(e.target.value))}
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 text-slate-900 dark:text-white text-lg font-semibold"
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setScore(e.target.value)}
+                                        placeholder="0"
+                                        min={0}
+                                        max={assignment.maxScore || 100}
+                                        className="flex-1"
                                     />
-                                    <div className="mt-2">
-                                        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                            <span>0</span>
-                                            <span>{submission.maxPoints}</span>
-                                        </div>
-                                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                                            <div
-                                                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all"
-                                                style={{ width: `${(score / submission.maxPoints) * 100}%` }}
-                                            />
-                                        </div>
+                                    <span className="text-sm text-muted-foreground">
+                                        / {assignment.maxScore || 100}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Enter score out of {assignment.maxScore || 100} points
+                                </p>
+                            </div>
+
+                            {/* Feedback Textarea */}
+                            <div className="space-y-2">
+                                <Label htmlFor="feedback">Feedback</Label>
+                                <Textarea
+                                    id="feedback"
+                                    value={feedback}
+                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFeedback(e.target.value)}
+                                    placeholder="Provide feedback to the student..."
+                                    rows={8}
+                                    className="resize-none"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Optional detailed feedback for the student
+                                </p>
+                            </div>
+
+                            {/* Submit Button */}
+                            <Button
+                                onClick={handleSubmitGrade}
+                                className="w-full"
+                                disabled={gradeMutation.isPending || !score}
+                            >
+                                {gradeMutation.isPending ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                                        {submission.status === "GRADED"
+                                            ? "Update Grade"
+                                            : "Submit Grade"}
+                                    </>
+                                )}
+                            </Button>
+
+                            {/* Quick Actions */}
+                            <div className="pt-4 border-t space-y-2">
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={handleNextStudent}
+                                    disabled={!hasNext}
+                                >
+                                    Save & Next Student
+                                    <ChevronRight className="h-4 w-4 ml-2" />
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Info Card */}
+                    <Card className="bg-blue-50 border-blue-200">
+                        <CardContent className="pt-6">
+                            <div className="flex gap-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <AlertCircle className="h-4 w-4 text-white" />
                                     </div>
                                 </div>
-
-                                {/* Feedback */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Feedback
-                                    </label>
-                                    <textarea
-                                        value={feedback}
-                                        onChange={(e) => setFeedback(e.target.value)}
-                                        rows={8}
-                                        placeholder="Provide detailed feedback for the student..."
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 text-slate-900 dark:text-white resize-none"
-                                    />
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="space-y-3">
-                                    <button
-                                        onClick={handleSaveGrade}
-                                        disabled={gradeMutation.isPending}
-                                        className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        <Save className="w-5 h-5" />
-                                        {gradeMutation.isPending ? "Saving..." : "Save Grade"}
-                                    </button>
-                                    <Link
-                                        href={`/teacher/assignments/${assignmentId}/submissions`}
-                                        className="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-medium rounded-lg transition-colors flex items-center justify-center"
-                                    >
-                                        Back to Submissions
-                                    </Link>
-                                </div>
-
-                                {/* Quick Score Buttons */}
-                                <div>
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Quick Score</p>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {[100, 90, 80, 70].map((quickScore) => (
-                                            <button
-                                                key={quickScore}
-                                                onClick={() => setScore(quickScore)}
-                                                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium rounded-lg transition-colors"
-                                            >
-                                                {quickScore}
-                                            </button>
-                                        ))}
-                                    </div>
+                                <div className="text-sm text-blue-800">
+                                    <p className="font-medium mb-1">Grading Tips</p>
+                                    <ul className="list-disc list-inside space-y-1 text-xs">
+                                        <li>Review all submitted files carefully</li>
+                                        <li>Provide constructive feedback</li>
+                                        <li>Consider late submission penalties if applicable</li>
+                                    </ul>
                                 </div>
                             </div>
-                        </motion.div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>

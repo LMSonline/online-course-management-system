@@ -12,7 +12,7 @@ import {
     QuizStatus,
 } from "@/services/assessment/assessment.types";
 import { useTeacherId } from "@/hooks/useProfile";
-import { QuizForm } from "@/core/components/teacher/quizzes";
+import { QuizForm } from "@/core/components/teacher/quiz";
 import {
     ArrowLeft,
     Plus,
@@ -177,12 +177,15 @@ export default function CreateEditQuizPage() {
             {/* Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Form */}
+                    {/* Quiz Settings Form */}
                     <div className="lg:col-span-2 space-y-6">
                         <QuizForm
-                            formData={formData}
-                            onChange={(field, value) => setFormData({ ...formData, [field]: value })}
-                            error={error}
+                            onSubmit={(data) => {
+                                setFormData(data);
+                                handleSubmit(new Event('submit') as any);
+                            }}
+                            onCancel={() => router.push("/teacher/quizzes")}
+                            isSubmitting={loading}
                         />
 
                         {/* Question Selection */}
