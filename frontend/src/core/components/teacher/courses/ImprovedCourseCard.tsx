@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Folder, Star, Trash2, Eye, Edit, RefreshCw, EyeOff, Lock, Unlock } from "lucide-react";
+import { SafeImage } from "@/core/components/ui/SafeImage";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { courseReviewService } from "@/services/courses/course-review.service";
 import { courseService } from "@/services/courses/course.service";
@@ -62,19 +62,15 @@ export function ImprovedCourseCard({
         <div className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
             {/* Thumbnail */}
             <div className="relative h-48 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 overflow-hidden">
-                {course.thumbnailUrl ? (
-                    <Image
-                        src={course.thumbnailUrl}
-                        alt={course.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Folder className="w-16 h-16 text-indigo-300 dark:text-indigo-700" />
-                    </div>
-                )}
+                <SafeImage
+                    src={course.thumbnailUrl}
+                    alt={course.title}
+                    fallback="/images/lesson_thum.png"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="group-hover:scale-110 transition-transform duration-300"
+                    objectFit="cover"
+                />
                 {course.isClosed && (
                     <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
                         Closed

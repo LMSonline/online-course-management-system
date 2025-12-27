@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
     MoreVertical,
     Edit,
@@ -21,6 +20,7 @@ import {
     FileText
 } from "lucide-react";
 import { CourseResponse, Difficulty } from "@/services/courses/course.types";
+import { SafeImage } from "@/core/components/ui/SafeImage";
 
 interface CourseCardProps {
     course: CourseResponse;
@@ -115,19 +115,15 @@ export const CourseCard = ({ course, onToggleStatus, onDelete, onRestore }: Cour
             <div className="flex flex-col sm:flex-row gap-0">
                 {/* Thumbnail */}
                 <div className="relative w-full sm:w-72 h-48 sm:h-auto flex-shrink-0 overflow-hidden bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
-                    {course.thumbnailUrl ? (
-                        <Image
-                            src={course.thumbnailUrl}
-                            alt={course.title}
-                            fill
-                            sizes="(max-width: 640px) 100vw, 288px"
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <BookOpen className="w-16 h-16 text-indigo-400/50" />
-                        </div>
-                    )}
+                    <SafeImage
+                        src={course.thumbnailUrl}
+                        alt={course.title}
+                        fallback="/images/lesson_thum.png"
+                        fill
+                        sizes="(max-width: 640px) 100vw, 288px"
+                        className="group-hover:scale-110 transition-transform duration-500"
+                        objectFit="cover"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                     {/* Status Badge */}

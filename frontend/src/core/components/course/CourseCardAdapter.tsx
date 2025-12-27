@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Star } from "lucide-react";
 import { CourseResponse } from "@/services/courses/course.types";
 import { cn } from "@/lib/cn";
+import { SafeImage } from "@/core/components/ui/SafeImage";
 
 /**
  * Adapter to convert CourseResponse to CourseCard props and render
@@ -37,13 +37,15 @@ export function CourseCardAdapter({ course, className }: CourseCardAdapterProps)
     >
       {/* Thumbnail */}
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl rounded-b-none">
-        <Image
-          src={course.thumbnailUrl || "/images/lesson_thum.png"}
+        <SafeImage
+          src={course.thumbnailUrl}
           alt={course.title}
+          fallback="/images/lesson_thum.png"
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className="transition-transform duration-300 group-hover:scale-[1.03]"
           priority={false}
+          objectFit="cover"
         />
       </div>
 
