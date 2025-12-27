@@ -11,18 +11,9 @@ declare module "axios" {
   }
 }
 
-// Ensure baseURL includes /api/v1
+// Get baseURL from ENV (already handles /api/v1 correctly)
 const getBaseURL = () => {
-  const baseURL = ENV.API.BASE_API_URL;
-  // If baseURL doesn't end with /api/v1, ensure it does
-  if (!baseURL.endsWith("/api/v1")) {
-    // If it ends with /api, add /v1, otherwise add /api/v1
-    if (baseURL.endsWith("/api")) {
-      return `${baseURL}/v1`;
-    }
-    return baseURL.endsWith("/") ? `${baseURL}api/v1` : `${baseURL}/api/v1`;
-  }
-  return baseURL;
+  return ENV.API.BASE_API_URL;
 };
 
 export const axiosClient = axios.create({
@@ -105,10 +96,24 @@ axiosClient.interceptors.response.use(
         const refreshToken = tokenStorage.getRefreshToken();
         if (!refreshToken) throw new Error("No refresh token");
 
-        // Use full path /api/v1/auth/refresh (baseURL already includes /api/v1)
-        const res = await refreshClient.post("/auth/refresh", {
+        // Get device info and IP address (same as auth.service)
+        const getDeviceInfo = (): string => {
+          return typeof navigator !== "undefined" ? navigator.userAgent : "unknown";
+        };
+
+        const getDefaultIpAddress = (): string => {
+          return "127.0.0.1";
+        };
+
+        // Refresh token payload with deviceInfo and ipAddress
+        const refreshPayload = {
           refreshToken,
-        });
+          deviceInfo: getDeviceInfo(),
+          ipAddress: getDefaultIpAddress(),
+        };
+
+        // Use /auth/refresh (baseURL already includes /api/v1)
+        const res = await refreshClient.post("/auth/refresh", refreshPayload);
 
         const { accessToken, refreshToken: newRefreshToken } = res.data.data;
         tokenStorage.setTokens(accessToken, newRefreshToken);
