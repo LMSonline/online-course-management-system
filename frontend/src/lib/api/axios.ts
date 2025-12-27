@@ -50,6 +50,8 @@ function processQueue(error: any, token: string | null) {
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = tokenStorage.getAccessToken();
+    const hasAuthHeader = !!(token && config.headers);
+    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -57,6 +59,17 @@ axiosClient.interceptors.request.use(
     // Attach contractKey to header if provided
     if (config.contractKey && config.headers) {
       config.headers["X-Contract-Key"] = config.contractKey;
+    }
+    
+    // DEV: Log every request
+    if (process.env.NODE_ENV === "development") {
+      const method = config.method?.toUpperCase() || "GET";
+      const url = config.url || "";
+      const fullUrl = config.baseURL ? `${config.baseURL}${url}` : url;
+      console.log(`[Axios] ${method} ${fullUrl}`, {
+        hasAuthHeader,
+        contractKey: config.contractKey,
+      });
     }
     
     return config;

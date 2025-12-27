@@ -31,16 +31,24 @@ export const useLogin = () => {
       // Store tokens
       tokenStorage.setTokens(data.accessToken, data.refreshToken);
 
-      // Set minimal auth info in store (accountId, role, email, fullName)
-      const internalRole = mapBackendRoleToInternal(data.user.role);
-      setAuth({
-        accountId: data.user.id,
-        role: internalRole,
-        email: data.user.email,
-        fullName: data.user.fullName ?? null,
-        username: data.user.username,
-        avatarUrl: data.user.avatarUrl ?? null,
-      });
+      // DEV: Log token storage (mask token for security)
+      if (process.env.NODE_ENV === "development") {
+        const tokenPreview = data.accessToken.substring(0, 12) + "...";
+        console.log("[Login] Tokens stored:", {
+          accessToken: tokenPreview,
+          hasRefreshToken: !!data.refreshToken,
+        });
+      }
+
+      // NOTE: Do NOT set accountId from login response
+      // Bootstrap will fetch /accounts/me immediately after login to get:
+      // - accountId (from data.accountId)
+      // - role (from data.role)
+      // - studentId (from data.profile.studentId if STUDENT)
+      // - teacherId (from data.profile.teacherId if TEACHER)
+      // 
+      // This ensures we use the canonical source of truth (/accounts/me)
+      // and avoid race conditions or stale data.
 
       // Invalidate AUTH_ME to trigger bootstrap flow
       queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.AUTH_ME] });
@@ -153,7 +161,9 @@ export const useCurrentUser = (enabled: boolean = true) => {
     queryKey: [CONTRACT_KEYS.AUTH_ME],
     queryFn: authService.getCurrentUser,
     enabled: enabled && !!tokenStorage.getAccessToken(),
-    retry: false,
+    retry: 0, // No retry on error
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     onSuccess: (data) => {
