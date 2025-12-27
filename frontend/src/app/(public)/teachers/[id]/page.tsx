@@ -10,21 +10,25 @@
  * - GET /teachers/:id
  * - GET /courses?teacherId=:id&page=&size=&sort=popular
  */
-export default function TeacherPublicProfileScreen({
+export default async function TeacherPublicProfileScreen({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams: { page?: string; size?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { id } = await params;
+  const sp = await searchParams;
+  const page = Array.isArray(sp.page) ? sp.page[0] : sp.page;
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1>TeacherPublicProfileScreen</h1>
       <p className="text-gray-600 dark:text-gray-400 mt-2">
-        Teacher ID (teacherId): {params.id}
+        Teacher ID (teacherId): {id}
       </p>
       <p className="text-gray-600 dark:text-gray-400">
-        Page: {searchParams.page || "1"}
+        Page: {page || "1"}
       </p>
       <div className="mt-4">
         <h2 className="font-semibold">TODO:</h2>

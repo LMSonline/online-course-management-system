@@ -1,8 +1,10 @@
 package vn.uit.lms.shared.dto.response.assignment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import vn.uit.lms.shared.constant.SubmissionStatus;
 
 import java.time.Instant;
@@ -10,8 +12,11 @@ import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Response DTO for assignment submission details")
 public class SubmissionResponse {
+
     @Schema(description = "Submission ID", example = "1")
     private Long id;
 

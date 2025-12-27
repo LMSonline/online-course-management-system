@@ -17,7 +17,7 @@ import {
     TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/core/components/ui/SafeImage";
 
 export default function EditCoursePage() {
     const params = useParams();
@@ -377,11 +377,13 @@ export default function EditCoursePage() {
                         <div className="space-y-4">
                             {thumbnailPreview && (
                                 <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
-                                    <Image
+                                    <SafeImage
                                         src={thumbnailPreview}
                                         alt="Thumbnail preview"
+                                        fallback="/images/lesson_thum.png"
                                         fill
                                         className="object-cover"
+                                        objectFit="cover"
                                     />
                                     {thumbnailFile && (
                                         <button

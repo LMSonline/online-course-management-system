@@ -5,5 +5,6 @@
 
 export { SafeImage } from "./SafeImage";
 export { CourseCardSkeleton, CourseCardSkeletonGrid } from "./CourseCardSkeleton";
-export { EmptyState, ErrorState } from "./EmptyState";
+export { EmptyState } from "./EmptyState";
+export { ErrorState } from "./ErrorState";
 

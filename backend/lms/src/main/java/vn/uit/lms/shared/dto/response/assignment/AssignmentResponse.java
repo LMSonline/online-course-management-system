@@ -1,14 +1,18 @@
 package vn.uit.lms.shared.dto.response.assignment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import vn.uit.lms.shared.constant.AssignmentType;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Response DTO for assignment details")
 public class AssignmentResponse {
     @Schema(description = "Assignment ID", example = "1")

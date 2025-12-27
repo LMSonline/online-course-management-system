@@ -7,16 +7,20 @@
  * TODO: Initial queries from Per-screenDataContract.md
  * - GET /admin/audit-logs?page=&size= (ADMIN_GET_AUDIT_LOGS)
  */
-export default function AdminAuditLogsScreen({
+export default async function AdminAuditLogsScreen({
   searchParams,
 }: {
-  searchParams: { page?: string; size?: string };
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const sp = await searchParams;
+  const page = Array.isArray(sp.page) ? sp.page[0] : sp.page;
+  const size = Array.isArray(sp.size) ? sp.size[0] : sp.size;
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1>AdminAuditLogsScreen</h1>
       <p className="text-gray-600 dark:text-gray-400 mt-2">
-        Page: {searchParams.page || "1"}
+        Page: {page || "1"}
       </p>
       <div className="mt-4">
         <h2 className="font-semibold">TODO:</h2>

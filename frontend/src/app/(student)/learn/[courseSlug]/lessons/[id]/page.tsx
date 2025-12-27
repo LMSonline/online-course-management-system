@@ -10,18 +10,23 @@
  * - GET /lessons/:id/resources
  * - GET /lessons/:id/comments?page=&size=
  */
-export default function LessonPlayerScreen({
+export default async function LessonPlayerScreen({
   params,
   searchParams,
 }: {
-  params: { courseSlug: string; id: string };
-  searchParams: { page?: string; size?: string };
+  params: Promise<{ courseSlug: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { courseSlug, id } = await params;
+  const sp = await searchParams;
+  const page = Array.isArray(sp.page) ? sp.page[0] : sp.page;
+  const size = Array.isArray(sp.size) ? sp.size[0] : sp.size;
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1>LessonPlayerScreen</h1>
       <p className="text-gray-600 dark:text-gray-400 mt-2">
-        Course slug: {params.courseSlug}, Lesson ID: {params.id}
+        Course slug: {courseSlug}, Lesson ID: {id}
       </p>
       <div className="mt-4">
         <h2 className="font-semibold">TODO:</h2>
