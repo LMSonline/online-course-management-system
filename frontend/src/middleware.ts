@@ -12,11 +12,18 @@ const PUBLIC_ROUTES = [
   "/404",
   "/500",
   "/loading",
+  "/search",
+  "/categories",
+  "/courses",
+  "/tags",
+  "/teachers",
+  "/lessons",
 ];
 
 const AUTH_ROUTES = [
   "/login",
   "/signup",
+  "/register", // docs-standard route
   "/forgot-password",
   "/reset-password",
   "/verify-email",
@@ -80,10 +87,49 @@ function hasRoleAccess(pathname: string, userRole: UserRole): boolean {
 }
 
 /**
+ * Redirect old /learner/* routes to new docs-standard routes
+ */
+function getRedirectForOldRoute(pathname: string): string | null {
+  // /learner/catalog -> /courses
+  if (pathname === "/learner/catalog" || pathname.startsWith("/learner/catalog?")) {
+    const searchParams = new URLSearchParams(pathname.split("?")[1] || "");
+    const query = searchParams.toString();
+    return `/courses${query ? `?${query}` : ""}`;
+  }
+
+  // /learner/courses/:slug -> /courses/:slug
+  const coursesMatch = pathname.match(/^\/learner\/courses\/([^\/]+)$/);
+  if (coursesMatch) {
+    return `/courses/${coursesMatch[1]}`;
+  }
+
+  // /learner/courses/:slug/learn -> /learn/:slug
+  const learnMatch = pathname.match(/^\/learner\/courses\/([^\/]+)\/learn$/);
+  if (learnMatch) {
+    return `/learn/${learnMatch[1]}`;
+  }
+
+  // /learner/dashboard -> /my-learning
+  if (pathname === "/learner/dashboard" || pathname.startsWith("/learner/dashboard?")) {
+    const searchParams = new URLSearchParams(pathname.split("?")[1] || "");
+    const query = searchParams.toString();
+    return `/my-learning${query ? `?${query}` : ""}`;
+  }
+
+  return null;
+}
+
+/**
  * Main middleware function
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Check for old route redirects first
+  const redirectPath = getRedirectForOldRoute(pathname);
+  if (redirectPath) {
+    return NextResponse.redirect(new URL(redirectPath, request.url));
+  }
 
   // Allow public routes
   if (isPublicRoute(pathname)) {
@@ -148,11 +194,11 @@ export function middleware(request: NextRequest) {
 function getDashboardUrl(role: UserRole): string {
   switch (role) {
     case "ADMIN":
-      return "/admin/dashboard";
+      return "/admin";
     case "TEACHER":
-      return "/teacher/dashboard";
+      return "/teacher/courses";
     case "STUDENT":
-      return "/learner/dashboard";
+      return "/my-learning";
     default:
       return "/";
   }
