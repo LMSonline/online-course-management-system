@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth/authStore";
 import { useAuthBootstrap } from "@/hooks/auth/useAuthBootstrap";
 import { tokenStorage } from "@/lib/api/tokenStorage";
@@ -44,9 +45,63 @@ export function LayoutGuard({
     redirectTo = "/login",
 }: GuardProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const { role, studentId, teacherId, isAuthenticated } = useAuthStore();
     const { isLoading: isBootstrapLoading, isReady: isBootstrapReady } = useAuthBootstrap();
     const hasToken = !!tokenStorage.getAccessToken();
+    
+    // Compute authentication status (stable value for useEffect deps)
+    const isAuthed = isAuthenticated();
+    
+    // State to track redirect status (prevent loops)
+    const [shouldRedirect, setShouldRedirect] = useState<{
+        type: "login" | "forbidden" | null;
+        url?: string;
+    }>({ type: null });
+
+    // Handle redirects in useEffect (client-side only)
+    useEffect(() => {
+        // Only run on client
+        if (typeof window === "undefined") return;
+
+        // If no token and bootstrap is ready (or no token at all), redirect to login
+        if (!hasToken || (isBootstrapReady && !isAuthed)) {
+            // Prevent redirect loop: don't redirect if already on login page
+            if (pathname === redirectTo || pathname.startsWith(redirectTo + "?")) {
+                return;
+            }
+            
+            const currentPath = window.location.pathname;
+            const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`;
+            
+            // Only redirect if not already redirecting
+            if (shouldRedirect.type !== "login") {
+                setShouldRedirect({ type: "login", url: redirectUrl });
+                router.replace(redirectUrl);
+            }
+            return;
+        }
+
+        // Check if user has required role
+        if (isBootstrapReady && role && !allowedRoles.includes(role)) {
+            // Prevent redirect loop: don't redirect if already on 403 page
+            if (pathname === "/403") {
+                return;
+            }
+            
+            // Only redirect if not already redirecting
+            if (shouldRedirect.type !== "forbidden") {
+                setShouldRedirect({ type: "forbidden", url: "/403" });
+                router.replace("/403");
+            }
+            return;
+        }
+
+        // Reset redirect state if conditions no longer apply
+        if (shouldRedirect.type !== null && hasToken && isAuthed && role && allowedRoles.includes(role)) {
+            setShouldRedirect({ type: null });
+        }
+    }, [hasToken, isBootstrapReady, isAuthed, role, allowedRoles, redirectTo, pathname, router, shouldRedirect.type]);
 
     // Wait for bootstrap to complete before checking auth
     if (hasToken && isBootstrapLoading) {
@@ -60,10 +115,8 @@ export function LayoutGuard({
         );
     }
 
-    // If no token and bootstrap is ready (or no token at all), redirect to login
-    if (!hasToken || (isBootstrapReady && !isAuthenticated())) {
-        const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-        router.replace(`${redirectTo}?redirect=${encodeURIComponent(currentPath)}`);
+    // If no token and bootstrap is ready (or no token at all), show redirect UI
+    if (!hasToken || (isBootstrapReady && !isAuthed)) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 <div className="text-center">
@@ -86,9 +139,8 @@ export function LayoutGuard({
         );
     }
 
-    // Check if user has required role
-    if (!role || !allowedRoles.includes(role)) {
-        router.replace("/403");
+    // Check if user has required role (show loading UI while redirect happens)
+    if (isBootstrapReady && role && !allowedRoles.includes(role)) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 <div className="text-center">
@@ -180,9 +232,35 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
  */
 export function GuestGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const pathname = usePathname();
     const { role, isAuthenticated } = useAuthStore();
     const { isLoading: isBootstrapLoading, isReady: isBootstrapReady } = useAuthBootstrap();
     const hasToken = !!tokenStorage.getAccessToken();
+    
+    // Compute authentication status (stable value for useEffect deps)
+    const isAuthed = isAuthenticated();
+    
+    // State to track redirect status (prevent loops)
+    const [hasRedirected, setHasRedirected] = useState(false);
+
+    // Handle redirect in useEffect (client-side only)
+    useEffect(() => {
+        // Only run on client
+        if (typeof window === "undefined") return;
+
+        // If authenticated and bootstrap ready, redirect to dashboard
+        if (hasToken && isBootstrapReady && isAuthed && role && !hasRedirected) {
+            const dashboardUrl = getDashboardUrl(role);
+            
+            // Prevent redirect loop: don't redirect if already on dashboard
+            if (pathname === dashboardUrl || pathname.startsWith(dashboardUrl + "/")) {
+                return;
+            }
+            
+            setHasRedirected(true);
+            router.replace(dashboardUrl);
+        }
+    }, [hasToken, isBootstrapReady, isAuthed, role, pathname, router, hasRedirected]);
 
     // Wait for bootstrap if token exists
     if (hasToken && isBootstrapLoading) {
@@ -193,10 +271,8 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // If authenticated and bootstrap ready, redirect to dashboard
-    if (hasToken && isBootstrapReady && isAuthenticated() && role) {
-        const dashboardUrl = getDashboardUrl(role);
-        router.replace(dashboardUrl);
+    // If authenticated and bootstrap ready, show redirect UI
+    if (hasToken && isBootstrapReady && isAuthed && role) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 <div className="text-center">
