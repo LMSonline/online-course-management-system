@@ -2,6 +2,7 @@ import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { DEMO_MODE } from "@/lib/env";
 import {
   LoginRequest,
   RegisterRequest,
@@ -164,6 +165,13 @@ export const authService = {
    * Returns: accountId, role, profile.studentId (if STUDENT), profile.teacherId (if TEACHER)
    */
   getCurrentUser: async (): Promise<MeUser> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<MeUser>>(
       "/accounts/me",
       {

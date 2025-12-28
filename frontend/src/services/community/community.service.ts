@@ -1,6 +1,7 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
+import { DEMO_MODE } from "@/lib/env";
 import {
   CommentCreateRequest,
   CommentResponse,
@@ -187,6 +188,13 @@ export const communityService = {
     page?: number,
     size?: number
   ): Promise<PageResponse<NotificationResponse>> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<
       ApiResponse<PageResponse<NotificationResponse>>
     >(NOTIFICATION_PREFIX, {
@@ -239,6 +247,13 @@ export const communityService = {
    * Count unread notifications
    */
   countUnreadNotifications: async (): Promise<number> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<number>>(
       `${NOTIFICATION_PREFIX}/count-unread`
     );

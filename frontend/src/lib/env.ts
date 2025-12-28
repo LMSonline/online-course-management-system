@@ -1,3 +1,5 @@
+export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 export const ENV = {
   API: {
     BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "",

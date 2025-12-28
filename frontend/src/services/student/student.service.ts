@@ -2,6 +2,7 @@ import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { DEMO_MODE } from "@/lib/env";
 
 export interface StudentProfile {
   id: number;
@@ -20,6 +21,13 @@ export const studentService = {
    * Endpoint: GET /api/v1/students/me
    */
   getMe: async (): Promise<StudentProfile> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<StudentProfile>>(
       "/students/me",
       {

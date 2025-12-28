@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
 import { useLogin, useResendVerificationEmail } from "@/hooks/useAuth";
 import Popup, { PopupType } from "@/core/components/public/Popup";
+import { DEMO_MODE } from "@/lib/env";
 
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
 
@@ -78,6 +80,26 @@ export default function LoginPage() {
   return (
     <main className="min-h-[72vh]">
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-10 md:py-14">
+        {/* DEMO_MODE Banner */}
+        {DEMO_MODE && (
+          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-yellow-400">Demo Mode: Authentication Disabled</p>
+                <p className="text-sm text-yellow-300/80 mt-1">
+                  All auth requirements are bypassed. You can explore the app without logging in.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/my-learning")}
+                className="px-4 py-2 rounded-xl bg-[var(--brand-600)] text-white hover:bg-[var(--brand-900)] transition"
+              >
+                Enter demo as Student
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="grid gap-8 md:grid-cols-2 items-center">
           {/* ==== Left: Login Card ==== */}
           <form

@@ -2,6 +2,7 @@ import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { DEMO_MODE } from "@/lib/env";
 
 export interface TeacherProfile {
   id: number;
@@ -44,6 +45,13 @@ export const teacherService = {
    * Endpoint: GET /api/v1/teachers/me
    */
   getMe: async (): Promise<TeacherProfile> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<TeacherProfile>>(
       "/teachers/me",
       {
@@ -75,6 +83,13 @@ export const teacherService = {
    * Note: id must be teacherId (NOT accountId)
    */
   getStats: async (teacherId: number): Promise<TeacherStats> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<TeacherStats>>(
       `/teachers/${teacherId}/stats`,
       {
@@ -94,6 +109,13 @@ export const teacherService = {
     teacherId: number,
     range?: string
   ): Promise<TeacherRevenue> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<TeacherRevenue>>(
       `/teachers/${teacherId}/revenue`,
       {

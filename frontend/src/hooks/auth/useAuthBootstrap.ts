@@ -7,6 +7,7 @@ import { authService } from "@/services/auth/auth.service";
 import { studentService } from "@/services/student/student.service";
 import { teacherService } from "@/services/teacher/teacher.service";
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { DEMO_MODE } from "@/lib/env";
 
 /**
  * Auth Bootstrap Hook
@@ -21,6 +22,18 @@ import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
  */
 export function useAuthBootstrap() {
   const { setAuth, setStudentId, setTeacherId, accountId, role, studentId, teacherId } = useAuthStore();
+
+  // DEMO_MODE: Skip all network calls, mark as ready immediately
+  if (DEMO_MODE) {
+    return {
+      isLoading: false,
+      isReady: true,
+      error: null,
+      accountData: null,
+      studentData: null,
+      teacherData: null,
+    };
+  }
 
   // Step 1: Get account info (AUTH_ME) - only if we have token and no accountId
   const hasToken = !!tokenStorage.getAccessToken();

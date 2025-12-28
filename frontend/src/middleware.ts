@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decodeJWT, isTokenExpired } from "@/lib/utils/jwt";
 import type { UserRole } from "@/services/auth/auth.types";
+import { DEMO_MODE } from "@/lib/env";
 
 // Route configuration
 const PUBLIC_ROUTES = [
@@ -124,6 +125,11 @@ function getRedirectForOldRoute(pathname: string): string | null {
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // DEMO_MODE: Skip all auth checks
+  if (DEMO_MODE) {
+    return NextResponse.next();
+  }
 
   // Check for old route redirects first
   const redirectPath = getRedirectForOldRoute(pathname);
