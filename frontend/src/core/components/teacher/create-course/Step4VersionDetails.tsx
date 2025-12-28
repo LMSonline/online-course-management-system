@@ -67,7 +67,7 @@ export const Step4VersionDetails = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Price (USD) <span className="text-red-500">*</span>
+                        Giá khóa học (VND) <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                         <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -76,13 +76,13 @@ export const Step4VersionDetails = ({
                             value={formData.price}
                             onChange={(e) => updateFormData({ price: Number(e.target.value) })}
                             min="0"
-                            step="0.01"
-                            placeholder="0.00"
+                            step="1000"
+                            placeholder="0"
                             className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                         />
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Set to 0 for free course
+                        Đặt giá 0 cho khóa học miễn phí
                     </p>
                 </div>
 
@@ -116,21 +116,25 @@ export const Step4VersionDetails = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Pass Score (%)
+                            Điểm đạt (0-10)
                         </label>
                         <input
                             type="number"
                             value={formData.passScore}
                             onChange={(e) => updateFormData({ passScore: Number(e.target.value) })}
                             min="0"
-                            max="100"
+                            max="10"
+                            step="0.1"
                             className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                         />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Ví dụ: 8.0 = điểm trung bình đạt
+                        </p>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Min Progress (%)
+                            Tiến độ tối thiểu (%)
                         </label>
                         <input
                             type="number"
@@ -144,16 +148,20 @@ export const Step4VersionDetails = ({
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            Final Weight (%)
+                            Trọng số điểm cuối (0-1)
                         </label>
                         <input
                             type="number"
                             value={formData.finalWeight}
                             onChange={(e) => updateFormData({ finalWeight: Number(e.target.value) })}
                             min="0"
-                            max="100"
+                            max="1"
+                            step="0.1"
                             className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                         />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Ví dụ: 0.6 = 60% trọng số
+                        </p>
                     </div>
                 </div>
 
@@ -182,29 +190,29 @@ export const Step4VersionDetails = ({
             {/* Summary Card */}
             <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                 <h3 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-4">
-                    Course Summary
+                    Tóm tắt khóa học
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Price</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Giá khóa học</p>
                         <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
-                            ${formData.price.toFixed(2)}
+                            {formData.price.toLocaleString('vi-VN')} ₫
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Duration</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Thời lượng</p>
                         <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
-                            {formData.durationDays} days
+                            {formData.durationDays} ngày
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Pass Score</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Điểm đạt</p>
                         <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
-                            {formData.passScore}%
+                            {formData.passScore}/10
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Min Progress</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-1">Tiến độ tối thiểu</p>
                         <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
                             {formData.minProgressPct}%
                         </p>

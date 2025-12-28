@@ -371,17 +371,99 @@ public class CourseVersionService {
                 .toList();
     }
 
-    // TODO: Implement updateCourseVersion method
-    // @Transactional
-    // @EnableSoftDeleteFilter
-    // public CourseVersionResponse updateCourseVersion(Long courseId, Long
-    // versionId, CourseVersionRequest request) {
-    // - Validate version is editable (DRAFT or REJECTED)
-    // - Verify teacher ownership
-    // - Update title, description, price, duration, passing criteria
-    // - Validate business rules (price >= 0, duration > 0, etc.)
-    // - Log changes for audit
-    // }
+    /**
+     * Update course version
+     * Only DRAFT or REJECTED versions can be updated
+     */
+    @Transactional
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse updateCourseVersion(Long courseId, Long versionId, CourseVersionRequest request) {
+        // Validate course and teacher ownership (same pattern as other methods)
+        Course course = courseService.validateCourse(courseId);
+        courseService.verifyTeacher(course);
+
+        // Get version and verify it belongs to course
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Course version not found or has been removed with id: " + versionId));
+
+        // Verify version belongs to this course
+        if (!version.getCourse().getId().equals(courseId)) {
+            throw new InvalidRequestException("Version does not belong to the specified course");
+        }
+
+        // Check if version is editable (only DRAFT or REJECTED)
+        if (version.getStatus() != CourseStatus.DRAFT && version.getStatus() != CourseStatus.REJECTED) {
+            throw new InvalidRequestException(
+                    "Only DRAFT or REJECTED versions can be updated. Current status: " + version.getStatus());
+        }
+
+        // Update fields (partial update - only provided fields)
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            version.setTitle(request.getTitle().trim());
+        }
+
+        if (request.getDescription() != null) {
+            version.setDescription(request.getDescription().trim());
+        }
+
+        // Update price with validation
+        if (request.getPrice() != null) {
+            if (request.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
+                throw new InvalidRequestException("Price cannot be negative");
+            }
+            version.setPrice(request.getPrice());
+        }
+
+        // Update duration with validation
+        if (request.getDurationDays() != null) {
+            if (request.getDurationDays() < 0) {
+                throw new InvalidRequestException("Duration cannot be negative");
+            }
+            version.setDurationDays(request.getDurationDays());
+        }
+
+        // Update passing score with validation
+        if (request.getPassScore() != null) {
+            if (request.getPassScore() < 0.0f || request.getPassScore() > 10.0f) {
+                throw new InvalidRequestException("Pass score must be between 0 and 10");
+            }
+            version.setPassScore(request.getPassScore());
+        }
+
+        // Update final weight with validation
+        if (request.getFinalWeight() != null) {
+            if (request.getFinalWeight() < 0.0f || request.getFinalWeight() > 1.0f) {
+                throw new InvalidRequestException("Final weight must be between 0 and 1");
+            }
+            version.setFinalWeight(request.getFinalWeight());
+        }
+
+        // Update min progress percentage with validation
+        if (request.getMinProgressPct() != null) {
+            if (request.getMinProgressPct() < 0 || request.getMinProgressPct() > 100) {
+                throw new InvalidRequestException("Minimum progress percentage must be between 0 and 100");
+            }
+            version.setMinProgressPct(request.getMinProgressPct());
+        }
+
+        if (request.getNotes() != null) {
+            version.setNotes(request.getNotes().trim());
+        }
+
+        // If status was REJECTED, reset to DRAFT when updating
+        if (version.getStatus() == CourseStatus.REJECTED) {
+            version.setStatus(CourseStatus.DRAFT);
+            version.setApprovedBy(null);
+            version.setApprovedAt(null);
+        }
+
+        // Save updated version
+        CourseVersion updatedVersion = courseVersionRepository.save(version);
+
+        // Return response (use same mapper as other methods)
+        return CourseVersionMapper.toCourseVersionResponse(updatedVersion);
+    }
 
     // TODO: Implement duplicateCourseVersion method
     // @Transactional

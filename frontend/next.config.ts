@@ -7,8 +7,28 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "example.com" },
       { protocol: "https", hostname: "**.amazonaws.com" },
       { protocol: "https", hostname: "**.cloudinary.com" },
+      { protocol: "https", hostname: "i.pravatar.cc" },
     ],
   },
+
+  // Performance optimizations
+  reactStrictMode: true,
+
+  // Optimize page transitions
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion", "date-fns"],
+  },
+
+  // Compiler optimizations
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? {
+            exclude: ["error", "warn"],
+          }
+        : false,
+  },
+
   /* config options here */
 };
 

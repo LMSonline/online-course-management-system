@@ -76,6 +76,18 @@ public class CourseVersionController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Update course version (only DRAFT or REJECTED)")
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/courses/{courseId}/versions/{versionId}")
+    @TeacherOnly
+    public ResponseEntity<CourseVersionResponse> updateCourseVersion(
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
+            @Parameter(description = "Version update details") @Valid @RequestBody CourseVersionRequest request) {
+        CourseVersionResponse response = courseVersionService.updateCourseVersion(courseId, versionId, request);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Delete course version (only DRAFT, PENDING, REJECTED)")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/courses/{courseId}/versions/{versionId}")

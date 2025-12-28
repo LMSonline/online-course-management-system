@@ -24,6 +24,7 @@ export interface StudentDetailResponse {
   status: AccountStatus;
   avatarUrl?: string;
   lastLoginAt?: string;
+  createdAt?: string; // Add createdAt for account creation date
   profile?: StudentProfile;
 }
 

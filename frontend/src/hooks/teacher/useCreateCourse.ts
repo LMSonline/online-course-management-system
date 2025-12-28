@@ -66,8 +66,8 @@ export const useCreateCourse = () => {
     versionDescription: "",
     price: 0,
     durationDays: 30,
-    passScore: 70,
-    finalWeight: 100,
+    passScore: 8.0, // Scale 0-10
+    finalWeight: 0.6, // Scale 0-1
     minProgressPct: 80,
     notes: "",
   });
@@ -121,27 +121,35 @@ export const useCreateCourse = () => {
     },
   });
 
-  // Mutation: Create Course Version
-  const createVersionMutation = useMutation({
+  // Mutation: Update Course Version (version 1 is auto-created with course)
+  const updateVersionMutation = useMutation({
     mutationFn: async ({
       courseId,
+      versionId,
       data,
     }: {
       courseId: number;
+      versionId: number;
       data: CourseVersionRequest;
     }) => {
-      return await courseVersionService.createCourseVersion(courseId, data);
+      return await courseVersionService.updateCourseVersion(
+        courseId,
+        versionId,
+        data
+      );
     },
-    onSuccess: () => {
-      toast.success("Course version created successfully!");
+    onSuccess: (updatedVersion) => {
+      toast.success("Course version updated successfully!");
       toast.success("Redirecting to course builder...");
-      // Redirect to course builder/management page
+      // Redirect to version content page to start building
       if (createdCourse) {
-        router.push(`/teacher/courses/${createdCourse.slug}/edit`);
+        router.push(
+          `/teacher/courses/${createdCourse.slug}/versions/${updatedVersion.id}/content`
+        );
       }
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to create course version");
+      toast.error(error?.message || "Failed to update course version");
     },
   });
 
@@ -208,21 +216,67 @@ export const useCreateCourse = () => {
   const submitVersion = async () => {
     if (!createdCourse) return;
 
-    const versionData: CourseVersionRequest = {
-      title: formData.versionTitle,
-      description: formData.versionDescription,
-      price: formData.price,
-      durationDays: formData.durationDays,
-      passScore: formData.passScore,
-      finalWeight: formData.finalWeight,
-      minProgressPct: formData.minProgressPct,
-      notes: formData.notes,
-    };
+    try {
+      // Get the first version that was auto-created
+      const versions = await courseVersionService.getCourseVersions(
+        createdCourse.id
+      );
+      if (!versions || versions.length === 0) {
+        toast.error("No version found for this course");
+        return;
+      }
 
-    await createVersionMutation.mutateAsync({
-      courseId: createdCourse.id,
-      data: versionData,
-    });
+      const firstVersion = versions[0];
+
+      // Check if user provided any custom version data
+      const hasCustomData =
+        formData.versionTitle.trim() ||
+        formData.versionDescription.trim() ||
+        formData.price !== 0 ||
+        formData.durationDays !== 30 ||
+        formData.passScore !== 8.0 ||
+        formData.finalWeight !== 0.6;
+
+      if (hasCustomData) {
+        const versionData: CourseVersionRequest = {
+          title: formData.versionTitle || firstVersion.title,
+          description: formData.versionDescription,
+          price: formData.price,
+          durationDays: formData.durationDays,
+          passScore: formData.passScore,
+          finalWeight: formData.finalWeight,
+          minProgressPct: formData.minProgressPct,
+          notes: formData.notes,
+        };
+
+        try {
+          await updateVersionMutation.mutateAsync({
+            courseId: createdCourse.id,
+            versionId: firstVersion.id,
+            data: versionData,
+          });
+        } catch (error: any) {
+          // If update fails (API not available), just redirect
+          console.warn(
+            "Update version API not available, redirecting...",
+            error
+          );
+          toast.warning("Version created with default values");
+          toast.success("Redirecting to course builder...");
+          router.push(
+            `/teacher/courses/${createdCourse.slug}/versions/${firstVersion.id}/content`
+          );
+        }
+      } else {
+        // No custom data, just redirect
+        toast.success("Course created successfully!");
+        router.push(
+          `/teacher/courses/${createdCourse.slug}/versions/${firstVersion.id}/content`
+        );
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to process version");
+    }
   };
 
   const skipThumbnail = () => {
@@ -239,7 +293,7 @@ export const useCreateCourse = () => {
   const isLoading =
     createCourseMutation.isPending ||
     uploadThumbnailMutation.isPending ||
-    createVersionMutation.isPending;
+    updateVersionMutation.isPending;
 
   return {
     formData,
@@ -261,6 +315,6 @@ export const useCreateCourse = () => {
     isLoading,
     isCreatingCourse: createCourseMutation.isPending,
     isUploadingThumbnail: uploadThumbnailMutation.isPending,
-    isCreatingVersion: createVersionMutation.isPending,
+    isUpdatingVersion: updateVersionMutation.isPending,
   };
 };

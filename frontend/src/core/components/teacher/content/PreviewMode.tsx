@@ -36,6 +36,8 @@ interface PreviewModeProps {
     onClose: () => void;
     chapters: ChapterResponse[];
     lessons: Record<number, LessonResponse[]>;
+    quizzes?: Record<number, QuizResponse[]>;
+    assignments?: Record<number, AssignmentResponse[]>;
     resources: Record<number, LessonResourceResponse[]>;
     courseTitle: string;
 }
@@ -45,6 +47,8 @@ export const PreviewMode = ({
     onClose,
     chapters,
     lessons,
+    quizzes = {},
+    assignments = {},
     resources,
     courseTitle,
 }: PreviewModeProps) => {
@@ -140,16 +144,19 @@ export const PreviewMode = ({
         };
     }, [selectedLesson]);
 
-    // Setup HLS player
+    // --- FIX: Robust HLS Player Logic ---
     useEffect(() => {
         if (!videoUrl || !videoRef.current) return;
 
         const video = videoRef.current;
 
+        // Cleanup previous HLS instance
         if (hlsRef.current) {
             hlsRef.current.destroy();
+            hlsRef.current = null;
         }
 
+        // Case 1: HLS Stream (Data URI or .m3u8)
         if (videoUrl.startsWith("data:application/vnd.apple.mpegurl")) {
             const base64Data = videoUrl.split(",")[1];
             const playlistContent = atob(base64Data);
@@ -172,6 +179,7 @@ export const PreviewMode = ({
                     video.play().catch(e => console.log("Auto-play prevented:", e));
                 });
 
+                // Robust Error Handling
                 hls.on(Hls.Events.ERROR, (event, data) => {
                     console.error("HLS Error:", data);
                     if (data.fatal) {
@@ -183,8 +191,11 @@ export const PreviewMode = ({
                                 hls.recoverMediaError();
                                 break;
                             default:
+                                console.log("Fatal error, cannot recover");
                                 if (selectedLesson) {
-                                    loadVideoStream(selectedLesson.id);
+                                    // Optional: Try reloading the stream URL entirely
+                                    // loadVideoStream(selectedLesson.id); 
+                                    hls.destroy();
                                 }
                                 break;
                         }
@@ -196,12 +207,14 @@ export const PreviewMode = ({
                     hls.destroy();
                 };
             } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                // Native HLS support (Safari)
                 video.src = videoUrl;
                 video.addEventListener("loadedmetadata", () => {
                     video.play().catch(e => console.log("Auto-play prevented:", e));
                 });
             }
         } else {
+            // --- FIX: Fallback for standard video files (MP4) or direct URLs ---
             video.src = videoUrl;
         }
 

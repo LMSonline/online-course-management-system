@@ -56,14 +56,14 @@ export type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD";
 
 export interface AnswerOptionRequest {
   content: string;
-  isCorrect: boolean;
+  correct: boolean;
   orderIndex?: number;
 }
 
 export interface AnswerOptionResponse {
   id: number;
   content: string;
-  isCorrect: boolean;
+  correct: boolean;
   orderIndex: number;
 }
 
@@ -137,7 +137,7 @@ export interface QuizAnswerResponse {
   questionText?: string;
   selectedOptionId?: number;
   textAnswer?: string;
-  isCorrect?: boolean;
+  correct?: boolean;
   pointsEarned?: number;
 }
 

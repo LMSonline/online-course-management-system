@@ -32,7 +32,6 @@ function processQueue(error: any, token: string | null) {
   failedQueue = [];
 }
 
-
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -75,7 +74,13 @@ axiosClient.interceptors.response.use(
 
       try {
         const refreshToken = tokenStorage.getRefreshToken();
-        if (!refreshToken) throw new Error("No refresh token");
+        if (!refreshToken) {
+          tokenStorage.clear();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          return Promise.reject(new Error("No refresh token"));
+        }
 
         const res = await refreshClient.post("/auth/refresh", {
           refreshToken,
@@ -107,4 +112,3 @@ axiosClient.interceptors.response.use(
     );
   }
 );
-

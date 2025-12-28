@@ -2,7 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { memo, useMemo } from "react";
 import {
   LayoutDashboard,
   BookOpen,
@@ -24,10 +26,10 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-export const TeacherSidebar = ({ isCollapsed, onToggle, isMobileOpen, onMobileClose }: SidebarProps) => {
+export const TeacherSidebar = memo(({ isCollapsed, onToggle, isMobileOpen, onMobileClose }: SidebarProps) => {
   const pathname = usePathname();
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { icon: LayoutDashboard, label: "Dashboard", href: "/teacher/dashboard" },
     { icon: BookOpen, label: "My Courses", href: "/teacher/courses" },
     { icon: HelpCircle, label: "Question Banks", href: "/teacher/question-banks" },
@@ -37,26 +39,24 @@ export const TeacherSidebar = ({ isCollapsed, onToggle, isMobileOpen, onMobileCl
     { icon: Bell, label: "Notifications", href: "/teacher/notifications" },
     { icon: Wallet, label: "Payouts", href: "/teacher/payouts" },
     { icon: BarChart3, label: "Analytics", href: "/teacher/analytics" },
-  ];
+  ], []);
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="h-16 flex items-center justify-center px-4 border-b border-slate-200 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50">
         {isCollapsed && !isMobile ? (
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <GraduationCap className="w-6 h-6 text-white" />
-          </div>
+          <Link href="/teacher/dashboard" className="flex items-center">
+            <Image src="/images/lms_logo.png" alt="LMS" width={28} height={28} priority />
+          </Link>
         ) : (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
+          <Link href="/teacher/dashboard" className="flex items-center gap-2">
+            <Image src="/images/lms_logo.png" alt="LMS" width={28} height={28} priority />
             <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white">EduLearn</h1>
+              <span className="text-lg font-extrabold tracking-tight text-[color:var(--brand-primary)]">LMS</span>
               <p className="text-xs text-slate-500 dark:text-slate-400">Teacher Portal</p>
             </div>
-          </div>
+          </Link>
         )}
       </div>
 
@@ -70,6 +70,7 @@ export const TeacherSidebar = ({ isCollapsed, onToggle, isMobileOpen, onMobileCl
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               onClick={() => {
                 if (isMobile) onMobileClose();
               }}
@@ -166,4 +167,6 @@ export const TeacherSidebar = ({ isCollapsed, onToggle, isMobileOpen, onMobileCl
       </AnimatePresence>
     </>
   );
-};
+});
+
+TeacherSidebar.displayName = 'TeacherSidebar';

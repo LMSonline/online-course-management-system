@@ -61,6 +61,24 @@ export const courseVersionService = {
   },
 
   /**
+   * Update course version (Teacher only)
+   */
+  updateCourseVersion: async (
+    courseId: number,
+    versionId: number,
+    payload: CourseVersionRequest
+  ): Promise<CourseVersionResponse> => {
+    console.log("Updating course version:", { courseId, versionId, payload });
+
+    const response = await axiosClient.put<ApiResponse<CourseVersionResponse>>(
+      `/courses/${courseId}/versions/${versionId}`,
+      payload
+    );
+
+    return unwrapResponse(response);
+  },
+
+  /**
    * Delete course version (Teacher only, only DRAFT/PENDING/REJECTED)
    */
   deleteCourseVersion: async (
