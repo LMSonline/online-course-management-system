@@ -23,21 +23,9 @@ import { DEMO_MODE } from "@/lib/env";
 export function useAuthBootstrap() {
   const { setAuth, setStudentId, setTeacherId, accountId, role, studentId, teacherId } = useAuthStore();
 
-  // DEMO_MODE: Skip all network calls, mark as ready immediately
-  if (DEMO_MODE) {
-    return {
-      isLoading: false,
-      isReady: true,
-      error: null,
-      accountData: null,
-      studentData: null,
-      teacherData: null,
-    };
-  }
-
   // Step 1: Get account info (AUTH_ME) - only if we have token and no accountId
   const hasToken = !!tokenStorage.getAccessToken();
-  const shouldFetchAuth = hasToken && !accountId;
+  const shouldFetchAuth = hasToken && !accountId && !DEMO_MODE;
 
   const {
     data: accountData,
@@ -58,6 +46,7 @@ export function useAuthBootstrap() {
   const internalRole = accountData ? mapBackendRoleToInternal(accountData.role) : role;
   const studentIdFromProfile = accountData?.profile?.studentId;
   const shouldFetchStudent =
+    !DEMO_MODE &&
     internalRole === "STUDENT" &&
     !!accountData &&
     !studentIdFromProfile && // Skip if studentId is in profile
@@ -80,6 +69,7 @@ export function useAuthBootstrap() {
   // Step 2b: Get teacher profile (only if role is TEACHER AND teacherId not in profile AND not already set)
   const teacherIdFromProfile = accountData?.profile?.teacherId;
   const shouldFetchTeacher =
+    !DEMO_MODE &&
     internalRole === "TEACHER" &&
     !!accountData &&
     !teacherIdFromProfile && // Skip if teacherId is in profile
@@ -101,6 +91,7 @@ export function useAuthBootstrap() {
 
   // Update auth store when account data arrives
   useEffect(() => {
+    if (DEMO_MODE) return;
     if (accountData) {
       const internalRole = mapBackendRoleToInternal(accountData.role);
       
@@ -142,6 +133,7 @@ export function useAuthBootstrap() {
 
   // Update studentId when student data arrives (fallback if not in profile)
   useEffect(() => {
+    if (DEMO_MODE) return;
     if (studentData) {
       if (process.env.NODE_ENV === "development") {
         console.log("[AuthBootstrap] studentId from /students/me:", studentData.id);
@@ -152,6 +144,7 @@ export function useAuthBootstrap() {
 
   // Update teacherId when teacher data arrives (fallback if not in profile)
   useEffect(() => {
+    if (DEMO_MODE) return;
     if (teacherData) {
       if (process.env.NODE_ENV === "development") {
         console.log("[AuthBootstrap] teacherId from /teachers/me:", teacherData.id);
@@ -162,9 +155,14 @@ export function useAuthBootstrap() {
 
   // Determine if bootstrap is ready
   const isLoading =
-    isLoadingAccount || isLoadingStudent || isLoadingTeacher;
+    !DEMO_MODE && (isLoadingAccount || isLoadingStudent || isLoadingTeacher);
 
   const isReady = (() => {
+    // DEMO_MODE: Always ready
+    if (DEMO_MODE) {
+      return true;
+    }
+    
     if (!hasToken) {
       // No token = guest, ready immediately
       return true;
@@ -195,6 +193,7 @@ export function useAuthBootstrap() {
 
   // DEV: Log bootstrap state transitions
   useEffect(() => {
+    if (DEMO_MODE) return;
     if (process.env.NODE_ENV === "development") {
       console.log("[AuthBootstrap] State:", {
         hasToken,
@@ -208,6 +207,18 @@ export function useAuthBootstrap() {
       });
     }
   }, [hasToken, isLoading, isReady, accountId, internalRole, studentIdFromProfile, studentId, teacherIdFromProfile, teacherId, accountError]);
+
+  // DEMO_MODE: Return early with ready state
+  if (DEMO_MODE) {
+    return {
+      isLoading: false,
+      isReady: true,
+      error: null,
+      accountData: null,
+      studentData: null,
+      teacherData: null,
+    };
+  }
 
   return {
     isLoading,

@@ -65,6 +65,7 @@ export const teacherService = {
    * Get teacher by ID (TEACHER_GET_BY_ID)
    * Contract Key: TEACHER_GET_BY_ID
    * Endpoint: GET /api/v1/teachers/{id}
+   * Note: id must be teacherId (NOT accountId)
    */
   getById: async (id: number): Promise<TeacherProfile> => {
     const response = await axiosClient.get<ApiResponse<TeacherProfile>>(

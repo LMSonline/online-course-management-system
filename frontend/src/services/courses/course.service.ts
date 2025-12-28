@@ -16,14 +16,19 @@ const ADMIN_COURSE_PREFIX = "/admin/courses";
 
 export const courseService = {
   /**
-   * Create a new course (Teacher only)
+   * Create a new course (COURSE_CREATE)
+   * Contract Key: COURSE_CREATE
+   * Endpoint: POST /api/v1/teacher/courses
    */
   createCourse: async (
     payload: CourseRequest
   ): Promise<CourseDetailResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseDetailResponse>>(
       TEACHER_COURSE_PREFIX,
-      payload
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.COURSE_CREATE,
+      }
     );
 
     return unwrapResponse(response);
@@ -115,29 +120,43 @@ export const courseService = {
   },
 
   /**
-   * Close a course (Teacher only)
+   * Close a course (COURSE_CLOSE_ACTION)
+   * Contract Key: COURSE_CLOSE_ACTION
+   * Endpoint: PATCH /api/v1/teacher/courses/{id}/close
    */
   closeCourse: async (id: number): Promise<CourseDetailResponse> => {
     const response = await axiosClient.patch<ApiResponse<CourseDetailResponse>>(
-      `${TEACHER_COURSE_PREFIX}/${id}/close`
+      `${TEACHER_COURSE_PREFIX}/${id}/close`,
+      {},
+      {
+        contractKey: CONTRACT_KEYS.COURSE_CLOSE_ACTION,
+      }
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Open a course (Teacher only)
+   * Open a course (COURSE_OPEN_ACTION)
+   * Contract Key: COURSE_OPEN_ACTION
+   * Endpoint: PATCH /api/v1/teacher/courses/{id}/open
    */
   openCourse: async (id: number): Promise<CourseDetailResponse> => {
     const response = await axiosClient.patch<ApiResponse<CourseDetailResponse>>(
-      `${TEACHER_COURSE_PREFIX}/${id}/open`
+      `${TEACHER_COURSE_PREFIX}/${id}/open`,
+      {},
+      {
+        contractKey: CONTRACT_KEYS.COURSE_OPEN_ACTION,
+      }
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Update a course (Teacher only)
+   * Update a course (COURSE_UPDATE)
+   * Contract Key: COURSE_UPDATE
+   * Endpoint: PUT /api/v1/teacher/courses/{id}
    */
   updateCourse: async (
     id: number,
@@ -145,17 +164,24 @@ export const courseService = {
   ): Promise<CourseDetailResponse> => {
     const response = await axiosClient.put<ApiResponse<CourseDetailResponse>>(
       `${TEACHER_COURSE_PREFIX}/${id}`,
-      payload
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.COURSE_UPDATE,
+      }
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Delete a course (Teacher only)
+   * Delete a course (COURSE_DELETE)
+   * Contract Key: COURSE_DELETE
+   * Endpoint: DELETE /api/v1/teacher/courses/{id}
    */
   deleteCourse: async (id: number): Promise<void> => {
-    await axiosClient.delete<void>(`${TEACHER_COURSE_PREFIX}/${id}`);
+    await axiosClient.delete<void>(`${TEACHER_COURSE_PREFIX}/${id}`, {
+      contractKey: CONTRACT_KEYS.COURSE_DELETE,
+    });
   },
 
   /**
@@ -170,7 +196,10 @@ export const courseService = {
   },
 
   /**
-   * Get my courses (Teacher only)
+   * Get my courses (TEACHER_GET_COURSES)
+   * Contract Key: TEACHER_GET_COURSES
+   * Endpoint: GET /api/v1/teachers/{id}/courses
+   * Note: This uses /teacher/courses which should map to teacher's own courses
    */
   getMyCourses: async (
     page?: number,
@@ -181,6 +210,7 @@ export const courseService = {
       ApiResponse<PageResponse<CourseResponse>>
     >(TEACHER_COURSE_PREFIX, {
       params: { page, size, filter },
+      contractKey: CONTRACT_KEYS.TEACHER_GET_COURSES,
     });
 
     return unwrapResponse(response);

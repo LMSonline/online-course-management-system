@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { courseService } from "@/services/courses/course.service";
 import { CourseResponse } from "@/services/courses/course.types";
 import { PageResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import { toast } from "sonner";
 
 export interface TeacherCoursesFilters {
@@ -28,7 +29,7 @@ export const useTeacherCourses = (filters: TeacherCoursesFilters = {}) => {
     error,
     refetch,
   } = useQuery<PageResponse<CourseResponse>>({
-    queryKey: ["teacher-courses", filters],
+    queryKey: [CONTRACT_KEYS.TEACHER_GET_COURSES, filters],
     queryFn: async () => {
       const result = await courseService.getMyCourses(
         filters.page,
@@ -37,13 +38,16 @@ export const useTeacherCourses = (filters: TeacherCoursesFilters = {}) => {
       );
       return result;
     },
+    staleTime: 60_000, // 1 minute
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   // Mutation for closing a course
   const closeCourse = useMutation({
     mutationFn: (courseId: number) => courseService.closeCourse(courseId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.TEACHER_GET_COURSES] });
       toast.success("Course closed successfully");
     },
     onError: (error: any) => {
@@ -55,7 +59,7 @@ export const useTeacherCourses = (filters: TeacherCoursesFilters = {}) => {
   const openCourse = useMutation({
     mutationFn: (courseId: number) => courseService.openCourse(courseId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.TEACHER_GET_COURSES] });
       toast.success("Course opened successfully");
     },
     onError: (error: any) => {
@@ -67,7 +71,7 @@ export const useTeacherCourses = (filters: TeacherCoursesFilters = {}) => {
   const deleteCourse = useMutation({
     mutationFn: (courseId: number) => courseService.deleteCourse(courseId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.TEACHER_GET_COURSES] });
       toast.success("Course deleted successfully");
     },
     onError: (error: any) => {
@@ -79,7 +83,7 @@ export const useTeacherCourses = (filters: TeacherCoursesFilters = {}) => {
   const restoreCourse = useMutation({
     mutationFn: (courseId: number) => courseService.restoreCourse(courseId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.TEACHER_GET_COURSES] });
       toast.success("Course restored successfully");
     },
     onError: (error: any) => {

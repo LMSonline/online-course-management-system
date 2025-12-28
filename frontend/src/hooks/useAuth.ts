@@ -26,7 +26,16 @@ export const useLogin = () => {
     AppError,
     LoginRequest & { redirectUrl?: string }
   >({
-    mutationFn: ({ redirectUrl, ...loginData }) => authService.login(loginData),
+    mutationFn: ({ redirectUrl, ...loginData }) => {
+      // DEV: Log login attempt
+      if (process.env.NODE_ENV === "development") {
+        console.log("[Login] Attempting login:", {
+          login: loginData.login,
+          hasPassword: !!loginData.password,
+        });
+      }
+      return authService.login(loginData);
+    },
     onSuccess: (data, variables) => {
       // Store tokens
       tokenStorage.setTokens(data.accessToken, data.refreshToken);
@@ -37,6 +46,7 @@ export const useLogin = () => {
         console.log("[Login] Tokens stored:", {
           accessToken: tokenPreview,
           hasRefreshToken: !!data.refreshToken,
+          role: data.role,
         });
       }
 
@@ -53,22 +63,40 @@ export const useLogin = () => {
       // Invalidate AUTH_ME to trigger bootstrap flow
       queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.AUTH_ME] });
 
+      // DEV: Log redirect plan
+      if (process.env.NODE_ENV === "development") {
+        console.log("[Login] Redirect plan:", {
+          redirectUrl: variables.redirectUrl,
+          role: data.role,
+        });
+      }
+
       toast.success("Login successful!");
 
-      // Redirect based on role
+      // Redirect based on redirectUrl or default dashboard
       // Note: Domain IDs (studentId/teacherId) will be hydrated by useAuthBootstrap
+      // We wait a bit for bootstrap to start, then redirect
       setTimeout(() => {
         if (variables.redirectUrl) {
+          if (process.env.NODE_ENV === "development") {
+            console.log("[Login] Redirecting to:", variables.redirectUrl);
+          }
           router.replace(variables.redirectUrl);
         } else {
-          const role = internalRole;
-          if (role === "ADMIN") {
-            router.replace("/admin");
-          } else if (role === "TEACHER") {
-            router.replace("/teacher/courses");
-          } else {
-            router.replace("/my-learning");
+          // Default redirect based on role from login response (if available)
+          // Otherwise, bootstrap will handle role-based redirect via guards
+          const roleFromResponse = data.role;
+          let targetPath = "/my-learning";
+          if (roleFromResponse === "ADMIN") {
+            targetPath = "/admin";
+          } else if (roleFromResponse === "TEACHER" || roleFromResponse === "CREATOR") {
+            targetPath = "/teacher/courses";
           }
+          
+          if (process.env.NODE_ENV === "development") {
+            console.log("[Login] Redirecting to default:", targetPath);
+          }
+          router.replace(targetPath);
         }
       }, 150);
     },

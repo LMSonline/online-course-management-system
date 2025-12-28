@@ -1,6 +1,7 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import { DEMO_MODE } from "@/lib/env";
 import {
   CommentCreateRequest,
@@ -24,7 +25,9 @@ export const communityService = {
   // ===========================
 
   /**
-   * Create course comment
+   * Create course comment (COMMENT_CREATE_COURSE)
+   * Contract Key: COMMENT_CREATE_COURSE
+   * Endpoint: POST /api/v1/courses/{courseId}/comments
    */
   createCourseComment: async (
     courseId: number,
@@ -32,13 +35,18 @@ export const communityService = {
   ): Promise<CommentResponse> => {
     const response = await axiosClient.post<ApiResponse<CommentResponse>>(
       `${COMMENT_PREFIX}/courses/${courseId}/comments`,
-      payload
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.COMMENT_CREATE_COURSE,
+      }
     );
     return unwrapResponse(response);
   },
 
   /**
-   * Create lesson comment
+   * Create lesson comment (COMMENT_CREATE_LESSON)
+   * Contract Key: COMMENT_CREATE_LESSON
+   * Endpoint: POST /api/v1/lessons/{lessonId}/comments
    */
   createLessonComment: async (
     lessonId: number,
@@ -46,7 +54,10 @@ export const communityService = {
   ): Promise<CommentResponse> => {
     const response = await axiosClient.post<ApiResponse<CommentResponse>>(
       `${COMMENT_PREFIX}/lessons/${lessonId}/comments`,
-      payload
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.COMMENT_CREATE_LESSON,
+      }
     );
     return unwrapResponse(response);
   },
@@ -66,21 +77,31 @@ export const communityService = {
   },
 
   /**
-   * Get course comments
+   * Get course comments (COMMENT_GET_COURSE_LIST)
+   * Contract Key: COMMENT_GET_COURSE_LIST
+   * Endpoint: GET /api/v1/courses/{courseId}/comments
    */
   getCourseComments: async (courseId: number): Promise<CommentResponse[]> => {
     const response = await axiosClient.get<ApiResponse<CommentResponse[]>>(
-      `${COMMENT_PREFIX}/courses/${courseId}/comments`
+      `${COMMENT_PREFIX}/courses/${courseId}/comments`,
+      {
+        contractKey: CONTRACT_KEYS.COMMENT_GET_COURSE_LIST,
+      }
     );
     return unwrapResponse(response);
   },
 
   /**
-   * Get lesson comments
+   * Get lesson comments (COMMENT_GET_LESSON_LIST)
+   * Contract Key: COMMENT_GET_LESSON_LIST
+   * Endpoint: GET /api/v1/lessons/{lessonId}/comments
    */
   getLessonComments: async (lessonId: number): Promise<CommentResponse[]> => {
     const response = await axiosClient.get<ApiResponse<CommentResponse[]>>(
-      `${COMMENT_PREFIX}/lessons/${lessonId}/comments`
+      `${COMMENT_PREFIX}/lessons/${lessonId}/comments`,
+      {
+        contractKey: CONTRACT_KEYS.COMMENT_GET_LESSON_LIST,
+      }
     );
     return unwrapResponse(response);
   },
@@ -96,25 +117,35 @@ export const communityService = {
   },
 
   /**
-   * Update comment
+   * Update comment (COMMENT_UPDATE)
+   * Contract Key: COMMENT_UPDATE
+   * Endpoint: PUT /api/v1/comments/{id}
    */
   updateComment: async (
     commentId: number,
     payload: CommentCreateRequest
   ): Promise<CommentResponse> => {
     const response = await axiosClient.put<ApiResponse<CommentResponse>>(
-      `${COMMENT_PREFIX}/${commentId}`,
-      payload
+      `${COMMENT_PREFIX}/comments/${commentId}`,
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.COMMENT_UPDATE,
+      }
     );
     return unwrapResponse(response);
   },
 
   /**
-   * Delete comment
+   * Delete comment (COMMENT_DELETE)
+   * Contract Key: COMMENT_DELETE
+   * Endpoint: DELETE /api/v1/comments/{id}
    */
   deleteComment: async (commentId: number): Promise<void> => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `${COMMENT_PREFIX}/${commentId}`
+      `${COMMENT_PREFIX}/comments/${commentId}`,
+      {
+        contractKey: CONTRACT_KEYS.COMMENT_DELETE,
+      }
     );
     return unwrapResponse(response);
   },
@@ -214,11 +245,17 @@ export const communityService = {
   },
 
   /**
-   * Mark notification as read
+   * Mark notification as read (NOTIFICATION_MARK_READ_ACTION)
+   * Contract Key: NOTIFICATION_MARK_READ_ACTION
+   * Endpoint: POST /api/v1/notifications/{id}/mark-read
    */
   markNotificationAsRead: async (id: number): Promise<void> => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      `${NOTIFICATION_PREFIX}/${id}/mark-read`
+      `${NOTIFICATION_PREFIX}/${id}/mark-read`,
+      {},
+      {
+        contractKey: CONTRACT_KEYS.NOTIFICATION_MARK_READ_ACTION,
+      }
     );
     return unwrapResponse(response);
   },

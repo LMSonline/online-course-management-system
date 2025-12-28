@@ -80,7 +80,7 @@ export function ImprovedCourseCard({
 
             {/* Content */}
             <div className="p-6 flex flex-col flex-1">
-                <Link href={`/teacher/courses/${course.slug}`}>
+                <Link href={`/courses/${course.slug}/versions`}>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors line-clamp-2">
                         {course.title}
                     </h3>
@@ -138,7 +138,7 @@ export function ImprovedCourseCard({
                 {/* Actions - Fixed at bottom */}
                 <div className="mt-auto pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
                     <Link
-                        href={`/teacher/courses/${course.slug}`}
+                        href={`/courses/${course.slug}/versions`}
                         className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors text-center"
                     >
                         Manage

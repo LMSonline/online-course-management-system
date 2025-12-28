@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SafeImage } from "@/core/components/ui/SafeImage";
 
 export type Course = {
   id?: string;
@@ -63,9 +63,10 @@ export default function CourseCard(props: Course) {
     <Wrapper href={href} className={className}>
       {/* Media: chỉ overflow-hidden ở ảnh để không cắt panel/viền */}
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl rounded-b-none">
-        <Image
+        <SafeImage
           src={image}
           alt={title}
+          fallback="/images/lesson_thum.png"
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"

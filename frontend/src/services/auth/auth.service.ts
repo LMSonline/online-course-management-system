@@ -52,6 +52,15 @@ export const authService = {
   login: async (payload: LoginRequest): Promise<LoginResponse> => {
     const enrichedPayload = enrichWithDeviceInfo(payload);
     
+    // DEV: Log API call
+    if (process.env.NODE_ENV === "development") {
+      console.log("[AuthService] POST /auth/login", {
+        login: payload.login,
+        baseURL: axiosClient.defaults.baseURL,
+        endpoint: `${AUTH_PREFIX}/login`,
+      });
+    }
+    
     const response = await axiosClient.post<ApiResponse<LoginResponse>>(
       `${AUTH_PREFIX}/login`,
       enrichedPayload,
@@ -59,6 +68,15 @@ export const authService = {
         contractKey: CONTRACT_KEYS.AUTH_LOGIN,
       }
     );
+    
+    // DEV: Log response
+    if (process.env.NODE_ENV === "development") {
+      console.log("[AuthService] Login response:", {
+        status: response.status,
+        hasAccessToken: !!response.data.data?.accessToken,
+        role: response.data.data?.role,
+      });
+    }
     
     return unwrapResponse(response);
   },

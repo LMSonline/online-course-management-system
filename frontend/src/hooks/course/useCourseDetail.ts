@@ -12,7 +12,9 @@ export function useCourseDetail(slug: string) {
     queryKey: [CONTRACT_KEYS.COURSE_GET_DETAIL, slug],
     queryFn: () => courseService.getCourseBySlug(slug),
     enabled: !!slug,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60_000, // 1 minute
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 }
 

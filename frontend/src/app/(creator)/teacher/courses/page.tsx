@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from 'react';
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Plus, Search, Folder, Tag, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { courseService } from "@/services/courses/course.service";
@@ -14,20 +15,20 @@ import { toast } from "sonner";
  * Layout: CreatorLayout
  * Guard: requireCreator
  */
-export default function TeacherCourseListScreen({
-  searchParams,
-}: {
-  searchParams: { page?: string; size?: string };
-}) {
+export default function TeacherCourseListScreen() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const currentPage = parseInt(searchParams.page || "0", 10);
+  const currentPage = parseInt(searchParams.get("page") || "0", 10);
 
   // Fetch courses
   const { data: coursesData, isLoading, refetch } = useQuery({
-    queryKey: ["teacher-courses", currentPage, searchQuery],
+    queryKey: ["TEACHER_GET_COURSES", { page: currentPage, size: 12, filter: searchQuery || undefined }],
     queryFn: () => courseService.getMyCourses(currentPage, 12, searchQuery || undefined),
+    staleTime: 60_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   const courses = coursesData?.items || [];

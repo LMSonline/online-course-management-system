@@ -51,11 +51,6 @@ export function LayoutGuard({
     const { isLoading: isBootstrapLoading, isReady: isBootstrapReady } = useAuthBootstrap();
     const hasToken = !!tokenStorage.getAccessToken();
     
-    // DEMO_MODE: Always allow render, skip all auth checks
-    if (DEMO_MODE) {
-        return <>{children}</>;
-    }
-    
     // Compute authentication status (stable value for useEffect deps)
     const isAuthed = isAuthenticated();
     
@@ -68,6 +63,11 @@ export function LayoutGuard({
     const allowedRolesKey = JSON.stringify(allowedRoles);
     if (allowedRolesRef.current !== allowedRolesKey) {
         allowedRolesRef.current = allowedRolesKey;
+    }
+
+    // DEMO_MODE: Always allow render, skip all auth checks (after hooks)
+    if (DEMO_MODE) {
+        return <>{children}</>;
     }
 
     // Handle redirects in useEffect (client-side only)
@@ -254,16 +254,16 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
     const { isLoading: isBootstrapLoading, isReady: isBootstrapReady } = useAuthBootstrap();
     const hasToken = !!tokenStorage.getAccessToken();
     
-    // DEMO_MODE: Always allow render, skip all auth checks
-    if (DEMO_MODE) {
-        return <>{children}</>;
-    }
-    
     // Compute authentication status (stable value for useEffect deps)
     const isAuthed = isAuthenticated();
     
     // State to track redirect status (prevent loops)
     const [hasRedirected, setHasRedirected] = useState(false);
+
+    // DEMO_MODE: Always allow render, skip all auth checks (after hooks)
+    if (DEMO_MODE) {
+        return <>{children}</>;
+    }
 
     // Handle redirect in useEffect (client-side only)
     useEffect(() => {

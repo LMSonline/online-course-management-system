@@ -5,18 +5,20 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Check, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth.schema";
 import { useLogin, useResendVerificationEmail } from "@/hooks/useAuth";
+import { useAuthStore } from "@/lib/auth/authStore";
 import Popup, { PopupType } from "@/core/components/public/Popup";
 import { DEMO_MODE } from "@/lib/env";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect");
+  const redirectUrl = searchParams.get("redirect") || searchParams.get("next");
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [popup, setPopup] = useState<{
     type: PopupType;
     title: string;
@@ -27,6 +29,7 @@ export default function LoginPage() {
 
   const { mutate: login, isPending } = useLogin();
   const { mutate: resendEmail } = useResendVerificationEmail();
+  const authStore = useAuthStore();
 
   const {
     register,
@@ -42,6 +45,15 @@ export default function LoginPage() {
   });
 
   const onSubmit = (data: LoginFormData) => {
+    // DEV: Log form submission
+    if (process.env.NODE_ENV === "development") {
+      console.log("[LoginPage] Form submitted:", {
+        email: data.email,
+        hasPassword: !!data.password,
+        redirectUrl: redirectUrl || undefined,
+      });
+    }
+    
     login(
       {
         login: data.email,
@@ -50,6 +62,15 @@ export default function LoginPage() {
       },
       {
         onError: (error) => {
+          // DEV: Log error
+          if (process.env.NODE_ENV === "development") {
+            console.error("[LoginPage] Login error:", {
+              code: error.code,
+              message: error.message,
+              status: error.status,
+            });
+          }
+          
           // Handle email not verified error
           if (error.code === "EMAIL_NOT_VERIFIED") {
             setPopup({
@@ -275,6 +296,89 @@ export default function LoginPage() {
           open={true}
           onClose={popup.onClose}
         />
+      )}
+
+      {/* Debug Panel */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mt-8 max-w-6xl mx-auto">
+          <button
+            onClick={() => setShowDebugPanel(!showDebugPanel)}
+            className="w-full flex items-center justify-between px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition"
+          >
+            <span>Debug: Auth State</span>
+            {showDebugPanel ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+          {showDebugPanel && (
+            <div className="mt-2 p-4 bg-slate-900/80 border border-slate-700 rounded-lg text-xs font-mono">
+              <div className="space-y-1 text-slate-300">
+                <div>
+                  <span className="text-slate-500">accountId:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.accountId ?? "null"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">role:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.role ?? "null"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">studentId:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.studentId ?? "null"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">teacherId:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.teacherId ?? "null"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">email:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.email ?? "null"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">username:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.username ?? "null"}
+                  </span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-slate-700">
+                  <span className="text-slate-500">isAuthenticated:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.isAuthenticated() ? "true" : "false"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">isStudent:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.isStudent() ? "true" : "false"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">isTeacher:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.isTeacher() ? "true" : "false"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">isAdmin:</span>{" "}
+                  <span className="text-yellow-400">
+                    {authStore.isAdmin() ? "true" : "false"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </main>
   );
