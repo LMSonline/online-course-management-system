@@ -347,7 +347,7 @@ export default function CourseOverviewPage() {
                                 {publishedVersion && (
                                     <>
                                         <Link
-                                            href={`/courses/${course.slug}`}
+                                            href={`/teacher/courses/${course.slug}/versions/${publishedVersion.id}/view`}
                                             target="_blank"
                                             className="flex items-center gap-3 p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors group border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
                                         >

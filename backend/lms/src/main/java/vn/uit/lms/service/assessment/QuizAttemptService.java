@@ -202,4 +202,82 @@ public class QuizAttemptService {
                 .map(QuizAttemptMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Abandon/cancel a quiz attempt (timeout or student gave up)
+     */
+    @Transactional
+    public QuizAttemptResponse abandonQuizAttempt(Long quizId, Long attemptId) {
+        QuizAttempt attempt = quizAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz attempt not found"));
+
+        if (!attempt.getQuiz().getId().equals(quizId)) {
+            throw new InvalidRequestException("Attempt does not belong to this quiz");
+        }
+
+        if (attempt.isCompleted()) {
+            throw new InvalidRequestException("Cannot abandon a completed attempt");
+        }
+
+        // Use rich domain logic to abandon
+        attempt.abandon();
+
+        attempt = quizAttemptRepository.save(attempt);
+        return QuizAttemptMapper.toResponse(attempt);
+    }
+
+    /**
+     * Get quiz attempts by student for a specific quiz
+     */
+    public List<QuizAttemptResponse> getStudentQuizAttemptsByQuiz(Long studentId, Long quizId) {
+        return quizAttemptRepository.findByStudentId(studentId).stream()
+                .filter(a -> a.getQuiz().getId().equals(quizId))
+                .map(QuizAttemptMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get best attempt score for a student on a quiz
+     */
+    public Double getBestScore(Long studentId, Long quizId) {
+        return quizAttemptRepository.findByStudentId(studentId).stream()
+                .filter(a -> a.getQuiz().getId().equals(quizId))
+                .filter(QuizAttempt::isCompleted)
+                .map(QuizAttempt::getTotalScore)
+                .filter(score -> score != null)
+                .max(Double::compare)
+                .orElse(null);
+    }
+
+    /**
+     * Get remaining time for an in-progress attempt
+     */
+    public Long getRemainingTime(Long attemptId) {
+        QuizAttempt attempt = quizAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz attempt not found"));
+
+        if (!attempt.isInProgress()) {
+            return 0L;
+        }
+
+        return attempt.getRemainingTimeMinutes();
+    }
+
+    /**
+     * Auto-finish attempts that exceeded time limit (scheduled task)
+     */
+    @Transactional
+    public void autoFinishExpiredAttempts() {
+        List<QuizAttempt> inProgressAttempts = quizAttemptRepository.findAll().stream()
+                .filter(QuizAttempt::isInProgress)
+                .filter(QuizAttempt::isTimeExceeded)
+                .collect(Collectors.toList());
+
+        for (QuizAttempt attempt : inProgressAttempts) {
+            // Calculate score from existing answers
+            double score = calculateScore(attempt);
+            attempt.finish(score);
+            quizAttemptRepository.save(attempt);
+        }
+    }
 }

@@ -1,7 +1,7 @@
 "use client";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Edit, Trash2 } from "lucide-react";
+import { GripVertical, Edit, Trash2, FileText, Video, CheckSquare, ClipboardList } from "lucide-react";
 import { LessonResponse } from "@/services/courses/content/lesson.types";
 
 interface LessonItemProps {
@@ -10,6 +10,10 @@ interface LessonItemProps {
     getLessonIcon: (type: string) => string;
     onEdit: (lesson: LessonResponse) => void;
     onDelete: (lessonId: number) => void;
+    onManageVideo?: (lesson: LessonResponse) => void;
+    onManageDocument?: (lesson: LessonResponse) => void;
+    onManageQuiz?: (lessonId: number) => void;
+    onManageAssignment?: (lessonId: number) => void;
 }
 
 export const LessonItem = ({
@@ -18,6 +22,10 @@ export const LessonItem = ({
     getLessonIcon,
     onEdit,
     onDelete,
+    onManageVideo,
+    onManageDocument,
+    onManageQuiz,
+    onManageAssignment,
 }: LessonItemProps) => {
     const {
         attributes,
@@ -74,23 +82,22 @@ export const LessonItem = ({
                         <>
                             <span>•</span>
                             <span
-                                className={`font-medium px-2 py-0.5 rounded text-xs ${
-                                    lesson.videoStatus === "READY"
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                                        : lesson.videoStatus === "PROCESSING"
+                                className={`font-medium px-2 py-0.5 rounded text-xs ${lesson.videoStatus === "READY"
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                    : lesson.videoStatus === "PROCESSING"
                                         ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse"
                                         : lesson.videoStatus === "UPLOADED"
-                                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 animate-pulse"
-                                        : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
-                                }`}
+                                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 animate-pulse"
+                                            : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+                                    }`}
                                 title={
                                     lesson.videoStatus === "READY"
                                         ? "Video is ready to stream"
                                         : lesson.videoStatus === "PROCESSING"
-                                        ? "Video is being processed to HLS format"
-                                        : lesson.videoStatus === "UPLOADED"
-                                        ? "Video uploaded, waiting to process"
-                                        : "Video processing failed"
+                                            ? "Video is being processed to HLS format"
+                                            : lesson.videoStatus === "UPLOADED"
+                                                ? "Video uploaded, waiting to process"
+                                                : "Video processing failed"
                                 }
                             >
                                 {lesson.videoStatus}
@@ -106,21 +113,82 @@ export const LessonItem = ({
                 </div>
             </div>
 
-            <button
-                onClick={() => onEdit(lesson)}
-                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                title="Edit Lesson"
-            >
-                <Edit className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            </button>
+            <div className="flex items-center gap-1">
+                {/* Type-specific Actions */}
+                {lesson.type === "VIDEO" && onManageVideo && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onManageVideo(lesson);
+                        }}
+                        className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-950 rounded-lg transition-colors"
+                        title="Manage Video"
+                    >
+                        <Video className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    </button>
+                )}
 
-            <button
-                onClick={() => onDelete(lesson.id)}
-                className="p-2 hover:bg-red-100 dark:hover:bg-red-950 rounded-lg transition-colors"
-                title="Delete Lesson"
-            >
-                <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-            </button>
+                {lesson.type === "DOCUMENT" && onManageDocument && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onManageDocument(lesson);
+                        }}
+                        className="p-2 hover:bg-emerald-100 dark:hover:bg-emerald-950 rounded-lg transition-colors"
+                        title="Manage Documents"
+                    >
+                        <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    </button>
+                )}
+
+                {lesson.type === "QUIZ" && onManageQuiz && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onManageQuiz(lesson.id);
+                        }}
+                        className="p-2 hover:bg-purple-100 dark:hover:bg-purple-950 rounded-lg transition-colors"
+                        title="Manage Quiz"
+                    >
+                        <CheckSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </button>
+                )}
+
+                {lesson.type === "ASSIGNMENT" && onManageAssignment && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onManageAssignment(lesson.id);
+                        }}
+                        className="p-2 hover:bg-amber-100 dark:hover:bg-amber-950 rounded-lg transition-colors"
+                        title="Manage Assignment"
+                    >
+                        <ClipboardList className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    </button>
+                )}
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(lesson);
+                    }}
+                    className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    title="Edit Lesson"
+                >
+                    <Edit className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </button>
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(lesson.id);
+                    }}
+                    className="p-2 hover:bg-red-100 dark:hover:bg-red-950 rounded-lg transition-colors"
+                    title="Delete Lesson"
+                >
+                    <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                </button>
+            </div>
         </div>
     );
 };

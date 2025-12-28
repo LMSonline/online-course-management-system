@@ -15,6 +15,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long>, JpaSpec
 
     Optional<Teacher> findByAccount(Account account);
 
+    @Query("SELECT t FROM Teacher t WHERE t.account.id = :accountId")
+    Optional<Teacher> findByAccountId(@Param("accountId") Long accountId);
+
     @Query("SELECT t FROM Teacher t JOIN FETCH t.account WHERE t.id = :id")
     Optional<Teacher> findByIdWithAccount(@Param("id") Long id);
 

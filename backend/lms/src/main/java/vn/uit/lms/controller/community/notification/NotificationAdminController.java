@@ -17,7 +17,7 @@ public class NotificationAdminController {
     private final NotificationService notificationService;
 
     @PostMapping("/send-bulk")
-    public ResponseEntity<?> sendBulk(@RequestBody SendBulkNotificationRequest req) {
+    public ResponseEntity<String> sendBulk(@RequestBody SendBulkNotificationRequest req) {
         notificationService.sendBulk(req);
         return ResponseEntity.ok("Notifications sent");
     }

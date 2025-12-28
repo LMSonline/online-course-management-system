@@ -17,6 +17,7 @@
     "@tanstack/react-query-devtools": "^5.91.1",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.23.26",
     "gsap": "^3.13.0",
     "hls.js": "^1.6.15",

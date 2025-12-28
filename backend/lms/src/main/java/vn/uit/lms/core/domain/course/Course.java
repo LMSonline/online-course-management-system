@@ -46,13 +46,16 @@ public class Course extends BaseEntity {
     private Difficulty difficulty = Difficulty.BEGINNER;
 
     @Column(name = "is_closed")
+    @Builder.Default
     private Boolean isClosed = false;
 
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<CourseVersion> versions = new ArrayList<>();
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<CourseTag> courseTags = new ArrayList<>();
 
     //support for SEO
@@ -75,6 +78,7 @@ public class Course extends BaseEntity {
 
     private String canonicalUrl;
 
+    @Builder.Default
     private boolean isIndexed = true;
 
     public void addVersion(CourseVersion version) {

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
     GripVertical,
     Edit,
@@ -17,6 +18,9 @@ import { LessonResponse, CreateLessonRequest, UpdateLessonRequest } from "@/serv
 import { useLessons } from "@/hooks/teacher/useContentManagement";
 import { LessonModal } from "./LessonModal";
 import { LessonItem } from "@/core/components/teacher/content/LessonItem";
+import { VideoUploadModal } from "./VideoUploadModal";
+import { DocumentUploadModal } from "./DocumentUploadModal";
+import { lessonResourceService } from "@/services/courses/content/lesson-resource.service";
 import { toast } from "sonner";
 
 interface ChapterItemProps {
@@ -36,6 +40,11 @@ export const ChapterItem = ({
     onEdit,
     onDelete,
 }: ChapterItemProps) => {
+    const router = useRouter();
+    const params = useParams();
+    const slug = params.slug as string;
+    const versionId = params.versionId as string;
+
     const {
         lessons,
         isLoading: loadingLessons,
@@ -76,12 +85,38 @@ export const ChapterItem = ({
         data?: LessonResponse;
     }>({ isOpen: false, mode: "create" });
 
+    const [videoModal, setVideoModal] = useState<{
+        isOpen: boolean;
+        lesson?: LessonResponse;
+    }>({ isOpen: false });
+
+    const [documentModal, setDocumentModal] = useState<{
+        isOpen: boolean;
+        lesson?: LessonResponse;
+    }>({ isOpen: false });
+
     const [uploadProgress, setUploadProgress] = useState<number | undefined>(undefined);
 
-    const handleCreateLesson = (data: CreateLessonRequest) => {
+    const handleCreateLesson = async (data: CreateLessonRequest, attachments?: File[]) => {
         createLesson.mutate(data, {
-            onSuccess: () => {
+            onSuccess: async (newLesson) => {
                 setLessonModal({ isOpen: false, mode: "create" });
+
+                // Upload attachments if any
+                if (attachments && attachments.length > 0 && newLesson.id) {
+                    toast.info(`Uploading ${attachments.length} attachment(s)...`);
+
+                    try {
+                        await Promise.all(
+                            attachments.map((file) =>
+                                lessonResourceService.addFileResource(newLesson.id, file)
+                            )
+                        );
+                        toast.success("Lesson and attachments created successfully!");
+                    } catch (error: any) {
+                        toast.error(error?.message || "Failed to upload some attachments");
+                    }
+                }
             },
         });
     };
@@ -155,14 +190,14 @@ export const ChapterItem = ({
     };
     return (
         <>
-            <div 
+            <div
                 ref={setNodeRef}
                 style={style}
                 className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden"
             >
                 {/* Chapter Header */}
                 <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                    <button 
+                    <button
                         {...attributes}
                         {...listeners}
                         className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded cursor-move"
@@ -242,6 +277,14 @@ export const ChapterItem = ({
                                                 getLessonIcon={getLessonIcon}
                                                 onEdit={(lesson: LessonResponse) => setLessonModal({ isOpen: true, mode: "edit", data: lesson })}
                                                 onDelete={handleDeleteLesson}
+                                                onManageVideo={(lesson) => setVideoModal({ isOpen: true, lesson })}
+                                                onManageDocument={(lesson) => setDocumentModal({ isOpen: true, lesson })}
+                                                onManageQuiz={(lessonId) => {
+                                                    router.push(`/teacher/quizzes/create?lessonId=${lessonId}`);
+                                                }}
+                                                onManageAssignment={(lessonId) => {
+                                                    router.push(`/teacher/assignments/create?lessonId=${lessonId}`);
+                                                }}
                                             />
                                         ))}
                                     </div>
@@ -267,9 +310,9 @@ export const ChapterItem = ({
                     setLessonModal({ isOpen: false, mode: "create" });
                     setUploadProgress(undefined);
                 }}
-                onSubmit={(data) => {
+                onSubmit={(data, attachments) => {
                     if (lessonModal.mode === "create") {
-                        handleCreateLesson(data as CreateLessonRequest);
+                        handleCreateLesson(data as CreateLessonRequest, attachments);
                     } else if (lessonModal.data) {
                         handleUpdateLesson(lessonModal.data.id, data as UpdateLessonRequest);
                     }
@@ -278,6 +321,31 @@ export const ChapterItem = ({
                 uploadProgress={uploadProgress}
                 isLoading={createLesson.isPending || updateLesson.isPending}
             />
+
+            {/* Video Upload Modal */}
+            {videoModal.lesson && (
+                <VideoUploadModal
+                    isOpen={videoModal.isOpen}
+                    onClose={() => setVideoModal({ isOpen: false })}
+                    lesson={videoModal.lesson}
+                    onUploadComplete={() => {
+                        // Refresh lessons to get updated video status
+                        lessons;
+                    }}
+                />
+            )}
+
+            {/* Document Upload Modal */}
+            {documentModal.lesson && (
+                <DocumentUploadModal
+                    isOpen={documentModal.isOpen}
+                    onClose={() => setDocumentModal({ isOpen: false })}
+                    lesson={documentModal.lesson}
+                    onUploadComplete={() => {
+                        // Resources updated
+                    }}
+                />
+            )}
         </>
     );
 };

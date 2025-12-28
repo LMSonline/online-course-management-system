@@ -271,4 +271,46 @@ public class Payout extends BaseEntity {
         }
         return YearMonth.parse(this.payoutPeriod);
     }
+
+    /**
+     * Complete payout (public method for service layer)
+     */
+    public void complete(String bankTransactionId, String processedBy) {
+        markAsCompleted(bankTransactionId, processedBy);
+    }
+
+    /**
+     * Reject payout (public method for service layer)
+     */
+    public void reject(String reason) {
+        if (this.status != PayoutStatus.PENDING) {
+            throw new IllegalStateException("Can only reject PENDING payouts");
+        }
+
+        this.status = PayoutStatus.FAILED;
+        this.failureReason = reason;
+        this.failedAt = Instant.now();
+    }
+
+    /**
+     * Validate payout before save
+     */
+    public void validate() {
+        if (teacher == null) {
+            throw new IllegalStateException("Teacher is required");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Amount must be greater than zero");
+        }
+        if (payoutPeriod == null || payoutPeriod.isBlank()) {
+            throw new IllegalStateException("Payout period is required");
+        }
+        if (bankAccountNumber == null || bankAccountNumber.isBlank()) {
+            throw new IllegalStateException("Bank account number is required");
+        }
+        if (bankName == null || bankName.isBlank()) {
+            throw new IllegalStateException("Bank name is required");
+        }
+    }
 }
+

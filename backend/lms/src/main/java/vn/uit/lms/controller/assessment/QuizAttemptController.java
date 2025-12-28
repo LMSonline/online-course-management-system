@@ -12,6 +12,7 @@ import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 public class QuizAttemptController {
     private final QuizAttemptService quizAttemptService;
 
@@ -50,5 +51,31 @@ public class QuizAttemptController {
     @TeacherOnly
     public ResponseEntity<?> getQuizResults(@PathVariable Long id) {
         return ResponseEntity.ok(quizAttemptService.getQuizResults(id));
+    }
+
+    @PostMapping("/quizzes/{quizId}/attempts/{attemptId}/abandon")
+    @StudentOnly
+    public ResponseEntity<?> abandonQuizAttempt(@PathVariable Long quizId, @PathVariable Long attemptId) {
+        return ResponseEntity.ok(quizAttemptService.abandonQuizAttempt(quizId, attemptId));
+    }
+
+    @GetMapping("/students/{studentId}/quizzes/{quizId}/attempts")
+    @StudentOrTeacher
+    public ResponseEntity<?> getStudentQuizAttemptsByQuiz(@PathVariable Long studentId, @PathVariable Long quizId) {
+        return ResponseEntity.ok(quizAttemptService.getStudentQuizAttemptsByQuiz(studentId, quizId));
+    }
+
+    @GetMapping("/students/{studentId}/quizzes/{quizId}/best-score")
+    @StudentOrTeacher
+    public ResponseEntity<?> getBestScore(@PathVariable Long studentId, @PathVariable Long quizId) {
+        Double bestScore = quizAttemptService.getBestScore(studentId, quizId);
+        return ResponseEntity.ok(java.util.Map.of("bestScore", bestScore != null ? bestScore : 0.0));
+    }
+
+    @GetMapping("/quiz-attempts/{attemptId}/remaining-time")
+    @StudentOnly
+    public ResponseEntity<?> getRemainingTime(@PathVariable Long attemptId) {
+        Long remainingTime = quizAttemptService.getRemainingTime(attemptId);
+        return ResponseEntity.ok(java.util.Map.of("remainingTimeMinutes", remainingTime));
     }
 }

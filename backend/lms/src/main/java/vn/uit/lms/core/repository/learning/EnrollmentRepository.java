@@ -103,6 +103,18 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long>, J
     );
 
     /**
+     * Check if student already enrolled in specific course version
+     */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Enrollment e " +
+            "WHERE e.student.id = :studentId " +
+            "AND e.courseVersion.id = :courseVersionId " +
+            "AND e.deletedAt IS NULL")
+    boolean existsByStudentIdAndCourseVersionId(
+            @Param("studentId") Long studentId,
+            @Param("courseVersionId") Long courseVersionId
+    );
+
+    /**
      * Find all enrollments for a student in specific course (all versions)
      */
     @Query("SELECT e FROM Enrollment e " +
