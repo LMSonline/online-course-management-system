@@ -176,4 +176,69 @@ public class Submission extends BaseEntity {
             validateScore(score);
         }
     }
+
+    /**
+     * Add file to submission
+     */
+    public void addFile(SubmissionFile file) {
+        if (files == null) {
+            files = new java.util.ArrayList<>();
+        }
+        file.setSubmission(this);
+        files.add(file);
+    }
+
+    /**
+     * Remove file from submission
+     */
+    public void removeFile(SubmissionFile file) {
+        if (files != null) {
+            files.remove(file);
+            file.setSubmission(null);
+        }
+    }
+
+    /**
+     * Get number of files attached
+     */
+    public int getFileCount() {
+        return files != null ? files.size() : 0;
+    }
+
+    /**
+     * Check if submission has files
+     */
+    public boolean hasFiles() {
+        return getFileCount() > 0;
+    }
+
+    /**
+     * Check if submission belongs to a specific student
+     */
+    public boolean belongsToStudent(Long studentId) {
+        return student != null && student.getId().equals(studentId);
+    }
+
+    /**
+     * Check if submission belongs to a specific assignment
+     */
+    public boolean belongsToAssignment(Long assignmentId) {
+        return assignment != null && assignment.getId().equals(assignmentId);
+    }
+
+    /**
+     * Resubmit (reset status to pending)
+     */
+    public void resubmit(String newContent) {
+        if (!canBeEdited()) {
+            throw new IllegalStateException("Cannot resubmit a graded or rejected submission");
+        }
+        this.content = newContent;
+        this.submittedAt = java.time.Instant.now();
+        this.status = SubmissionStatus.PENDING;
+        this.score = null;
+        this.feedback = null;
+        this.gradedAt = null;
+        this.gradedBy = null;
+    }
 }

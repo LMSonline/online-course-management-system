@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.assignment.Assignment;
 import vn.uit.lms.core.domain.assignment.Submission;
 import vn.uit.lms.core.domain.course.content.Lesson;
@@ -13,6 +14,7 @@ import vn.uit.lms.core.repository.assignment.AssignmentRepository;
 import vn.uit.lms.core.repository.assignment.SubmissionRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.TeacherService;
 import vn.uit.lms.shared.dto.request.assignment.AssignmentRequest;
 import vn.uit.lms.shared.dto.response.assignment.*;
 import vn.uit.lms.shared.exception.InvalidRequestException;
@@ -32,11 +34,16 @@ public class AssignmentService {
     private final SubmissionRepository submissionRepository;
     private final StudentRepository studentRepository;
     private final AccountService accountService;
+    private final TeacherService teacherService;
 
     @Transactional
     public AssignmentResponse createAssignment(Long lessonId, AssignmentRequest request) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
+
+        // Validate ownership - teacher can only create assignment in their own course's lessons
+        Teacher lessonOwner = getLessonOwner(lesson);
+        teacherService.validateTeacherAccess(lessonOwner);
 
         Assignment assignment = Assignment.builder()
                 .lesson(lesson)
@@ -73,6 +80,10 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
+        // Validate ownership - teacher can only update their own assignment
+        Teacher lessonOwner = getLessonOwner(assignment.getLesson());
+        teacherService.validateTeacherAccess(lessonOwner);
+
         if (request.getAssignmentType() != null) {
             assignment.setAssignmentType(request.getAssignmentType());
         }
@@ -100,9 +111,13 @@ public class AssignmentService {
 
     @Transactional
     public void deleteAssignment(Long id) {
-        if (!assignmentRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Assignment not found");
-        }
+        Assignment assignment = assignmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+
+        // Validate ownership - teacher can only delete their own assignment
+        Teacher lessonOwner = getLessonOwner(assignment.getLesson());
+        teacherService.validateTeacherAccess(lessonOwner);
+
         assignmentRepository.deleteById(id);
     }
 
@@ -334,5 +349,25 @@ public class AssignmentService {
         assignment = assignmentRepository.save(assignment);
         
         return AssignmentMapper.toResponse(assignment);
+    }
+
+
+    /**
+     * Get teacher owner from lesson through: Lesson -> Chapter -> CourseVersion -> Course -> Teacher
+     */
+    private Teacher getLessonOwner(Lesson lesson) {
+        if (lesson.getChapter() == null) {
+            throw new IllegalStateException("Lesson must belong to a chapter");
+        }
+        if (lesson.getChapter().getCourseVersion() == null) {
+            throw new IllegalStateException("Chapter must belong to a course version");
+        }
+        if (lesson.getChapter().getCourseVersion().getCourse() == null) {
+            throw new IllegalStateException("Course version must belong to a course");
+        }
+        if (lesson.getChapter().getCourseVersion().getCourse().getTeacher() == null) {
+            throw new IllegalStateException("Course must have a teacher");
+        }
+        return lesson.getChapter().getCourseVersion().getCourse().getTeacher();
     }
 }

@@ -20,47 +20,47 @@ import java.util.List;
 @AdminOnly
 public class NotificationChannelController {
 
-    private final NotificationChannelRepository channelRepository;
-    private final NotificationRepository notificationRepository;
-
-    @PostMapping
-    public ResponseEntity<NotificationChannel> create(@RequestBody NotificationChannelCreateRequest req) {
-
-        NotificationChannel channel = new NotificationChannel();
-
-        Notification notification = notificationRepository
-                .findById(req.getNotificationId())
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
-
-        channel.setNotification(notification);
-        channel.setChannel(ChannelType.valueOf(req.getChannel()));
-        channel.setStatus(ChannelStatus.valueOf(req.getStatus()));
-
-        return ResponseEntity.ok(channelRepository.save(channel));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<NotificationChannel>> list() {
-        return ResponseEntity.ok(channelRepository.findAll());
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<NotificationChannel> update(@PathVariable Long id,
-                                    @RequestBody NotificationChannelCreateRequest req) {
-
-        NotificationChannel channel = channelRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Channel not found"));
-
-        Notification notification = notificationRepository
-                .findById(req.getNotificationId())
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
-
-        // Update fields
-        channel.setNotification(notification);
-        channel.setChannel(ChannelType.valueOf(req.getChannel()));
-        channel.setStatus(ChannelStatus.valueOf(req.getStatus()));
-
-        return ResponseEntity.ok(channelRepository.save(channel));
-    }
+//    private final NotificationChannelRepository channelRepository;
+//    private final NotificationRepository notificationRepository;
+//
+//    @PostMapping
+//    public ResponseEntity<NotificationChannel> create(@RequestBody NotificationChannelCreateRequest req) {
+//
+//        NotificationChannel channel = new NotificationChannel();
+//
+//        Notification notification = notificationRepository
+//                .findById(req.getNotificationId())
+//                .orElseThrow(() -> new RuntimeException("Notification not found"));
+//
+//        channel.setNotification(notification);
+//        channel.setChannel(ChannelType.valueOf(req.getChannel()));
+//        channel.setStatus(ChannelStatus.valueOf(req.getStatus()));
+//
+//        return ResponseEntity.ok(channelRepository.save(channel));
+//    }
+//
+//    @GetMapping
+//    public ResponseEntity<List<NotificationChannel>> list() {
+//        return ResponseEntity.ok(channelRepository.findAll());
+//    }
+//
+//    @PutMapping("/{id}")
+//    public ResponseEntity<NotificationChannel> update(@PathVariable Long id,
+//                                    @RequestBody NotificationChannelCreateRequest req) {
+//
+//        NotificationChannel channel = channelRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Channel not found"));
+//
+//        Notification notification = notificationRepository
+//                .findById(req.getNotificationId())
+//                .orElseThrow(() -> new RuntimeException("Notification not found"));
+//
+//        // Update fields
+//        channel.setNotification(notification);
+//        channel.setChannel(ChannelType.valueOf(req.getChannel()));
+//        channel.setStatus(ChannelStatus.valueOf(req.getStatus()));
+//
+//        return ResponseEntity.ok(channelRepository.save(channel));
+//    }
 
 }

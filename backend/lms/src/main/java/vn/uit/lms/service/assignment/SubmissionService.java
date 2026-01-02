@@ -126,6 +126,15 @@ public class SubmissionService {
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
         
+        // Validate ownership - student can only delete their own submission
+        Account currentAccount = accountService.verifyCurrentAccount();
+        Student currentStudent = studentRepository.findByAccount(currentAccount)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        if (!submission.getStudent().getId().equals(currentStudent.getId())) {
+            throw new vn.uit.lms.shared.exception.UnauthorizedException("You can only delete your own submissions");
+        }
+
         // Check if submission can be edited using rich domain logic
         if (!submission.canBeEdited()) {
             throw new InvalidRequestException("Cannot delete a graded or rejected submission");
@@ -151,6 +160,15 @@ public class SubmissionService {
     public SubmissionResponse updateSubmissionContent(Long id, String content) {
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
+
+        // Validate ownership - student can only update their own submission
+        Account currentAccount = accountService.verifyCurrentAccount();
+        Student currentStudent = studentRepository.findByAccount(currentAccount)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        if (!submission.getStudent().getId().equals(currentStudent.getId())) {
+            throw new vn.uit.lms.shared.exception.UnauthorizedException("You can only update your own submissions");
+        }
 
         // Check if submission can be edited using rich domain logic
         if (!submission.canBeEdited()) {

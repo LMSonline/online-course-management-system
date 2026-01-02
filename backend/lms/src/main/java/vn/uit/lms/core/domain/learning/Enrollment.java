@@ -92,7 +92,6 @@ public class Enrollment extends BaseEntity {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
-    /* ================= DOMAIN LOGIC ================= */
 
     public void start() {
         if (this.startAt != null) return;

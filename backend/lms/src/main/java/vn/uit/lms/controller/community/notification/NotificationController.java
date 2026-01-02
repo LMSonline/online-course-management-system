@@ -22,65 +22,65 @@ import java.util.stream.Collectors;
 @Authenticated
 public class NotificationController {
 
-    private final NotificationService notificationService;
-    private final NotificationMapper notificationMapper; // ⭐ FIXED
-
-    @GetMapping
-    public ResponseEntity<PageResponse<NotificationResponse>> getList(Pageable pageable) {
-
-        Long accountId = SecurityUtils.getCurrentUserId().orElseThrow();
-
-        PageResponse<Notification> page = notificationService.getMyNotifications(accountId, pageable);
-
-        List<NotificationResponse> mapped = page.getItems()
-                .stream()
-                .map(notificationMapper::toResponse) // ⭐ FIXED
-                .collect(Collectors.toList());
-
-        PageResponse<NotificationResponse> response = PageResponse.<NotificationResponse>builder()
-                .items(mapped)
-                .page(page.getPage())
-                .size(page.getSize())
-                .totalItems(page.getTotalItems())
-                .totalPages(page.getTotalPages())
-                .hasNext(page.isHasNext())
-                .hasPrevious(page.isHasPrevious())
-                .build();
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<NotificationResponse> getDetail(@PathVariable Long id) {
-        Long accountId = SecurityUtils.getCurrentUserId().orElseThrow();
-        Notification n = notificationService.get(id, accountId);
-        return ResponseEntity.ok(notificationMapper.toResponse(n)); // ⭐ FIXED
-    }
-
-    @PostMapping("/{id}/mark-read")
-    public ResponseEntity<String> markRead(@PathVariable Long id) {
-        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
-        notificationService.markRead(id, acc); // ⭐ FIXED
-        return ResponseEntity.ok("Marked as read");
-    }
-
-    @PostMapping("/mark-all-read")
-    public ResponseEntity<String> markAllRead() {
-        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
-        notificationService.markAllRead(acc); // ⭐ FIXED
-        return ResponseEntity.ok("All marked read");
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
-        notificationService.delete(id, acc); // ⭐ FIXED
-        return ResponseEntity.ok("Deleted");
-    }
-
-    @GetMapping("/count-unread")
-    public ResponseEntity<Map<String, Long>> countUnread() {
-        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
-        return ResponseEntity.ok(Map.of("count", notificationService.countUnread(acc))); // ⭐ FIXED
-    }
+//    private final NotificationService notificationService;
+//    private final NotificationMapper notificationMapper; // ⭐ FIXED
+//
+//    @GetMapping
+//    public ResponseEntity<PageResponse<NotificationResponse>> getList(Pageable pageable) {
+//
+//        Long accountId = SecurityUtils.getCurrentUserId().orElseThrow();
+//
+//        PageResponse<Notification> page = notificationService.getMyNotifications(accountId, pageable);
+//
+//        List<NotificationResponse> mapped = page.getItems()
+//                .stream()
+//                .map(notificationMapper::toResponse) // ⭐ FIXED
+//                .collect(Collectors.toList());
+//
+//        PageResponse<NotificationResponse> response = PageResponse.<NotificationResponse>builder()
+//                .items(mapped)
+//                .page(page.getPage())
+//                .size(page.getSize())
+//                .totalItems(page.getTotalItems())
+//                .totalPages(page.getTotalPages())
+//                .hasNext(page.isHasNext())
+//                .hasPrevious(page.isHasPrevious())
+//                .build();
+//
+//        return ResponseEntity.ok(response);
+//    }
+//
+//    @GetMapping("/{id}")
+//    public ResponseEntity<NotificationResponse> getDetail(@PathVariable Long id) {
+//        Long accountId = SecurityUtils.getCurrentUserId().orElseThrow();
+//        Notification n = notificationService.get(id, accountId);
+//        return ResponseEntity.ok(notificationMapper.toResponse(n)); // ⭐ FIXED
+//    }
+//
+//    @PostMapping("/{id}/mark-read")
+//    public ResponseEntity<String> markRead(@PathVariable Long id) {
+//        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
+//        notificationService.markRead(id, acc); // ⭐ FIXED
+//        return ResponseEntity.ok("Marked as read");
+//    }
+//
+//    @PostMapping("/mark-all-read")
+//    public ResponseEntity<String> markAllRead() {
+//        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
+//        notificationService.markAllRead(acc); // ⭐ FIXED
+//        return ResponseEntity.ok("All marked read");
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<String> delete(@PathVariable Long id) {
+//        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
+//        notificationService.delete(id, acc); // ⭐ FIXED
+//        return ResponseEntity.ok("Deleted");
+//    }
+//
+//    @GetMapping("/count-unread")
+//    public ResponseEntity<Map<String, Long>> countUnread() {
+//        Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
+//        return ResponseEntity.ok(Map.of("count", notificationService.countUnread(acc))); // ⭐ FIXED
+//    }
 }

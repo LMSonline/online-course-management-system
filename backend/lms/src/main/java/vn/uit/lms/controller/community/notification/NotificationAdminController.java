@@ -14,11 +14,11 @@ import vn.uit.lms.shared.util.annotation.AdminOnly;
 @AdminOnly
 public class NotificationAdminController {
 
-    private final NotificationService notificationService;
-
-    @PostMapping("/send-bulk")
-    public ResponseEntity<String> sendBulk(@RequestBody SendBulkNotificationRequest req) {
-        notificationService.sendBulk(req);
-        return ResponseEntity.ok("Notifications sent");
-    }
+//    private final NotificationService notificationService;
+//
+//    @PostMapping("/send-bulk")
+//    public ResponseEntity<String> sendBulk(@RequestBody SendBulkNotificationRequest req) {
+//        notificationService.sendBulk(req);
+//        return ResponseEntity.ok("Notifications sent");
+//    }
 }

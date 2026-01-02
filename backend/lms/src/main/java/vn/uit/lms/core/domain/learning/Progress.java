@@ -73,7 +73,6 @@ public class Progress extends BaseEntity {
     @Builder.Default
     private Boolean isBookmarked = false;
 
-    /* ================= DOMAIN ================= */
 
     public void markAsViewed() {
         if (this.status == ProgressStatus.NOT_VIEWED) {

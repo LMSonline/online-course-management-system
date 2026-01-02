@@ -55,45 +55,33 @@ public class EmailVerificationService {
 
     /**
      * Verify the given email token and activate or update account status accordingly.
+     *
      * @param rawToken unique verification token sent via email
      * @throws ResourceNotFoundException if token not found
-     * @throws InvalidTokenException     if token is expired, used, or invalid
+     * @throws vn.uit.lms.shared.exception.InvalidTokenException if token is invalid, expired, or used
      */
     @Transactional
     public void verifyToken(String rawToken) {
         log.info("Start verifying email token: {}", rawToken);
+
         String hashToken = TokenHashUtil.hashToken(rawToken);
 
-        //Validate token existence
+        // Find token
         EmailVerification verification = emailVerificationRepository.findByTokenHash(hashToken)
                 .orElseThrow(() -> {
                     log.warn("Token not found: {}", rawToken);
                     return new ResourceNotFoundException("Invalid verification token.");
                 });
 
-        //Check token usage
-        if (verification.isUsed()) {
-            log.warn("Token has already been used: {}", rawToken);
-            throw new InvalidTokenException("Token has already been used.");
-        }
+        // Validate token using domain behavior (throws exception if invalid)
+        verification.validateForUse();
+        verification.validateTokenType(TokenType.VERIFY_EMAIL);
 
-        //Check expiration
-        if (verification.getExpiresAt().isBefore(Instant.now())) {
-            log.warn("Token expired: {}", rawToken);
-            throw new InvalidTokenException("Token has expired.");
-        }
-
-        //Validate token type
-        if (verification.getTokenType() != TokenType.VERIFY_EMAIL) {
-            log.warn("Invalid token type: {}", verification.getTokenType());
-            throw new InvalidTokenException("Invalid token type.");
-        }
-
-        //Load associated account
+        // Load associated account
         Account account = verification.getAccount();
         log.debug("Processing verification for account id={}, role={}", account.getId(), account.getRole());
 
-        //Activate or set pending status based on role
+        // Activate or set pending status based on role
         switch (account.getRole()) {
             case STUDENT -> {
                 log.info("Activating student account id={}", account.getId());
@@ -123,16 +111,43 @@ public class EmailVerificationService {
             default -> log.warn("Unsupported role during verification: {}", account.getRole());
         }
 
-        //Mark token as used and persist all updates
-        verification.setUsed(true);
+        // Consume token using domain behavior
+        verification.consume();
         emailVerificationRepository.save(verification);
         accountRepository.save(account);
 
-        //Notify user of activation success
+        // Notify user of activation success
         eventPublisher.publishEvent(new AccountActivatedEvent(account));
 
         log.info("Email verification completed successfully for account id={}", account.getId());
     }
+
+    /**
+     * Generate a new email verification token for an account.
+     *
+     * @param account the account for which to generate the verification
+     * @param tokenType the type of verification token
+     * @return the generated EmailVerification with plain token available
+     */
+    @Transactional
+    public EmailVerification generateVerificationToken(Account account, TokenType tokenType) {
+        return generateVerificationToken(account, tokenType, 30);
+    }
+
+    /**
+     * Generate a new email verification token with custom expiration.
+     *
+     * @param account the account for which to generate the verification
+     * @param tokenType the type of verification token
+     * @param expirationMinutes custom expiration time in minutes
+     * @return the generated EmailVerification with plain token available
+     */
+    @Transactional
+    public EmailVerification generateVerificationToken(Account account, TokenType tokenType, long expirationMinutes) {
+        EmailVerification verification = EmailVerification.generate(account, tokenType, expirationMinutes);
+        return emailVerificationRepository.save(verification);
+    }
+
 
 
 }

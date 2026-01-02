@@ -54,3 +54,4 @@ public class ViolationReport extends BaseEntity {
     @Column(length = 20, nullable = false)
     private ViolationReportStatus status = ViolationReportStatus.PENDING;
 }
+

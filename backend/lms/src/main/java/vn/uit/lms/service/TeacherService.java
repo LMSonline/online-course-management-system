@@ -64,6 +64,7 @@ public class TeacherService {
         this.accountService = accountService;
     }
 
+
     /**
      * Get teacher by ID
      * - TEACHER: Can only view their own profile
@@ -532,43 +533,24 @@ public class TeacherService {
     /**
      * Validate if current user has access to view teacher data
      */
-    private void validateTeacherAccess(Teacher teacher) {
-        Long currentUserId = SecurityUtils.getCurrentUserId()
-                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+    /**
+     * Validate teacher access - ensures teacher can only access their own data
+     * Throws UnauthorizedException if access denied
+     */
+    public void validateTeacherAccess(Teacher teacher) {
+        Account currentAccount = accountService.validateCurrentAccountByRole(Role.TEACHER);
 
-        Account currentAccount = accountRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Current account not found"));
-
-        // ADMIN can access any teacher
-        if (currentAccount.getRole() == Role.ADMIN) {
-            return;
+        if (!teacher.getAccount().getId().equals(currentAccount.getId())) {
+            throw new UnauthorizedException("Teachers can only access their own data");
         }
 
-        // TEACHER can only access their own data
-        if (currentAccount.getRole() == Role.TEACHER) {
-            if (!teacher.getAccount().getId().equals(currentUserId)) {
-                throw new UnauthorizedException("Teachers can only access their own data");
-            }
-            return;
-        }
-
-        // STUDENT can view approved teachers teaching their courses
-        if (currentAccount.getRole() == Role.STUDENT) {
-            if (!teacher.isApproved()) {
-                throw new UnauthorizedException("Cannot access unapproved teacher profile");
-            }
-            // TODO: Add enrollment check when Enrollment entity is created
-            // Verify student is enrolled in at least one course taught by this teacher
-            return;
-        }
-
-        throw new UnauthorizedException("Access denied");
+        // Access granted - return normally
     }
 
     /**
      * Validate teacher ownership or admin role
      */
-    private void validateTeacherOwnershipOrAdmin(Teacher teacher) {
+    public void validateTeacherOwnershipOrAdmin(Teacher teacher) {
         Long currentUserId = SecurityUtils.getCurrentUserId()
                 .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
 

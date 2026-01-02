@@ -68,7 +68,6 @@ public class Comment extends BaseEntity {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> replies = new ArrayList<>();
 
-    // ========== RICH DOMAIN METHODS ==========
 
     /**
      * Factory method: Create a course comment

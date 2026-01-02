@@ -33,7 +33,6 @@ public abstract class PersonBase extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
-    // ========== Rich Domain Model Behaviors ==========
 
     /**
      * Update profile information with validation
