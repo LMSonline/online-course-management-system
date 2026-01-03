@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Menu,
   Bell,
@@ -16,6 +17,8 @@ import {
   Settings,
   Search
 } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
+import { useLogout } from "@/hooks/useAuth";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -30,6 +33,10 @@ export const TeacherNavbar = ({ onMenuClick, isCollapsed }: NavbarProps) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch profile data
+  const { data: profile, isLoading: isLoadingProfile } = useProfile();
+  const logout = useLogout();
 
   useEffect(() => {
     setMounted(true);
@@ -179,9 +186,13 @@ export const TeacherNavbar = ({ onMenuClick, isCollapsed }: NavbarProps) => {
                     ))}
                   </div>
                   <div className="p-3 text-center border-t border-slate-200 dark:border-slate-700">
-                    <button className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
+                    <Link
+                      href="/teacher/notifications"
+                      className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                      onClick={() => setShowNotifications(false)}
+                    >
                       View All Notifications
-                    </button>
+                    </Link>
                   </div>
                 </motion.div>
               )}
@@ -196,12 +207,26 @@ export const TeacherNavbar = ({ onMenuClick, isCollapsed }: NavbarProps) => {
                 setShowNotifications(false);
               }}
               className="flex items-center gap-3 p-1.5 pr-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              disabled={isLoadingProfile}
             >
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <User className="w-5 h-5 text-white" />
-              </div>
+              {profile?.avatarUrl ? (
+                <div className="w-9 h-9 rounded-lg overflow-hidden shadow-lg relative">
+                  <Image
+                    src={profile.avatarUrl}
+                    alt={profile.profile?.fullName || profile.username}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+              )}
               <div className="hidden md:block text-left">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">John Doe</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {profile?.profile?.fullName || profile?.username || "Loading..."}
+                </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Instructor</p>
               </div>
             </button>
@@ -216,23 +241,46 @@ export const TeacherNavbar = ({ onMenuClick, isCollapsed }: NavbarProps) => {
                   className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
                 >
                   <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                    <p className="font-semibold text-slate-900 dark:text-white">John Doe</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">john.doe@example.com</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">
+                      {profile?.profile?.fullName || profile?.username}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{profile?.email}</p>
+                    {profile?.profile?.teacherCode && (
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                        {profile.profile.teacherCode}
+                      </p>
+                    )}
                   </div>
                   <div className="p-2">
-                    <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <button
+                      onClick={() => {
+                        router.push("/teacher/profile");
+                        setShowProfileMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
                       <User className="w-4 h-4" />
                       My Profile
                     </button>
-                    <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <button
+                      onClick={() => {
+                        router.push("/teacher/profile?tab=security");
+                        setShowProfileMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
                       <Settings className="w-4 h-4" />
                       Settings
                     </button>
                   </div>
                   <div className="p-2 border-t border-slate-200 dark:border-slate-700">
-                    <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                    <button
+                      onClick={() => logout.mutate()}
+                      disabled={logout.isPending}
+                      className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                    >
                       <LogOut className="w-4 h-4" />
-                      Logout
+                      {logout.isPending ? "Logging out..." : "Logout"}
                     </button>
                   </div>
                 </motion.div>

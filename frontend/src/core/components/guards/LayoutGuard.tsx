@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth/authStore";
 import { useAuthBootstrap } from "@/hooks/auth/useAuthBootstrap";
@@ -8,6 +8,7 @@ import { tokenStorage } from "@/lib/api/tokenStorage";
 import { Loader2 } from "lucide-react";
 import { ProfileMissingError } from "./ProfileMissingError";
 import type { InternalRole } from "@/lib/auth/roleMap";
+import { DEMO_MODE } from "@/lib/env";
 
 interface GuardProps {
     children: React.ReactNode;
@@ -54,10 +55,20 @@ export function LayoutGuard({
     const isAuthed = isAuthenticated();
     
     // State to track redirect status (prevent loops)
-    const [shouldRedirect, setShouldRedirect] = useState<{
-        type: "login" | "forbidden" | null;
-        url?: string;
-    }>({ type: null });
+    const [hasRedirectedToLogin, setHasRedirectedToLogin] = useState(false);
+    const [hasRedirectedToForbidden, setHasRedirectedToForbidden] = useState(false);
+    
+    // Use ref to track allowedRoles changes (prevent infinite loops from array reference changes)
+    const allowedRolesRef = useRef<string>(JSON.stringify(allowedRoles));
+    const allowedRolesKey = JSON.stringify(allowedRoles);
+    if (allowedRolesRef.current !== allowedRolesKey) {
+        allowedRolesRef.current = allowedRolesKey;
+    }
+
+    // DEMO_MODE: Always allow render, skip all auth checks (after hooks)
+    if (DEMO_MODE) {
+        return <>{children}</>;
+    }
 
     // Handle redirects in useEffect (client-side only)
     useEffect(() => {
@@ -68,40 +79,46 @@ export function LayoutGuard({
         if (!hasToken || (isBootstrapReady && !isAuthed)) {
             // Prevent redirect loop: don't redirect if already on login page
             if (pathname === redirectTo || pathname.startsWith(redirectTo + "?")) {
+                setHasRedirectedToLogin(false); // Reset if we're already on login
                 return;
             }
             
-            const currentPath = window.location.pathname;
-            const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`;
-            
-            // Only redirect if not already redirecting
-            if (shouldRedirect.type !== "login") {
-                setShouldRedirect({ type: "login", url: redirectUrl });
+            // Only redirect once
+            if (!hasRedirectedToLogin) {
+                const currentPath = window.location.pathname;
+                const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`;
+                setHasRedirectedToLogin(true);
                 router.replace(redirectUrl);
             }
             return;
+        }
+
+        // Reset login redirect flag if authenticated
+        if (hasToken && isAuthed) {
+            setHasRedirectedToLogin(false);
         }
 
         // Check if user has required role
         if (isBootstrapReady && role && !allowedRoles.includes(role)) {
             // Prevent redirect loop: don't redirect if already on 403 page
             if (pathname === "/403") {
+                setHasRedirectedToForbidden(false); // Reset if we're already on 403
                 return;
             }
             
-            // Only redirect if not already redirecting
-            if (shouldRedirect.type !== "forbidden") {
-                setShouldRedirect({ type: "forbidden", url: "/403" });
+            // Only redirect once
+            if (!hasRedirectedToForbidden) {
+                setHasRedirectedToForbidden(true);
                 router.replace("/403");
             }
             return;
         }
 
-        // Reset redirect state if conditions no longer apply
-        if (shouldRedirect.type !== null && hasToken && isAuthed && role && allowedRoles.includes(role)) {
-            setShouldRedirect({ type: null });
+        // Reset forbidden redirect flag if user has correct role
+        if (role && allowedRoles.includes(role)) {
+            setHasRedirectedToForbidden(false);
         }
-    }, [hasToken, isBootstrapReady, isAuthed, role, allowedRoles, redirectTo, pathname, router, shouldRedirect.type]);
+    }, [hasToken, isBootstrapReady, isAuthed, role, allowedRoles, redirectTo, pathname, router, hasRedirectedToLogin, hasRedirectedToForbidden]);
 
     // Wait for bootstrap to complete before checking auth
     if (hasToken && isBootstrapLoading) {
@@ -242,6 +259,11 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
     
     // State to track redirect status (prevent loops)
     const [hasRedirected, setHasRedirected] = useState(false);
+
+    // DEMO_MODE: Always allow render, skip all auth checks (after hooks)
+    if (DEMO_MODE) {
+        return <>{children}</>;
+    }
 
     // Handle redirect in useEffect (client-side only)
     useEffect(() => {

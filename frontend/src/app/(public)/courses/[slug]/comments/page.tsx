@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCourseDetail } from "@/hooks/course/useCourseDetail";
-import { CourseCardSkeletonGrid } from "@/core/components/ui/CourseCardSkeleton";
-import { EmptyState, ErrorState } from "@/core/components/ui/EmptyState";
-import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { useCourseComments } from "@/hooks/comment/useComments";
+import { CommentThread } from "@/core/components/comments/CommentThread";
+import { Loader2, ArrowLeft, AlertCircle } from "lucide-react";
 
 /**
  * CourseCommentsPublicScreen
@@ -17,10 +18,8 @@ import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
  */
 export default function CourseCommentsPublicScreen({
   params,
-  searchParams,
 }: {
   params: { slug: string };
-  searchParams: { page?: string; size?: string; sort?: string };
 }) {
   const {
     data: course,
@@ -32,79 +31,88 @@ export default function CourseCommentsPublicScreen({
 
   const courseId = course?.id;
 
-  // TODO: Implement COMMENT_GET_COURSE_LIST hook
-  // const { data: comments, isLoading: isLoadingComments, ... } = useCourseComments({
-  //   courseId,
-  //   page: parseInt(searchParams.page || "1", 10),
-  //   size: parseInt(searchParams.size || "12", 10),
-  //   sort: searchParams.sort || "latest",
-  // });
+  // Fetch comments
+  const {
+    data: comments = [],
+    isLoading: isLoadingComments,
+    isError: isCommentsError,
+    error: commentsError,
+    refetch: refetchComments,
+  } = useCourseComments(courseId);
 
   if (isLoadingCourse) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-8" />
-        <CourseCardSkeletonGrid count={6} />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-12 w-12 animate-spin text-[var(--brand-600)]" />
+        </div>
       </div>
     );
   }
 
-  if (isCourseError) {
+  if (isCourseError || !course) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <ErrorState
-          message={courseError?.message || "Failed to load course"}
-          onRetry={() => refetchCourse()}
-        />
-      </div>
-    );
-  }
-
-  if (!course) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <EmptyState
-          title="Course not found"
-          description="The course you're looking for doesn't exist."
-        />
-      </div>
-    );
-  }
-
-  if (!courseId) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <ErrorState
-          message="Course data incomplete. Missing course ID."
-          onRetry={() => refetchCourse()}
-        />
+        <div className="text-center py-12">
+          <AlertCircle className="h-16 w-16 mx-auto text-red-400 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Course not found</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {courseError?.message || "The course you're looking for doesn't exist."}
+          </p>
+          <button
+            onClick={() => refetchCourse()}
+            className="px-6 py-3 bg-[var(--brand-600)] text-white rounded-xl hover:bg-[var(--brand-900)] transition"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Header */}
       <div className="mb-8">
+        <Link
+          href={`/courses/${params.slug}`}
+          className="inline-flex items-center gap-2 text-[var(--brand-600)] hover:underline mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to course
+        </Link>
         <h1 className="text-3xl font-bold mb-2">Comments</h1>
         <p className="text-slate-600 dark:text-slate-400">
           Course: {course.title}
         </p>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-          Course ID: {courseId} (from slug: {params.slug})
-        </p>
       </div>
 
-      <div className="mt-4">
-        <h2 className="font-semibold">TODO:</h2>
-        <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-          <li>Implement COMMENT_GET_COURSE_LIST query with courseId: {courseId}</li>
-          <li>Render comments list with pagination</li>
-          <li>Handle empty/error states</li>
-        </ul>
-        <p className="mt-4 text-sm text-slate-500">
-          Note: API will use courseId ({courseId}) internally, but URL uses slug ({params.slug}) for SEO.
-        </p>
-      </div>
+      {/* Comments Section */}
+      {isLoadingComments ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-600)]" />
+        </div>
+      ) : isCommentsError ? (
+        <div className="text-center py-12">
+          <AlertCircle className="h-16 w-16 mx-auto text-red-400 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Failed to load comments</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {commentsError?.message || "An error occurred while loading comments."}
+          </p>
+          <button
+            onClick={() => refetchComments()}
+            className="px-6 py-3 bg-[var(--brand-600)] text-white rounded-xl hover:bg-[var(--brand-900)] transition"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <CommentThread
+          resourceType="course"
+          resourceId={courseId!}
+          comments={comments}
+        />
+      )}
     </div>
   );
 }

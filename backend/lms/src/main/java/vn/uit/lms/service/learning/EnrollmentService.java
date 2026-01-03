@@ -40,6 +40,7 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+    private final vn.uit.lms.core.repository.course.CourseVersionRepository courseVersionRepository;
     private final EnrollmentMapper enrollmentMapper;
     private final AccountService accountService;
 
@@ -59,6 +60,29 @@ public class EnrollmentService {
 
         Enrollment enrollment = createAndStartEnrollment(student, course, publishedVersion);
         log.info("Successfully enrolled student {} in course {}", student.getId(), courseId);
+
+        return enrollmentMapper.toDetailResponse(enrollment);
+    }
+
+    /**
+     * Enroll student by ID (used by payment system)
+     */
+    @Transactional
+    public EnrollmentDetailResponse enrollStudent(Long studentId, Long courseVersionId) {
+        log.info("Processing enrollment for student: {} in courseVersion: {}", studentId, courseVersionId);
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        CourseVersion courseVersion = courseVersionRepository.findById(courseVersionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course version not found: " + courseVersionId));
+
+        Course course = courseVersion.getCourse();
+
+        checkNotAlreadyEnrolled(studentId, course.getId());
+
+        Enrollment enrollment = createAndStartEnrollment(student, course, courseVersion);
+        log.info("Successfully enrolled student {} in course {}", studentId, course.getId());
 
         return enrollmentMapper.toDetailResponse(enrollment);
     }

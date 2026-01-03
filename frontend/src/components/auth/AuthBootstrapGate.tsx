@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useAuthBootstrap } from "@/hooks/auth/useAuthBootstrap";
 import { tokenStorage } from "@/lib/api/tokenStorage";
+import { DEMO_MODE } from "@/lib/env";
 
 /**
  * Public routes that don't require auth
@@ -62,13 +63,18 @@ export function AuthBootstrapGate({ children }: AuthBootstrapGateProps) {
   const isPublic = isPublicRoute(pathname);
   const isAuth = isAuthRoute(pathname);
 
+  // For protected routes, bootstrap auth (always call hook, conditionally use result)
+  const { isLoading, isReady, error } = useAuthBootstrap();
+
+  // DEMO_MODE: Always render children, skip all auth checks
+  if (DEMO_MODE) {
+    return <>{children}</>;
+  }
+
   // For public routes, render immediately
   if (isPublic) {
     return <>{children}</>;
   }
-
-  // For protected routes, bootstrap auth
-  const { isLoading, isReady, error } = useAuthBootstrap();
 
   // If no token and not on auth route, redirect will be handled by middleware
   if (!hasToken && !isAuth) {

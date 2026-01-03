@@ -12,7 +12,9 @@ import {
   Wallet,
   BarChart3,
   ChevronLeft,
-  GraduationCap
+  GraduationCap,
+  HelpCircle,
+  Bell
 } from "lucide-react";
 
 interface SidebarProps {
@@ -28,9 +30,11 @@ export const TeacherSidebar = ({ isCollapsed, onToggle, isMobileOpen, onMobileCl
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/teacher/dashboard" },
     { icon: BookOpen, label: "My Courses", href: "/teacher/courses" },
+    { icon: HelpCircle, label: "Question Banks", href: "/teacher/question-banks" },
     { icon: Users, label: "Students", href: "/teacher/students" },
     { icon: FileText, label: "Assignments", href: "/teacher/assignments" },
     { icon: MessageSquare, label: "Q&A", href: "/teacher/qna" },
+    { icon: Bell, label: "Notifications", href: "/teacher/notifications" },
     { icon: Wallet, label: "Payouts", href: "/teacher/payouts" },
     { icon: BarChart3, label: "Analytics", href: "/teacher/analytics" },
   ];

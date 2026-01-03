@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
+import lombok.Builder;
 import lombok.Data;
 import vn.uit.lms.shared.constant.Gender;
 import vn.uit.lms.shared.exception.InvalidFileException;

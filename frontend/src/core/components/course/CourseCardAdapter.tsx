@@ -54,9 +54,20 @@ export function CourseCardAdapter({ course, className }: CourseCardAdapterProps)
         <h3 className="line-clamp-2 text-[16px] font-semibold leading-snug">
           {course.title}
         </h3>
-        <div className="mt-1 text-[13px] text-muted-foreground">
-          {course.teacherName || "Instructor"}
-        </div>
+        {course.teacherId && (
+          <Link
+            href={`/teachers/${course.teacherId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1 text-[13px] text-muted-foreground hover:text-[var(--brand-600)] transition"
+          >
+            {course.teacherName || "Instructor"}
+          </Link>
+        )}
+        {!course.teacherId && (
+          <div className="mt-1 text-[13px] text-muted-foreground">
+            Instructor
+          </div>
+        )}
 
         {/* Rating */}
         {rating > 0 && (

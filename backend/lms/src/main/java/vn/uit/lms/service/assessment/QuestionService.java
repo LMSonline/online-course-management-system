@@ -83,36 +83,52 @@ public class QuestionService {
             question.setMaxPoints(request.getMaxPoints());
         }
 
-        // Update options if provided? Or just question details?
-        // Usually updateQuestion might update options too, but we have manageAnswerOptions.
-        // Let's assume this updates basic info, and if options are provided, it replaces them?
-        // For simplicity, let's stick to basic info update here, or full replacement if options provided.
-        // Given manageAnswerOptions exists, maybe this just updates content/type.
-        // But if the user sends options, we should probably handle it.
-
-        // Ý nó nói là có nên update tất cả options không?
-
+        // Update answer options if provided
         if (request.getAnswerOptions() != null) {
-            // Clear existing options
-            answerOptionRepository.deleteByQuestionId(id);
-
-            List<AnswerOption> options = new ArrayList<>();
-            for (AnswerOptionRequest optionReq : request.getAnswerOptions()) {
-                AnswerOption option = AnswerOption.builder()
-                        .content(optionReq.getContent())
-                        .isCorrect(optionReq.getIsCorrect())
-                        .orderIndex(optionReq.getOrderIndex())
-                        .question(question)
-                        .build();
-                options.add(option);
-            }
-            answerOptionRepository.saveAll(options);
-            question.setAnswerOptions(options);
+            updateAnswerOptions(question, request.getAnswerOptions());
         }
 
         question = questionRepository.save(question);
         return QuestionMapper.toResponse(question);
     }
+
+    /**
+     * Helper method to properly update answer options without orphan removal errors
+     */
+    private void updateAnswerOptions(Question question, List<AnswerOptionRequest> newOptionsRequest) {
+        // Get existing options
+        List<AnswerOption> existingOptions = question.getAnswerOptions();
+
+        if (existingOptions != null && !existingOptions.isEmpty()) {
+            // Remove all existing options from the collection
+            existingOptions.clear();
+            // Flush to sync with DB
+            questionRepository.flush();
+        }
+
+        // Delete all old options
+        answerOptionRepository.deleteByQuestionId(question.getId());
+        answerOptionRepository.flush();
+
+        // Create and add new options
+        List<AnswerOption> newOptions = new ArrayList<>();
+        for (AnswerOptionRequest optionReq : newOptionsRequest) {
+            AnswerOption option = AnswerOption.builder()
+                    .content(optionReq.getContent())
+                    .isCorrect(optionReq.getIsCorrect())
+                    .orderIndex(optionReq.getOrderIndex())
+                    .question(question)
+                    .build();
+            newOptions.add(option);
+        }
+
+        // Save new options
+        List<AnswerOption> savedOptions = answerOptionRepository.saveAll(newOptions);
+
+        // Update the question's collection reference
+        question.setAnswerOptions(savedOptions);
+    }
+
 
     @Transactional
     public void deleteQuestion(Long id) {
@@ -127,25 +143,105 @@ public class QuestionService {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
 
-        // This method could be "replace all options" or "add/update".
-        // Based on the name "manage", and typical REST patterns, POST to .../answer-options might mean adding or replacing.
-        // Let's assume it replaces all options for simplicity and consistency with "managing" the set.
-
-        answerOptionRepository.deleteByQuestionId(questionId);
-
-        List<AnswerOption> options = new ArrayList<>();
-        for (AnswerOptionRequest optionReq : optionsReq) {
-            AnswerOption option = AnswerOption.builder()
-                    .content(optionReq.getContent())
-                    .isCorrect(optionReq.getIsCorrect())
-                    .orderIndex(optionReq.getOrderIndex())
-                    .question(question)
-                    .build();
-            options.add(option);
-        }
-        answerOptionRepository.saveAll(options);
-        question.setAnswerOptions(options);
+        // Use the same helper method to avoid code duplication
+        updateAnswerOptions(question, optionsReq);
 
         return QuestionMapper.toResponse(question);
     }
+
+    /**
+     * Search questions by content
+     */
+    public List<QuestionResponse> searchQuestions(Long bankId, String keyword) {
+        List<Question> questions = questionRepository.findByQuestionBankId(bankId);
+
+        return questions.stream()
+                .filter(q -> q.getContent().toLowerCase().contains(keyword.toLowerCase()))
+                .map(QuestionMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get questions by type from a bank
+     */
+    public List<QuestionResponse> getQuestionsByType(Long bankId, vn.uit.lms.shared.constant.QuestionType type) {
+        return questionRepository.findByQuestionBankId(bankId).stream()
+                .filter(q -> q.getType() == type)
+                .map(QuestionMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Clone question to another bank
+     */
+    @Transactional
+    public QuestionResponse cloneQuestion(Long questionId, Long targetBankId) {
+        Question sourceQuestion = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
+
+        QuestionBank targetBank = questionBankRepository.findById(targetBankId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target question bank not found"));
+
+        Question clonedQuestion = Question.builder()
+                .content(sourceQuestion.getContent())
+                .type(sourceQuestion.getType())
+                .metadata(sourceQuestion.getMetadata())
+                .maxPoints(sourceQuestion.getMaxPoints())
+                .questionBank(targetBank)
+                .build();
+
+        clonedQuestion = questionRepository.save(clonedQuestion);
+
+        // Clone answer options
+        if (sourceQuestion.getAnswerOptions() != null && !sourceQuestion.getAnswerOptions().isEmpty()) {
+            List<AnswerOption> clonedOptions = new ArrayList<>();
+            for (AnswerOption sourceOption : sourceQuestion.getAnswerOptions()) {
+                AnswerOption clonedOption = AnswerOption.builder()
+                        .content(sourceOption.getContent())
+                        .isCorrect(sourceOption.isCorrect())
+                        .orderIndex(sourceOption.getOrderIndex())
+                        .question(clonedQuestion)
+                        .build();
+                clonedOptions.add(clonedOption);
+            }
+            answerOptionRepository.saveAll(clonedOptions);
+            clonedQuestion.setAnswerOptions(clonedOptions);
+        }
+
+        return QuestionMapper.toResponse(clonedQuestion);
+    }
+
+    /**
+     * Bulk delete questions
+     */
+    @Transactional
+    public void bulkDeleteQuestions(List<Long> questionIds) {
+        questionRepository.deleteAllById(questionIds);
+    }
+
+    /**
+     * Update question max points
+     */
+    @Transactional
+    public QuestionResponse updateMaxPoints(Long questionId, Double maxPoints) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
+
+        if (maxPoints != null && maxPoints < 0) {
+            throw new vn.uit.lms.shared.exception.InvalidRequestException("Max points cannot be negative");
+        }
+
+        question.setMaxPoints(maxPoints);
+        question = questionRepository.save(question);
+
+        return QuestionMapper.toResponse(question);
+    }
+
+    /**
+     * Get question count for a bank
+     */
+    public int getQuestionCount(Long bankId) {
+        return questionRepository.findByQuestionBankId(bankId).size();
+    }
 }
+

@@ -8,6 +8,9 @@ import {
   GradeSubmissionRequest,
   FeedbackSubmissionRequest,
   SubmissionFileResponse,
+  AssignmentEligibilityResponse,
+  AssignmentStatisticsResponse,
+  StudentProgressResponse,
 } from "./assignment.types";
 
 export const assignmentService = {
@@ -84,6 +87,43 @@ export const assignmentService = {
     const response = await axiosClient.get<ApiResponse<SubmissionResponse[]>>(
       `/assignments/${id}/submissions`
     );
+    return unwrapResponse(response);
+  },
+
+  /**
+   * Check assignment eligibility (Student only)
+   */
+  checkAssignmentEligibility: async (
+    id: number
+  ): Promise<AssignmentEligibilityResponse> => {
+    const response = await axiosClient.get<
+      ApiResponse<AssignmentEligibilityResponse>
+    >(`/assignments/${id}/eligibility`);
+    return unwrapResponse(response);
+  },
+
+  /**
+   * Get assignment statistics (Teacher only)
+   */
+  getAssignmentStatistics: async (
+    id: number
+  ): Promise<AssignmentStatisticsResponse> => {
+    const response = await axiosClient.get<
+      ApiResponse<AssignmentStatisticsResponse>
+    >(`/assignments/${id}/statistics`);
+    return unwrapResponse(response);
+  },
+
+  /**
+   * Get student progress for assignment (Student or Teacher)
+   */
+  getStudentProgress: async (
+    assignmentId: number,
+    studentId: number
+  ): Promise<StudentProgressResponse> => {
+    const response = await axiosClient.get<
+      ApiResponse<StudentProgressResponse>
+    >(`/assignments/${assignmentId}/students/${studentId}/progress`);
     return unwrapResponse(response);
   },
 
@@ -191,7 +231,7 @@ export const assignmentService = {
 
     const response = await axiosClient.post<
       ApiResponse<SubmissionFileResponse>
-    >(`/submissions/${submissionId}/files`, formData, {
+    >(`/submissions/${submissionId}/files/upload`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 import LearnerNavbar from "@/core/components/learner/navbar/LearnerNavbar";
-import TeacherNavbar from "@/core/components/teacher/navbar/TeacherNavbar";
+import { TeacherNavbar } from "@/core/components/teacher/layout/TeacherNavbar";
 import AdminNavbar from "@/core/components/admin/navbar/AdminNavbar";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
@@ -59,7 +59,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       {role === "STUDENT" && <LearnerNavbar />}
-      {role === "TEACHER" && <TeacherNavbar />}
+      {role === "TEACHER" && <TeacherNavbar onMenuClick={() => { }} isCollapsed={false} />}
       {role === "ADMIN" && <AdminNavbar />}
 
       <main className="min-h-[72vh]">{children}</main>

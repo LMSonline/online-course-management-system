@@ -311,6 +311,8 @@ export default function CourseVersionsPage() {
 
                                         {/* Actions */}
                                         <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+
+
                                             <Link
                                                 href={`/teacher/courses/${slug}/versions/${version.id}/view`}
                                                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -322,7 +324,7 @@ export default function CourseVersionsPage() {
                                             {version.status !== "PUBLISHED" && version.status !== "ARCHIVED" && (
                                                 <Link
                                                     href={`/teacher/courses/${slug}/versions/${version.id}/content`}
-                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                     Edit Content

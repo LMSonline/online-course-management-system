@@ -12,6 +12,8 @@ import vn.uit.lms.shared.constant.ChannelType;
 import vn.uit.lms.shared.dto.request.community.notification.NotificationChannelCreateRequest;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/admin/notification-channels")
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class NotificationChannelController {
     private final NotificationRepository notificationRepository;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody NotificationChannelCreateRequest req) {
+    public ResponseEntity<NotificationChannel> create(@RequestBody NotificationChannelCreateRequest req) {
 
         NotificationChannel channel = new NotificationChannel();
 
@@ -38,12 +40,12 @@ public class NotificationChannelController {
     }
 
     @GetMapping
-    public ResponseEntity<?> list() {
+    public ResponseEntity<List<NotificationChannel>> list() {
         return ResponseEntity.ok(channelRepository.findAll());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id,
+    public ResponseEntity<NotificationChannel> update(@PathVariable Long id,
                                     @RequestBody NotificationChannelCreateRequest req) {
 
         NotificationChannel channel = channelRepository.findById(id)

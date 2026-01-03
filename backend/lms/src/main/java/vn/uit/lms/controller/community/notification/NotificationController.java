@@ -13,6 +13,7 @@ import vn.uit.lms.shared.util.SecurityUtils;
 import vn.uit.lms.shared.util.annotation.Authenticated;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,7 +26,7 @@ public class NotificationController {
     private final NotificationMapper notificationMapper; // ⭐ FIXED
 
     @GetMapping
-    public ResponseEntity<?> getList(Pageable pageable) {
+    public ResponseEntity<PageResponse<NotificationResponse>> getList(Pageable pageable) {
 
         Long accountId = SecurityUtils.getCurrentUserId().orElseThrow();
 
@@ -50,36 +51,36 @@ public class NotificationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getDetail(@PathVariable Long id) {
+    public ResponseEntity<NotificationResponse> getDetail(@PathVariable Long id) {
         Long accountId = SecurityUtils.getCurrentUserId().orElseThrow();
         Notification n = notificationService.get(id, accountId);
         return ResponseEntity.ok(notificationMapper.toResponse(n)); // ⭐ FIXED
     }
 
     @PostMapping("/{id}/mark-read")
-    public ResponseEntity<?> markRead(@PathVariable Long id) {
+    public ResponseEntity<String> markRead(@PathVariable Long id) {
         Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
         notificationService.markRead(id, acc); // ⭐ FIXED
         return ResponseEntity.ok("Marked as read");
     }
 
     @PostMapping("/mark-all-read")
-    public ResponseEntity<?> markAllRead() {
+    public ResponseEntity<String> markAllRead() {
         Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
         notificationService.markAllRead(acc); // ⭐ FIXED
         return ResponseEntity.ok("All marked read");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<String> delete(@PathVariable Long id) {
         Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
         notificationService.delete(id, acc); // ⭐ FIXED
         return ResponseEntity.ok("Deleted");
     }
 
     @GetMapping("/count-unread")
-    public ResponseEntity<?> countUnread() {
+    public ResponseEntity<Map<String, Long>> countUnread() {
         Long acc = SecurityUtils.getCurrentUserId().orElseThrow();
-        return ResponseEntity.ok(notificationService.countUnread(acc)); // ⭐ FIXED
+        return ResponseEntity.ok(Map.of("count", notificationService.countUnread(acc))); // ⭐ FIXED
     }
 }

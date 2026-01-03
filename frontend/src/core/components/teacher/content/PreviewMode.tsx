@@ -14,11 +14,21 @@ import {
     Loader2,
     List,
     Menu,
+    Download,
+    ExternalLink,
+    FileIcon,
+    Link2,
+    Clock,
 } from "lucide-react";
 import { ChapterResponse } from "@/services/courses/content/chapter.types";
 import { LessonResponse } from "@/services/courses/content/lesson.types";
 import { LessonResourceResponse } from "@/services/courses/content/lesson-resource.types";
+import { QuizResponse } from "@/services/assessment/assessment.types";
+import { AssignmentResponse } from "@/services/assignment/assignment.types";
 import { lessonService } from "@/services/courses/content/lesson.service";
+import { lessonResourceService } from "@/services/courses/content/lesson-resource.service";
+import { assessmentService } from "@/services/assessment/assessment.service";
+import { assignmentService } from "@/services/assignment/assignment.service";
 import { toast } from "sonner";
 
 interface PreviewModeProps {
@@ -47,6 +57,12 @@ export const PreviewMode = ({
     const hlsRef = useRef<Hls | null>(null);
     const videoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Lesson content data
+    const [lessonResources, setLessonResources] = useState<LessonResourceResponse[]>([]);
+    const [lessonQuizzes, setLessonQuizzes] = useState<QuizResponse[]>([]);
+    const [lessonAssignments, setLessonAssignments] = useState<AssignmentResponse[]>([]);
+    const [loadingContent, setLoadingContent] = useState(false);
+
     // Auto-expand all chapters and select first lesson on open
     useEffect(() => {
         if (isOpen && chapters.length > 0) {
@@ -64,6 +80,31 @@ export const PreviewMode = ({
             }
         }
     }, [isOpen, chapters]);
+
+    // Load lesson content when selected lesson changes
+    useEffect(() => {
+        if (selectedLesson) {
+            loadLessonContent(selectedLesson.id);
+        }
+    }, [selectedLesson]);
+
+    const loadLessonContent = async (lessonId: number) => {
+        try {
+            setLoadingContent(true);
+            const [resources, quizzes, assignments] = await Promise.all([
+                lessonResourceService.getLessonResources(lessonId).catch(() => []),
+                assessmentService.getQuizzesByLesson(lessonId).catch(() => []),
+                assignmentService.getAssignmentsByLesson(lessonId).catch(() => []),
+            ]);
+            setLessonResources(resources);
+            setLessonQuizzes(quizzes);
+            setLessonAssignments(assignments);
+        } catch (error) {
+            console.error("Failed to load lesson content:", error);
+        } finally {
+            setLoadingContent(false);
+        }
+    };
 
     // Load video and setup auto-refresh
     useEffect(() => {
@@ -417,6 +458,169 @@ export const PreviewMode = ({
                                 <h2 className="text-2xl font-bold text-white mb-2">
                                     {selectedLesson.title}
                                 </h2>
+
+                                {/* Lesson Resources */}
+                                {loadingContent ? (
+                                    <div className="flex justify-center py-8">
+                                        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6 mb-8">
+                                        {/* Resources Section */}
+                                        {lessonResources.length > 0 && (
+                                            <div className="bg-slate-800 rounded-lg p-4">
+                                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                                    <FileIcon className="w-5 h-5" />
+                                                    Resources
+                                                </h3>
+                                                <div className="space-y-2">
+                                                    {lessonResources.map((resource) => (
+                                                        <div
+                                                            key={resource.id}
+                                                            className="flex items-center justify-between p-3 bg-slate-750 hover:bg-slate-700 rounded-lg transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-1">
+                                                                {resource.resourceType === "FILE" ? (
+                                                                    <FileText className="w-5 h-5 text-indigo-400" />
+                                                                ) : (
+                                                                    <Link2 className="w-5 h-5 text-green-400" />
+                                                                )}
+                                                                <div className="flex-1">
+                                                                    <p className="text-white font-medium">{resource.title}</p>
+                                                                    {resource.description && (
+                                                                        <p className="text-sm text-slate-400">{resource.description}</p>
+                                                                    )}
+                                                                    {resource.fileName && (
+                                                                        <p className="text-xs text-slate-500 mt-1">
+                                                                            {resource.fileName} {resource.formattedFileSize && `(${resource.formattedFileSize})`}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            {resource.downloadUrl && (
+                                                                <a
+                                                                    href={resource.downloadUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+                                                                >
+                                                                    <Download className="w-4 h-4" />
+                                                                    Download
+                                                                </a>
+                                                            )}
+                                                            {resource.externalUrl && !resource.downloadUrl && (
+                                                                <a
+                                                                    href={resource.externalUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+                                                                >
+                                                                    <ExternalLink className="w-4 h-4" />
+                                                                    Open
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Quizzes Section */}
+                                        {lessonQuizzes.length > 0 && (
+                                            <div className="bg-slate-800 rounded-lg p-4">
+                                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                                    <Award className="w-5 h-5" />
+                                                    Quizzes
+                                                </h3>
+                                                <div className="space-y-2">
+                                                    {lessonQuizzes.map((quiz) => (
+                                                        <div
+                                                            key={quiz.id}
+                                                            className="flex items-center justify-between p-3 bg-slate-750 hover:bg-slate-700 rounded-lg transition-colors"
+                                                        >
+                                                            <div className="flex-1">
+                                                                <p className="text-white font-medium">{quiz.title}</p>
+                                                                {quiz.description && (
+                                                                    <p className="text-sm text-slate-400 mt-1">{quiz.description}</p>
+                                                                )}
+                                                                <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                                                    {quiz.totalQuestions && (
+                                                                        <span>{quiz.totalQuestions} questions</span>
+                                                                    )}
+                                                                    {quiz.timeLimit && (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Clock className="w-3 h-3" />
+                                                                            {quiz.timeLimit} mins
+                                                                        </span>
+                                                                    )}
+                                                                    {quiz.passingScore && (
+                                                                        <span>Passing: {quiz.passingScore}%</span>
+                                                                    )}
+                                                                    <span className={`px-2 py-0.5 rounded ${quiz.status === 'PUBLISHED' ? 'bg-green-900/30 text-green-400' :
+                                                                        quiz.status === 'DRAFT' ? 'bg-amber-900/30 text-amber-400' :
+                                                                            'bg-slate-700 text-slate-400'
+                                                                        }`}>
+                                                                        {quiz.status}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Assignments Section */}
+                                        {lessonAssignments.length > 0 && (
+                                            <div className="bg-slate-800 rounded-lg p-4">
+                                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                                    <FileQuestion className="w-5 h-5" />
+                                                    Assignments
+                                                </h3>
+                                                <div className="space-y-2">
+                                                    {lessonAssignments.map((assignment) => (
+                                                        <div
+                                                            key={assignment.id}
+                                                            className="flex items-center justify-between p-3 bg-slate-750 hover:bg-slate-700 rounded-lg transition-colors"
+                                                        >
+                                                            <div className="flex-1">
+                                                                <p className="text-white font-medium">{assignment.title}</p>
+                                                                {assignment.description && (
+                                                                    <p className="text-sm text-slate-400 mt-1">{assignment.description}</p>
+                                                                )}
+                                                                <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                                                    {assignment.maxScore && (
+                                                                        <span>Max score: {assignment.maxScore}</span>
+                                                                    )}
+                                                                    {assignment.dueDate && (
+                                                                        <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                                                                    )}
+                                                                    {assignment.totalSubmissions !== undefined && (
+                                                                        <span>{assignment.totalSubmissions} submissions</span>
+                                                                    )}
+                                                                    <span className={`px-2 py-0.5 rounded ${assignment.status === 'PUBLISHED' ? 'bg-green-900/30 text-green-400' :
+                                                                        assignment.status === 'DRAFT' ? 'bg-amber-900/30 text-amber-400' :
+                                                                            'bg-slate-700 text-slate-400'
+                                                                        }`}>
+                                                                        {assignment.status}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Empty State */}
+                                        {lessonResources.length === 0 && lessonQuizzes.length === 0 && lessonAssignments.length === 0 && (
+                                            <div className="bg-slate-800 rounded-lg p-8 text-center">
+                                                <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                                                <p className="text-slate-400">No additional content for this lesson</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Navigation Buttons */}
                                 <div className="flex gap-3">

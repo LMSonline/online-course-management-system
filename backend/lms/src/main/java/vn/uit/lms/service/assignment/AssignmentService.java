@@ -15,6 +15,7 @@ import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.shared.dto.request.assignment.AssignmentRequest;
 import vn.uit.lms.shared.dto.response.assignment.*;
+import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.AssignmentMapper;
 
@@ -248,5 +249,90 @@ public class AssignmentService {
                 .bestScore(bestScore)
                 .isPassing(isPassing)
                 .build();
+    }
+
+    /**
+     * Clone assignment to another lesson (for teachers)
+     */
+    @Transactional
+    public AssignmentResponse cloneAssignment(Long assignmentId, Long targetLessonId) {
+        Assignment sourceAssignment = getAssignmentEntity(assignmentId);
+        Lesson targetLesson = lessonRepository.findById(targetLessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target lesson not found"));
+
+        Assignment clonedAssignment = Assignment.builder()
+                .lesson(targetLesson)
+                .title(sourceAssignment.getTitle() + " (Copy)")
+                .description(sourceAssignment.getDescription())
+                .assignmentType(sourceAssignment.getAssignmentType())
+                .totalPoints(sourceAssignment.getTotalPoints())
+                .timeLimitMinutes(sourceAssignment.getTimeLimitMinutes())
+                .maxAttempts(sourceAssignment.getMaxAttempts())
+                .dueDate(sourceAssignment.getDueDate())
+                .build();
+
+        clonedAssignment.validate();
+        clonedAssignment = assignmentRepository.save(clonedAssignment);
+        
+        return AssignmentMapper.toResponse(clonedAssignment);
+    }
+
+    /**
+     * Get all late submissions for an assignment
+     */
+    public List<SubmissionResponse> getLateSubmissions(Long assignmentId) {
+        if (!assignmentRepository.existsById(assignmentId)) {
+            throw new ResourceNotFoundException("Assignment not found");
+        }
+        
+        return submissionRepository.findByAssignmentId(assignmentId).stream()
+                .filter(Submission::isLate)
+                .map(AssignmentMapper::toSubmissionResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all pending submissions for an assignment (need grading)
+     */
+    public List<SubmissionResponse> getPendingSubmissions(Long assignmentId) {
+        if (!assignmentRepository.existsById(assignmentId)) {
+            throw new ResourceNotFoundException("Assignment not found");
+        }
+        
+        return submissionRepository.findByAssignmentId(assignmentId).stream()
+                .filter(Submission::isPending)
+                .map(AssignmentMapper::toSubmissionResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get assignments by lesson and type
+     */
+    public List<AssignmentResponse> getAssignmentsByType(Long lessonId, vn.uit.lms.shared.constant.AssignmentType type) {
+        return assignmentRepository.findByLessonId(lessonId).stream()
+                .filter(a -> a.getAssignmentType() == type)
+                .map(AssignmentMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Extend assignment due date (for teachers)
+     */
+    @Transactional
+    public AssignmentResponse extendDueDate(Long assignmentId, java.time.Instant newDueDate) {
+        Assignment assignment = getAssignmentEntity(assignmentId);
+        
+        if (newDueDate == null) {
+            throw new InvalidRequestException("New due date cannot be null");
+        }
+        
+        if (assignment.hasDueDate() && newDueDate.isBefore(assignment.getDueDate())) {
+            throw new InvalidRequestException("New due date must be after current due date");
+        }
+        
+        assignment.setDueDate(newDueDate);
+        assignment = assignmentRepository.save(assignment);
+        
+        return AssignmentMapper.toResponse(assignment);
     }
 }

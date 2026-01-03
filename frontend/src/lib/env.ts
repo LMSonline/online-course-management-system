@@ -1,3 +1,5 @@
+export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 export const ENV = {
   API: {
     BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "",
@@ -5,7 +7,11 @@ export const ENV = {
 
     get BASE_API_URL() {
       if (!this.BASE_URL) {
-        console.warn("Missing NEXT_PUBLIC_API_BASE_URL");
+        const errorMsg = "Missing NEXT_PUBLIC_API_BASE_URL - API calls will fail!";
+        console.error(errorMsg);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Please set NEXT_PUBLIC_API_BASE_URL in .env.local");
+        }
         return "";
       }
 
@@ -19,10 +25,20 @@ export const ENV = {
       if (version) {
         // Ensure no double slashes
         const url = `${baseUrl}/${version}`;
-        return url.replace(/([^:]\/)\/+/g, "$1");
+        const finalUrl = url.replace(/([^:]\/)\/+/g, "$1");
+        
+        // DEV: Log final URL
+        if (process.env.NODE_ENV === "development") {
+          console.log("[ENV] API Base URL:", finalUrl);
+        }
+        
+        return finalUrl;
       }
       
       // If no version, return baseUrl (ensure no trailing slash)
+      if (process.env.NODE_ENV === "development") {
+        console.log("[ENV] API Base URL:", baseUrl);
+      }
       return baseUrl;
     },
   },

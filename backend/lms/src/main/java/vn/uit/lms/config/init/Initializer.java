@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import vn.uit.lms.core.domain.Account;
@@ -30,6 +31,7 @@ import java.util.List;
  * <p>This ensures that at least one admin and demo accounts exist for quick setup
  * after deployment.</p>
  */
+@Order(1)
 @Component
 public class Initializer implements CommandLineRunner {
 

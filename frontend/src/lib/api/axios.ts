@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from "axios";
-import { ENV } from "@/lib/env";
+import { ENV, DEMO_MODE } from "@/lib/env";
 import { tokenStorage } from "./tokenStorage";
 import { AppError } from "./api.error";
 import type { ContractKey } from "./contractKeys";
@@ -49,16 +49,19 @@ function processQueue(error: any, token: string | null) {
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = tokenStorage.getAccessToken();
-    const hasAuthHeader = !!(token && config.headers);
-    
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    // Attach contractKey to header if provided
-    if (config.contractKey && config.headers) {
-      config.headers["X-Contract-Key"] = config.contractKey;
+    // DEMO_MODE: Skip Authorization header and contract key
+    if (!DEMO_MODE) {
+      const token = tokenStorage.getAccessToken();
+      const hasAuthHeader = !!(token && config.headers);
+      
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      // Attach contractKey to header if provided
+      if (config.contractKey && config.headers) {
+        config.headers["X-Contract-Key"] = config.contractKey;
+      }
     }
     
     // DEV: Log every request
@@ -83,6 +86,17 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<any>) => {
+    // DEMO_MODE: Skip token refresh logic
+    if (DEMO_MODE) {
+      const contractKey = (error.config as AxiosRequestConfig)?.contractKey;
+      throw new AppError(
+        error.response?.data?.message || "Request failed",
+        error.response?.status || 500,
+        error.response?.data?.code || "UNKNOWN_ERROR",
+        contractKey
+      );
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
