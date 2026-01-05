@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "example.com" },
     ],
+    // Thêm domain cho next/image
+    domains: [
+      "ui-avatars.com",
+      // Nếu có domain khác, thêm ở đây
+    ],
     // Allow unoptimized images for development (optional, can remove in production)
     unoptimized: process.env.NODE_ENV === "development" ? false : false,
   },

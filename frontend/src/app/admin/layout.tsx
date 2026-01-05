@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminGuard } from "@/core/components/guards";
-import AdminNavbar from "@/core/components/admin/navbar/AdminNavbar";
+import { AdminSidebar } from "@/core/components/admin/dashboard/AdminSidebar";
+import { AdminTopBar } from "@/core/components/admin/dashboard/AdminTopBar";
 
 /**
  * AdminLayout - requireAdmin guard
@@ -11,8 +12,15 @@ import AdminNavbar from "@/core/components/admin/navbar/AdminNavbar";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
         <AdminGuard>
-            <AdminNavbar />
-            <main className="min-h-[72vh]">{children}</main>
+            <div className="flex min-h-screen bg-[#181f36]">
+                <AdminSidebar />
+                <div className="flex-1 flex flex-col">
+                    <AdminTopBar stats={{}} />
+                    <main className="min-h-[72vh] flex-1 px-8 py-6">
+                        {children}
+                    </main>
+                </div>
+            </div>
         </AdminGuard>
     );
 }

@@ -1,13 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Users, BookOpen, Settings, FileText, User, LogOut } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 export default function AdminNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { mutate: logout, isPending } = useLogout();
+
+  // Redirect to /admin/dashboard if at /admin or /admin/
+  useEffect(() => {
+    if (pathname === "/admin" || pathname === "/admin/") {
+      router.replace("/admin/dashboard");
+    }
+  }, [pathname, router]);
 
   const navItems = [
     { label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard size={18} /> },

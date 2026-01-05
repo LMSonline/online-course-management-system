@@ -49,10 +49,12 @@ function processQueue(error: any, token: string | null) {
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    let hasAuthHeader = false; // <-- Khai báo ở đây
+
     // DEMO_MODE: Skip Authorization header and contract key
     if (!DEMO_MODE) {
       const token = tokenStorage.getAccessToken();
-      const hasAuthHeader = !!(token && config.headers);
+      hasAuthHeader = !!(token && config.headers); // <-- Gán giá trị ở đây
       
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -165,9 +167,9 @@ axiosClient.interceptors.response.use(
     const contractKey = (originalRequest as AxiosRequestConfig)?.contractKey;
 
     throw new AppError(
-      error.response?.data?.message || "Request failed",
-      error.response?.status || 500,
-      error.response?.data?.code || "UNKNOWN_ERROR",
+      error.response?.data?.message ?? "Request failed",
+      error.response?.status ?? 500,
+      error.response?.data?.code ?? "UNKNOWN_ERROR",
       contractKey
     );
   }

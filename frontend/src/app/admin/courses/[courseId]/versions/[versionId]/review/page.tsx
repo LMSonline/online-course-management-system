@@ -126,8 +126,8 @@ export default function AdminCourseVersionApprovalScreen() {
     }
   };
 
-  const canApprove = version.status === "PENDING" || version.status === "SUBMITTED";
-  const canReject = version.status === "PENDING" || version.status === "SUBMITTED";
+  const canApprove = version.status === "PENDING" ;
+  const canReject = version.status === "PENDING";
 
   return (
     <div className="container mx-auto px-4 py-8">

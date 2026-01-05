@@ -53,8 +53,7 @@ export default function LoginPage() {
         redirectUrl: redirectUrl || undefined,
       });
     }
-    
-    login(
+login(
       {
         login: data.email,
         password: data.password,
