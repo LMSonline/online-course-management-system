@@ -74,7 +74,7 @@ export const authService = {
       console.log("[AuthService] Login response:", {
         status: response.status,
         hasAccessToken: !!response.data.data?.accessToken,
-        role: response.data.data?.role,
+        role: response.data.data?.user?.role,
       });
     }
     
