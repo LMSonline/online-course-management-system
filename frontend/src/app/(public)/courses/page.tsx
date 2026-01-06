@@ -24,10 +24,18 @@ export default function CourseListScreen() {
   const category = searchParams.get("category") || undefined;
   const q = searchParams.get("q") || undefined;
 
+  // Map UI sort value to backend sort param
+  let backendSort = sort;
+  if (sort === "all") backendSort = "";
+  else if (sort === "newest") backendSort = "createdAt,desc";
+  else if (sort === "rating") backendSort = "averageRating,desc";
+  else if (sort === "popular") backendSort = "enrollmentCount,desc";
+  // Add more mappings as needed
+
   const { data, isLoading, isError, error, refetch } = useCourseList({
     page,
     size,
-    sort,
+    sort: backendSort,
     category,
     q,
   });
@@ -55,6 +63,7 @@ export default function CourseListScreen() {
               onChange={(e) => handleSortChange(e.target.value)}
               className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-sm"
             >
+              <option value="all">All</option>
               <option value="newest">Newest</option>
               <option value="trending">Trending</option>
               <option value="popular">Popular</option>
