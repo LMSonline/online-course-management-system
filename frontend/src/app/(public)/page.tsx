@@ -41,7 +41,6 @@ const slides: BannerSlide[] = [
 
 function FeaturedCoursesSection() {
   const { data, isLoading, isError, error, refetch } = useCourseList({
-    sort: "trending",
     size: 12,
   });
 

@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
       // Placeholder services
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "example.com" },
+      // Unsplash images
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
     // Thêm domain cho next/image
     domains: [

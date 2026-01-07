@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Search, ShoppingCart, Bot, Menu, X, Sun, Moon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
@@ -16,6 +17,7 @@ function NavItem({ href, label, className }: { href: string; label: string; clas
 }
 
 export default function Navbar() {
+    const router = useRouter();
   const openPopup = useAssistantStore((s) => s.openPopup);
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export default function Navbar() {
             <input
               placeholder="Search for anything"
               className="search-input w-full"
-              onKeyDown={(e) => { if (e.key === "Enter") location.href = "/explore"; }}
+              onKeyDown={(e) => { if (e.key === "Enter") router.push("/explore"); }}
             />
           </div>
         </div>

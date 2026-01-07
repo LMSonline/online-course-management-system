@@ -3,7 +3,7 @@ import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import { DEMO_MODE } from "@/lib/env";
-import { DEMO_ENROLLMENTS, createDemoPageResponse } from "@/lib/demo/demoData";
+
 
 /**
  * Enrollment Response Type
@@ -42,11 +42,6 @@ export const enrollmentService = {
     page: number = 0,
     size: number = 20
   ): Promise<PageResponse<EnrollmentResponse>> => {
-    // DEMO_MODE: Return mock data
-    if (DEMO_MODE) {
-      return createDemoPageResponse(DEMO_ENROLLMENTS, page + 1, size);
-    }
-
     const response = await axiosClient.get<
       ApiResponse<PageResponse<EnrollmentResponse>>
     >(`/students/${studentId}/enrollments`, {
