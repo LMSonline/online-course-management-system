@@ -103,7 +103,17 @@ export default function MyEnrollmentsScreen() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {enrollments.map((enrollment) => (
+        {enrollments.map((enrollment: {
+          id: number;
+          courseId: number;
+          courseTitle: string;
+          versionNumber: number;
+          completionPercentage: number;
+          status: string;
+          averageScore?: number | null;
+          remainingDays: number;
+          // ...add other fields as needed
+        }) => (
           <Link
             key={enrollment.id}
             href={`/learn/${enrollment.courseId}`} // TODO: Backend should include courseSlug in EnrollmentResponse; for now using courseId
@@ -158,7 +168,7 @@ export default function MyEnrollmentsScreen() {
               </div>
               {enrollment.averageScore !== undefined && (
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Score: {enrollment.averageScore.toFixed(1)}
+                  Score: {typeof enrollment.averageScore === 'number' ? enrollment.averageScore.toFixed(1) : 'N/A'}
                 </span>
               )}
             </div>
