@@ -10,24 +10,46 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Giữ nguyên 3 màu cũ để code cũ không lỗi
+        // Semantic colors mapped to CSS variables
         brand: {
-          900: "#2d5a27", // xanh đậm
-          600: "#3fa337", // xanh trung
-          200: "#d9f2c7", // xanh nhạt
+          900: "var(--brand-900)",
+          600: "var(--brand-600)",
+          200: "var(--brand-200)",
+          primary: "var(--brand-primary)",
+          secondary: "var(--brand-secondary)",
+          accent: "var(--brand-accent)",
         },
-
-        // 🎨 Thêm mới 3 màu chính theo logo hiện tại
-        "brand-primary": "#65D830", // neon lime chủ đạo
-        "brand-secondary": "#2B3A4A", // xanh than đậm
-        "brand-accent": "#CFF6B2", // xanh nhạt sáng viền
-
-        // Một số màu nền và chữ mở rộng
-        panel: "#0B1220",
-        ink: "#0F172A",
+        background: {
+          app: "var(--bg)",
+          surface: "var(--surface)",
+          surface2: "var(--surface-2)",
+        },
+        text: {
+          body: "var(--text)",
+          heading: "var(--text-heading)",
+          link: "var(--text-link)",
+          muted: "var(--muted)",
+        },
+        border: {
+          default: "var(--border)",
+          strong: "var(--border-strong)",
+        },
+        state: {
+          success: "var(--success)",
+          error: "var(--error)",
+          warning: "var(--warning)",
+          info: "var(--info)",
+        },
+        ring: {
+          default: "var(--ring)",
+        },
+        shadow: {
+          default: "var(--shadow)",
+          glow: "var(--shadow-glow)",
+        },
       },
       boxShadow: {
-        glow: "0 0 24px rgba(134,239,74,0.35)", // hiệu ứng neon
+        glow: "var(--shadow-glow)",
       },
       borderRadius: {
         xl2: "1.25rem",
