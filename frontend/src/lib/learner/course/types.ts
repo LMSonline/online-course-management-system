@@ -4,6 +4,7 @@ export type CourseSection = {
   title: string;
   lecturesCount: number;
   duration: string;
+  lessons?: import("@/lib/learner/player/types").PlayerLesson[];
 };
 
 export type CourseDetail = {

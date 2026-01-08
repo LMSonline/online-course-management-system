@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.*;
 import vn.uit.lms.core.repository.*;
+import vn.uit.lms.core.repository.log.UserActivityLogRepository;
 import vn.uit.lms.service.event.AccountActiveEvent;
 import vn.uit.lms.service.event.PasswordResetEvent;
 import vn.uit.lms.shared.constant.SecurityConstants;
@@ -27,6 +28,7 @@ import vn.uit.lms.shared.util.TokenHashUtil;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -50,6 +52,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserActivityLogRepository userActivityLogRepository;
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
@@ -66,7 +69,8 @@ public class AuthService {
                        TeacherRepository teacherRepository,
                        RefreshTokenRepository refreshTokenRepository,
                        PasswordEncoder passwordEncoder,
-                       ApplicationEventPublisher eventPublisher) {
+                       ApplicationEventPublisher eventPublisher,
+                       UserActivityLogRepository userActivityLogRepository) {
         this.accountRepository = accountRepository;
         this.emailService = emailService;
         this.emailVerificationRepository = emailVerificationRepository;
@@ -77,6 +81,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.userActivityLogRepository = userActivityLogRepository;
     }
 
     /**
@@ -213,6 +218,13 @@ public class AuthService {
         // Update last login (using domain behavior)
         accountDB.recordLogin();
         accountRepository.save(accountDB);
+
+        // Ghi log đăng nhập
+        UserActivityLog log = new UserActivityLog();
+        log.setAccountId(accountDB.getId());
+        log.setActionType("LOGIN");
+        log.setCreatedAt(LocalDateTime.now());
+        userActivityLogRepository.save(log);
 
         return resLoginDTO;
     }
