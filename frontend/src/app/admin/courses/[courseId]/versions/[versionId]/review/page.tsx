@@ -9,7 +9,7 @@ import {
   usePublishVersion,
 } from "@/hooks/admin/useAdminCourses";
 import { SafeImage } from "@/core/components/ui/SafeImage";
-
+import { CourseStatus } from "@/lib/admin/types";
 interface AdminCourseVersionReviewProps {
   courseId: number;
   versionId: number;
@@ -63,6 +63,16 @@ export default function AdminCourseVersionReview({
       setActionInProgress(false);
     }
   };
+const handleApproveAndPublish = async () => {
+  setActionInProgress(true);
+  try {
+    await approve.mutateAsync({ courseId, versionId });
+    await publish.mutateAsync({ courseId, versionId });
+    onClose();
+  } finally {
+    setActionInProgress(false);
+  }
+};
 
   if (isLoading) {
     return (
@@ -80,7 +90,7 @@ export default function AdminCourseVersionReview({
     );
   }
 
-  const statusBadgeColor = {
+const statusBadgeColor: Record<CourseStatus, string> = {
     PENDING: "bg-yellow-900/30 text-yellow-400",
     APPROVED: "bg-green-900/30 text-green-400",
     REJECTED: "bg-red-900/30 text-red-400",
@@ -130,7 +140,8 @@ export default function AdminCourseVersionReview({
               </div>
               <div>
                 <p className="text-gray-400 text-sm">Pass Score</p>
-                <p className="text-white font-semibold">{version.passScore}%</p>
+                <p className="text-white font-semibold">{version.passScore}/10
+</p>
               </div>
               <div>
                 <p className="text-gray-400 text-sm">Min Progress</p>
@@ -176,23 +187,22 @@ export default function AdminCourseVersionReview({
             {version.status === "PENDING" && (
               <div className="space-y-3">
                 {/* Approve Button */}
-                <button
+                {/* <button
                   onClick={handleApprove}
                   disabled={actionInProgress || approve.isPending}
                   className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   {approve.isPending ? "Approving..." : "Approve Version"}
-                </button>
+                </button> */}
 
                 {/* Publish Button */}
-                <button
-                  onClick={handlePublish}
-                  disabled={actionInProgress || publish.isPending}
-                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors"
-                >
-                  {publish.isPending ? "Publishing..." : "Approve & Publish"}
-                </button>
+              <button
+  onClick={handleApproveAndPublish}
+  disabled={actionInProgress || approve.isPending || publish.isPending}
+>
+  Approve & Publish
+</button>
 
                 {/* Reject Button */}
                 <button

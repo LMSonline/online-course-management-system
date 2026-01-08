@@ -58,19 +58,24 @@ export const useApproveVersion = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ courseId, versionId }: { courseId: number; versionId: number }) => {
+    mutationFn: async ({
+      courseId,
+      versionId,
+    }: {
+      courseId: number;
+      versionId: number;
+    }) => {
       return await courseVersionService.approveCourseVersion(courseId, versionId);
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["versions", "pending"],
-      });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["versions", "pending"] });
       queryClient.invalidateQueries({
         queryKey: ["version", variables.courseId, variables.versionId],
       });
     },
   });
 };
+
 
 export const useRejectVersion = () => {
   const queryClient = useQueryClient();
