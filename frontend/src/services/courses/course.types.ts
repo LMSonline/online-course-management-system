@@ -180,6 +180,7 @@ export interface CourseVersionResponse {
   approvedAt?: string; // ISO datetime string
   publishedAt?: string; // ISO datetime string
   chapterCount: number;
+  createdAt?: string; // ISO date string from backend
 }
 
 // Course Review

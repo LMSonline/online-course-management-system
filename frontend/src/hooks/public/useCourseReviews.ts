@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { courseReviewService } from "@/services/courses/course-review.service";
-import { PageResponse, CourseReviewResponse } from "@/services/courses/course.types";
+import { CourseReviewResponse } from "@/services/courses/course.types";
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { PageResponse } from "@/lib/api/api.types";
 
 /**
  * Hook to fetch course reviews

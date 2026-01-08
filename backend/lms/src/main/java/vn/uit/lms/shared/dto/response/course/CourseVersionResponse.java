@@ -64,5 +64,8 @@ public class CourseVersionResponse {
 
     @Schema(description = "Number of chapters in this version", example = "10")
     private int chapterCount;
+
+    @Schema(description = "Creation timestamp", example = "2025-11-10T09:00:00Z")
+    private Instant createdAt;
 }
 

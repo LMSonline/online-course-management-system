@@ -1,314 +1,297 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
-import { useVersionDetailQuery } from "@/hooks/creator/useVersionQueries";
-import { useApproveVersionMutation, useRejectVersionMutation } from "@/hooks/admin/useVersionReview";
-import { RejectRequest } from "@/services/account/account.types";
-import { Loader2, ArrowLeft, CheckCircle2, XCircle, AlertCircle, BookOpen, Calendar, User } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, AlertCircle, CheckCircle, XCircle, Send } from "lucide-react";
+import {
+  useGetVersionDetail,
+  useApproveVersion,
+  useRejectVersion,
+  usePublishVersion,
+} from "@/hooks/admin/useAdminCourses";
+import { SafeImage } from "@/core/components/ui/SafeImage";
 
-/**
- * Admin Version Review Page
- * Route: /admin/courses/:courseId/versions/:versionId/review
- * Layout: AdminLayout
- * Guard: requireAdmin
- * 
- * Data:
- * - VERSION_GET_DETAIL (by courseId and versionId)
- * - VERSION_APPROVE_ACTION (mutation)
- * - VERSION_REJECT_ACTION (mutation)
- */
-export default function AdminCourseVersionApprovalScreen() {
-  const params = useParams();
-  const router = useRouter();
-  const courseId = parseInt(params.courseId as string, 10);
-  const versionId = parseInt(params.versionId as string, 10);
+interface AdminCourseVersionReviewProps {
+  courseId: number;
+  versionId: number;
+  onClose: () => void;
+}
 
+export default function AdminCourseVersionReview({
+  courseId,
+  versionId,
+  onClose,
+}: AdminCourseVersionReviewProps) {
   const [rejectReason, setRejectReason] = useState("");
-  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
 
-  const {
-    data: version,
-    isLoading: isLoadingVersion,
-    error: versionError,
-    refetch,
-  } = useVersionDetailQuery(courseId, versionId);
+  const { data: version, isLoading } = useGetVersionDetail(courseId, versionId);
+  const approve = useApproveVersion();
+  const reject = useRejectVersion();
+  const publish = usePublishVersion();
 
-  const { mutate: approveVersion, isPending: isApproving } = useApproveVersionMutation();
-  const { mutate: rejectVersion, isPending: isRejecting } = useRejectVersionMutation();
-
-  const handleApprove = () => {
-    if (!confirm("Are you sure you want to approve this version?")) {
-      return;
+  const handleApprove = async () => {
+    setActionInProgress(true);
+    try {
+      await approve.mutateAsync({ courseId, versionId });
+      onClose();
+    } finally {
+      setActionInProgress(false);
     }
-
-    approveVersion(
-      { courseId, versionId },
-      {
-        onSuccess: () => {
-          refetch();
-        },
-      }
-    );
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectReason.trim()) {
-      toast.error("Please provide a reason for rejection");
+      alert("Vui lòng nhập lý do từ chối");
       return;
     }
-
-    rejectVersion(
-      {
-        courseId,
-        versionId,
-        payload: { reason: rejectReason.trim() },
-      },
-      {
-        onSuccess: () => {
-          setShowRejectModal(false);
-          setRejectReason("");
-          refetch();
-        },
-      }
-    );
-  };
-
-  if (isLoadingVersion) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-12 w-12 animate-spin text-[var(--brand-600)]" />
-        </div>
-      </div>
-    );
-  }
-
-  if (versionError || !version) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            <h2 className="text-lg font-semibold text-red-800 dark:text-red-200">
-              Version not found
-            </h2>
-          </div>
-          <p className="text-red-600 dark:text-red-300 text-sm mb-4">
-            {versionError instanceof Error ? versionError.message : "The version you're looking for doesn't exist."}
-          </p>
-          <Link
-            href="/admin/manage/courses/approval"
-            className="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-          >
-            Back to Approvals
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200";
-      case "APPROVED":
-        return "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200";
-      case "PENDING":
-      case "SUBMITTED":
-        return "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200";
-      case "REJECTED":
-        return "bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200";
-      default:
-        return "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
+    setActionInProgress(true);
+    try {
+      await reject.mutateAsync({ courseId, versionId, reason: rejectReason });
+      onClose();
+    } finally {
+      setActionInProgress(false);
     }
   };
 
-  const canApprove = version.status === "PENDING" ;
-  const canReject = version.status === "PENDING";
+  const handlePublish = async () => {
+    setActionInProgress(true);
+    try {
+      await publish.mutateAsync({ courseId, versionId });
+      onClose();
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-gray-400">Loading version details...</div>
+      </div>
+    );
+  }
+
+  if (!version) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-red-400">Version not found</div>
+      </div>
+    );
+  }
+
+  const statusBadgeColor = {
+    PENDING: "bg-yellow-900/30 text-yellow-400",
+    APPROVED: "bg-green-900/30 text-green-400",
+    REJECTED: "bg-red-900/30 text-red-400",
+    PUBLISHED: "bg-blue-900/30 text-blue-400",
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Link
-        href="/admin/manage/courses/approval"
-        className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-[var(--brand-600)] mb-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Approvals
-      </Link>
-
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Version Review</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Course ID: {courseId} | Version ID: {versionId}
-          </p>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-white">{version.title}</h1>
+            <p className="text-gray-400">Course Version Review</p>
+          </div>
         </div>
-        <span className={`px-3 py-1 rounded text-sm font-medium ${getStatusColor(version.status)}`}>
+        <span className={`px-3 py-1 rounded-lg text-sm font-medium ${statusBadgeColor[version.status as keyof typeof statusBadgeColor] || "bg-gray-700 text-gray-300"}`}>
           {version.status}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Version Information
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Title:</span>{" "}
-              <span className="font-medium">{version.title || `Version ${version.versionNumber}`}</span>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Version Details */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Version Overview */}
+          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Version Information</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-400 text-sm">Version Number</p>
+                <p className="text-white font-semibold">v{version.versionNumber}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Price</p>
+                <p className="text-white font-semibold">${version.price}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Duration</p>
+                <p className="text-white font-semibold">{version.durationDays} days</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Pass Score</p>
+                <p className="text-white font-semibold">{version.passScore}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Min Progress</p>
+                <p className="text-white font-semibold">{version.minProgressPct}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Final Weight</p>
+                <p className="text-white font-semibold">{version.finalWeight}</p>
+              </div>
             </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-400">Version Number:</span>{" "}
-              <span className="font-medium">#{version.versionNumber}</span>
+          </div>
+
+          {/* Description */}
+          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
+            <p className="text-gray-400 leading-relaxed">{version.description}</p>
+          </div>
+
+          {/* Chapters */}
+          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Course Content</h3>
+            <p className="text-gray-400 text-sm mb-4">Total Chapters: {version.chapterCount}</p>
+            <div className="space-y-2 text-gray-400 text-sm">
+              <p>Chapter content details would be displayed here if available</p>
             </div>
-            {version.price !== undefined && (
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Price:</span>{" "}
-                <span className="font-medium">${version.price.toFixed(2)}</span>
-              </div>
-            )}
-            {version.durationDays && (
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Duration:</span>{" "}
-                <span className="font-medium">{version.durationDays} days</span>
-              </div>
-            )}
-            {version.chapterCount !== undefined && (
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Chapters:</span>{" "}
-                <span className="font-medium">{version.chapterCount}</span>
-              </div>
-            )}
           </div>
+
+          {/* Notes */}
+          {version.notes && (
+            <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Instructor Notes</h3>
+              <p className="text-gray-400">{version.notes}</p>
+            </div>
+          )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Timeline
-          </h3>
-          <div className="space-y-2 text-sm">
-            {version.approvedAt && (
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Approved At:</span>{" "}
-                <span className="font-medium">{new Date(version.approvedAt).toLocaleString()}</span>
+        {/* Right Column - Actions */}
+        <div className="space-y-4">
+          {/* Status Card */}
+          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Review Actions</h3>
+
+            {version.status === "PENDING" && (
+              <div className="space-y-3">
+                {/* Approve Button */}
+                <button
+                  onClick={handleApprove}
+                  disabled={actionInProgress || approve.isPending}
+                  className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  {approve.isPending ? "Approving..." : "Approve Version"}
+                </button>
+
+                {/* Publish Button */}
+                <button
+                  onClick={handlePublish}
+                  disabled={actionInProgress || publish.isPending}
+                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors"
+                >
+                  {publish.isPending ? "Publishing..." : "Approve & Publish"}
+                </button>
+
+                {/* Reject Button */}
+                <button
+                  onClick={() => setShowRejectForm(!showRejectForm)}
+                  disabled={actionInProgress}
+                  className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Reject Version
+                </button>
               </div>
             )}
-            {version.publishedAt && (
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Published At:</span>{" "}
-                <span className="font-medium">{new Date(version.publishedAt).toLocaleString()}</span>
-              </div>
-            )}
-            {version.approvedBy && (
-              <div>
-                <span className="text-gray-600 dark:text-gray-400">Approved By:</span>{" "}
-                <span className="font-medium">{version.approvedBy}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {version.description && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold mb-2">Description</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{version.description}</p>
-        </div>
-      )}
-
-      {version.notes && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold mb-2">Notes</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{version.notes}</p>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex items-center gap-4">
-        {canApprove && (
-          <button
-            onClick={handleApprove}
-            disabled={isApproving}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
-          >
-            {isApproving ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Approving...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-5 w-5" />
-                Approve Version
-              </>
-            )}
-          </button>
-        )}
-
-        {canReject && (
-          <>
-            <button
-              onClick={() => setShowRejectModal(true)}
-              disabled={isRejecting}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-            >
-              <XCircle className="h-5 w-5" />
-              Reject Version
-            </button>
-
-            {showRejectModal && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                  <h3 className="text-lg font-semibold mb-4">Reject Version</h3>
-                  <label className="block text-sm font-medium mb-2">
-                    Reason for rejection <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-red-600 focus:border-transparent resize-none mb-4"
-                    placeholder="Please provide a reason for rejection..."
-                  />
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={handleReject}
-                      disabled={isRejecting || !rejectReason.trim()}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-                    >
-                      {isRejecting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-                          Rejecting...
-                        </>
-                      ) : (
-                        "Confirm Reject"
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowRejectModal(false);
-                        setRejectReason("");
-                      }}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                    >
-                      Cancel
-                    </button>
+            {version.status === "APPROVED" && (
+              <div className="space-y-3">
+                <div className="p-3 bg-green-900/20 border border-green-700 rounded-lg flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <div>
+                    <p className="text-white text-sm font-medium">Approved</p>
+                    <p className="text-gray-400 text-xs">Ready to be published</p>
                   </div>
+                </div>
+                <button
+                  onClick={handlePublish}
+                  disabled={actionInProgress || publish.isPending}
+                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors"
+                >
+                  {publish.isPending ? "Publishing..." : "Publish Now"}
+                </button>
+              </div>
+            )}
+
+            {version.status === "PUBLISHED" && (
+              <div className="p-3 bg-blue-900/20 border border-blue-700 rounded-lg flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-blue-400" />
+                <div>
+                  <p className="text-white text-sm font-medium">Published</p>
+                  <p className="text-gray-400 text-xs">Available to students</p>
                 </div>
               </div>
             )}
-          </>
-        )}
+
+            {version.status === "REJECTED" && (
+              <div className="p-3 bg-red-900/20 border border-red-700 rounded-lg flex items-center gap-3">
+                <XCircle className="w-5 h-5 text-red-400" />
+                <div>
+                  <p className="text-white text-sm font-medium">Rejected</p>
+                  <p className="text-gray-400 text-xs">Version was rejected</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Reject Form */}
+          {showRejectForm && version.status === "PENDING" && (
+            <div className="bg-[#12182b] border border-red-700 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4 text-red-400">
+                <AlertCircle className="w-5 h-5" />
+                <h3 className="font-semibold">Rejection Reason</h3>
+              </div>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Explain why this version is being rejected..."
+                className="w-full bg-[#0d111f] border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-600 text-sm"
+                rows={4}
+              />
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={handleReject}
+                  disabled={actionInProgress || reject.isPending || !rejectReason.trim()}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  {reject.isPending ? "Rejecting..." : "Confirm Rejection"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRejectForm(false);
+                    setRejectReason("");
+                  }}
+                  disabled={actionInProgress}
+                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Approval Info */}
+          {version.approvedAt && (
+            <div className="bg-[#12182b] border border-gray-800 rounded-lg p-4 text-sm">
+              <p className="text-gray-400 mb-2">Approved By</p>
+              <p className="text-white font-semibold">{version.approvedBy}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
-
-
