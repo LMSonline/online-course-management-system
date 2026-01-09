@@ -1,5 +1,5 @@
 import "../styles/globals.css";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "@/core/providers/theme-provider";
 import type { Metadata } from "next";
 import AssistantWidget from "@/core/components/public/AssistantWidget";
 import { ReactQueryProvider } from "@/lib/providers/ReactQueryProvider";
@@ -21,8 +21,9 @@ export default function RootLayout({
         <ReactQueryProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
           >
             <ToasterProvider />
             {children}

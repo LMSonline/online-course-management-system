@@ -6,7 +6,7 @@ module.exports = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/styles/**/*.{css,scss}",
   ],
-  darkMode: ["class"], // thêm để sau dùng dark theme
+  // darkMode: ["class"], // thêm để sau dùng dark theme
   theme: {
     extend: {
       colors: {
@@ -34,5 +34,6 @@ module.exports = {
       },
     },
   },
+  darkMode: 'selector',
   plugins: [],
 };

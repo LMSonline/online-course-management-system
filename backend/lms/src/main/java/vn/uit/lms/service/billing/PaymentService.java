@@ -29,7 +29,8 @@ import vn.uit.lms.service.learning.EnrollmentService;
 import vn.uit.lms.service.learning.EnrollmentService;
 import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.PaymentProvider;
-import vn.uit.lms.shared.util.NetworkUtil;
+
+import vn.uit.lms.shared.constant.PaymentStatus;
 import vn.uit.lms.shared.dto.request.billing.CreatePaymentRequest;
 import vn.uit.lms.shared.dto.request.billing.RefundRequest;
 import vn.uit.lms.shared.dto.response.billing.CoursePaymentStatsResponse;
