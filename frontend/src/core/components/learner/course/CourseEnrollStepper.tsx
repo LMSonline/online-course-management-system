@@ -51,7 +51,6 @@ export default function CourseEnrollStepper({
           setWaitingPayment(false);
         }
       } else {
-        // Free course: enroll directly
         try {
           await onEnroll(notes);
           setSuccess(true);

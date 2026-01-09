@@ -18,13 +18,11 @@ public class QuestionBankController {
     private final QuestionBankService questionBankService;
 
     @PostMapping("/teachers/{teacherId}/question-banks")
-    @TeacherOnly
     public ResponseEntity<QuestionBankResponse> createQuestionBank(@PathVariable Long teacherId, @RequestBody @Valid QuestionBankRequest request) {
         return ResponseEntity.ok(questionBankService.createQuestionBank(teacherId, request));
     }
 
     @GetMapping("/teachers/{teacherId}/question-banks")
-    @TeacherOnly
     public ResponseEntity<List<QuestionBankResponse>> getAllQuestionBanks(@PathVariable Long teacherId) {
         return ResponseEntity.ok(questionBankService.getQuestionBanksByTeacher(teacherId));
     }

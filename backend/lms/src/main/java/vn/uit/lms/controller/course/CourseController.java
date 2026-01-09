@@ -20,8 +20,7 @@ import vn.uit.lms.shared.dto.request.course.CourseRequest;
 import vn.uit.lms.shared.dto.request.course.CourseUpdateRequest;
 import vn.uit.lms.shared.dto.response.course.CourseDetailResponse;
 import vn.uit.lms.shared.dto.response.course.CourseResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+
 
 @RestController
 @RequestMapping("/api/v1")
@@ -35,9 +34,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Create a new course")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/teacher/courses")
-    @TeacherOnly
     public ResponseEntity<CourseDetailResponse> createNewCourse(
             @Parameter(description = "Course details") @Valid @RequestBody CourseRequest courseRequest) {
         CourseDetailResponse createdCourse = courseService.createCourse(courseRequest);
@@ -63,9 +60,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Get all courses (Admin)")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/admin/courses")
-    @AdminOnly
     public ResponseEntity<PageResponse<CourseResponse>> getAllCourses(
             @Parameter(hidden = true) @Filter Specification<Course> specification,
             @Parameter(description = "Pagination parameters") Pageable pageable
@@ -75,9 +70,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Close a course")
-    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/teacher/courses/{id}/close")
-    @TeacherOnly
     public ResponseEntity<CourseDetailResponse> closeCourse(
             @Parameter(description = "Course ID") @PathVariable Long id) {
         CourseDetailResponse closedCourse = courseService.closeCourse(id);
@@ -85,9 +78,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Open a course")
-    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/teacher/courses/{id}/open")
-    @TeacherOnly
     public ResponseEntity<CourseDetailResponse> openCourse(
             @Parameter(description = "Course ID") @PathVariable Long id) {
         CourseDetailResponse openedCourse = courseService.openCourse(id);
@@ -95,9 +86,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Update a course")
-    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/teacher/courses/{id}")
-    @TeacherOnly
     public ResponseEntity<CourseDetailResponse> updateCourse(
             @Parameter(description = "Course ID") @PathVariable Long id,
             @Parameter(description = "Updated course details") @Valid @RequestBody CourseUpdateRequest courseUpdateRequest) {
@@ -106,9 +95,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Delete a course")
-    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/teacher/courses/{id}")
-    @TeacherOnly
     public ResponseEntity<Void> deleteCourse(
             @Parameter(description = "Course ID") @PathVariable Long id) {
         courseService.deleteCourse(id);
@@ -116,9 +103,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Restore a deleted course")
-    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/teacher/courses/{id}/restore")
-    @TeacherOnly
     public ResponseEntity<CourseDetailResponse> restoreCourse(
             @Parameter(description = "Course ID") @PathVariable Long id) {
         CourseDetailResponse restoredCourse = courseService.restoreCourse(id);
@@ -126,9 +111,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Upload course thumbnail")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping(value = "/teacher/courses/{id}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @TeacherOnly
     public ResponseEntity<CourseDetailResponse> uploadCourseThumbnail(
             @Parameter(description = "Course ID") @PathVariable Long id,
             @Parameter(description = "Thumbnail image file", required = true) @RequestParam("file") MultipartFile file) {
@@ -137,9 +120,7 @@ public class CourseController {
     }
 
     @Operation(summary = "Get my courses (Teacher)")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/teacher/courses")
-    @TeacherOnly
     public ResponseEntity<PageResponse<CourseResponse>> getMyCourses(
             @Parameter(hidden = true) @Filter Specification<Course> specification,
             @Parameter(description = "Pagination parameters") Pageable pageable

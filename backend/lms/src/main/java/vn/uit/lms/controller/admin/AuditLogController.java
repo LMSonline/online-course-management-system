@@ -15,7 +15,6 @@ import java.time.Instant;
 @RestController
 @RequestMapping("/api/v1/admin/audit-logs")
 @RequiredArgsConstructor
-@AdminOnly
 public class AuditLogController {
 
     private final AuditLogService service;

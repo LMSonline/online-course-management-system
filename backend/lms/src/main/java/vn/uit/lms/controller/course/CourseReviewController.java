@@ -28,9 +28,7 @@ public class CourseReviewController {
     }
 
     @Operation(summary = "Create a new review")
-    //@SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/reviews")
-    //@StudentOnly
     public ResponseEntity<CourseReviewResponse> createNewReview(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Review details") @Valid @RequestBody CourseReviewRequest courseReviewRequest
@@ -50,9 +48,7 @@ public class CourseReviewController {
     }
 
     @Operation(summary = "Update a review")
-    //@SecurityRequirement(name = "bearerAuth")
     @PutMapping("/courses/{courseId}/reviews/{reviewId}")
-    //@StudentOnly
     public ResponseEntity<CourseReviewResponse> updateReview(
             @Parameter(description = "Course ID") @PathVariable Long courseId,
             @Parameter(description = "Review ID") @PathVariable Long reviewId,
@@ -63,9 +59,7 @@ public class CourseReviewController {
     }
 
     @Operation(summary = "Delete a review")
-    //@SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/courses/{courseId}/reviews/{reviewId}")
-    //@StudentOnly
     public ResponseEntity<Void> deleteReview(
             @Parameter(description = "Course ID") @PathVariable Long courseId,
             @Parameter(description = "Review ID") @PathVariable Long reviewId

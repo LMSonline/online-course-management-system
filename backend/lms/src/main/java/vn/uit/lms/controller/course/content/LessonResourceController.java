@@ -36,7 +36,6 @@ public class LessonResourceController {
     )
     @PostMapping(value = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("File resource added successfully")
-    @TeacherOnly
     public ResponseEntity<LessonResourceResponse> addFileResource(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,
@@ -65,7 +64,6 @@ public class LessonResourceController {
     )
     @PostMapping
     @ApiMessage("Link/Embed resource added successfully")
-    @TeacherOnly
     public ResponseEntity<LessonResourceResponse> addLinkResource(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,
@@ -83,7 +81,6 @@ public class LessonResourceController {
     )
     @GetMapping
     @ApiMessage("Resources retrieved successfully")
-    @Authenticated
     public ResponseEntity<List<LessonResourceResponse>> getLessonResources(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId
@@ -98,7 +95,6 @@ public class LessonResourceController {
     )
     @GetMapping("/{resourceId}")
     @ApiMessage("Resource details retrieved successfully")
-    @Authenticated
     public ResponseEntity<LessonResourceResponse> getResourceById(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,
@@ -116,7 +112,6 @@ public class LessonResourceController {
     )
     @PutMapping("/{resourceId}")
     @ApiMessage("Resource updated successfully")
-    @TeacherOnly
     public ResponseEntity<LessonResourceResponse> updateResource(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,
@@ -137,7 +132,6 @@ public class LessonResourceController {
     )
     @PutMapping(value = "/{resourceId}/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Resource file replaced successfully")
-    @TeacherOnly
     public ResponseEntity<LessonResourceResponse> replaceResourceFile(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,
@@ -158,7 +152,6 @@ public class LessonResourceController {
     )
     @DeleteMapping("/{resourceId}")
     @ApiMessage("Resource deleted successfully")
-    @TeacherOnly
     public ResponseEntity<Void> deleteResource(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,
@@ -176,7 +169,6 @@ public class LessonResourceController {
     )
     @PostMapping("/reorder")
     @ApiMessage("Resources reordered successfully")
-    @TeacherOnly
     public ResponseEntity<Void> reorderResources(
             @Parameter(description = "Lesson ID", required = true)
             @PathVariable Long lessonId,

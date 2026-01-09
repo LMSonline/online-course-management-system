@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Play, Pause, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import type { PlayerCourse, PlayerLesson } from "@/lib/learner/player/types";
+import { LessonDetailPanel } from "./LessonDetailPanel";
 
 type Props = {
   course: PlayerCourse;
@@ -196,25 +197,9 @@ export function CoursePlayerShell({ course }: Props) {
             </div>
           </section>
 
-          {/* Tabs mô tả / tài liệu / ghi chú – tạm mock đơn giản */}
+          {/* Lesson detail: quiz, assignment, resource, etc. */}
           <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5 space-y-3">
-            <div className="flex gap-2 text-xs md:text-sm">
-              <button className="rounded-full bg-slate-900 px-3 py-1.5 font-medium text-[var(--brand-100)]">
-                Overview
-              </button>
-              <button className="rounded-full px-3 py-1.5 text-slate-300 hover:bg-slate-900">
-                Resources
-              </button>
-              <button className="rounded-full px-3 py-1.5 text-slate-300 hover:bg-slate-900">
-                Notes
-              </button>
-            </div>
-
-            <p className="text-sm text-slate-300">
-              Đây là khu vực mô tả bài giảng, tóm tắt nội dung chính hoặc ghi chú
-              quan trọng cho người học. Sau này có thể bind từ API (lesson
-              description, transcript, downloadable files, v.v.).
-            </p>
+            <LessonDetailPanel lesson={currentLesson} />
           </section>
         </div>
 

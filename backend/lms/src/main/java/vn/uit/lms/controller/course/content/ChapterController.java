@@ -29,9 +29,7 @@ public class ChapterController {
     }
 
     @Operation(summary = "Create a new chapter")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/chapters")
-    @TeacherOnly
     public ResponseEntity<ChapterDto> createNewChapter(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
@@ -43,7 +41,6 @@ public class ChapterController {
 
     @Operation(summary = "Get all chapters")
     @GetMapping("/courses/{courseId}/versions/{versionId}/chapters")
-    @Authenticated
     public ResponseEntity<List<ChapterDto>> getListChapters(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
@@ -53,7 +50,6 @@ public class ChapterController {
 
     @Operation(summary = "Get chapter details")
     @GetMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
-    @Authenticated
     public ResponseEntity<ChapterDto> getDetailChapter(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
@@ -64,9 +60,7 @@ public class ChapterController {
     }
 
     @Operation(summary = "Update a chapter")
-    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
-    @TeacherOnly
     public ResponseEntity<ChapterDto> updateChapter(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
@@ -78,9 +72,7 @@ public class ChapterController {
     }
 
     @Operation(summary = "Delete a chapter")
-    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/courses/{courseId}/versions/{versionId}/chapters/{chapterId}")
-    @TeacherOnly
     public ResponseEntity<Void> deleteChapter(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
@@ -91,9 +83,7 @@ public class ChapterController {
     }
 
     @Operation(summary = "Reorder chapters", description = "Reorder chapters within a course version. Provide ordered list of chapter IDs.")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/chapters/reorder")
-    @TeacherOnly
     public ResponseEntity<Void> reorderChapters(
             @Parameter(description = "Course ID", required = true) @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID", required = true) @PathVariable("versionId") Long versionId,

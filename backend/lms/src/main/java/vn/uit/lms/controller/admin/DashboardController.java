@@ -11,7 +11,6 @@ import java.time.Instant;
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-@AdminOnly
 public class DashboardController {
 
     @GetMapping("/dashboard")

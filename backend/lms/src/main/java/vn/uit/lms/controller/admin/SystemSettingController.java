@@ -13,7 +13,6 @@ import java.time.Instant;
 @RestController
 @RequestMapping("/api/v1/admin/settings")
 @RequiredArgsConstructor
-@AdminOnly
 public class SystemSettingController {
 
     private final SystemSettingService service;

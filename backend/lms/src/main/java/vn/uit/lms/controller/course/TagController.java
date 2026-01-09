@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.course.TagService;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.TagRequest;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
 
 @RestController
 @RequestMapping("/api/v1")

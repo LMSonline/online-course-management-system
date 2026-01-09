@@ -36,7 +36,6 @@ public class LessonController {
     @Operation(summary = "Create new lesson", description = "Create a new lesson in a chapter. Only accessible by teachers.")
     @PostMapping("/chapters/{chapterId}/lessons")
     @ApiMessage("Lesson created successfully")
-    @TeacherOnly
     public ResponseEntity<LessonDTO> createLesson(
             @Parameter(description = "Chapter ID", required = true) @PathVariable("chapterId") Long chapterId,
             @Parameter(description = "Lesson details", required = true) @Valid @RequestBody CreateLessonRequest request
@@ -48,7 +47,6 @@ public class LessonController {
     @Operation(summary = "Get all lessons of a chapter", description = "Retrieve all lessons in a specific chapter")
     @GetMapping("/chapters/{chapterId}/lessons")
     @ApiMessage("Lessons retrieved successfully")
-    @Authenticated
     public ResponseEntity<List<LessonDTO>> getLessonsByChapter(
             @Parameter(description = "Chapter ID", required = true) @PathVariable("chapterId") Long chapterId
     ){
@@ -59,7 +57,6 @@ public class LessonController {
     @Operation(summary = "Get lesson details", description = "Retrieve detailed information about a specific lesson")
     @GetMapping("/lessons/{id}")
     @ApiMessage("Lesson details retrieved successfully")
-    @Authenticated
     public ResponseEntity<LessonDTO> getLessonById(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("id") Long id
     ) {
@@ -70,7 +67,6 @@ public class LessonController {
     @Operation(summary = "Update lesson", description = "Update lesson information. Only accessible by teachers.")
     @PutMapping("/lessons/{id}")
     @ApiMessage("Lesson updated successfully")
-    @TeacherOnly
     public ResponseEntity<LessonDTO> updateLesson(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("id") Long id,
             @Parameter(description = "Updated lesson details", required = true) @Valid @RequestBody UpdateLessonRequest request
@@ -82,7 +78,6 @@ public class LessonController {
     @Operation(summary = "Delete lesson", description = "Delete a lesson and its associated resources. Only accessible by teachers.")
     @DeleteMapping("/lessons/{id}")
     @ApiMessage("Lesson deleted successfully")
-    @TeacherOnly
     public ResponseEntity<Void> deleteLesson(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("id") Long id
     ) {
@@ -93,7 +88,6 @@ public class LessonController {
     @Operation(summary = "Reorder lessons", description = "Reorder lessons within a chapter. Only accessible by teachers.")
     @PostMapping("/chapters/{chapterId}/lessons/reorder")
     @ApiMessage("Lessons reordered successfully")
-    @TeacherOnly
     public ResponseEntity<Void> reorderLessons(
             @Parameter(description = "Chapter ID", required = true) @PathVariable("chapterId") Long chapterId,
             @Parameter(description = "New lesson order", required = true) @Valid @RequestBody ReorderLessonsRequest request
@@ -105,7 +99,6 @@ public class LessonController {
     @Operation(summary = "Request video upload URL", description = "Get a presigned URL for uploading a video to a lesson. Only accessible by teachers.")
     @GetMapping("/lessons/{lessonId}/video/upload-url")
     @ApiMessage("Upload URL generated successfully")
-    @TeacherOnly
     public ResponseEntity<RequestUploadUrlResponse> requestUploadUrl(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("lessonId") Long lessonId
     ) {
@@ -116,7 +109,6 @@ public class LessonController {
     @Operation(summary = "Complete video upload", description = "Notify server that video upload is complete and trigger processing. Only accessible by teachers.")
     @PostMapping("/lessons/{lessonId}/video/upload-complete")
     @ApiMessage("Video upload completed, processing started")
-    @TeacherOnly
     public ResponseEntity<LessonDTO> uploadComplete(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("lessonId") Long lessonId,
             @Parameter(description = "Video upload details", required = true) @Valid @RequestBody UpdateVideoRequest request
@@ -128,7 +120,6 @@ public class LessonController {
     @Operation(summary = "Get video streaming URL", description = "Get a presigned URL for streaming a lesson's video")
     @GetMapping("/lessons/{lessonId}/video/stream-url")
     @ApiMessage("Streaming URL generated successfully")
-    @Authenticated
     public ResponseEntity<Map<String, String>> getVideoStreamingUrl(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("lessonId") Long lessonId
     ) {
@@ -139,7 +130,6 @@ public class LessonController {
     @Operation(summary = "Delete lesson video", description = "Delete the video associated with a lesson. Only accessible by teachers.")
     @DeleteMapping("/lessons/{lessonId}/video")
     @ApiMessage("Video deleted successfully")
-    @TeacherOnly
     public ResponseEntity<LessonDTO> deleteVideo(
             @Parameter(description = "Lesson ID", required = true) @PathVariable("lessonId") Long lessonId
     ) {

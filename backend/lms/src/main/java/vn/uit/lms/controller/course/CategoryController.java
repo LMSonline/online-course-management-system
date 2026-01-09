@@ -27,9 +27,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Create a new category")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/admin/categories")
-    @AdminOnly
     public ResponseEntity<CategoryResponseDto> createCategory(
             @Parameter(description = "Category details") @Valid @RequestBody CategoryRequest categoryRequest) {
         CategoryResponseDto createdCategory = categoryService.createCategory(categoryRequest);
@@ -45,9 +43,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get category by ID (Admin)")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/admin/categories/{id}")
-    @AdminOnly
     public ResponseEntity<CategoryResponseDto> getCategoryByIdForAdmin(
             @Parameter(description = "Category ID") @PathVariable Long id) {
         CategoryResponseDto category = categoryService.getCategoryByIdForAdmin(id);
@@ -62,18 +58,14 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get all deleted categories")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/admin/categories/deleted")
-    @AdminOnly
     public ResponseEntity<List<CategoryResponseDto>> getAllDeleted() {
         List<CategoryResponseDto> deletedCategories = categoryService.getAllDeletedCategories();
         return ResponseEntity.ok(deletedCategories);
     }
 
     @Operation(summary = "Delete a category")
-    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/admin/categories/{id}")
-    @AdminOnly
     public ResponseEntity<Void> deleteCategory(
             @Parameter(description = "Category ID") @PathVariable Long id) {
         categoryService.deleteCategory(id);
@@ -81,9 +73,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Restore a deleted category")
-    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/admin/categories/{id}/restore")
-    @AdminOnly
     public ResponseEntity<CategoryResponseDto> restoreCategory(
             @Parameter(description = "Category ID") @PathVariable Long id) {
         CategoryResponseDto category = categoryService.restoreCategory(id);
@@ -91,9 +81,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Update a category")
-    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/admin/categories/{id}")
-    @AdminOnly
     public ResponseEntity<CategoryResponseDto> updateCategory(
             @Parameter(description = "Category ID") @PathVariable("id") Long id,
             @Parameter(description = "Updated category details") @Valid @RequestBody CategoryRequest categoryRequest) {

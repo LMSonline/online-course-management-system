@@ -103,7 +103,6 @@ public class FileStorageController {
     )
     @DeleteMapping("/{id}")
     @ApiMessage("File deleted successfully")
-    @TeacherOrAdmin
     public ResponseEntity<Void> deleteFile(
             @Parameter(description = "File storage ID", required = true)
             @PathVariable Long id
