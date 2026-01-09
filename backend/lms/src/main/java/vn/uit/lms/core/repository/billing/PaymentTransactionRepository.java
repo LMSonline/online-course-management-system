@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.billing.PaymentTransaction;
 import vn.uit.lms.shared.constant.PaymentStatus;
 
@@ -13,7 +14,8 @@ import java.util.Optional;
 
 public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, Long>, JpaSpecificationExecutor<PaymentTransaction> {
 
-    List<PaymentTransaction> findByStudentId(Long studentId);
+    @Query("SELECT p FROM PaymentTransaction p WHERE p.student.id = :studentId")
+    List<PaymentTransaction> findByStudentId(@Param("studentId") Long studentId);
 
     List<PaymentTransaction> findByCourseId(Long courseId);
 

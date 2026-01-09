@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.uit.lms.shared.constant.PaymentProvider;
 
 @Data
 @Builder
@@ -18,7 +19,7 @@ public class CreatePaymentRequest {
     @NotNull(message = "Course version ID is required")
     private Long courseVersionId;
 
-    private String paymentMethod; // VNPAY, ZALOPAY, etc.
+    private PaymentProvider paymentMethod; // VNPAY, ZALOPAY, etc.
 
     private String returnUrl; // URL to redirect after payment
 

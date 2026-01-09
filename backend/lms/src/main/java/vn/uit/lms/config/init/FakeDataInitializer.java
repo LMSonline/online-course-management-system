@@ -881,7 +881,11 @@ public class FakeDataInitializer implements CommandLineRunner {
                 payment.setCourse(enrollment.getCourse());
                 payment.setCourseVersion(enrollment.getCourseVersion());
                 payment.setAmount(enrollment.getCourseVersion().getPrice());
-                payment.setPaymentMethod(faker.options().option("MOMO", "VNPAY", "ZALOPAY", "BANK_TRANSFER"));
+                payment.setPaymentMethod(faker.options().option(
+                    PaymentProvider.MOMO,
+                    PaymentProvider.VNPAY,
+                    PaymentProvider.ZALOPAY
+                ));
                 payment.setStatus(PaymentStatus.SUCCESS);
                 payment.setProviderTransactionId("TXN-" + faker.number().digits(12));
                 payment.setPaidAt(enrollment.getEnrolledAt());

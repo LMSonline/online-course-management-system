@@ -13,6 +13,7 @@ import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.core.domain.learning.Enrollment;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
+import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.learning.EnrollmentRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.shared.constant.CourseStatus;
@@ -40,49 +41,114 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
-    private final vn.uit.lms.core.repository.course.CourseVersionRepository courseVersionRepository;
+    private final CourseVersionRepository courseVersionRepository;
     private final EnrollmentMapper enrollmentMapper;
     private final AccountService accountService;
 
     /**
-     * Student enrolls in a course
+     * Student enrolls in a FREE course
+     *
+     * Preconditions:
+     * - Student must be authenticated
+     * - Course must exist and be open for enrollment
+     * - Course must have published version
+     * - Course must be FREE (price = 0)
+     * - Student must NOT be already enrolled in this course
+     *
+     * Postconditions:
+     * - Enrollment created with ENROLLED status
+     * - Enrollment start date set to current time
+     * - Enrollment expiry date calculated based on course duration
+     * - Student can access course content
      */
     @Transactional
     public EnrollmentDetailResponse enrollCourse(Long courseId, EnrollCourseRequest request) {
-        log.info("Processing enrollment for course: {}", courseId);
+        log.info("Processing FREE course enrollment for course: {}", courseId);
 
+        // Precondition: Validate authenticated student
         Student student = getCurrentAuthenticatedStudent();
+
+        // Precondition: Validate course for enrollment
         Course course = validateCourseForEnrollment(courseId);
         CourseVersion publishedVersion = getPublishedVersion(course);
 
-        checkNotAlreadyEnrolled(student.getId(), courseId);
-        validatePaymentForPaidCourse(publishedVersion, request);
+        // Precondition: Check course is FREE
+        if (publishedVersion.getPrice() != null && publishedVersion.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+            throw new InvalidRequestException("This is a PAID course. Please use payment flow to enroll.");
+        }
 
+        // Precondition: Check not already enrolled
+        checkNotAlreadyEnrolled(student.getId(), courseId);
+
+        // Create and start enrollment
         Enrollment enrollment = createAndStartEnrollment(student, course, publishedVersion);
-        log.info("Successfully enrolled student {} in course {}", student.getId(), courseId);
+
+        // Postcondition: Verify enrollment created successfully
+        assert enrollment.getId() != null : "Enrollment must have ID after saving";
+        assert enrollment.getStatus() == EnrollmentStatus.ENROLLED : "Enrollment must be in ENROLLED status";
+        assert enrollment.getStartAt() != null : "Enrollment must have start date";
+
+        log.info("Successfully enrolled student {} in FREE course {}", student.getId(), courseId);
 
         return enrollmentMapper.toDetailResponse(enrollment);
     }
 
     /**
-     * Enroll student by ID (used by payment system)
+     * Enroll student by ID (CALLED BY PAYMENT SYSTEM AFTER SUCCESSFUL PAYMENT)
+     * This method is invoked automatically when a payment transaction is completed successfully.
+     *
+     * Preconditions:
+     * - Student must exist in system
+     * - CourseVersion must exist and be the published version
+     * - Student must NOT be already enrolled in this course
+     * - Payment must have been verified successfully (caller's responsibility)
+     *
+     * Postconditions:
+     * - Enrollment created with ENROLLED status
+     * - Enrollment start date set to current time
+     * - Enrollment expiry date calculated based on course duration
+     * - Student can access course content immediately
+     * - Enrollment is persisted to database
+     *
+     * @param studentId The ID of the student to enroll
+     * @param courseVersionId The ID of the course version to enroll in
+     * @return EnrollmentDetailResponse with enrollment details
+     * @throws ResourceNotFoundException if student or course version not found
+     * @throws InvalidRequestException if student already enrolled
      */
     @Transactional
     public EnrollmentDetailResponse enrollStudent(Long studentId, Long courseVersionId) {
-        log.info("Processing enrollment for student: {} in courseVersion: {}", studentId, courseVersionId);
+        log.info("Processing PAID enrollment for student: {} in courseVersion: {}", studentId, courseVersionId);
 
+        // Precondition: Validate student exists
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
+        // Precondition: Validate course version exists
         CourseVersion courseVersion = courseVersionRepository.findById(courseVersionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course version not found: " + courseVersionId));
 
         Course course = courseVersion.getCourse();
 
+        // Precondition: Validate course version is published
+        if (courseVersion.getStatus() != CourseStatus.PUBLISHED) {
+            throw new InvalidRequestException("Cannot enroll in non-published course version");
+        }
+
+        // Precondition: Check not already enrolled (prevent duplicate enrollments)
         checkNotAlreadyEnrolled(studentId, course.getId());
 
+        // Create and start enrollment
         Enrollment enrollment = createAndStartEnrollment(student, course, courseVersion);
-        log.info("Successfully enrolled student {} in course {}", studentId, course.getId());
+
+        // Postcondition: Verify enrollment created successfully
+        assert enrollment.getId() != null : "Enrollment must have ID after saving";
+        assert enrollment.getStatus() == EnrollmentStatus.ENROLLED : "Enrollment must be in ENROLLED status";
+        assert enrollment.getStartAt() != null : "Enrollment must have start date";
+        assert enrollment.getEndAt() != null : "Enrollment must have expiry date";
+
+        log.info("Successfully enrolled student {} in PAID course {} (version {})",
+                studentId, course.getId(), courseVersionId);
 
         return enrollmentMapper.toDetailResponse(enrollment);
     }
@@ -213,12 +279,21 @@ public class EnrollmentService {
 
     /* ==================== HELPER METHODS ==================== */
 
+    /**
+     * Get currently authenticated student
+     * @throws ResourceNotFoundException if student not found
+     */
     private Student getCurrentAuthenticatedStudent() {
         Account currentAccount = accountService.validateCurrentAccountByRole(Role.STUDENT);
         return studentRepository.findByAccount(currentAccount)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
     }
 
+    /**
+     * Validate course is available for enrollment
+     * @throws ResourceNotFoundException if course not found
+     * @throws InvalidRequestException if course is closed
+     */
     private Course validateCourseForEnrollment(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
@@ -230,6 +305,10 @@ public class EnrollmentService {
         return course;
     }
 
+    /**
+     * Get published version of course
+     * @throws InvalidRequestException if no published version exists
+     */
     private CourseVersion getPublishedVersion(Course course) {
         CourseVersion publishedVersion = course.getVersionPublish();
         if (publishedVersion == null || publishedVersion.getStatus() != CourseStatus.PUBLISHED) {
@@ -238,6 +317,11 @@ public class EnrollmentService {
         return publishedVersion;
     }
 
+    /**
+     * Check if student is already enrolled in course
+     * Checks for active enrollments (ENROLLED status)
+     * @throws InvalidRequestException if already enrolled
+     */
     private void checkNotAlreadyEnrolled(Long studentId, Long courseId) {
         boolean alreadyEnrolled = enrollmentRepository.existsByStudentIdAndCourseIdAndActiveStatus(studentId, courseId);
         if (alreadyEnrolled) {
@@ -245,15 +329,11 @@ public class EnrollmentService {
         }
     }
 
-    private void validatePaymentForPaidCourse(CourseVersion courseVersion, EnrollCourseRequest request) {
-        if (courseVersion.getPrice() != null && courseVersion.getPrice().compareTo(BigDecimal.ZERO) > 0) {
-            if (request.getPaymentTransactionId() == null) {
-                throw new InvalidRequestException("Payment is required for this course");
-            }
-            // TODO: Verify payment transaction with Payment module
-        }
-    }
-
+    /**
+     * Create and start enrollment
+     * Sets status to ENROLLED and calculates expiry date
+     * @return Saved enrollment entity
+     */
     private Enrollment createAndStartEnrollment(Student student, Course course, CourseVersion courseVersion) {
         Enrollment enrollment = Enrollment.builder()
                 .student(student)
@@ -262,8 +342,14 @@ public class EnrollmentService {
                 .status(EnrollmentStatus.ENROLLED)
                 .build();
 
+        // Start enrollment - sets start date and calculates expiry date
         enrollment.start();
-        return enrollmentRepository.save(enrollment);
+
+        Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+        log.debug("Created enrollment {} for student {} in course {}",
+                 savedEnrollment.getId(), student.getId(), course.getId());
+
+        return savedEnrollment;
     }
 
     private void validateEnrollmentOwnership(Enrollment enrollment, Student student) {

@@ -23,7 +23,7 @@ public class BillingMapper {
                 .versionNumber(payment.getCourseVersion() != null ? payment.getCourseVersion().getVersionNumber() : null)
                 .amount(payment.getAmount())
                 .currency(payment.getCurrency())
-                .paymentMethod(payment.getPaymentMethod())
+                .paymentMethod(payment.getPaymentMethod() != null ? payment.getPaymentMethod() : null)
                 .status(payment.getStatus())
                 .providerTransactionId(payment.getProviderTransactionId())
                 .paidAt(payment.getPaidAt())

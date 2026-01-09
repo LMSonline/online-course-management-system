@@ -7,6 +7,7 @@ import org.hibernate.type.SqlTypes;
 import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.course.CourseVersion;
+import vn.uit.lms.shared.constant.PaymentProvider;
 import vn.uit.lms.shared.constant.PaymentStatus;
 import vn.uit.lms.shared.entity.BaseEntity;
 
@@ -52,8 +53,9 @@ public class PaymentTransaction extends BaseEntity {
     @Builder.Default
     private String currency = "VND";
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 64)
-    private String paymentMethod;
+    private PaymentProvider paymentMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
