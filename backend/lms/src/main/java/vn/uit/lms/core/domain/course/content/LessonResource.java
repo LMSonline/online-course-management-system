@@ -43,10 +43,12 @@ public class LessonResource extends BaseEntity {
     private String externalUrl;
 
     @Column(name = "order_index", nullable = false)
+    @Builder.Default
     private Integer orderIndex = 0;
 
 
     @Column(name = "is_required", nullable = false)
+    @Builder.Default
     private Boolean isRequired = false;
 
     @Column(name = "file_size_bytes")

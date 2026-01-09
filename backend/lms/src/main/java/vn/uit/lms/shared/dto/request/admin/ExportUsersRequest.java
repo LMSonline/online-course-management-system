@@ -22,15 +22,19 @@ public class ExportUsersRequest {
     private ExportFormat format;
 
     @Schema(description = "Include inactive accounts", example = "false")
+    @Builder.Default
     private Boolean includeInactive = false;
 
     @Schema(description = "Include suspended accounts", example = "false")
+    @Builder.Default
     private Boolean includeSuspended = false;
 
     @Schema(description = "Include rejected accounts", example = "false")
+    @Builder.Default
     private Boolean includeRejected = false;
 
     @Schema(description = "Include deleted accounts", example = "false")
+    @Builder.Default
     private Boolean includeDeleted = false;
 
     @Schema(description = "Fields to include in export (comma separated)",

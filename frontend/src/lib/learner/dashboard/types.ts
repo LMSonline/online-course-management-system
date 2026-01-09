@@ -1,4 +1,5 @@
 // src/components/learner/dashboard/types.ts
+import type { CourseVersionResponse } from "@/services/courses/course.types";
 export type MyCourse = {
   id: string;
   slug: string;
@@ -10,6 +11,7 @@ export type MyCourse = {
   level: "Beginner" | "Intermediate" | "Advanced";
   category: string;
   rating: number;
+  version?: CourseVersionResponse;
 };
 
 export const MOCK_COURSES: MyCourse[] = [

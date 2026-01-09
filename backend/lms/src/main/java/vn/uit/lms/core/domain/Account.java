@@ -46,6 +46,7 @@ public class Account extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
+    @Builder.Default
     private AccountStatus status = AccountStatus.PENDING_EMAIL;
 
     @Column(name = "avatar_url", length = 512)
@@ -59,6 +60,7 @@ public class Account extends BaseEntity {
 
     @Size(min = 2, max = 10)
     @Column(name = "lang_key", length = 10)
+    @Builder.Default
     private String langKey = Language.VI.getCode();
 
 

@@ -31,6 +31,7 @@ public class Category extends BaseEntity {
     private String code;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean visible = true;
 
     @Column(columnDefinition = "TEXT")
@@ -41,6 +42,7 @@ public class Category extends BaseEntity {
     private Category parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Category> children = new ArrayList<>();
 
     //support for SEO

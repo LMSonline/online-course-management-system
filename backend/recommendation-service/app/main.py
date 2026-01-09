@@ -11,6 +11,13 @@ from app.api.v1 import (
     recommendations as recommendations_router,
     analytics as analytics_router,
     admin as admin_router,
+    learning_time_router,
+)
+# Mount routers
+app.include_router(
+    learning_time_router,
+    prefix="/api/v1",
+    tags=["learning-time"],
 )
 from app.core import logging as core_logging
 from app.core.settings import settings

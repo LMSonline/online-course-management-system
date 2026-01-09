@@ -4,6 +4,7 @@ export type CourseSection = {
   title: string;
   lecturesCount: number;
   duration: string;
+  lessons?: import("@/lib/learner/player/types").PlayerLesson[];
 };
 
 export type CourseDetail = {
@@ -28,6 +29,10 @@ export type CourseDetail = {
     avatarUrl?: string;
     about: string;
   };
+  price?: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  isEnrolled?: boolean;
 };
 
 export const MOCK_COURSE: CourseDetail = {

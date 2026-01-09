@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -20,6 +20,7 @@ import { DEMO_MODE } from "@/lib/env";
  * - CHAPTER_GET_LIST (by courseId + versionId)
  * - PROGRESS_GET_COURSE (by studentId + courseId)
  */
+/*
 export default function CourseLearningHomeScreen() {
   const params = useParams();
   const courseSlug = params.courseSlug as string;
@@ -119,7 +120,7 @@ export default function CourseLearningHomeScreen() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Course Header */}
+      
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -132,7 +133,7 @@ export default function CourseLearningHomeScreen() {
           </div>
         </div>
         
-        {/* Progress Summary */}
+        
         {progress && (
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -164,7 +165,7 @@ export default function CourseLearningHomeScreen() {
           </div>
         )}
         
-        {/* Continue Button */}
+       
         {firstIncompleteLesson && (
           <div className="mb-6">
             <Link
@@ -178,7 +179,7 @@ export default function CourseLearningHomeScreen() {
         )}
       </div>
       
-      {/* Curriculum */}
+      
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Curriculum</h2>
         
@@ -201,7 +202,7 @@ export default function CourseLearningHomeScreen() {
                   key={chapter.id}
                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
                 >
-                  {/* Chapter Header */}
+                  
                   <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -226,7 +227,7 @@ export default function CourseLearningHomeScreen() {
                     )}
                   </div>
                   
-                  {/* Lessons List */}
+                  
                   <div className="p-4">
                     {chapterProgress?.lessons && chapterProgress.lessons.length > 0 ? (
                       <ul className="space-y-2">
@@ -268,3 +269,4 @@ export default function CourseLearningHomeScreen() {
     </div>
   );
 }
+  */

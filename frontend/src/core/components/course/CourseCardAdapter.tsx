@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { CourseResponse } from "@/services/courses/course.types";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { SafeImage } from "@/core/components/ui/SafeImage";
 
@@ -19,14 +20,24 @@ export function CourseCardAdapter({ course, className }: CourseCardAdapterProps)
   // Format price (assuming price comes from course version, may need adjustment)
   const price = "₫0"; // TODO: Get from course version when available
   const discountPrice = undefined; // TODO: Get from course version when available
-  
+
   // Get rating (may need to fetch separately or from course version)
   const rating = 0; // TODO: Get from course reviews/rating summary
   const ratingCount = 0; // TODO: Get from course reviews/rating summary
 
+  // Đảm bảo thumbnailUrl luôn có giá trị đúng
+  const thumbnailUrl = course.thumbnailUrl || (course as any).thumbnail_url || "";
+
+  const router = useRouter();
+  const handleTeacherClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    router.push(`/teachers/${course.teacherId}`);
+  };
+
   return (
-    <Link
-      href={`/courses/${course.slug}`}
+    <div
+      role="link"
+      tabIndex={0}
       className={cn(
         "group block relative isolate rounded-2xl border bg-white/[0.06] dark:bg-white/[0.06] " +
         "border-white/20 hover:border-white/30 " +
@@ -34,11 +45,17 @@ export function CourseCardAdapter({ course, className }: CourseCardAdapterProps)
         "transition-all overflow-visible",
         className
       )}
+      onClick={() => router.push(`/courses/${course.slug}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          router.push(`/courses/${course.slug}`);
+        }
+      }}
     >
       {/* Thumbnail */}
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl rounded-b-none">
         <SafeImage
-          src={course.thumbnailUrl}
+          src={thumbnailUrl}
           alt={course.title}
           fallback="/images/lesson_thum.png"
           fill
@@ -54,16 +71,16 @@ export function CourseCardAdapter({ course, className }: CourseCardAdapterProps)
         <h3 className="line-clamp-2 text-[16px] font-semibold leading-snug">
           {course.title}
         </h3>
-        {course.teacherId && (
-          <Link
-            href={`/teachers/${course.teacherId}`}
-            onClick={(e) => e.stopPropagation()}
-            className="mt-1 text-[13px] text-muted-foreground hover:text-[var(--brand-600)] transition"
+        {course.teacherId ? (
+          <button
+            type="button"
+            onClick={handleTeacherClick}
+            className="mt-1 text-[13px] text-muted-foreground hover:text-[var(--brand-600)] transition bg-transparent border-none p-0 cursor-pointer"
+            tabIndex={0}
           >
             {course.teacherName || "Instructor"}
-          </Link>
-        )}
-        {!course.teacherId && (
+          </button>
+        ) : (
           <div className="mt-1 text-[13px] text-muted-foreground">
             Instructor
           </div>
@@ -95,7 +112,7 @@ export function CourseCardAdapter({ course, className }: CourseCardAdapterProps)
 
       {/* Subtle focus/hover ring */}
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-0 group-hover:ring-1 ring-white/20 transition" />
-    </Link>
+    </div>
   );
 }
 

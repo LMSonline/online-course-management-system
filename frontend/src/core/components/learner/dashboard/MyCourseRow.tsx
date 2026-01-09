@@ -1,22 +1,26 @@
 // src/components/learner/dashboard/MyCourseRow.tsx
 import { Star, Play, Clock3 } from "lucide-react";
 import type { MyCourse } from "@/lib/learner/dashboard/types";
+import Link from "next/link";
 
 export function MyCourseRow({ course }: { course: MyCourse }) {
   return (
-    <article className="group flex flex-col rounded-3xl border border-white/10 bg-slate-950/80 p-3 md:p-4 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_40px_rgba(22,163,74,0.35)] transition">
+    <Link
+      href={`/courses/${course.slug}/learn`}
+      className="group flex flex-col rounded-3xl border border-white/10 bg-slate-950/80 p-3 md:p-4 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_40px_rgba(22,163,74,0.35)] transition cursor-pointer"
+      title={`Tên: ${course.title}\nGiảng viên: ${course.instructor}\nTiến độ: ${course.progress}%\nLần xem gần nhất: ${course.lastViewed}\nLevel: ${course.level}\nChuyên mục: ${course.category}\nĐánh giá: ${course.rating}`}
+      prefetch={false}
+    >
       {/* thumbnail / banner */}
-      <div
-        className={`relative mb-3 h-32 md:h-36 w-full overflow-hidden rounded-2xl bg-gradient-to-br ${course.thumbColor}`}
-      >
+      <div className={`relative mb-3 h-32 md:h-36 w-full overflow-hidden rounded-2xl bg-gradient-to-br ${course.thumbColor}`}>
         <div className="absolute inset-0 bg-black/10" />
         <div className="absolute left-3 top-3 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-slate-100 backdrop-blur">
           {course.category}
         </div>
-        <button className="absolute right-3 bottom-3 inline-flex items-center rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-slate-900 shadow-sm hover:bg-white group-hover:translate-y-0.5 transition">
+        <span className="absolute right-3 bottom-3 inline-flex items-center rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-slate-900 shadow-sm group-hover:bg-white group-hover:translate-y-0.5 transition pointer-events-none select-none">
           <Play className="mr-1 h-3.5 w-3.5" />
           Resume
-        </button>
+        </span>
       </div>
 
       {/* title + instructor */}
@@ -38,6 +42,17 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
           <Clock3 className="h-3 w-3" />
           Last viewed {course.lastViewed}
         </span>
+        {/* Thông tin version mới nhất */}
+        {course.version && (
+          <>
+            <span className="h-1 w-1 rounded-full bg-slate-500" />
+            <span>Version: {course.version.versionNumber}</span>
+            <span className="h-1 w-1 rounded-full bg-slate-500" />
+            <span>Price: {course.version.price ? `$${course.version.price}` : "Free"}</span>
+            <span className="h-1 w-1 rounded-full bg-slate-500" />
+            <span>Duration: {course.version.durationDays ? `${course.version.durationDays} days` : "N/A"}</span>
+          </>
+        )}
       </div>
 
       {/* progress bar */}
@@ -50,6 +65,6 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
         </div>
         <span className="text-xs text-slate-300">{course.progress}%</span>
       </div>
-    </article>
+    </Link>
   );
 }

@@ -1,9 +1,20 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
+
+// ===================== MAPPING lastAccessed =====================
+// - Interface EnrollmentResponse có trường lastAccessed (ISO string, optional)
+// - Được trả về từ API getStudentEnrollments
+// - Được sử dụng bởi:
+//   + src/hooks/enrollment/useStudentEnrollments.ts (trả về cho FE)
+//   + src/app/(student)/my-learning/page.tsx (lấy danh sách enrollment)
+//   + src/core/components/learner/dashboard/ContinueCourseCard.tsx (lọc, chọn, render)
+// ================================================================
+
+export type { PageResponse };
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import { DEMO_MODE } from "@/lib/env";
-import { DEMO_ENROLLMENTS, createDemoPageResponse } from "@/lib/demo/demoData";
+
 
 /**
  * Enrollment Response Type
@@ -29,6 +40,7 @@ export interface EnrollmentResponse {
   remainingDays: number;
   isActive: boolean;
   canTakeFinalExam: boolean;
+  lastAccessed?: string; // ISO string, newly added
 }
 
 export const enrollmentService = {
@@ -42,11 +54,6 @@ export const enrollmentService = {
     page: number = 0,
     size: number = 20
   ): Promise<PageResponse<EnrollmentResponse>> => {
-    // DEMO_MODE: Return mock data
-    if (DEMO_MODE) {
-      return createDemoPageResponse(DEMO_ENROLLMENTS, page + 1, size);
-    }
-
     const response = await axiosClient.get<
       ApiResponse<PageResponse<EnrollmentResponse>>
     >(`/students/${studentId}/enrollments`, {

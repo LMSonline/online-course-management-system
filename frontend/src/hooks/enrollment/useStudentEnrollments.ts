@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { enrollmentService } from "@/services/enrollment/enrollment.service";
 import { PageResponse, EnrollmentResponse } from "@/services/enrollment/enrollment.service";
+
+// ===================== MAPPING lastAccessed =====================
+// - Sử dụng EnrollmentResponse (có lastAccessed)
+// - Trả về danh sách enrollment cho các component FE
+// - Được sử dụng bởi:
+//   + src/app/(student)/my-learning/page.tsx (lấy danh sách enrollment)
+//   + src/core/components/learner/dashboard/ContinueCourseCard.tsx (lọc, chọn, render)
+// ================================================================
 import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 
 interface UseStudentEnrollmentsQueryProps {
