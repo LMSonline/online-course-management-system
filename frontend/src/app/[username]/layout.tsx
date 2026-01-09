@@ -19,7 +19,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const [role, setRole] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
 
-  const { data: user, isLoading, isError } = useCurrentUser();
+  // Ép kiểu user về đúng kiểu mong muốn
+  const { data, isLoading, isError } = useCurrentUser();
+  const user = data as { username: string; role: string } | undefined;
 
   useEffect(() => {
     // If error loading user, redirect to login
@@ -29,7 +31,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     }
 
     // If user loaded successfully
-    if (user) {
+    if (user && user.username && user.role) {
       const urlUser = usernameFromUrl?.toLowerCase().trim();
       const realUser = user.username?.toLowerCase().trim();
 
@@ -61,7 +63,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       {role === "STUDENT" && <LearnerNavbar />}
       {role === "TEACHER" && <TeacherNavbar onMenuClick={() => { }} isCollapsed={false} />}
       {role === "ADMIN" && <AdminNavbar />}
-
       <main className="min-h-[72vh]">{children}</main>
     </>
   );

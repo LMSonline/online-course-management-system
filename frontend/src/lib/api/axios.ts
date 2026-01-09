@@ -1,10 +1,23 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { ENV } from "@/lib/env";
+import axios, { AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from "axios";
+import { ENV, DEMO_MODE } from "@/lib/env";
 import { tokenStorage } from "./tokenStorage";
 import { AppError } from "./api.error";
+import type { ContractKey } from "./contractKeys";
+
+// Extend AxiosRequestConfig to support contractKey
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    contractKey?: ContractKey;
+  }
+}
+
+// Get baseURL from ENV (already handles /api/v1 correctly)
+const getBaseURL = () => {
+  return ENV.API.BASE_API_URL;
+};
 
 export const axiosClient = axios.create({
-  baseURL: ENV.API.BASE_API_URL,
+  baseURL: getBaseURL(),
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -12,7 +25,7 @@ export const axiosClient = axios.create({
 });
 
 const refreshClient = axios.create({
-  baseURL: ENV.API.BASE_API_URL,
+  baseURL: getBaseURL(),
   headers: {
     "Content-Type": "application/json",
   },
@@ -35,10 +48,34 @@ function processQueue(error: any, token: string | null) {
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = tokenStorage.getAccessToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    let hasAuthHeader = false; // <-- Khai báo ở đây
+
+    // DEMO_MODE: Skip Authorization header and contract key
+    if (!DEMO_MODE) {
+      const token = tokenStorage.getAccessToken();
+      hasAuthHeader = !!(token && config.headers); // <-- Gán giá trị ở đây
+      
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      // Attach contractKey to header if provided
+      if (config.contractKey && config.headers) {
+        config.headers["X-Contract-Key"] = config.contractKey;
+      }
     }
+    
+    // DEV: Log every request
+    if (process.env.NODE_ENV === "development") {
+      const method = config.method?.toUpperCase() || "GET";
+      const url = config.url || "";
+      const fullUrl = config.baseURL ? `${config.baseURL}${url}` : url;
+      console.log(`[Axios] ${method} ${fullUrl}`, {
+        hasAuthHeader,
+        contractKey: config.contractKey,
+      });
+    }
+    
     return config;
   },
   (error: AxiosError) => {
@@ -50,6 +87,17 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<any>) => {
+    // DEMO_MODE: Skip token refresh logic
+    if (DEMO_MODE) {
+      const contractKey = (error.config as AxiosRequestConfig)?.contractKey;
+      throw new AppError(
+        error.response?.data?.message || "Request failed",
+        error.response?.status || 500,
+        error.response?.data?.code || "UNKNOWN_ERROR",
+        contractKey
+      );
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
@@ -82,9 +130,24 @@ axiosClient.interceptors.response.use(
           return Promise.reject(new Error("No refresh token"));
         }
 
-        const res = await refreshClient.post("/auth/refresh", {
+        // Get device info and IP address (same as auth.service)
+        const getDeviceInfo = (): string => {
+          return typeof navigator !== "undefined" ? navigator.userAgent : "unknown";
+        };
+
+        const getDefaultIpAddress = (): string => {
+          return "127.0.0.1";
+        };
+
+        // Refresh token payload with deviceInfo and ipAddress
+        const refreshPayload = {
           refreshToken,
-        });
+          deviceInfo: getDeviceInfo(),
+          ipAddress: getDefaultIpAddress(),
+        };
+
+        // Use /auth/refresh (baseURL already includes /api/v1)
+        const res = await refreshClient.post("/auth/refresh", refreshPayload);
 
         const { accessToken, refreshToken: newRefreshToken } = res.data.data;
         tokenStorage.setTokens(accessToken, newRefreshToken);
@@ -105,10 +168,14 @@ axiosClient.interceptors.response.use(
       }
     }
 
+    // Extract contractKey from request config if available
+    const contractKey = (originalRequest as AxiosRequestConfig)?.contractKey;
+
     throw new AppError(
-      error.response?.data?.message || "Request failed",
-      error.response?.status || 500,
-      error.response?.data?.code || "UNKNOWN_ERROR"
+      error.response?.data?.message ?? "Request failed",
+      error.response?.status ?? 500,
+      error.response?.data?.code ?? "UNKNOWN_ERROR",
+      contractKey
     );
   }
 );

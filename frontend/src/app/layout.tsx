@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import AssistantWidget from "@/core/components/public/AssistantWidget";
 import { ReactQueryProvider } from "@/lib/providers/ReactQueryProvider";
 import { ToasterProvider } from "@/lib/providers/ToasterProvider";
+import { AuthBootstrapGate } from "@/components/auth/AuthBootstrapGate";
 
 export const metadata: Metadata = {
   title: "LMS – Online Courses Learning",
@@ -26,7 +27,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ToasterProvider />
-            {children}
+            <AuthBootstrapGate>
+              {children}
+            </AuthBootstrapGate>
             <AssistantWidget />
           </ThemeProvider>
         </ReactQueryProvider>

@@ -1,21 +1,26 @@
-import {  CategoryRequest,
-  CategoryResponse, } from "./course.types";
+import { CategoryRequest, CategoryResponse } from "./course.types";
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 const CATEGORY_PREFIX = "/categories";
 const ADMIN_CATEGORY_PREFIX = "/admin/categories";
 
 export const categoryService = {
   /**
-   * Create a new category (Admin only)
+   * Create a new category (CATEGORY_CREATE)
+   * Contract Key: CATEGORY_CREATE
+   * Endpoint: POST /api/v1/admin/categories
    */
   createCategory: async (
     payload: CategoryRequest
   ): Promise<CategoryResponse> => {
     const response = await axiosClient.post<ApiResponse<CategoryResponse>>(
       ADMIN_CATEGORY_PREFIX,
-      payload
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.CATEGORY_CREATE,
+      }
     );
 
     return unwrapResponse(response);
@@ -45,13 +50,17 @@ export const categoryService = {
 
   /**
    * Get category tree
+   * Contract Key: CATEGORY_GET_TREE
    */
   getCategoryTree: async (): Promise<CategoryResponse[]> => {
     const response = await axiosClient.get<ApiResponse<CategoryResponse[]>>(
-      `${CATEGORY_PREFIX}/tree`
+      `${CATEGORY_PREFIX}/tree`,
+      {
+        contractKey: CONTRACT_KEYS.CATEGORY_GET_TREE,
+      }
     );
 
-    return unwrapResponse(response);
+    return unwrapResponse(response, CONTRACT_KEYS.CATEGORY_GET_TREE);
   },
 
   /**
@@ -66,10 +75,14 @@ export const categoryService = {
   },
 
   /**
-   * Delete a category (Admin only)
+   * Delete a category (CATEGORY_DELETE)
+   * Contract Key: CATEGORY_DELETE
+   * Endpoint: DELETE /api/v1/admin/categories/{id}
    */
   deleteCategory: async (id: number): Promise<void> => {
-    await axiosClient.delete<void>(`${ADMIN_CATEGORY_PREFIX}/${id}`);
+    await axiosClient.delete<void>(`${ADMIN_CATEGORY_PREFIX}/${id}`, {
+      contractKey: CONTRACT_KEYS.CATEGORY_DELETE,
+    });
   },
 
   /**
@@ -84,7 +97,9 @@ export const categoryService = {
   },
 
   /**
-   * Update a category (Admin only)
+   * Update a category (CATEGORY_UPDATE)
+   * Contract Key: CATEGORY_UPDATE
+   * Endpoint: PUT /api/v1/admin/categories/{id}
    */
   updateCategory: async (
     id: number,
@@ -92,7 +107,10 @@ export const categoryService = {
   ): Promise<CategoryResponse> => {
     const response = await axiosClient.put<ApiResponse<CategoryResponse>>(
       `${ADMIN_CATEGORY_PREFIX}/${id}`,
-      payload
+      payload,
+      {
+        contractKey: CONTRACT_KEYS.CATEGORY_UPDATE,
+      }
     );
 
     return unwrapResponse(response);
@@ -100,12 +118,16 @@ export const categoryService = {
 
   /**
    * Get category by slug
+   * Contract Key: CATEGORY_GET_BY_SLUG
    */
   getCategoryBySlug: async (slug: string): Promise<CategoryResponse> => {
     const response = await axiosClient.get<ApiResponse<CategoryResponse>>(
-      `${CATEGORY_PREFIX}/slug/${slug}`
+      `${CATEGORY_PREFIX}/slug/${slug}`,
+      {
+        contractKey: CONTRACT_KEYS.CATEGORY_GET_BY_SLUG,
+      }
     );
 
-    return unwrapResponse(response);
+    return unwrapResponse(response, CONTRACT_KEYS.CATEGORY_GET_BY_SLUG);
   },
 };

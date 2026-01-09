@@ -11,46 +11,92 @@ import {
   MeUser,
 } from "@/services/auth/auth.types";
 import { tokenStorage } from "@/lib/api/tokenStorage";
+import { useAuthStore } from "@/lib/auth/authStore";
+import { mapBackendRoleToInternal } from "@/lib/auth/roleMap";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 
 // Login Hook
 export const useLogin = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { setAuth } = useAuthStore();
 
   return useMutation<
     LoginResponse,
     AppError,
     LoginRequest & { redirectUrl?: string }
   >({
-    mutationFn: ({ redirectUrl, ...loginData }) => authService.login(loginData),
+    mutationFn: ({ redirectUrl, ...loginData }) => {
+      // DEV: Log login attempt
+      if (process.env.NODE_ENV === "development") {
+        console.log("[Login] Attempting login:", {
+          login: loginData.login,
+          hasPassword: !!loginData.password,
+        });
+      }
+      return authService.login(loginData);
+    },
     onSuccess: (data, variables) => {
       // Store tokens
       tokenStorage.setTokens(data.accessToken, data.refreshToken);
 
-      // Store user info
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(data.user));
+      // DEV: Log token storage (mask token for security)
+      if (process.env.NODE_ENV === "development") {
+        const tokenPreview = data.accessToken.substring(0, 12) + "...";
+        console.log("[Login] Tokens stored:", {
+          accessToken: tokenPreview,
+          hasRefreshToken: !!data.refreshToken,
+          role: data.role,
+        });
       }
 
-      // Cache user data
-      queryClient.setQueryData(["currentUser"], data.user);
+      // NOTE: Do NOT set accountId from login response
+      // Bootstrap will fetch /accounts/me immediately after login to get:
+      // - accountId (from data.accountId)
+      // - role (from data.role)
+      // - studentId (from data.profile.studentId if STUDENT)
+      // - teacherId (from data.profile.teacherId if TEACHER)
+      // 
+      // This ensures we use the canonical source of truth (/accounts/me)
+      // and avoid race conditions or stale data.
+
+      // Invalidate AUTH_ME to trigger bootstrap flow
+      queryClient.invalidateQueries({ queryKey: [CONTRACT_KEYS.AUTH_ME] });
+
+      // DEV: Log redirect plan
+      if (process.env.NODE_ENV === "development") {
+        console.log("[Login] Redirect plan:", {
+          redirectUrl: variables.redirectUrl,
+          role: data.role,
+        });
+      }
 
       toast.success("Login successful!");
 
-      // Redirect based on role with small delay to ensure token is set
+      // Redirect based on redirectUrl or default dashboard
+      // Note: Domain IDs (studentId/teacherId) will be hydrated by useAuthBootstrap
+      // We wait a bit for bootstrap to start, then redirect
       setTimeout(() => {
-        // Use redirect URL if provided, otherwise use default dashboard
         if (variables.redirectUrl) {
+          if (process.env.NODE_ENV === "development") {
+            console.log("[Login] Redirecting to:", variables.redirectUrl);
+          }
           router.replace(variables.redirectUrl);
         } else {
-          const role = data.user.role;
-          if (role === "ADMIN") {
-            router.replace("/admin/dashboard");
-          } else if (role === "TEACHER") {
-            router.replace("/teacher/dashboard");
-          } else {
-            router.replace("/learner/dashboard");
+          // Default redirect based on role from login response (if available)
+          // Otherwise, bootstrap will handle role-based redirect via guards
+          const roleFromResponse = data.role;
+          let targetPath = "/my-learning";
+          if (roleFromResponse === "ADMIN") {
+            targetPath = "/admin";
+          } else if (roleFromResponse === "TEACHER" || roleFromResponse === "CREATOR") {
+            targetPath = "/teacher/courses";
           }
+          
+          if (process.env.NODE_ENV === "development") {
+            console.log("[Login] Redirecting to default:", targetPath);
+          }
+          router.replace(targetPath);
         }
       }, 150);
     },
@@ -100,6 +146,7 @@ export const useRegister = () => {
 export const useLogout = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { clear: clearAuthStore } = useAuthStore();
 
   return useMutation<void, AppError>({
     mutationFn: async () => {
@@ -109,13 +156,13 @@ export const useLogout = () => {
       }
     },
     onSuccess: () => {
-      // Clear all stored data
+      // Clear auth store (accountId, role, studentId, teacherId)
+      clearAuthStore();
+      
+      // Clear tokens
       tokenStorage.clear();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-      }
-
-      // Clear all queries
+      
+      // Clear all React Query cache
       queryClient.clear();
 
       toast.success("Logged out successfully");
@@ -123,10 +170,8 @@ export const useLogout = () => {
     },
     onError: (error) => {
       // Even if logout fails on server, clear local data
+      clearAuthStore();
       tokenStorage.clear();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-      }
       queryClient.clear();
 
       console.error("Logout error:", error);
@@ -138,13 +183,29 @@ export const useLogout = () => {
 
 // Get Current User Hook
 export const useCurrentUser = (enabled: boolean = true) => {
+  const { setAuth } = useAuthStore();
+
   return useQuery<MeUser, AppError>({
-    queryKey: ["currentUser"],
+    queryKey: [CONTRACT_KEYS.AUTH_ME],
     queryFn: authService.getCurrentUser,
     enabled: enabled && !!tokenStorage.getAccessToken(),
-    retry: false,
+    retry: 0, // No retry on error
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    onSuccess: (data) => {
+      // Update auth store when data is fetched
+      const internalRole = mapBackendRoleToInternal(data.role);
+      setAuth({
+        accountId: data.accountId,
+        role: internalRole,
+        email: data.email,
+        fullName: data.fullName ?? null,
+        username: data.username,
+        avatarUrl: data.avatarUrl ?? null,
+      });
+    },
   });
 };
 

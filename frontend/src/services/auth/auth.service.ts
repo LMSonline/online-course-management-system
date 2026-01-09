@@ -1,6 +1,8 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
+import { DEMO_MODE } from "@/lib/env";
 import {
   LoginRequest,
   RegisterRequest,
@@ -50,10 +52,31 @@ export const authService = {
   login: async (payload: LoginRequest): Promise<LoginResponse> => {
     const enrichedPayload = enrichWithDeviceInfo(payload);
     
+    // DEV: Log API call
+    if (process.env.NODE_ENV === "development") {
+      console.log("[AuthService] POST /auth/login", {
+        login: payload.login,
+        baseURL: axiosClient.defaults.baseURL,
+        endpoint: `${AUTH_PREFIX}/login`,
+      });
+    }
+    
     const response = await axiosClient.post<ApiResponse<LoginResponse>>(
       `${AUTH_PREFIX}/login`,
-      enrichedPayload
+      enrichedPayload,
+      {
+        contractKey: CONTRACT_KEYS.AUTH_LOGIN,
+      }
     );
+    
+    // DEV: Log response
+    if (process.env.NODE_ENV === "development") {
+      console.log("[AuthService] Login response:", {
+        status: response.status,
+        hasAccessToken: !!response.data.data?.accessToken,
+        role: response.data.data?.user?.role,
+      });
+    }
     
     return unwrapResponse(response);
   },
@@ -156,10 +179,22 @@ export const authService = {
 
   /**
    * Get current authenticated user
+   * Endpoint: GET /api/v1/accounts/me
+   * Returns: accountId, role, profile.studentId (if STUDENT), profile.teacherId (if TEACHER)
    */
   getCurrentUser: async (): Promise<MeUser> => {
+    // DEMO_MODE: Skip protected endpoint
+    if (DEMO_MODE) {
+      const error: any = new Error("DEMO_MODE: Auth disabled");
+      error.code = "DEMO_SKIP_AUTH";
+      throw error;
+    }
+    
     const response = await axiosClient.get<ApiResponse<MeUser>>(
-      `${AUTH_PREFIX}/me`
+      "/accounts/me",
+      {
+        contractKey: CONTRACT_KEYS.AUTH_ME,
+      }
     );
     
     return unwrapResponse(response);

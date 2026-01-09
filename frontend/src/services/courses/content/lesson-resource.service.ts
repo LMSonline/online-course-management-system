@@ -1,6 +1,7 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
+import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import {
   LessonResourceRequest,
   ReorderResourcesRequest,
