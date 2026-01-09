@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useQuery } from "@tanstack/react-query";
 import { notFound, useParams } from "next/navigation";
 import { CoursePlayerShell } from "@/core/components/learner/player/CoursePlayerShell";
@@ -11,6 +10,10 @@ import { CourseTeacherCard } from "@/core/components/learner/course/CourseTeache
 import { CourseStudentFeedback } from "@/core/components/learner/course/CourseStudentFeedback";
 import { CourseIncludes } from "@/core/components/learner/course/CourseIncludes";
 import { courseService } from "@/services/courses/course.service";
+import { courseVersionService } from "@/services/courses/courseVersion.service";
+import { CourseVersionResponse } from "@/services/courses/course.types";
+import { useAuthStore } from "@/lib/auth/authStore";
+import { enrollmentService } from "@/services/enrollment/enrollment.service";
 import type { CourseDetail } from "@/lib/learner/course/types";
 import type { PlayerCourse, PlayerSection, PlayerLesson } from "@/lib/learner/player/types";
 // Map CourseDetail -> PlayerCourse (for CoursePlayerShell)
@@ -63,7 +66,39 @@ function mapToPlayerCourse(course: CourseDetail): PlayerCourse {
   };
 }
 // Map CourseDetailResponse (API) -> CourseDetail (UI)
-function mapCourseDetail(api: any): CourseDetail {
+async function mapCourseDetail(api: any, studentId?: number): Promise<CourseDetail> {
+  // Lấy version list
+  let versions: CourseVersionResponse[] = [];
+  try {
+    versions = await courseVersionService.getCourseVersions(api.id);
+  } catch {}
+  // Lấy version đầu tiên và mới nhất
+  const sortedVersions = versions.slice().sort((a, b) => a.id - b.id);
+  const firstVersion = sortedVersions[0];
+  const latestVersion = sortedVersions[sortedVersions.length - 1];
+  let price = 0;
+  let originalPrice = 0;
+  if (latestVersion) {
+    const latestDetail = await courseVersionService.getCourseVersionById(api.id, latestVersion.id);
+    price = latestDetail?.price ?? 0;
+  }
+  if (firstVersion) {
+    const firstDetail = await courseVersionService.getCourseVersionById(api.id, firstVersion.id);
+    originalPrice = firstDetail?.price ?? price;
+  } else {
+    originalPrice = price;
+  }
+  const discountPercent = price < originalPrice && originalPrice > 0 ? Math.round(100 - (price / originalPrice) * 100) : undefined;
+
+  // Kiểm tra enroll
+  let isEnrolled = false;
+  if (studentId) {
+    try {
+      const enrollments = await enrollmentService.getStudentEnrollments(studentId, 0, 100);
+      isEnrolled = enrollments.items.some(e => e.courseId === api.id && e.status === "ENROLLED");
+    } catch {}
+  }
+
   return {
     id: String(api.id),
     slug: api.slug || "",
@@ -86,27 +121,43 @@ function mapCourseDetail(api: any): CourseDetail {
       avatarUrl: "",
       about: "No instructor info."
     },
+    price,
+    originalPrice,
+    discountPercent,
+    isEnrolled,
   };
 }
 
 
+import React from "react";
 export default function StudentCourseLearnPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
+  const { studentId } = useAuthStore();
+  const [mappedCourse, setMappedCourse] = React.useState<CourseDetail | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const apiCourse = await courseService.getCourseBySlug(slug);
+        const detail = await mapCourseDetail(apiCourse, studentId ?? undefined);
+        if (mounted) setMappedCourse(detail);
+      } catch {
+        if (mounted) setMappedCourse(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    if (slug) fetchData();
+    return () => { mounted = false; };
+  }, [slug, studentId]);
 
-  const { data: course, isLoading, error } = useQuery({
-    queryKey: ["course-detail", slug],
-    queryFn: () => courseService.getCourseBySlug(slug),
-    enabled: !!slug,
-    staleTime: 60_000,
-  });
-
-  if (isLoading) {
+  if (loading) {
     return <div className="flex items-center justify-center min-h-[400px]">Đang tải khoá học...</div>;
   }
-  if (error || !course) return notFound();
-
-  const mappedCourse: CourseDetail = mapCourseDetail(course);
+  if (!mappedCourse) return notFound();
 
   return (
     <div className="bg-slate-950 text-slate-50">

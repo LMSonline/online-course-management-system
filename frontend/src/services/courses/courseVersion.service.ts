@@ -18,4 +18,15 @@ export const courseVersionService = {
     );
     return unwrapResponse(response);
   },
+
+  /**
+   * Get course version detail by versionId
+   * Endpoint: GET /api/v1/courses/{courseId}/versions/{versionId}
+   */
+  getCourseVersionById: async (courseId: number, versionId: number): Promise<CourseVersionResponse> => {
+    const response = await axiosClient.get<ApiResponse<CourseVersionResponse>>(
+      `${COURSE_PREFIX}/${courseId}/versions/${versionId}`
+    );
+    return unwrapResponse(response);
+  },
 };

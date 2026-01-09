@@ -29,6 +29,10 @@ export type CourseDetail = {
     avatarUrl?: string;
     about: string;
   };
+  price?: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  isEnrolled?: boolean;
 };
 
 export const MOCK_COURSE: CourseDetail = {
