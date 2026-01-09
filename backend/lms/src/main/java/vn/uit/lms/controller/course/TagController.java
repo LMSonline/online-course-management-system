@@ -26,9 +26,7 @@ public class TagController {
     }
 
     @Operation(summary = "Create a new tag")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/admin/tags")
-    @AdminOnly
     public ResponseEntity<vn.uit.lms.core.domain.course.Tag> createTag(
             @Parameter(description = "Tag details") @Valid @RequestBody TagRequest tagRequest) {
         vn.uit.lms.core.domain.course.Tag createdTag = tagService.createTag(tagRequest);
@@ -44,9 +42,7 @@ public class TagController {
     }
 
     @Operation(summary = "Get all tags including deleted")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/admin/tags")
-    @AdminOnly
     public ResponseEntity<PageResponse<vn.uit.lms.core.domain.course.Tag>> getAllTags(
             @Parameter(description = "Pagination parameters") Pageable pageable) {
         PageResponse<vn.uit.lms.core.domain.course.Tag> tagsPage = tagService.getAllIncludingDeleted(pageable);
@@ -54,9 +50,7 @@ public class TagController {
     }
 
     @Operation(summary = "Update a tag")
-    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/admin/tags/{id}")
-    @AdminOnly
     public ResponseEntity<vn.uit.lms.core.domain.course.Tag> updateTag(
             @Parameter(description = "Tag ID") @PathVariable Long id,
             @Parameter(description = "Updated tag details") @Valid @RequestBody TagRequest tagRequest) {
@@ -65,9 +59,7 @@ public class TagController {
     }
 
     @Operation(summary = "Delete a tag")
-    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/admin/tags/{id}")
-    @AdminOnly
     public ResponseEntity<Void> deleteTag(
             @Parameter(description = "Tag ID") @PathVariable Long id) {
         tagService.deleteTag(id);
@@ -75,9 +67,7 @@ public class TagController {
     }
 
     @Operation(summary = "Restore a deleted tag")
-    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/admin/tags/{id}/restore")
-    @AdminOnly
     public ResponseEntity<vn.uit.lms.core.domain.course.Tag> restoreTag(
             @Parameter(description = "Tag ID") @PathVariable Long id) {
         vn.uit.lms.core.domain.course.Tag restoredTag = tagService.restoreTag(id);

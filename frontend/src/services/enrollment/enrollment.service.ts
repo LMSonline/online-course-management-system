@@ -43,7 +43,24 @@ export interface EnrollmentResponse {
   lastAccessed?: string; // ISO string, newly added
 }
 
+
 export const enrollmentService = {
+  /**
+   * Enroll in a course (ENROLLMENT_CREATE)
+   * Endpoint: POST /api/v1/courses/{courseId}/enroll
+   */
+  enrollCourse: async (
+    courseId: string | number,
+    paymentTransactionId: number | null = null,
+    notes?: string
+  ) => {
+    const response = await axiosClient.post(`/courses/${courseId}/enroll`, {
+      paymentTransactionId,
+      notes,
+    });
+    return unwrapResponse(response);
+  },
+
   /**
    * Get student enrollments (ENROLLMENT_GET_STUDENT_LIST)
    * Contract Key: ENROLLMENT_GET_STUDENT_LIST

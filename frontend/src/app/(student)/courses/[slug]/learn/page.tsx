@@ -163,18 +163,31 @@ export default function StudentCourseLearnPage() {
     <div className="bg-slate-950 text-slate-50">
       <CourseHero course={mappedCourse} />
       <main className="mx-auto flex w-full max-w-6xl xl:max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-10 xl:px-0 py-6 md:py-8 lg:flex-row">
-        {/* Left column: Player + nội dung */}
+        {/* Left column: Player + nội dung nếu đã enroll, chỉ info nếu chưa */}
         <div className="flex-1 space-y-5">
-          <CoursePlayerShell course={mapToPlayerCourse(mappedCourse)} />
-          <CourseWhatYouWillLearn course={mappedCourse} />
-          <CourseContentOutline course={mappedCourse} />
-          <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5">
-            <h2 className="text-lg md:text-xl font-semibold mb-3">Description</h2>
-            <p className="text-sm md:text-[15px] text-slate-200 leading-relaxed">
-              {mappedCourse.description}
-            </p>
-          </section>
-          <CourseStudentFeedback course={mappedCourse} />
+          {mappedCourse.isEnrolled ? (
+            <>
+              <CoursePlayerShell course={mapToPlayerCourse(mappedCourse)} />
+              <CourseWhatYouWillLearn course={mappedCourse} />
+              <CourseContentOutline course={mappedCourse} />
+              <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5">
+                <h2 className="text-lg md:text-xl font-semibold mb-3">Description</h2>
+                <p className="text-sm md:text-[15px] text-slate-200 leading-relaxed">
+                  {mappedCourse.description}
+                </p>
+              </section>
+              <CourseStudentFeedback course={mappedCourse} />
+            </>
+          ) : (
+            <>
+              <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5">
+                <h2 className="text-lg md:text-xl font-semibold mb-3">Description</h2>
+                <p className="text-sm md:text-[15px] text-slate-200 leading-relaxed">
+                  {mappedCourse.description}
+                </p>
+              </section>
+            </>
+          )}
         </div>
         {/* Right column: Thông tin khoá học */}
         <aside className="w-full lg:w-80 xl:w-96 space-y-5">

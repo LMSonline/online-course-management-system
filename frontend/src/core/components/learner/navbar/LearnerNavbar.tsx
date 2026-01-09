@@ -15,6 +15,7 @@ import {
   Moon, // thêm icon
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { CartPreviewDropdown } from "@/core/components/learner/navbar/CartPreviewDropdown";
 import { cn } from "@/lib/cn";
 import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; // ⬅️ thêm
 import { useAssistantStore } from "@/core/components/public/store";
@@ -46,6 +47,9 @@ export default function LearnerNavbar() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Cart preview dropdown state
+  const [cartOpen, setCartOpen] = useState(false);
 
   const [theme, setTheme] = useState<"light" | "dark">(
     typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -155,13 +159,20 @@ export default function LearnerNavbar() {
             <Heart size={18} />
           </button>
 
+
           {/* Cart */}
-          <button
-            className="btn-icon hidden sm:inline-flex"
-            aria-label="Cart"
-          >
-            <ShoppingCart size={18} />
-          </button>
+          <div className="relative hidden sm:inline-flex">
+            <button
+              className="btn-icon"
+              aria-label="Cart"
+              onClick={() => setCartOpen((v) => !v)}
+            >
+              <ShoppingCart size={18} />
+            </button>
+            {cartOpen && (
+              <CartPreviewDropdown onClose={() => setCartOpen(false)} />
+            )}
+          </div>
 
           {/* Notifications */}
           <button className="btn-icon hidden sm:inline-flex" aria-label="Notifications">

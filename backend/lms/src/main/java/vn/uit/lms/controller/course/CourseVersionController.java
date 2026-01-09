@@ -34,9 +34,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Create a new course version")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions")
-    @TeacherOnly
     public ResponseEntity<CourseVersionResponse> createCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version details") @Valid @RequestBody CourseVersionRequest courseVersionRequest) {
@@ -46,9 +44,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Get all course versions")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/versions")
-    @TeacherOnly
     public ResponseEntity<List<CourseVersionResponse>> getCourseVersions(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId) {
         List<CourseVersionResponse> listVersion = courseVersionService.getCourseVersions(courseId);
@@ -56,9 +52,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Get deleted course versions")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/versions/deleted")
-    @TeacherOnly
     public ResponseEntity<List<CourseVersionResponse>> getDeletedCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId) {
         List<CourseVersionResponse> listVersion = courseVersionService.getDeletedCourseVersions(courseId);
@@ -66,9 +60,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Get course version by ID")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/versions/{versionId}")
-    @TeacherOnly
     public ResponseEntity<CourseVersionResponse> getCourseVersionById(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
@@ -77,9 +69,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Delete course version (only DRAFT, PENDING, REJECTED)")
-    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/courses/{courseId}/versions/{versionId}")
-    @TeacherOnly
     public ResponseEntity<Void> deleteCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
@@ -88,9 +78,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Get course versions by status")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/versions/status/{status}")
-    @TeacherOnly
     public ResponseEntity<List<CourseVersionResponse>> getCourseVersionsByStatus(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Status") @PathVariable("status") String status) {
@@ -99,9 +87,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Submit version for approval")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/submit-approval")
-    @TeacherOnly
     public ResponseEntity<CourseVersionResponse> submitApproval(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
@@ -110,9 +96,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Approve course version (Admin)")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/approve")
-    @AdminOnly
     public ResponseEntity<CourseVersionResponse> approveCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
@@ -121,9 +105,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Reject course version (Admin)")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/reject")
-    @AdminOnly
     public ResponseEntity<CourseVersionResponse> rejectCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId,
@@ -133,9 +115,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Publish course version")
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/versions/{versionId}/publish")
-    @TeacherOnly
     public ResponseEntity<CourseVersionResponse> publishCourseVersion(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {
@@ -144,9 +124,7 @@ public class CourseVersionController {
     }
 
     @Operation(summary = "Get all pending course versions (Admin)")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/admin/versions/pending")
-    @AdminOnly
     public ResponseEntity<PageResponse<CourseVersionResponse>> getAllPendingCourseVersions(
             @Parameter(hidden = true) @Filter Specification<CourseVersion> spec,
             @Parameter(description = "Pagination parameters") Pageable pageable) {

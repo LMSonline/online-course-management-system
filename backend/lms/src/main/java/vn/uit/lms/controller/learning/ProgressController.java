@@ -27,9 +27,9 @@ public class ProgressController {
             summary = "Get student overall progress",
             description = "Get overall learning progress summary for a student across all enrolled courses"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/students/{studentId}/progress")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<StudentProgressOverviewResponse> getStudentProgress(
             @Parameter(description = "Student ID") @PathVariable Long studentId) {
         StudentProgressOverviewResponse response = progressService.getStudentProgress(studentId);
@@ -43,9 +43,9 @@ public class ProgressController {
             summary = "Get student course progress",
             description = "Get detailed progress for a student in a specific course, including all chapters and lessons"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/students/{studentId}/courses/{courseId}/progress")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<CourseProgressResponse> getStudentCourseProgress(
             @Parameter(description = "Student ID") @PathVariable Long studentId,
             @Parameter(description = "Course ID") @PathVariable Long courseId) {
@@ -60,9 +60,9 @@ public class ProgressController {
             summary = "Get student lesson progress",
             description = "Get progress information for a student in a specific lesson"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/students/{studentId}/lessons/{lessonId}/progress")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<LessonProgressResponse> getStudentLessonProgress(
             @Parameter(description = "Student ID") @PathVariable Long studentId,
             @Parameter(description = "Lesson ID") @PathVariable Long lessonId) {
@@ -78,9 +78,9 @@ public class ProgressController {
             description = "Mark a lesson as viewed by the authenticated student. " +
                     "Creates or updates progress record with viewed status."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @PostMapping("/lessons/{lessonId}/mark-viewed")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<LessonProgressResponse> markLessonAsViewed(
             @Parameter(description = "Lesson ID") @PathVariable Long lessonId) {
         LessonProgressResponse response = progressService.markLessonAsViewed(lessonId);
@@ -95,7 +95,7 @@ public class ProgressController {
             description = "Mark a lesson as completed by the authenticated student. " +
                     "Updates enrollment completion percentage automatically."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @PostMapping("/lessons/{lessonId}/mark-completed")
     @StudentOnly
     public ResponseEntity<LessonProgressResponse> markLessonAsCompleted(
@@ -112,9 +112,9 @@ public class ProgressController {
             description = "Get progress statistics for a course (Teacher access). " +
                     "Includes enrollment stats, completion rates, and average scores."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/progress-stats")
-    @TeacherOnly
+    //@TeacherOnly
     public ResponseEntity<CourseProgressStatsResponse> getCourseProgressStats(
             @Parameter(description = "Course ID") @PathVariable Long courseId) {
         CourseProgressStatsResponse response = progressService.getCourseProgressStats(courseId);

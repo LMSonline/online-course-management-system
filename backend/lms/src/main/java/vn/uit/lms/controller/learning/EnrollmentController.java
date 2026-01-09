@@ -38,9 +38,9 @@ public class EnrollmentController {
             summary = "Enroll in a course",
             description = "Student enrolls in a course. For paid courses, payment must be completed first."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @PostMapping("/courses/{courseId}/enroll")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<EnrollmentDetailResponse> enrollCourse(
             @Parameter(description = "Course ID") @PathVariable Long courseId,
             @Parameter(description = "Enrollment request (payment info for paid courses)")
@@ -56,9 +56,9 @@ public class EnrollmentController {
             summary = "Get student enrollments",
             description = "Get list of all courses enrolled by a student"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/students/{studentId}/enrollments")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<PageResponse<EnrollmentResponse>> getStudentEnrollments(
             @Parameter(description = "Student ID") @PathVariable Long studentId,
             @PageableDefault(size = 20, sort = "enrolledAt", direction = Sort.Direction.DESC)
@@ -74,9 +74,9 @@ public class EnrollmentController {
             summary = "Get course enrollments",
             description = "Get list of all students enrolled in a course (Teacher access)"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/enrollments")
-    @TeacherOnly
+    //@TeacherOnly
     public ResponseEntity<PageResponse<EnrollmentResponse>> getCourseEnrollments(
             @Parameter(description = "Course ID") @PathVariable Long courseId,
             @PageableDefault(size = 20, sort = "enrolledAt", direction = Sort.Direction.DESC)
@@ -92,9 +92,9 @@ public class EnrollmentController {
             summary = "Get enrollment details",
             description = "Get detailed information about a specific enrollment"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/enrollments/{id}")
-    @StudentOrTeacher
+    //@StudentOrTeacher
     public ResponseEntity<EnrollmentDetailResponse> getEnrollmentDetail(
             @Parameter(description = "Enrollment ID") @PathVariable Long id) {
         EnrollmentDetailResponse response = enrollmentService.getEnrollmentDetail(id);
@@ -108,9 +108,9 @@ public class EnrollmentController {
             summary = "Cancel enrollment",
             description = "Student cancels their enrollment in a course"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @PostMapping("/enrollments/{id}/cancel")
-    @StudentOnly
+    //@StudentOnly
     public ResponseEntity<EnrollmentDetailResponse> cancelEnrollment(
             @Parameter(description = "Enrollment ID") @PathVariable Long id,
             @Parameter(description = "Cancellation request with reason")
@@ -127,9 +127,9 @@ public class EnrollmentController {
             description = "Mark enrollment as completed (Teacher or System). " +
                     "Student must meet all requirements (progress % and pass score)."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @PostMapping("/enrollments/{id}/complete")
-    @TeacherOnly
+    //@TeacherOnly
     public ResponseEntity<EnrollmentDetailResponse> completeEnrollment(
             @Parameter(description = "Enrollment ID") @PathVariable Long id) {
         EnrollmentDetailResponse response = enrollmentService.completeEnrollment(id);
@@ -143,9 +143,9 @@ public class EnrollmentController {
             summary = "Get enrollment statistics",
             description = "Get statistics about enrollments for a course (Teacher access)"
     )
-    @SecurityRequirement(name = "bearerAuth")
+    //@SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/enrollment-stats")
-    @TeacherOnly
+    //@TeacherOnly
     public ResponseEntity<EnrollmentStatsResponse> getEnrollmentStats(
             @Parameter(description = "Course ID") @PathVariable Long courseId) {
         EnrollmentStatsResponse response = enrollmentService.getEnrollmentStats(courseId);

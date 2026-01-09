@@ -1,8 +1,36 @@
 // src/components/learner/course/CourseHero.tsx
+
 import { Star, Globe2, Users } from "lucide-react";
 import type { CourseDetail } from "@/lib/learner/course/types";
+import { useCart } from "@/core/hooks/useCart";
+import { useState } from "react";
+import CourseEnrollStepper from "./CourseEnrollStepper";
+import { enrollmentService } from "@/services/enrollment/enrollment.service";
 
 export function CourseHero({ course }: { course: CourseDetail }) {
+  const { addToCart, isInCart } = useCart();
+  const inCart = isInCart(course.id);
+  const [showEnroll, setShowEnroll] = useState(false);
+  const [enrollLoading, setEnrollLoading] = useState(false);
+  const [enrolled, setEnrolled] = useState(!!course.isEnrolled);
+
+  const handleAddToCart = () => {
+    if (!inCart) {
+      addToCart(course.id, course.slug);
+    }
+  };
+
+  const handleEnroll = async (notes?: string) => {
+    setEnrollLoading(true);
+    try {
+      // paymentTransactionId: null (mock), notes
+      await enrollmentService.enrollCourse(course.id, null, notes);
+      setEnrolled(true);
+    } finally {
+      setEnrollLoading(false);
+    }
+  };
+
   return (
     <section
       className="
@@ -179,18 +207,9 @@ export function CourseHero({ course }: { course: CourseDetail }) {
                     )}
                 </div>
 
-                {course.isEnrolled ? (
+                {enrolled ? (
                   <button
-                    className="
-                      w-full
-                      rounded-xl
-                      bg-slate-700
-                      py-2.5
-                      text-sm
-                      font-semibold
-                      text-slate-200
-                      cursor-not-allowed
-                    "
+                    className="w-full rounded-xl bg-slate-700 py-2.5 text-sm font-semibold text-slate-200 cursor-not-allowed"
                     disabled
                   >
                     Enrolled
@@ -198,39 +217,29 @@ export function CourseHero({ course }: { course: CourseDetail }) {
                 ) : (
                   <>
                     <button
-                      className="
-                        w-full
-                        rounded-xl
-                        bg-[var(--brand-600)]
-                        py-2.5
-                        text-sm
-                        font-semibold
-                        text-white
-                        shadow-[0_6px_24px_rgba(16,185,129,0.35)]
-                        transition
-                        hover:bg-[var(--brand-900)]
-                      "
+                      className="w-full rounded-xl bg-[var(--brand-600)] py-2.5 text-sm font-semibold text-white shadow-[0_6px_24px_rgba(16,185,129,0.35)] transition hover:bg-[var(--brand-900)] disabled:opacity-60"
+                      onClick={handleAddToCart}
+                      disabled={inCart}
                     >
-                      Add to cart
+                      {inCart ? "Added to cart" : "Add to cart"}
                     </button>
-
                     <button
-                      className="
-                        w-full
-                        rounded-xl
-                        border border-white/15
-                        bg-slate-900/80
-                        py-2.5
-                        text-sm
-                        font-semibold
-                        text-slate-50
-                        transition
-                        hover:bg-slate-800
-                      "
+                      className="w-full rounded-xl border border-white/15 bg-slate-900/80 py-2.5 text-sm font-semibold text-slate-50 transition hover:bg-slate-800 mt-2"
+                      onClick={() => setShowEnroll(true)}
                     >
-                      Buy now
+                      Enroll now
                     </button>
                   </>
+                )}
+
+                {showEnroll && (
+                  <CourseEnrollStepper
+                    course={course}
+                    onClose={() => setShowEnroll(false)}
+                    onEnroll={handleEnroll}
+                    loading={enrollLoading}
+                    enrolled={enrolled}
+                  />
                 )}
 
                 <p className="pt-1 text-[11px] text-slate-400">
