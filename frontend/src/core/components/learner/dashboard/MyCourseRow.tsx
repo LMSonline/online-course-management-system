@@ -42,6 +42,17 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
           <Clock3 className="h-3 w-3" />
           Last viewed {course.lastViewed}
         </span>
+        {/* Thông tin version mới nhất */}
+        {course.version && (
+          <>
+            <span className="h-1 w-1 rounded-full bg-slate-500" />
+            <span>Version: {course.version.versionNumber}</span>
+            <span className="h-1 w-1 rounded-full bg-slate-500" />
+            <span>Price: {course.version.price ? `$${course.version.price}` : "Free"}</span>
+            <span className="h-1 w-1 rounded-full bg-slate-500" />
+            <span>Duration: {course.version.durationDays ? `${course.version.durationDays} days` : "N/A"}</span>
+          </>
+        )}
       </div>
 
       {/* progress bar */}

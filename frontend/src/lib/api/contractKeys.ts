@@ -30,6 +30,7 @@ export const CONTRACT_KEYS = {
   STUDENT_GET_ME: 'STUDENT_GET_ME',
   STUDENT_GET_BY_ID: 'STUDENT_GET_BY_ID',
   STUDENT_GET_COURSES: 'STUDENT_GET_COURSES',
+  STUDENT_GET_CERTIFICATES: 'STUDENT_GET_CERTIFICATES',
 
   // ============================================
   // TEACHER - Teacher operations

@@ -30,12 +30,14 @@ public class EmailVerification extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "token_type", length = 30, nullable = false)
+    @Builder.Default
     private TokenType tokenType = TokenType.VERIFY_EMAIL;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
     @Column(name = "is_used", nullable = false)
+    @Builder.Default
     private boolean isUsed = false;
 
 

@@ -1,3 +1,10 @@
+export interface StudentCertificateResponse {
+  certificateId: string;
+  certificateCode: string;
+  certificateUrl: string;
+  certificateIssueDate: string;
+  courseTitle: string;
+}
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse } from "@/lib/api/api.types";
@@ -49,6 +56,45 @@ export const studentService = {
         contractKey: CONTRACT_KEYS.STUDENT_GET_BY_ID,
       }
     );
+    return unwrapResponse(response);
+  },
+  /**
+   * Get certificates for student (STUDENT_GET_CERTIFICATES)
+   * Endpoint: GET /api/v1/students/{id}/certificates
+   */
+  getStudentCertificates: async (
+    studentId: number,
+    page: number = 0,
+    size: number = 12
+  ): Promise<{
+    items: Array<{
+      certificateId: string;
+      certificateCode: string;
+      certificateUrl: string;
+      certificateIssueDate: string;
+      courseTitle: string;
+    }>;
+    totalPages: number;
+    totalItems: number;
+    page: number;
+    size: number;
+  }> => {
+    const response = await axiosClient.get<ApiResponse<{
+      items: Array<{
+        certificateId: string;
+        certificateCode: string;
+        certificateUrl: string;
+        certificateIssueDate: string;
+        courseTitle: string;
+      }>;
+      totalPages: number;
+      totalItems: number;
+      page: number;
+      size: number;
+    }>>(`/students/${studentId}/certificates`, {
+      params: { page, size },
+      contractKey: CONTRACT_KEYS.STUDENT_GET_CERTIFICATES,
+    });
     return unwrapResponse(response);
   },
 };

@@ -5,6 +5,7 @@ import lombok.Data;
 
 
 @Data
+@lombok.EqualsAndHashCode(callSuper=false)
 @Entity
 public class TestEntity extends BaseEntity{
 

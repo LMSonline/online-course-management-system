@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.*;
 import vn.uit.lms.core.repository.*;
 import vn.uit.lms.core.repository.log.UserActivityLogRepository;
+import vn.uit.lms.core.domain.log.UserActivityLog;
 import vn.uit.lms.service.event.AccountActiveEvent;
 import vn.uit.lms.service.event.PasswordResetEvent;
 import vn.uit.lms.shared.constant.SecurityConstants;
@@ -224,6 +225,7 @@ public class AuthService {
         log.setAccountId(accountDB.getId());
         log.setActionType("LOGIN");
         log.setCreatedAt(LocalDateTime.now());
+        log.setMetadata("{}" ); // Đảm bảo metadata là JSON hợp lệ
         userActivityLogRepository.save(log);
 
         return resLoginDTO;

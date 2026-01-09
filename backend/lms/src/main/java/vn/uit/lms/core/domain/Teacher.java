@@ -38,6 +38,7 @@ public class Teacher extends PersonBase implements BaseProfile{
     private String degree;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean approved = false;
 
     @Column(name = "approved_by")

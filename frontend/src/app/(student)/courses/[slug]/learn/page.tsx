@@ -1,4 +1,3 @@
-// src/app/(student)/courses/[slug]/learn/page.tsx
 "use client";
 
 
@@ -70,7 +69,7 @@ function mapCourseDetail(api: any): CourseDetail {
     slug: api.slug || "",
     title: api.title || "",
     subtitle: api.shortDescription || "No subtitle provided",
-    rating: typeof api.rating === "number" ? api.rating : 4.5,
+    rating: typeof api.rating === "number" ? api.rating : 0.0,
     ratingCount: typeof api.ratingCount === "number" ? api.ratingCount : 0,
     studentsCount: typeof api.studentsCount === "number" ? api.studentsCount : 0,
     lastUpdated: api.updatedAt || api.lastUpdated || "N/A",

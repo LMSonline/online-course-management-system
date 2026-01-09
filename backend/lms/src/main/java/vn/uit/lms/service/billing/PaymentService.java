@@ -259,7 +259,7 @@ public class PaymentService {
             Long courseId,
             Pageable pageable
     ) {
-        Specification<PaymentTransaction> spec = Specification.where(null);
+        Specification<PaymentTransaction> spec = Specification.anyOf();
 
         if (status != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));

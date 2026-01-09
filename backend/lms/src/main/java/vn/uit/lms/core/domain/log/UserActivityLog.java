@@ -19,7 +19,7 @@ public class UserActivityLog {
     private String referenceType;
     private String referenceId;
 
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "TEXT")
     private String metadata;
 
     private java.time.LocalDateTime createdAt;

@@ -15,6 +15,7 @@ import java.time.LocalDate;
  * PersonBase with Rich Domain Model - encapsulates common person profile logic
  */
 @Data
+@lombok.EqualsAndHashCode(callSuper=false)
 @MappedSuperclass
 public abstract class PersonBase extends BaseEntity {
 

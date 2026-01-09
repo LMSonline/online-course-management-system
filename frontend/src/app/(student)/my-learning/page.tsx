@@ -1,9 +1,20 @@
 "use client";
 
+import React from "react";
+
 import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/auth/authStore";
 import { useStudentEnrollments } from "@/hooks/enrollment/useStudentEnrollments";
+import { useQuery } from "@tanstack/react-query";
+import { courseService } from "@/services/courses/course.service";
+import { courseVersionService } from "@/services/courses/courseVersion.service";
 import type { EnrollmentResponse } from "@/services/enrollment/enrollment.service";
+import type { CourseResponse } from "@/services/courses/course.types";
+
+// ===================== MAPPING lastAccessed =====================
+// - Gọi useStudentEnrollments để lấy danh sách enrollment (có lastAccessed)
+// - Dữ liệu này có thể truyền xuống các component con như ContinueCourseCard
+// ================================================================
 import type { MyCourse } from "@/lib/learner/dashboard/types";
 import { Loader2 } from "lucide-react";
 import { DashboardHeader } from "@/core/components/learner/dashboard/DashboardHeader";
@@ -33,25 +44,93 @@ export default function MyEnrollmentsScreen() {
     size,
   });
 
+
   const enrollments = data?.items || [];
-  function mapEnrollmentToMyCourse(e: EnrollmentResponse): MyCourse {
+  // Get all enrolled course IDs
+  const enrolledCourseIds = new Set(enrollments.map(e => e.courseId));
+
+  // Fetch all active courses
+
+  const { data: allCoursesData, isLoading: isCoursesLoading } = useQuery({
+    queryKey: ["active-courses"],
+    queryFn: () => courseService.getCoursesActive({ page: 0, size: 100 }),
+  });
+
+  // Filter out enrolled courses
+
+  const allCourses: CourseResponse[] = (allCoursesData && 'items' in allCoursesData && Array.isArray(allCoursesData.items))
+    ? allCoursesData.items
+    : [];
+  const unenrolledCourses: CourseResponse[] = allCourses.filter(
+    (course) => !enrolledCourseIds.has(course.id)
+  );
+
+  // Map CourseResponse to MyCourse
+
+  async function mapCourseToMyCourseWithVersion(c: CourseResponse): Promise<MyCourse> {
+    let version;
+    try {
+      const versions = await courseVersionService.getCourseVersions(c.id);
+      version = versions.reduce((max, v) => (v.id > max.id ? v : max), versions[0]);
+    } catch {
+      version = undefined;
+    }
+    return {
+      id: String(c.id),
+      slug: c.slug,
+      title: c.title,
+      instructor: c.teacherName || 'Unknown',
+      thumbColor: 'from-emerald-500 via-sky-500 to-indigo-500',
+      progress: 0,
+      lastViewed: 'New',
+      level: 'Beginner',
+      category: c.categoryName || 'General',
+      rating: 0,
+      version,
+    };
+  }
+
+  // Recommended courses with version
+  const [recommendedCourses, setRecommendedCourses] = React.useState<MyCourse[]>([]);
+  React.useEffect(() => {
+    (async () => {
+      const mapped = await Promise.all(unenrolledCourses.map(mapCourseToMyCourseWithVersion));
+      setRecommendedCourses(mapped);
+    })();
+  }, [unenrolledCourses]);
+
+  // Restore myCourses for enrolled section
+  async function mapEnrollmentToMyCourseWithVersion(e: EnrollmentResponse): Promise<MyCourse> {
+    let version;
+    try {
+      const versions = await courseVersionService.getCourseVersions(e.courseId);
+      version = versions.reduce((max, v) => (v.id > max.id ? v : max), versions[0]);
+    } catch {
+      version = undefined;
+    }
     return {
       id: String(e.id),
       slug: e.courseTitle.toLowerCase().replace(/ /g, '-'),
       title: e.courseTitle,
       instructor: e.studentName || 'Unknown',
-      thumbColor: 'from-emerald-500 via-sky-500 to-indigo-500', // customize as needed
+      thumbColor: 'from-emerald-500 via-sky-500 to-indigo-500',
       progress: e.completionPercentage,
-      lastViewed: 'Recently',
-      level: 'Beginner', // or map from backend if available
-      category: 'Web Development', // or map from backend if available
+      lastViewed: e.lastAccessed ? new Date(e.lastAccessed).toLocaleString() : 'Unknown',
+      level: 'Beginner',
+      category: 'Web Development',
       rating: e.averageScore || 0,
+      version,
     };
   }
-  const myCourses = enrollments.map(mapEnrollmentToMyCourse);
-  const recommendedCourses = myCourses.slice(0, 3);
+  const [myCourses, setMyCourses] = React.useState<MyCourse[]>([]);
+  React.useEffect(() => {
+    (async () => {
+      const mapped = await Promise.all(enrollments.map(mapEnrollmentToMyCourseWithVersion));
+      setMyCourses(mapped);
+    })();
+  }, [enrollments]);
 
-  if (isLoading) {
+  if (isLoading || isCoursesLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-12 w-12 animate-spin text-[var(--brand-600)] mx-auto mb-4" />

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vn.uit.lms.core.domain.log.UserActivityLog;
 import vn.uit.lms.core.repository.log.UserActivityLogRepository;
-import vn.uit.lms.shared.dto.response.ApiResponse;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -24,7 +24,7 @@ public class UserStreakController {
     private UserActivityLogRepository logRepo;
 
     @GetMapping("/streak")
-    public ApiResponse<Integer> getStreak(@AuthenticationPrincipal(expression = "id") Long accountId) {
+    public ResponseEntity<Integer> getStreak(@AuthenticationPrincipal(expression = "id") Long accountId) {
         List<UserActivityLog> logs = logRepo.findByAccountIdAndActionTypeOrderByCreatedAtDesc(accountId, "LOGIN");
         Set<LocalDate> accessDays = logs.stream()
                 .map(log -> log.getCreatedAt().toLocalDate())
@@ -35,6 +35,6 @@ public class UserStreakController {
         while (accessDays.contains(today.minusDays(streak))) {
             streak++;
         }
-        return ApiResponse.success(streak);
+        return ResponseEntity.ok(streak);
     }
 }
