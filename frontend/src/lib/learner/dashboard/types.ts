@@ -5,11 +5,13 @@ export type MyCourse = {
   title: string;
   instructor: string;
   thumbColor: string; // Tailwind gradient classes
+  thumbnailUrl?: string; // URL ảnh đại diện khóa học
   progress: number;
   lastViewed: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   category: string;
   rating: number;
+  price?: string;
 };
 
 export const MOCK_COURSES: MyCourse[] = [

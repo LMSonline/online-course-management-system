@@ -14,15 +14,26 @@ type Props = {
 export function RecommendedCarousel({ courses }: Props) {
   const [index, setIndex] = useState(0);
 
+  // Lọc và sort 10 course publish gần nhất (giả sử có trường publishedAt, nếu không thì lấy đầu danh sách)
+  const sortedCourses = [...courses]
+    .sort((a, b) => {
+      // Ưu tiên trường publishedAt, nếu không có thì giữ nguyên thứ tự
+      if ((a as any).publishedAt && (b as any).publishedAt) {
+        return new Date((b as any).publishedAt).getTime() - new Date((a as any).publishedAt).getTime();
+      }
+      return 0;
+    })
+    .slice(0, 10);
+
   // 1 slide = 3 course
   const perSlide = 3;
   const slides = useMemo(() => {
     const result: MyCourse[][] = [];
-    for (let i = 0; i < courses.length; i += perSlide) {
-      result.push(courses.slice(i, i + perSlide));
+    for (let i = 0; i < sortedCourses.length; i += perSlide) {
+      result.push(sortedCourses.slice(i, i + perSlide));
     }
     return result;
-  }, [courses]);
+  }, [sortedCourses]);
   const total = slides.length;
 
   function go(delta: number) {
@@ -34,7 +45,7 @@ export function RecommendedCarousel({ courses }: Props) {
     });
   }
 
-  if (!courses.length) return null;
+  if (!sortedCourses.length) return null;
 
   return (
     <section className="mt-10 md:mt-12">

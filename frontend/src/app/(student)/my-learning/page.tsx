@@ -1,12 +1,30 @@
-"use client";
+  "use client";
+  
+ 
 
+import React from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useAuthStore } from "@/lib/auth/authStore";
 import { useStudentEnrollments } from "@/hooks/enrollment/useStudentEnrollments";
-import { Loader2, BookOpen, Clock, Award, ChevronRight } from "lucide-react";
-import { DEMO_MODE } from "@/lib/env";
-import { DEMO_ENROLLMENTS } from "@/lib/demo/demoData";
+import { useQuery } from "@tanstack/react-query";
+import { courseService } from "@/services/courses/course.service";
+import type { EnrollmentResponse } from "@/services/enrollment/enrollment.service";
+import type { CourseResponse } from "@/services/courses/course.types";
+import type { MyCourse } from "@/lib/learner/dashboard/types";
+import { Loader2 } from "lucide-react";
+import { DashboardHeader } from "@/core/components/learner/dashboard/DashboardHeader";
+import { DashboardStatsRow } from "@/core/components/learner/dashboard/DashboardStatsRow";
+import { MyCoursesSection } from "@/core/components/learner/dashboard/MyCoursesSection";
+import { RecommendedCarousel } from "@/core/components/learner/dashboard/RecommendedCarousel";
+import { courseReviewService } from "@/services/courses/course-review.service";
+
+ // Helper: map difficulty to level
+  function mapDifficultyToLevel(difficulty?: string): "Beginner" | "Intermediate" | "Advanced" {
+    if (difficulty === "BEGINNER") return "Beginner";
+    if (difficulty === "INTERMEDIATE") return "Intermediate";
+    if (difficulty === "ADVANCED") return "Advanced";
+    return "Beginner";
+  }
 
 /**
  * MyEnrollmentsScreen
@@ -21,182 +39,118 @@ export default function MyEnrollmentsScreen() {
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page");
   const sizeParam = searchParams.get("size");
-  
-  const page = pageParam ? parseInt(pageParam, 10) - 1 : 0; // Backend uses 0-based
+  const page = pageParam ? parseInt(pageParam, 10) - 1 : 0;
   const size = sizeParam ? parseInt(sizeParam, 10) : 20;
-  
   const { studentId } = useAuthStore();
-  
-  // In DEMO_MODE, use mock data directly
+
+  // Lấy danh sách enrollment
   const { data, isLoading, error } = useStudentEnrollments({
-    studentId: DEMO_MODE ? 1 : studentId,
+    studentId,
     page,
     size,
   });
+  const enrollments = data?.items || [];
+  const enrolledCourseIds = new Set(enrollments.map((e: EnrollmentResponse) => e.courseId));
 
-  if (isLoading) {
+  // Lấy danh sách tất cả khóa học active
+  const { data: allCoursesData, isLoading: isCoursesLoading } = useQuery({
+    queryKey: ["active-courses"],
+    queryFn: () => courseService.getCoursesActive({ page: 0, size: 100 }),
+  });
+  const allCourses: CourseResponse[] = (allCoursesData && 'items' in allCoursesData && Array.isArray(allCoursesData.items))
+    ? allCoursesData.items
+    : [];
+  const unenrolledCourses: CourseResponse[] = allCourses.filter(
+    (course) => !enrolledCourseIds.has(course.id)
+  );
+
+  // Map CourseResponse to MyCourse (fetch rating trung bình)
+  const [recommendedCourses, setRecommendedCourses] = React.useState<MyCourse[]>([]);
+  React.useEffect(() => {
+    async function fetchRecommended() {
+      const mapped = await Promise.all(
+        unenrolledCourses.map(async (c) => {
+          let rating = 0;
+          try {
+            const summary = await courseReviewService.getRatingSummary(c.id);
+            rating = summary.averageRating || 0;
+          } catch {}
+          return {
+            id: String(c.id),
+            slug: c.slug,
+            title: c.title,
+            instructor: c.teacherName || 'Unknown',
+            thumbColor: 'from-emerald-500 via-sky-500 to-indigo-500',
+            thumbnailUrl: c.thumbnailUrl,
+            progress: 0,
+            lastViewed: 'New',
+            level: mapDifficultyToLevel(c.difficulty),
+            category: c.categoryName || 'General',
+            rating,
+          };
+        })
+      );
+      setRecommendedCourses(mapped);
+    }
+    if (unenrolledCourses.length > 0) fetchRecommended();
+    else setRecommendedCourses([]);
+  }, [unenrolledCourses]);
+  // Map EnrollmentResponse to MyCourse
+  function mapEnrollmentToMyCourse(e: EnrollmentResponse): MyCourse {
+    return {
+      id: String(e.id),
+      slug: e.courseTitle.toLowerCase().replace(/ /g, '-'),
+      title: e.courseTitle,
+      instructor: e.studentName || 'Unknown',
+      thumbColor: 'from-emerald-500 via-sky-500 to-indigo-500',
+      progress: e.completionPercentage,
+      lastViewed: e.startAt ? new Date(e.startAt).toLocaleString() : 'Unknown',
+      level: 'Beginner',
+      category: 'Web Development',
+      rating: e.averageScore || 0,
+    };
+  }
+
+  // recommendedCourses đã được fetch ở trên
+  const myCourses: MyCourse[] = enrollments.map(mapEnrollmentToMyCourse);
+
+  if (isLoading || isCoursesLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-[var(--brand-600)] mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading your courses...</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-12 w-12 animate-spin text-[var(--brand-600)] mx-auto mb-4" />
+        <p className="text-gray-600 dark:text-gray-400">Loading your courses...</p>
       </div>
     );
   }
-
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
-              Error loading enrollments
-            </h2>
-            <p className="text-red-600 dark:text-red-300 text-sm mb-4">
-              {error instanceof Error ? error.message : "An unexpected error occurred"}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const enrollments = data?.items || [];
-  const isEmpty = enrollments.length === 0;
-
-  if (isEmpty) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-semibold mb-2">You haven't enrolled in any courses yet</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Start your learning journey by exploring our course catalog.
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+            Error loading enrollments
+          </h2>
+          <p className="text-red-600 dark:text-red-300 text-sm mb-4">
+            {error instanceof Error ? error.message : "An unexpected error occurred"}
           </p>
-          <Link
-            href="/courses"
-            className="inline-flex items-center px-6 py-3 bg-[var(--brand-600)] text-white rounded-lg hover:bg-[var(--brand-900)] transition"
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
           >
-            Browse Courses
-          </Link>
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Learning</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Continue your learning journey
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {enrollments.map((enrollment) => (
-          <Link
-            key={enrollment.id}
-            href={`/learn/${enrollment.courseId}`} // TODO: Backend should include courseSlug in EnrollmentResponse; for now using courseId
-            className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-1 line-clamp-2">
-                  {enrollment.courseTitle}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Version {enrollment.versionNumber}
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0 ml-2" />
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                <span className="font-semibold">
-                  {enrollment.completionPercentage.toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className="bg-[var(--brand-600)] h-2 rounded-full transition-all"
-                  style={{ width: `${enrollment.completionPercentage}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Status Badge */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {enrollment.status === "COMPLETED" ? (
-                  <>
-                    <Award className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-                      Completed
-                    </span>
-                  </>
-                ) : enrollment.status === "ENROLLED" ? (
-                  <>
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                      In Progress
-                    </span>
-                  </>
-                ) : null}
-              </div>
-              {enrollment.averageScore !== undefined && (
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Score: {enrollment.averageScore.toFixed(1)}
-                </span>
-              )}
-            </div>
-
-            {/* Remaining Days */}
-            {enrollment.remainingDays > 0 && enrollment.status === "ENROLLED" && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                {enrollment.remainingDays} days remaining
-              </p>
-            )}
-          </Link>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {data && data.totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-2">
-          {data.hasPrevious && (
-            <Link
-              href={`/my-learning?page=${page}&size=${size}`}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-            >
-              Previous
-            </Link>
-          )}
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Page {data.page + 1} of {data.totalPages}
-          </span>
-          {data.hasNext && (
-            <Link
-              href={`/my-learning?page=${page + 2}&size=${size}`}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-            >
-              Next
-            </Link>
-          )}
-        </div>
-      )}
-    </div>
+    <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-6 md:py-8">
+      <section className="mx-auto w-full max-w-6xl xl:max-w-7xl">
+        <DashboardHeader />
+        <DashboardStatsRow />
+        <MyCoursesSection courses={myCourses} />
+        <RecommendedCarousel courses={recommendedCourses} />
+      </section>
+    </main>
   );
 }

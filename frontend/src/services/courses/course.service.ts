@@ -8,6 +8,7 @@ import {
   CourseUpdateRequest,
   CourseResponse,
   CourseDetailResponse,
+  CourseVersionResponse,
 } from "./course.types";
 
 const COURSE_PREFIX = "/courses";
@@ -214,5 +215,28 @@ export const courseService = {
     });
 
     return unwrapResponse(response);
+  },
+
+  /**
+   * Get course version detail (for price)
+   * Contract Key: VERSION_GET_DETAIL
+   * Endpoint: GET /api/v1/courses/versions/{versionId}
+   * Requires student token in Authorization header
+   */
+  getCourseVersion: async (
+    courseId: number,
+    versionId: number,
+    token: string
+  ): Promise<CourseVersionResponse> => {
+    const response = await axiosClient.get<ApiResponse<CourseVersionResponse>>(
+      `/courses/${courseId}/versions/${versionId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        contractKey: CONTRACT_KEYS.VERSION_GET_DETAIL,
+      }
+    );
+    return unwrapResponse(response, CONTRACT_KEYS.VERSION_GET_DETAIL);
   },
 };

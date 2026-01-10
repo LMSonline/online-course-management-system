@@ -23,6 +23,9 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
       <h3 className="text-sm md:text-[15px] font-semibold leading-snug line-clamp-2">
         {course.title}
       </h3>
+      {course.price && (
+        <div className="mt-1 text-[13px] font-bold text-white">{course.price}</div>
+      )}
       <p className="mt-1 text-xs text-slate-400">{course.instructor}</p>
 
       {/* meta info */}

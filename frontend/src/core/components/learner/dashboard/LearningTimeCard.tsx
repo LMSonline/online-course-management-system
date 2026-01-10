@@ -1,39 +1,47 @@
 // src/components/learner/dashboard/LearningTimeCard.tsx
 import { Clock3, ListChecks } from "lucide-react";
+import { useLearningTime } from "@/hooks/useLearningTime";
 
 export function LearningTimeCard() {
+  // Mock dữ liệu learning time
+  const { data, isLoading } = useLearningTime("demo-student");
+  const minutes = data?.week_minutes ?? 0;
+  const goal = data?.week_goal ?? 120;
+  const percent = Math.min(100, Math.round((minutes / goal) * 100));
+
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4 md:px-5 md:py-5">
-      <div className="pointer-events-none absolute -left-10 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-sky-500/15 blur-2xl" />
-      <div className="relative flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 border border-white/10">
-            <Clock3 className="w-5 h-5 text-sky-300" />
+    <div className="relative overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-br from-sky-950 via-slate-950 to-slate-900 px-6 py-6 shadow-lg min-h-[170px] flex flex-col justify-between">
+      <div className="pointer-events-none absolute -left-16 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-sky-400/10 blur-2xl" />
+      <div className="relative flex flex-col gap-4 flex-1">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 border border-sky-400/20">
+            <Clock3 className="w-6 h-6 text-sky-300" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Learning time
-            </p>
-            <p className="text-lg font-semibold">
-              0 / 30{" "}
-              <span className="text-sm font-medium text-slate-400">mins this week</span>
+            <p className="text-xs uppercase tracking-wide text-sky-300 mb-1 font-semibold">Learning time</p>
+            <p className="text-xl font-bold text-white">
+              {isLoading ? "..." : `${minutes} / ${goal}`}
+              <span className="text-sm font-medium text-slate-400 ml-1">mins this week</span>
             </p>
           </div>
         </div>
-        <div>
-          <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+        <div className="flex flex-col gap-1 mt-2">
+          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
             <span>Weekly goal</span>
-            <span>0%</span>
+            <span>{isLoading ? "..." : `${percent}%`}</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-[8%] rounded-full bg-[var(--brand-600)]" />
+          <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-sky-600 transition-all duration-500"
+              style={{ width: `${percent}%` }}
+            />
           </div>
         </div>
-        <button className="inline-flex items-center gap-1 text-xs mt-1 text-[var(--brand-300)] hover:text-[var(--brand-100)]">
-          <ListChecks className="w-3 h-3" />
-          Set learning reminder
-        </button>
       </div>
+      <button className="inline-flex items-center gap-1 text-xs mt-4 text-sky-300 hover:text-sky-100">
+        <ListChecks className="w-3 h-3" />
+        Set learning reminder
+      </button>
     </div>
   );
 }
