@@ -16,6 +16,11 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long>,
     List<QuizAttempt> findByQuizId(Long quizId);
 
     /**
+     * Count attempts for a quiz (used for business rule validation)
+     */
+    long countByQuizId(Long quizId);
+
+    /**
      * Delete all quiz attempts for a quiz (for cascade delete)
      */
     @Modifying

@@ -24,11 +24,63 @@ import java.util.List;
 public class AssignmentController {
     private final AssignmentService assignmentService;
 
+
+    /**
+     * Create independent assignment (not linked to any lesson yet)
+     * Follows Association pattern: Assignment exists independently
+     */
+    @PostMapping("/assignments")
+    @TeacherOnly
+    public ResponseEntity<AssignmentResponse> createIndependentAssignment(@RequestBody @Valid AssignmentRequest request) {
+        return ResponseEntity.ok(assignmentService.createIndependentAssignment(request));
+    }
+
+    /**
+     * Get all independent assignments (assignment library/pool)
+     */
+    @GetMapping("/assignments")
+    @TeacherOnly
+    public ResponseEntity<List<AssignmentResponse>> getAllIndependentAssignments() {
+        return ResponseEntity.ok(assignmentService.getAllIndependentAssignments());
+    }
+
+    /**
+     * Link existing assignment to a lesson
+     * Allows assignment reusability across lessons
+     */
+    @PostMapping("/lessons/{lessonId}/assignments/{assignmentId}")
+    @TeacherOnly
+    public ResponseEntity<AssignmentResponse> linkAssignmentToLesson(
+            @PathVariable Long lessonId,
+            @PathVariable Long assignmentId) {
+        return ResponseEntity.ok(assignmentService.linkAssignmentToLesson(assignmentId, lessonId));
+    }
+
+    /**
+     * Unlink assignment from lesson
+     * Assignment becomes independent again
+     */
+    @DeleteMapping("/lessons/{lessonId}/assignments/{assignmentId}")
+    @TeacherOnly
+    public ResponseEntity<Void> unlinkAssignmentFromLesson(
+            @PathVariable Long lessonId,
+            @PathVariable Long assignmentId) {
+        assignmentService.unlinkAssignmentFromLesson(lessonId, assignmentId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    /**
+     * Create assignment and immediately link to lesson (convenience method)
+     * LEGACY: For UX convenience (quick creation during lesson editing)
+     * Internally calls: createIndependentAssignment() + linkAssignmentToLesson()
+     */
     @PostMapping("/lessons/{lessonId}/assignments")
     @TeacherOnly
     public ResponseEntity<AssignmentResponse> createAssignment(@PathVariable Long lessonId, @RequestBody @Valid AssignmentRequest request) {
         return ResponseEntity.ok(assignmentService.createAssignment(lessonId, request));
     }
+
 
     @GetMapping("/lessons/{lessonId}/assignments")
     @StudentOrTeacher

@@ -511,44 +511,241 @@ public class CourseVersionService {
         return CourseVersionMapper.toCourseVersionResponse(updatedVersion);
     }
 
-    // TODO: Implement duplicateCourseVersion method
+    /**
+     * Duplicate course version
+     *
+     * Implementation Plan:
+     * 1. Load source version with all relationships
+     * 2. Create new version entity with incremented version number
+     * 3. Deep copy all content:
+     *    - Chapters: Copy chapter structure and order
+     *    - Lessons: Copy lesson data, video references (NOT files)
+     *    - Resources: Copy resource metadata and S3 keys
+     * 4. Set new version to DRAFT status
+     * 5. Clear approval/publish metadata
+     * 6. Maintain video object keys (files stay in cloud storage)
+     *
+     * Use Case:
+     * - Teacher wants to create new version based on existing one
+     * - Updates content without affecting live students
+     *
+     * @param courseId Course ID
+     * @param versionId Source version ID to duplicate
+     * @return Created draft version
+     */
     // @Transactional
     // @EnableSoftDeleteFilter
-    // public CourseVersionResponse duplicateCourseVersion(Long courseId, Long
-    // versionId) {
-    // - Copy all version data to new version
-    // - Deep copy chapters, lessons, resources
-    // - Copy video references (not files themselves)
-    // - Set status to DRAFT
-    // - Increment version number
-    // - Clear approval/publish dates
+    // public CourseVersionResponse duplicateCourseVersion(Long courseId, Long versionId) {
+    //     // Load source version with chapters and lessons
+    //     CourseVersion sourceVersion = loadVersionWithContent(courseId, versionId);
+    //     Course course = sourceVersion.getCourse();
+    //
+    //     // Create new version with incremented number
+    //     Integer newVersionNumber = courseVersionRepository
+    //         .findMaxVersionNumberByCourseId(courseId) + 1;
+    //
+    //     CourseVersion newVersion = CourseVersion.builder()
+    //         .course(course)
+    //         .versionNumber(newVersionNumber)
+    //         .title(sourceVersion.getTitle() + " (Copy)")
+    //         .shortDescription(sourceVersion.getShortDescription())
+    //         .description(sourceVersion.getDescription())
+    //         .price(sourceVersion.getPrice())
+    //         .durationDays(sourceVersion.getDurationDays())
+    //         .passScore(sourceVersion.getPassScore())
+    //         .finalWeight(sourceVersion.getFinalWeight())
+    //         .minProgressPct(sourceVersion.getMinProgressPct())
+    //         .status(CourseStatus.DRAFT)
+    //         .build();
+    //
+    //     newVersion = courseVersionRepository.save(newVersion);
+    //
+    //     // Deep copy chapters and lessons
+    //     for (Chapter sourceChapter : sourceVersion.getChapters()) {
+    //         Chapter newChapter = Chapter.builder()
+    //             .courseVersion(newVersion)
+    //             .title(sourceChapter.getTitle())
+    //             .orderIndex(sourceChapter.getOrderIndex())
+    //             .build();
+    //         newChapter = chapterRepository.save(newChapter);
+    //
+    //         for (Lesson sourceLesson : sourceChapter.getLessons()) {
+    //             Lesson newLesson = Lesson.builder()
+    //                 .chapter(newChapter)
+    //                 .type(sourceLesson.getType())
+    //                 .title(sourceLesson.getTitle())
+    //                 .shortDescription(sourceLesson.getShortDescription())
+    //                 .videoObjectKey(sourceLesson.getVideoObjectKey()) // Reference, not copy
+    //                 .durationSeconds(sourceLesson.getDurationSeconds())
+    //                 .orderIndex(sourceLesson.getOrderIndex())
+    //                 .isPreview(sourceLesson.getIsPreview())
+    //                 .build();
+    //             lessonRepository.save(newLesson);
+    //         }
+    //     }
+    //
+    //     return CourseVersionMapper.toCourseVersionResponse(newVersion);
     // }
 
-    // TODO: Implement compareVersions method
-    // public VersionComparisonResponse compareVersions(Long courseId, Long
-    // version1Id, Long version2Id) {
-    // - Compare content differences between two versions
-    // - Show added/removed/modified chapters and lessons
-    // - Compare pricing and configuration changes
-    // - Useful for admin review process
+    /**
+     * Compare two versions of a course
+     *
+     * Implementation Plan:
+     * 1. Load both versions with full content
+     * 2. Compare metadata (title, description, price, etc.)
+     * 3. Compare chapter structure:
+     *    - Added chapters
+     *    - Removed chapters
+     *    - Modified chapters
+     * 4. Compare lessons:
+     *    - Added/removed/modified lessons
+     *    - Video changes
+     *    - Order changes
+     * 5. Return structured diff
+     *
+     * Use Case:
+     * - Admin reviewing version changes before approval
+     * - Teacher reviewing what changed between versions
+     *
+     * @param courseId Course ID
+     * @param version1Id First version ID (older)
+     * @param version2Id Second version ID (newer)
+     * @return Comparison details
+     */
+    // public VersionComparisonResponse compareVersions(Long courseId, Long version1Id, Long version2Id) {
+    //     CourseVersion v1 = loadVersionWithContent(courseId, version1Id);
+    //     CourseVersion v2 = loadVersionWithContent(courseId, version2Id);
+    //
+    //     List<String> metadataChanges = new ArrayList<>();
+    //     if (!Objects.equals(v1.getTitle(), v2.getTitle())) {
+    //         metadataChanges.add("Title changed");
+    //     }
+    //     if (!Objects.equals(v1.getPrice(), v2.getPrice())) {
+    //         metadataChanges.add(String.format("Price changed from %s to %s",
+    //             v1.getPrice(), v2.getPrice()));
+    //     }
+    //
+    //     // Compare chapters and lessons
+    //     List<ChapterDiff> chapterDiffs = compareChapters(v1.getChapters(), v2.getChapters());
+    //
+    //     return VersionComparisonResponse.builder()
+    //         .version1Id(version1Id)
+    //         .version2Id(version2Id)
+    //         .metadataChanges(metadataChanges)
+    //         .chapterDiffs(chapterDiffs)
+    //         .build();
     // }
 
-    // TODO: Implement getVersionAnalytics method
-    // public VersionAnalyticsResponse getVersionAnalytics(Long courseId, Long
-    // versionId) {
-    // - Count total chapters, lessons, resources
-    // - Calculate total video duration
-    // - Count different lesson types
-    // - Estimate completion time
-    // - Show content completeness percentage
+    /**
+     * Get analytics for a course version
+     *
+     * Implementation Plan:
+     * 1. Count content elements:
+     *    - Total chapters
+     *    - Total lessons by type (VIDEO, QUIZ, TEXT, etc.)
+     *    - Total resources
+     * 2. Calculate durations:
+     *    - Total video duration (sum of all video lessons)
+     *    - Estimated completion time (videos + reading + quizzes)
+     * 3. Content completeness:
+     *    - Percentage of lessons with descriptions
+     *    - Percentage of video lessons with videos uploaded
+     *    - Lessons missing content
+     * 4. Calculate course metrics:
+     *    - Average chapter size (lessons per chapter)
+     *    - Content distribution (video vs quiz vs text)
+     *
+     * Use Case:
+     * - Teacher reviewing content completeness before publishing
+     * - Admin validating course quality
+     *
+     * @param courseId Course ID
+     * @param versionId Version ID
+     * @return Analytics data
+     */
+    // public VersionAnalyticsResponse getVersionAnalytics(Long courseId, Long versionId) {
+    //     CourseVersion version = loadVersionWithContent(courseId, versionId);
+    //
+    //     int totalChapters = version.getChapters().size();
+    //     int totalLessons = version.getChapters().stream()
+    //         .mapToInt(c -> c.getLessons().size())
+    //         .sum();
+    //
+    //     Map<LessonType, Long> lessonsByType = version.getChapters().stream()
+    //         .flatMap(c -> c.getLessons().stream())
+    //         .collect(Collectors.groupingBy(Lesson::getType, Collectors.counting()));
+    //
+    //     int totalVideoDuration = version.getChapters().stream()
+    //         .flatMap(c -> c.getLessons().stream())
+    //         .filter(l -> l.getType() == LessonType.VIDEO && l.getDurationSeconds() != null)
+    //         .mapToInt(Lesson::getDurationSeconds)
+    //         .sum();
+    //
+    //     long lessonsWithVideo = version.getChapters().stream()
+    //         .flatMap(c -> c.getLessons().stream())
+    //         .filter(l -> l.getType() == LessonType.VIDEO)
+    //         .filter(l -> l.getVideoObjectKey() != null)
+    //         .count();
+    //
+    //     long videoLessons = lessonsByType.getOrDefault(LessonType.VIDEO, 0L);
+    //     float contentCompleteness = videoLessons > 0
+    //         ? (float) lessonsWithVideo / videoLessons * 100
+    //         : 100f;
+    //
+    //     return VersionAnalyticsResponse.builder()
+    //         .versionId(versionId)
+    //         .totalChapters(totalChapters)
+    //         .totalLessons(totalLessons)
+    //         .lessonsByType(lessonsByType)
+    //         .totalVideoDurationSeconds(totalVideoDuration)
+    //         .totalVideoDurationHours(totalVideoDuration / 3600f)
+    //         .estimatedCompletionHours(totalVideoDuration / 3600f * 1.5f) // +50% for exercises
+    //         .contentCompletenessPercentage(contentCompleteness)
+    //         .build();
     // }
 
-    // TODO: Implement archiveCourseVersion method
+    /**
+     * Archive course version manually
+     *
+     * Implementation Plan:
+     * 1. Verify version exists and is not currently published
+     * 2. Verify no active enrollments on this version
+     * 3. Set status to ARCHIVED
+     * 4. Keep all content for historical reference
+     *
+     * Use Case:
+     * - Manually archive old draft versions
+     * - Clean up unpublished versions
+     *
+     * @param courseId Course ID
+     * @param versionId Version ID to archive
+     * @return Archived version
+     */
     // @Transactional
-    // public CourseVersionResponse archiveCourseVersion(Long courseId, Long
-    // versionId) {
-    // - Manually archive old published version
-    // - Verify not the current published version
+    // public CourseVersionResponse archiveCourseVersion(Long courseId, Long versionId) {
+    //     CourseVersion version = loadVersion(courseId, versionId);
+    //
+    //     // Cannot archive current published version
+    //     if (version.getCourse().getVersionPublish() != null &&
+    //         version.getCourse().getVersionPublish().getId().equals(versionId)) {
+    //         throw new InvalidRequestException("Cannot archive currently published version");
+    //     }
+    //
+    //     // Check for active enrollments
+    //     long activeEnrollments = enrollmentRepository
+    //         .countByCourseVersionIdAndStatusIn(versionId,
+    //             Arrays.asList(EnrollmentStatus.ENROLLED, EnrollmentStatus.COMPLETED));
+    //
+    //     if (activeEnrollments > 0) {
+    //         throw new InvalidRequestException(
+    //             String.format("Cannot archive version with %d active enrollments", activeEnrollments));
+    //     }
+    //
+    //     version.setStatus(CourseStatus.ARCHIVED);
+    //     version = courseVersionRepository.save(version);
+    //
+    //     return CourseVersionMapper.toCourseVersionResponse(version);
+    // }
     // - Update status to ARCHIVED
     // - Keep for historical reference
     // }

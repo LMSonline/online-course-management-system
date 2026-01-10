@@ -23,6 +23,57 @@ public class QuizController {
     private final QuizService quizService;
     private final QuizStatisticsService quizStatisticsService;
 
+
+    /**
+     * Create independent quiz (not linked to any lesson yet)
+     * Follows Association pattern: Quiz exists independently
+     */
+    @PostMapping("/quizzes")
+    @TeacherOnly
+    public ResponseEntity<QuizResponse> createIndependentQuiz(@RequestBody @Valid QuizRequest request) {
+        return ResponseEntity.ok(quizService.createIndependentQuiz(request));
+    }
+
+    /**
+     * Get all independent quizzes (quiz library/pool)
+     */
+    @GetMapping("/quizzes")
+    @TeacherOnly
+    public ResponseEntity<List<QuizResponse>> getAllIndependentQuizzes() {
+        return ResponseEntity.ok(quizService.getAllIndependentQuizzes());
+    }
+
+    /**
+     * Link existing quiz to a lesson
+     * Allows quiz reusability across lessons
+     */
+    @PostMapping("/lessons/{lessonId}/quizzes/{quizId}")
+    @TeacherOnly
+    public ResponseEntity<QuizResponse> linkQuizToLesson(
+            @PathVariable Long lessonId,
+            @PathVariable Long quizId) {
+        return ResponseEntity.ok(quizService.linkQuizToLesson(quizId, lessonId));
+    }
+
+    /**
+     * Unlink quiz from lesson
+     * Quiz becomes independent again
+     */
+    @DeleteMapping("/lessons/{lessonId}/quizzes/{quizId}")
+    @TeacherOnly
+    public ResponseEntity<Void> unlinkQuizFromLesson(
+            @PathVariable Long lessonId,
+            @PathVariable Long quizId) {
+        quizService.unlinkQuizFromLesson(lessonId, quizId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    /**
+     * Create quiz and immediately link to lesson (convenience method)
+     * LEGACY: For UX convenience (quick creation during lesson editing)
+     * Internally calls: createIndependentQuiz() + linkQuizToLesson()
+     */
     @PostMapping("/lessons/{lessonId}/quizzes")
     @TeacherOnly
     public ResponseEntity<QuizResponse> createQuiz(@PathVariable Long lessonId, @RequestBody @Valid QuizRequest request) {

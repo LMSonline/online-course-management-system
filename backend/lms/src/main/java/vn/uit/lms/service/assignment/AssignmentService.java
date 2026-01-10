@@ -45,17 +45,17 @@ public class AssignmentService {
     private final EnrollmentAccessService enrollmentAccessService;
 
     /**
-     * Create assignment in a lesson (Teacher only).
-     * Access validation: Teacher must own the course containing the lesson.
+     * Create independent assignment (Teacher only) - NEW API
+     * Assignment is created without being linked to any lesson.
+     * Can be linked to lessons later via linkAssignmentToLesson().
+     *
+     * This follows Association pattern: Assignment exists independently.
      */
     @Transactional
-    public AssignmentResponse createAssignment(Long lessonId, AssignmentRequest request) {
-        // Validate ownership - centralized access check
-        Lesson lesson = enrollmentAccessService.verifyTeacherLessonOwnership(lessonId);
-
-        // Business logic - assume access is validated
+    public AssignmentResponse createIndependentAssignment(AssignmentRequest request) {
+        // Business logic - create assignment WITHOUT lesson
         Assignment assignment = Assignment.builder()
-                .lesson(lesson)
+                .lesson(null) // Explicitly null - assignment is independent
                 .assignmentType(request.getAssignmentType())
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -73,12 +73,83 @@ public class AssignmentService {
     }
 
     /**
+     * Link assignment to lesson (Teacher only) - NEW API
+     * Associates an existing independent assignment with a lesson.
+     *
+     * Access validation: Teacher must own the lesson.
+     */
+    @Transactional
+    public AssignmentResponse linkAssignmentToLesson(Long assignmentId, Long lessonId) {
+        // Verify teacher ownership of lesson
+        Lesson lesson = enrollmentAccessService.verifyTeacherLessonOwnership(lessonId);
+
+        // Load assignment
+        Assignment assignment = loadAssignment(assignmentId);
+
+        // Business rule: Allow re-linking (re-usable assignment pattern)
+        assignment.setLesson(lesson);
+        assignment = assignmentRepository.save(assignment);
+
+        return AssignmentMapper.toResponse(assignment);
+    }
+
+    /**
+     * Unlink assignment from lesson (Teacher only) - NEW API
+     * Removes association between assignment and lesson.
+     * Assignment becomes independent again.
+     *
+     * Access validation: Teacher must own the assignment.
+     */
+    @Transactional
+    public AssignmentResponse unlinkAssignmentFromLesson(Long lessonId, Long assignmentId) {
+        // Verify teacher ownership
+        Assignment assignment = enrollmentAccessService.verifyTeacherAssignmentOwnership(assignmentId);
+
+        // Verify assignment is actually linked to this lesson
+        if (assignment.getLesson() == null || !assignment.getLesson().getId().equals(lessonId)) {
+            throw new InvalidRequestException("Assignment is not linked to this lesson");
+        }
+
+        // Unlink
+        assignment.setLesson(null);
+        assignment = assignmentRepository.save(assignment);
+
+        return AssignmentMapper.toResponse(assignment);
+    }
+
+    /**
+     * Create assignment in a lesson (Teacher only) - LEGACY/CONVENIENCE API
+     * This is a convenience method that combines createIndependentAssignment + linkAssignmentToLesson.
+     * Kept for backward compatibility and UX (quick creation during lesson editing).
+     *
+     * Access validation: Teacher must own the course containing the lesson.
+     */
+    @Transactional
+    public AssignmentResponse createAssignment(Long lessonId, AssignmentRequest request) {
+        // Step 1: Create independent assignment
+        AssignmentResponse assignmentResponse = createIndependentAssignment(request);
+
+        // Step 2: Link to lesson
+        return linkAssignmentToLesson(assignmentResponse.getId(), lessonId);
+    }
+
+    /**
      * Get assignments by lesson.
      * No access validation - returns public data.
      * For sensitive operations, validate in caller.
      */
     public List<AssignmentResponse> getAssignmentsByLesson(Long lessonId) {
         return assignmentRepository.findByLessonId(lessonId).stream()
+                .map(AssignmentMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all independent assignments (not linked to any lesson) - NEW API
+     * Useful for showing assignment pool/library for teachers to select from.
+     */
+    public List<AssignmentResponse> getAllIndependentAssignments() {
+        return assignmentRepository.findByLessonIsNull().stream()
                 .map(AssignmentMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -130,12 +201,21 @@ public class AssignmentService {
 
     /**
      * Delete assignment (Teacher only).
+     * Business Rule: Cannot delete assignment if it has submissions (use soft delete or archive instead).
      * Access validation: Teacher must own the assignment.
      */
     @Transactional
     public void deleteAssignment(Long id) {
         // Validate ownership - centralized access check
         enrollmentAccessService.verifyTeacherAssignmentOwnership(id);
+
+        // BUSINESS RULE: Check if assignment has submissions
+        long submissionCount = submissionRepository.countByAssignmentId(id);
+        if (submissionCount > 0) {
+            throw new InvalidRequestException(
+                    String.format("Cannot delete assignment with %d student submission(s). Consider unlinking from lesson or archiving instead.", submissionCount)
+            );
+        }
 
         // Business logic - assume access is validated
         assignmentRepository.deleteById(id);

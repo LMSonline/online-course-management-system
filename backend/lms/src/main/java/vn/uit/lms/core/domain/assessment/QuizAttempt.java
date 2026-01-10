@@ -50,7 +50,7 @@ public class QuizAttempt extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String metadata;
 
-    @OneToMany(mappedBy = "quizAttempt", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "quizAttempt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuizAttemptAnswer> answers = new ArrayList<>();
 

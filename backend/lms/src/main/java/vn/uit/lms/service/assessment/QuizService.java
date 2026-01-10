@@ -44,22 +44,21 @@ public class QuizService {
     private final EnrollmentAccessService enrollmentAccessService;
 
     /**
-     * Use Case: Create quiz (Teacher only)
+     * Use Case: Create independent quiz (Teacher only) - NEW API
+     * Quiz is created without being linked to any lesson.
+     * Can be linked to lessons later via linkQuizToLesson().
      *
-     * Access Control: Verifies teacher owns the lesson's course.
+     * This follows Association pattern: Quiz exists independently.
      */
     @Transactional
-    public QuizResponse createQuiz(Long lessonId, QuizRequest request) {
-        log.info("Creating quiz in lesson: {}", lessonId);
+    public QuizResponse createIndependentQuiz(QuizRequest request) {
+        log.info("Creating independent quiz: {}", request.getTitle());
 
-        // Verify teacher ownership using centralized service
-        Lesson lesson = enrollmentAccessService.verifyTeacherLessonOwnership(lessonId);
-
-        // Build quiz entity
+        // Build quiz entity WITHOUT lesson
         Quiz quiz = Quiz.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .lesson(lesson)
+                .lesson(null) // Explicitly null - quiz is independent
                 .totalPoints(request.getTotalPoints())
                 .timeLimitMinutes(request.getTimeLimitMinutes())
                 .maxAttempts(request.getMaxAttempts())
@@ -73,8 +72,77 @@ public class QuizService {
 
         // Persist
         quiz = quizRepository.save(quiz);
-        log.info("Quiz created with id: {}", quiz.getId());
+        log.info("Independent quiz created with id: {}", quiz.getId());
         return QuizMapper.toResponse(quiz);
+    }
+
+    /**
+     * Use Case: Link quiz to lesson (Teacher only) - NEW API
+     * Associates an existing independent quiz with a lesson.
+     *
+     * Access Control: Verifies teacher owns the lesson.
+     */
+    @Transactional
+    public QuizResponse linkQuizToLesson(Long quizId, Long lessonId) {
+        log.info("Linking quiz {} to lesson: {}", quizId, lessonId);
+
+        // Verify teacher ownership of lesson
+        Lesson lesson = enrollmentAccessService.verifyTeacherLessonOwnership(lessonId);
+
+        // Load quiz
+        Quiz quiz = loadQuiz(quizId);
+
+        // Business rule: Allow re-linking (re-usable quiz pattern)
+        quiz.setLesson(lesson);
+        quiz = quizRepository.save(quiz);
+
+        log.info("Quiz {} linked to lesson: {}", quizId, lessonId);
+        return QuizMapper.toResponse(quiz);
+    }
+
+    /**
+     * Use Case: Unlink quiz from lesson (Teacher only) - NEW API
+     * Removes association between quiz and lesson.
+     * Quiz becomes independent again.
+     *
+     * Access Control: Verifies teacher owns the quiz.
+     */
+    @Transactional
+    public QuizResponse unlinkQuizFromLesson(Long lessonId, Long quizId) {
+        log.info("Unlinking quiz {} from lesson: {}", quizId, lessonId);
+
+        // Verify teacher ownership
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
+
+        // Verify quiz is actually linked to this lesson
+        if (quiz.getLesson() == null || !quiz.getLesson().getId().equals(lessonId)) {
+            throw new InvalidRequestException("Quiz is not linked to this lesson");
+        }
+
+        // Unlink
+        quiz.setLesson(null);
+        quiz = quizRepository.save(quiz);
+
+        log.info("Quiz {} unlinked from lesson: {}", quizId, lessonId);
+        return QuizMapper.toResponse(quiz);
+    }
+
+    /**
+     * Use Case: Create quiz and link to lesson (Teacher only) - LEGACY/CONVENIENCE API
+     * This is a convenience method that combines createIndependentQuiz + linkQuizToLesson.
+     * Kept for backward compatibility and UX (quick creation during lesson editing).
+     *
+     * Access Control: Verifies teacher owns the lesson's course.
+     */
+    @Transactional
+    public QuizResponse createQuiz(Long lessonId, QuizRequest request) {
+        log.info("Creating quiz in lesson (convenience method): {}", lessonId);
+
+        // Step 1: Create independent quiz
+        QuizResponse quizResponse = createIndependentQuiz(request);
+
+        // Step 2: Link to lesson
+        return linkQuizToLesson(quizResponse.getId(), lessonId);
     }
 
     /**
@@ -82,6 +150,16 @@ public class QuizService {
      */
     public List<QuizResponse> getQuizzesByLesson(Long lessonId) {
         return quizRepository.findByLessonId(lessonId).stream()
+                .map(QuizMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Use Case: Get all independent quizzes (not linked to any lesson) - NEW API
+     * Useful for showing quiz pool/library for teachers to select from.
+     */
+    public List<QuizResponse> getAllIndependentQuizzes() {
+        return quizRepository.findByLessonIsNull().stream()
                 .map(QuizMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -129,7 +207,8 @@ public class QuizService {
      * Use Case: Delete quiz (Teacher only)
      *
      * Access Control: Verifies teacher owns the quiz.
-     * Cascade Delete: Deletes quiz questions and quiz attempts to prevent foreign key errors.
+     * Business Rule: Cannot delete quiz if it has attempts (use soft delete or archive instead).
+     * Cascade Delete: Deletes quiz questions to prevent orphaned data.
      */
     @Transactional
     public void deleteQuiz(Long id) {
@@ -138,18 +217,20 @@ public class QuizService {
         // Verify teacher ownership using centralized service
         Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(id);
 
+        // BUSINESS RULE: Check if quiz has attempts
+        long attemptCount = quizAttemptRepository.countByQuizId(id);
+        if (attemptCount > 0) {
+            throw new InvalidRequestException(
+                    String.format("Cannot delete quiz with %d student attempt(s). Consider unlinking from lesson or archiving instead.", attemptCount)
+            );
+        }
+
         // CASCADE DELETE to prevent foreign key constraint errors
         // STEP 1: Delete all quiz questions (composition relationship)
         log.debug("Deleting quiz questions for quiz: {}", id);
         quizQuestionRepository.deleteByQuizId(id);
 
-        // STEP 2: Delete all quiz attempts (composition relationship)
-        // Note: QuizAnswer will be cascade deleted by database if configured,
-        // or we can delete manually here
-        log.debug("Deleting quiz attempts for quiz: {}", id);
-        quizAttemptRepository.deleteByQuizId(id);
-
-        // STEP 3: Delete quiz (aggregate root)
+        // STEP 2: Delete quiz (aggregate root)
         quizRepository.deleteById(id);
         log.info("Quiz deleted successfully: {}", id);
     }

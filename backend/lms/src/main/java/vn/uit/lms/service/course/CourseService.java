@@ -14,6 +14,7 @@ import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.core.repository.course.CategoryRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.TagRepository;
+import vn.uit.lms.core.repository.learning.EnrollmentRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.helper.SEOHelper;
 import vn.uit.lms.service.storage.CloudinaryStorageService;
@@ -31,6 +32,7 @@ import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.mapper.course.CourseMapper;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
+import vn.uit.lms.shared.constant.EnrollmentStatus;
 
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +56,7 @@ public class CourseService {
     private final SEOHelper seoHelper;
     private final AccountService accountService;
     private final CloudinaryStorageService cloudinaryStorageService;
-    private final vn.uit.lms.core.repository.learning.EnrollmentRepository enrollmentRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     public CourseService(CourseRepository courseRepository,
                          CategoryRepository categoryRepository,
@@ -63,7 +65,7 @@ public class CourseService {
                          SEOHelper seoHelper,
                          AccountService accountService,
                          CloudinaryStorageService cloudinaryStorageService,
-                         vn.uit.lms.core.repository.learning.EnrollmentRepository enrollmentRepository) {
+                         EnrollmentRepository enrollmentRepository) {
         this.seoHelper = seoHelper;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
@@ -256,8 +258,7 @@ public class CourseService {
         if (activeEnrollments > 0) {
             log.warn("Closing course {} with {} active enrollments. Students may need notification.",
                     id, activeEnrollments);
-            // TODO: Send notification to enrolled students
-            // emailService.notifyStudentsAboutCourseClosure(course, activeEnrollments);
+//             emailService.notifyStudentsAboutCourseClosure(course, activeEnrollments);
         }
 
         course.setIsClosed(true);
@@ -413,16 +414,16 @@ public class CourseService {
             throw new InvalidRequestException("Course has published version, cannot delete");
         }
 
-        // TODO: Check if course has any enrollments
-        // boolean hasEnrollments = enrollmentRepository.existsByCourse(course);
-        // if (hasEnrollments) {
-        //     long activeCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE);
-        //     long completedCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.COMPLETED);
-        //     throw new InvalidRequestException(
-        //         String.format("Cannot delete course with enrollments: %d active, %d completed",
-        //                       activeCount, completedCount)
-        //     );
-        // }
+
+         boolean hasEnrollments = enrollmentRepository.existsByCourse(course);
+         if (hasEnrollments) {
+             long activeCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ENROLLED);
+             long completedCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.COMPLETED);
+             throw new InvalidRequestException(
+                 String.format("Cannot delete course with enrollments: %d active, %d completed",
+                               activeCount, completedCount)
+             );
+         }
 
         verifyTeacher(course);
 
