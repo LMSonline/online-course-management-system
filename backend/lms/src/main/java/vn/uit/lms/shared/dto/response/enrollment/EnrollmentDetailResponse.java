@@ -99,5 +99,24 @@ public class EnrollmentDetailResponse {
 
     @Schema(description = "Course final weight", example = "0.6")
     private Float finalWeight;
+
+    @Schema(description = "Quiz scores (JSON)")
+    private java.util.List<java.util.Map<String, Object>> quizScores;
+
+    @Schema(description = "Final exam score", example = "9.0")
+    private Float finalExamScore;
+
+    @Schema(description = "Final exam weight (k factor)", example = "0.6")
+    private Float finalExamWeight;
+
+    @Schema(description = "Ban reason if kicked from course")
+    private String banReason;
+
+    @Schema(description = "Banned at", example = "2025-01-20T00:00:00Z")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    private Instant bannedAt;
+
+    @Schema(description = "Is eligible for certificate", example = "true")
+    private Boolean isEligibleForCertificate;
 }
 

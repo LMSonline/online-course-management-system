@@ -61,10 +61,6 @@ export interface MeUser {
   bio?: string;
   gender?: Gender;
   lastLoginAt?: string;
-  profile?: {
-    studentId?: number;
-    teacherId?: number;
-  };
 }
 
 export interface RegisterResponse {

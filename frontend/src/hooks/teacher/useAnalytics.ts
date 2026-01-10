@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   GlobalAnalytics,
   CourseRevenueBreakdown,
@@ -32,10 +33,10 @@ const generateGlobalAnalytics = (timeRange: string): GlobalAnalytics => {
     timeRange === "30"
       ? 1
       : timeRange === "90"
-      ? 3
-      : timeRange === "180"
-      ? 6
-      : 12;
+        ? 3
+        : timeRange === "180"
+          ? 6
+          : 12;
 
   const revenueTrend = [];
   for (let i = monthsToShow - 1; i >= 0; i--) {
@@ -338,42 +339,25 @@ const generateIntegrityAlerts = (): IntegrityAlert[] => {
   });
 };
 
-// Hooks
+// Hooks - Using React Query for caching and better performance
 export const useGlobalAnalytics = (filters: AnalyticsFilters) => {
-  const [data, setData] = useState<GlobalAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["global-analytics", filters.timeRange, filters.courseId],
+    queryFn: () => generateGlobalAnalytics(filters.timeRange),
+    staleTime: Infinity, // Mock data doesn't need refetching
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setData(generateGlobalAnalytics(filters.timeRange));
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [filters.timeRange, filters.courseId]);
-
-  return { data, loading };
+  return { data: data ?? null, loading };
 };
 
 export const useRevenueBreakdown = () => {
-  const [data, setData] = useState<CourseRevenueBreakdown[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data = [], isLoading: loading } = useQuery({
+    queryKey: ["revenue-breakdown"],
+    queryFn: generateRevenueBreakdown,
+    staleTime: Infinity,
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setData(generateRevenueBreakdown());
-      setLoading(false);
-    };
-
-    fetchData();
-  }, []);
-
-  const exportCSV = () => {
-    // Mock export
+  const exportCSV = useCallback(() => {
     const csv =
       "Course,Price,Units Sold,Total Revenue,Platform Fee,Net Earnings\n" +
       data
@@ -390,61 +374,55 @@ export const useRevenueBreakdown = () => {
     a.download = `revenue-breakdown-${Date.now()}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-  };
+  }, [data]);
 
   return { data, loading, exportCSV };
 };
 
-export const useCourseAnalytics = () => {
-  const [data, setData] = useState<CourseAnalytics[]>([]);
-  const [loading, setLoading] = useState(true);
+// Helper to generate course analytics data
+const generateCourseAnalyticsData = (): CourseAnalytics[] => {
+  const courses = [
+    "Advanced React & Next.js Development",
+    "Python for Data Science & Machine Learning",
+    "Full-Stack Web Development Bootcamp",
+    "UI/UX Design Masterclass",
+    "Node.js & Express Backend Development",
+    "Mobile App Development with React Native",
+    "DevOps & Cloud Computing AWS",
+  ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 600));
+  return courses.map((name, index) => {
+    const totalEnrollments = Math.floor(Math.random() * 500) + 200;
+    const activeStudents = Math.floor(
+      totalEnrollments * (0.6 + Math.random() * 0.3)
+    );
+    const studentsCompleted = Math.floor(
+      totalEnrollments * (0.3 + Math.random() * 0.2)
+    );
+    const studentsInProgress = activeStudents - studentsCompleted;
+    const studentsNotStarted =
+      totalEnrollments - activeStudents - studentsCompleted;
 
-      const courses = [
-        "Advanced React & Next.js Development",
-        "Python for Data Science & Machine Learning",
-        "Full-Stack Web Development Bootcamp",
-        "UI/UX Design Masterclass",
-        "Node.js & Express Backend Development",
-        "Mobile App Development with React Native",
-        "DevOps & Cloud Computing AWS",
-      ];
-
-      const courseAnalytics = courses.map((name, index) => {
-        const totalEnrollments = Math.floor(Math.random() * 500) + 200;
-        const activeStudents = Math.floor(
-          totalEnrollments * (0.6 + Math.random() * 0.3)
-        );
-        const studentsCompleted = Math.floor(
-          totalEnrollments * (0.3 + Math.random() * 0.2)
-        );
-        const studentsInProgress = activeStudents - studentsCompleted;
-        const studentsNotStarted =
-          totalEnrollments - activeStudents - studentsCompleted;
-
-        return {
-          courseId: index + 1,
-          courseName: name,
-          totalEnrollments,
-          activeStudents,
-          completionRate: (studentsCompleted / totalEnrollments) * 100,
-          averageTimeSpent: Math.floor(Math.random() * 30) + 15,
-          studentsCompleted,
-          studentsInProgress,
-          studentsNotStarted,
-        };
-      });
-
-      setData(courseAnalytics);
-      setLoading(false);
+    return {
+      courseId: index + 1,
+      courseName: name,
+      totalEnrollments,
+      activeStudents,
+      completionRate: (studentsCompleted / totalEnrollments) * 100,
+      averageTimeSpent: Math.floor(Math.random() * 30) + 15,
+      studentsCompleted,
+      studentsInProgress,
+      studentsNotStarted,
     };
+  });
+};
 
-    fetchData();
-  }, []);
+export const useCourseAnalytics = () => {
+  const { data = [], isLoading: loading } = useQuery({
+    queryKey: ["course-analytics"],
+    queryFn: generateCourseAnalyticsData,
+    staleTime: Infinity,
+  });
 
   return { data, loading };
 };
@@ -455,7 +433,12 @@ export const useCourseCompletion = (courseId: number | string) => {
   const [lessonEngagement, setLessonEngagement] = useState<LessonEngagement[]>(
     []
   );
-  const [assessmentStats, setAssessmentStats] = useState<any>(null);
+  const [assessmentStats, setAssessmentStats] = useState<{
+    averageScore: number;
+    passRate: number;
+    completionRate: number;
+    difficultQuestions: Array<{ questionText: string; lessonName: string; correctRate: number }>;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -512,22 +495,22 @@ export const useCourseCompletion = (courseId: number | string) => {
   // Create data object with all info needed
   const data = stats
     ? {
-        courseName: stats.courseName,
-        funnel: {
-          registered: stats.registered,
-          halfComplete: stats.halfwayComplete,
-          examEligible: stats.eligibleForExam,
-          certified: stats.certified,
-        },
-        students,
-        lessonEngagement,
-        assessmentStats: assessmentStats || {
-          averageScore: 0,
-          passRate: 0,
-          completionRate: 0,
-          difficultQuestions: [],
-        },
-      }
+      courseName: stats.courseName,
+      funnel: {
+        registered: stats.registered,
+        halfComplete: stats.halfwayComplete,
+        examEligible: stats.eligibleForExam,
+        certified: stats.certified,
+      },
+      students,
+      lessonEngagement,
+      assessmentStats: assessmentStats || {
+        averageScore: 0,
+        passRate: 0,
+        completionRate: 0,
+        difficultQuestions: [],
+      },
+    }
     : null;
 
   return { data, loading };

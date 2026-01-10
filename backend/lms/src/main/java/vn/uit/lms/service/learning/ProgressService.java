@@ -39,11 +39,10 @@ public class ProgressService {
 
     private final ProgressRepository progressRepository;
     private final StudentRepository studentRepository;
-    private final CourseRepository courseRepository;
     private final LessonRepository lessonRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final ProgressMapper progressMapper;
-    private final AccountService accountService;
+    private final EnrollmentAccessService enrollmentAccessService;
 
     /**
      * Get student overall progress
@@ -124,24 +123,18 @@ public class ProgressService {
 
     /**
      * Get student progress in a specific course
+     *
+     * Access Control: Verifies student is enrolled in the course.
      */
     public CourseProgressResponse getStudentCourseProgress(Long studentId, Long courseId) {
         log.info("Fetching course progress for student {} in course {}", studentId, courseId);
 
-        // Verify student and course exist
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        // STEP 1: Verify enrollment using centralized service
+        Enrollment enrollment = enrollmentAccessService.verifyStudentEnrollment(studentId, courseId);
 
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
-
-        // Verify enrollment exists
-        List<Enrollment> enrollments = enrollmentRepository.findAllByStudentIdAndCourseId(studentId, courseId);
-        if (enrollments.isEmpty()) {
-            throw new InvalidRequestException("Student is not enrolled in this course");
-        }
-
-        Enrollment enrollment = enrollments.get(0);
+        // STEP 2: Get student and course (already validated by enrollment check)
+        Student student = enrollment.getStudent();
+        Course course = enrollment.getCourse();
         CourseVersion courseVersion = enrollment.getCourseVersion();
 
         // Get all progress for this course
@@ -222,20 +215,21 @@ public class ProgressService {
 
     /**
      * Get lesson progress for a student
+     *
+     * Access Control: Verifies student is enrolled in the course containing this lesson.
      */
     public LessonProgressResponse getStudentLessonProgress(Long studentId, Long lessonId) {
         log.info("Fetching lesson progress for student {} in lesson {}", studentId, lessonId);
 
-        // Verify student and lesson exist
-        if (!studentRepository.existsById(studentId)) {
-            throw new ResourceNotFoundException("Student not found with id: " + studentId);
-        }
+        // STEP 1: Verify student is enrolled in the course containing this lesson
+        Enrollment enrollment = enrollmentAccessService.verifyLessonAccess(studentId, lessonId);
 
+        // STEP 2: Get lesson (already validated by access check)
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
 
-        // Get course version from lesson
-        CourseVersion courseVersion = lesson.getChapter().getCourseVersion();
+        // Get course version from enrollment
+        CourseVersion courseVersion = enrollment.getCourseVersion();
 
         // Find progress
         Progress progress = progressRepository.findByStudentIdAndLessonIdAndCourseVersionId(
@@ -315,21 +309,58 @@ public class ProgressService {
     }
 
     /**
+     * Update watched duration for video lessons
+     * Preconditions:
+     * - Student must be authenticated
+     * - Student must be enrolled in the course
+     * - Lesson must exist and be a video lesson
+     *
+     * Postconditions:
+     * - Watched duration updated
+     * - Progress status updated (VIEWED or COMPLETED based on percentage)
+     * - Auto-complete if watched >= 90% of video duration
+     * - Enrollment completion percentage updated if lesson completed
+     */
+    @Transactional
+    public LessonProgressResponse updateWatchedDuration(Long lessonId, Integer durationSeconds) {
+        log.info("Updating watched duration for lesson {}: {} seconds", lessonId, durationSeconds);
+
+        // Precondition: Validate duration
+        if (durationSeconds < 0) {
+            throw new InvalidRequestException("Duration must be positive");
+        }
+
+        ProgressContext context = validateAndPrepareProgressContext(lessonId);
+        Progress progress = findOrCreateProgress(context);
+
+        // Update watched duration using domain logic
+        // This will automatically mark as VIEWED or COMPLETED based on percentage
+        progress.updateWatchedDuration(durationSeconds);
+        progress = progressRepository.save(progress);
+
+        log.info("Updated watched duration for lesson {}: {} seconds. Status: {}",
+                lessonId, durationSeconds, progress.getStatus());
+
+        // Update enrollment progress if lesson was completed
+        if (progress.isCompleted()) {
+            updateEnrollmentProgress(context.enrollment);
+        }
+
+        return progressMapper.toLessonProgressResponse(progress);
+    }
+
+    /**
      * Get course progress statistics (Teacher access)
+     *
+     * Access Control: Verifies teacher owns the course.
      */
     public CourseProgressStatsResponse getCourseProgressStats(Long courseId) {
         log.info("Fetching progress stats for course: {}", courseId);
 
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        // STEP 1: Verify teacher owns the course
+        Course course = enrollmentAccessService.verifyTeacherCourseOwnership(courseId);
 
-        // TODO: Verify teacher owns the course
-        // Long currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
-        // if (!course.getTeacher().getAccount().getId().equals(currentUserId)) {
-        //     throw new UnauthorizedException("You are not authorized to view stats for this course");
-        // }
-
-        // Get enrollment stats
+        // STEP 2: Get enrollment stats (access verified)
         Long totalEnrolled = enrollmentRepository.countByCourseId(courseId);
         Long studentsWithProgress = progressRepository.countStudentsWithProgressInCourse(courseId);
         Long studentsCompleted = enrollmentRepository.countByCourseIdAndStatus(
@@ -377,26 +408,22 @@ public class ProgressService {
 
     /**
      * Helper: Validate and prepare all necessary context for progress tracking
+     *
+     * Uses EnrollmentAccessService to verify student enrollment.
      */
     private ProgressContext validateAndPrepareProgressContext(Long lessonId) {
-        Account currentUser = accountService.validateCurrentAccountByRole(Role.STUDENT);
-        Student student = studentRepository.findByAccount(currentUser)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+        // STEP 1: Verify current student is enrolled in the course containing this lesson
+        Enrollment enrollment = enrollmentAccessService.verifyCurrentStudentLessonAccess(lessonId);
+
+        // STEP 2: Get entities (already validated by access check)
+        Student student = enrollment.getStudent();
+        Course course = enrollment.getCourse();
+        CourseVersion courseVersion = enrollment.getCourseVersion();
 
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
 
-        CourseVersion courseVersion = lesson.getChapter().getCourseVersion();
-        Course course = courseVersion.getCourse();
-
-        List<Enrollment> enrollments = enrollmentRepository.findAllByStudentIdAndCourseId(
-                student.getId(), course.getId());
-
-        if (enrollments.isEmpty() || !enrollments.get(0).isActive()) {
-            throw new InvalidRequestException("Student is not actively enrolled in this course");
-        }
-
-        return new ProgressContext(student, lesson, course, courseVersion, enrollments.get(0));
+        return new ProgressContext(student, lesson, course, courseVersion, enrollment);
     }
 
     /**

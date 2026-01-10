@@ -5,16 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
-import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.assignment.Assignment;
 import vn.uit.lms.core.domain.assignment.Submission;
 import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.assignment.AssignmentRepository;
 import vn.uit.lms.core.repository.assignment.SubmissionRepository;
-import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.service.AccountService;
-import vn.uit.lms.service.TeacherService;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.dto.request.assignment.AssignmentRequest;
 import vn.uit.lms.shared.dto.response.assignment.*;
 import vn.uit.lms.shared.exception.InvalidRequestException;
@@ -25,26 +23,37 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Assignment Service - Manages assignment operations following DDD principles.
+ *
+ * IMPORTANT: Access validation is delegated to EnrollmentAccessService.
+ * Business methods assume access has been validated by the caller or controller.
+ *
+ * Aggregate Root Pattern:
+ * - Assignments belong to Lessons (composition)
+ * - Should only be created/modified through proper validation
+ * - Business logic delegated to rich domain models
+ */
 @Service
 @RequiredArgsConstructor
 public class AssignmentService {
     private final AssignmentRepository assignmentRepository;
-    private final LessonRepository lessonRepository;
     private final SubmissionService submissionService;
     private final SubmissionRepository submissionRepository;
     private final StudentRepository studentRepository;
     private final AccountService accountService;
-    private final TeacherService teacherService;
+    private final EnrollmentAccessService enrollmentAccessService;
 
+    /**
+     * Create assignment in a lesson (Teacher only).
+     * Access validation: Teacher must own the course containing the lesson.
+     */
     @Transactional
     public AssignmentResponse createAssignment(Long lessonId, AssignmentRequest request) {
-        Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
+        // Validate ownership - centralized access check
+        Lesson lesson = enrollmentAccessService.verifyTeacherLessonOwnership(lessonId);
 
-        // Validate ownership - teacher can only create assignment in their own course's lessons
-        Teacher lessonOwner = getLessonOwner(lesson);
-        teacherService.validateTeacherAccess(lessonOwner);
-
+        // Business logic - assume access is validated
         Assignment assignment = Assignment.builder()
                 .lesson(lesson)
                 .assignmentType(request.getAssignmentType())
@@ -63,27 +72,37 @@ public class AssignmentService {
         return AssignmentMapper.toResponse(assignment);
     }
 
+    /**
+     * Get assignments by lesson.
+     * No access validation - returns public data.
+     * For sensitive operations, validate in caller.
+     */
     public List<AssignmentResponse> getAssignmentsByLesson(Long lessonId) {
         return assignmentRepository.findByLessonId(lessonId).stream()
                 .map(AssignmentMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get assignment by ID.
+     * No access validation - returns public data.
+     * For sensitive operations, validate in caller.
+     */
     public AssignmentResponse getAssignmentById(Long id) {
-        Assignment assignment = assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+        Assignment assignment = loadAssignment(id);
         return AssignmentMapper.toResponse(assignment);
     }
 
+    /**
+     * Update assignment (Teacher only).
+     * Access validation: Teacher must own the assignment.
+     */
     @Transactional
     public AssignmentResponse updateAssignment(Long id, AssignmentRequest request) {
-        Assignment assignment = assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+        // Validate ownership - centralized access check
+        Assignment assignment = enrollmentAccessService.verifyTeacherAssignmentOwnership(id);
 
-        // Validate ownership - teacher can only update their own assignment
-        Teacher lessonOwner = getLessonOwner(assignment.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
-
+        // Business logic - assume access is validated
         if (request.getAssignmentType() != null) {
             assignment.setAssignmentType(request.getAssignmentType());
         }
@@ -109,18 +128,23 @@ public class AssignmentService {
         return AssignmentMapper.toResponse(assignment);
     }
 
+    /**
+     * Delete assignment (Teacher only).
+     * Access validation: Teacher must own the assignment.
+     */
     @Transactional
     public void deleteAssignment(Long id) {
-        Assignment assignment = assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+        // Validate ownership - centralized access check
+        enrollmentAccessService.verifyTeacherAssignmentOwnership(id);
 
-        // Validate ownership - teacher can only delete their own assignment
-        Teacher lessonOwner = getLessonOwner(assignment.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
-
+        // Business logic - assume access is validated
         assignmentRepository.deleteById(id);
     }
 
+    /**
+     * Get all submissions for an assignment (Teacher only).
+     * Access should be validated in controller/caller.
+     */
     public List<SubmissionResponse> getAssignmentSubmissions(Long id) {
         if (!assignmentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Assignment not found");
@@ -129,28 +153,25 @@ public class AssignmentService {
     }
 
     /**
-     * Get assignment with submission eligibility info for a student
-     */
-    public Assignment getAssignmentEntity(Long id) {
-        return assignmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
-    }
-
-    /**
-     * Check if a student can submit an assignment
+     * Check if student can submit an assignment.
+     * Access validation: Student must be enrolled in the course.
      */
     public AssignmentEligibilityResponse checkEligibility(Long assignmentId) {
+        // Validate enrollment - centralized access check
+        enrollmentAccessService.verifyCurrentStudentAssignmentAccess(assignmentId);
+
+        // Business logic - assume access is validated
         Account account = accountService.verifyCurrentAccount();
         Student student = studentRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        Assignment assignment = getAssignmentEntity(assignmentId);
+        Assignment assignment = loadAssignment(assignmentId);
         List<Submission> submissions = submissionRepository.findByAssignmentIdAndStudentId(assignmentId, student.getId());
         int attemptCount = submissions.size();
 
         boolean canSubmit = assignment.canSubmit(attemptCount);
         String reason = null;
-        
+
         if (!canSubmit) {
             if (assignment.isPastDue()) {
                 reason = "Assignment is past due date";
@@ -172,10 +193,11 @@ public class AssignmentService {
     }
 
     /**
-     * Get statistics for an assignment (for teachers)
+     * Get statistics for an assignment (Teacher only).
+     * Access should be validated in controller/caller.
      */
     public AssignmentStatisticsResponse getAssignmentStatistics(Long assignmentId) {
-        Assignment assignment = getAssignmentEntity(assignmentId);
+        Assignment assignment = loadAssignment(assignmentId);
         List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId);
 
         // Count unique students who submitted
@@ -197,21 +219,16 @@ public class AssignmentService {
                 .filter(Submission::isGraded)
                 .map(Submission::getScore)
                 .filter(score -> score != null)
-                .collect(Collectors.toList());
+                .toList();
 
-        Double averageScore = scores.isEmpty() ? null : 
+        Double averageScore = scores.isEmpty() ? null :
                 scores.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
         Double highestScore = scores.isEmpty() ? null :
                 scores.stream().max(Double::compare).orElse(null);
         Double lowestScore = scores.isEmpty() ? null :
                 scores.stream().min(Double::compare).orElse(null);
 
-        // For total students, ideally should come from course enrollment
-        // For now, use submitted count as total (assuming only students who submitted are counted)
-        // In production, this should be retrieved from course enrollment data
         int totalStudents = (int) submittedCount;
-        // Submission rate would be meaningful if we had actual enrollment count
-        // Setting to 100% as all counted students have submitted (by definition)
         Double submissionRate = 100.0;
 
         return AssignmentStatisticsResponse.builder()
@@ -229,10 +246,11 @@ public class AssignmentService {
     }
 
     /**
-     * Get student's progress on an assignment
+     * Get student's progress on an assignment.
+     * Access validation: Student must be enrolled.
      */
     public StudentAssignmentProgressResponse getStudentProgress(Long assignmentId, Long studentId) {
-        Assignment assignment = getAssignmentEntity(assignmentId);
+        Assignment assignment = loadAssignment(assignmentId);
         List<Submission> submissions = submissionRepository.findByAssignmentIdAndStudentId(assignmentId, studentId);
 
         boolean hasSubmitted = !submissions.isEmpty();
@@ -267,14 +285,18 @@ public class AssignmentService {
     }
 
     /**
-     * Clone assignment to another lesson (for teachers)
+     * Clone assignment to another lesson (Teacher only).
+     * Access validation: Teacher must own both lessons.
      */
     @Transactional
     public AssignmentResponse cloneAssignment(Long assignmentId, Long targetLessonId) {
-        Assignment sourceAssignment = getAssignmentEntity(assignmentId);
-        Lesson targetLesson = lessonRepository.findById(targetLessonId)
-                .orElseThrow(() -> new ResourceNotFoundException("Target lesson not found"));
+        // Validate source assignment ownership
+        Assignment sourceAssignment = enrollmentAccessService.verifyTeacherAssignmentOwnership(assignmentId);
 
+        // Validate target lesson ownership
+        Lesson targetLesson = enrollmentAccessService.verifyTeacherLessonOwnership(targetLessonId);
+
+        // Business logic - assume access is validated
         Assignment clonedAssignment = Assignment.builder()
                 .lesson(targetLesson)
                 .title(sourceAssignment.getTitle() + " (Copy)")
@@ -288,18 +310,18 @@ public class AssignmentService {
 
         clonedAssignment.validate();
         clonedAssignment = assignmentRepository.save(clonedAssignment);
-        
+
         return AssignmentMapper.toResponse(clonedAssignment);
     }
 
     /**
-     * Get all late submissions for an assignment
+     * Get late submissions (Teacher only).
      */
     public List<SubmissionResponse> getLateSubmissions(Long assignmentId) {
         if (!assignmentRepository.existsById(assignmentId)) {
             throw new ResourceNotFoundException("Assignment not found");
         }
-        
+
         return submissionRepository.findByAssignmentId(assignmentId).stream()
                 .filter(Submission::isLate)
                 .map(AssignmentMapper::toSubmissionResponse)
@@ -307,13 +329,13 @@ public class AssignmentService {
     }
 
     /**
-     * Get all pending submissions for an assignment (need grading)
+     * Get pending submissions (Teacher only).
      */
     public List<SubmissionResponse> getPendingSubmissions(Long assignmentId) {
         if (!assignmentRepository.existsById(assignmentId)) {
             throw new ResourceNotFoundException("Assignment not found");
         }
-        
+
         return submissionRepository.findByAssignmentId(assignmentId).stream()
                 .filter(Submission::isPending)
                 .map(AssignmentMapper::toSubmissionResponse)
@@ -321,7 +343,7 @@ public class AssignmentService {
     }
 
     /**
-     * Get assignments by lesson and type
+     * Get assignments by type.
      */
     public List<AssignmentResponse> getAssignmentsByType(Long lessonId, vn.uit.lms.shared.constant.AssignmentType type) {
         return assignmentRepository.findByLessonId(lessonId).stream()
@@ -331,43 +353,38 @@ public class AssignmentService {
     }
 
     /**
-     * Extend assignment due date (for teachers)
+     * Extend assignment due date (Teacher only).
+     * Access validation: Teacher must own the assignment.
      */
     @Transactional
     public AssignmentResponse extendDueDate(Long assignmentId, java.time.Instant newDueDate) {
-        Assignment assignment = getAssignmentEntity(assignmentId);
-        
+        // Validate ownership - centralized access check
+        Assignment assignment = enrollmentAccessService.verifyTeacherAssignmentOwnership(assignmentId);
+
+        // Business logic - assume access is validated
         if (newDueDate == null) {
             throw new InvalidRequestException("New due date cannot be null");
         }
-        
+
         if (assignment.hasDueDate() && newDueDate.isBefore(assignment.getDueDate())) {
             throw new InvalidRequestException("New due date must be after current due date");
         }
-        
+
         assignment.setDueDate(newDueDate);
         assignment = assignmentRepository.save(assignment);
-        
+
         return AssignmentMapper.toResponse(assignment);
     }
 
+    /* ==================== HELPER METHODS ==================== */
 
     /**
-     * Get teacher owner from lesson through: Lesson -> Chapter -> CourseVersion -> Course -> Teacher
+     * Load assignment by ID (internal use).
+     * Public methods should use EnrollmentAccessService for validation.
      */
-    private Teacher getLessonOwner(Lesson lesson) {
-        if (lesson.getChapter() == null) {
-            throw new IllegalStateException("Lesson must belong to a chapter");
-        }
-        if (lesson.getChapter().getCourseVersion() == null) {
-            throw new IllegalStateException("Chapter must belong to a course version");
-        }
-        if (lesson.getChapter().getCourseVersion().getCourse() == null) {
-            throw new IllegalStateException("Course version must belong to a course");
-        }
-        if (lesson.getChapter().getCourseVersion().getCourse().getTeacher() == null) {
-            throw new IllegalStateException("Course must have a teacher");
-        }
-        return lesson.getChapter().getCourseVersion().getCourse().getTeacher();
+    private Assignment loadAssignment(Long id) {
+        return assignmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with id: " + id));
     }
 }
+

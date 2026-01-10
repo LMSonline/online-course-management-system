@@ -44,6 +44,16 @@ public class PayoutController {
     }
 
     /**
+     * Get payouts for current user (Teacher sees own, Admin sees all)
+     * GET /payouts
+     */
+    @GetMapping("/payouts")
+    @TeacherOnly
+    public ResponseEntity<List<PayoutResponse>> getPayouts() {
+        return ResponseEntity.ok(payoutService.getMyPayouts());
+    }
+
+    /**
      * Get all payouts with filters (Admin)
      */
     @GetMapping("/admin/payouts")

@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -7,10 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
-import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.course.*;
-import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.core.repository.course.CategoryRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
@@ -37,6 +36,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class CourseService {
 
     private static final String PREFIX_CANONICAL_URL = "/courses";
@@ -51,10 +51,10 @@ public class CourseService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final TeacherRepository teacherRepository;
-    private final StudentRepository studentRepository;
     private final SEOHelper seoHelper;
     private final AccountService accountService;
     private final CloudinaryStorageService cloudinaryStorageService;
+    private final vn.uit.lms.core.repository.learning.EnrollmentRepository enrollmentRepository;
 
     public CourseService(CourseRepository courseRepository,
                          CategoryRepository categoryRepository,
@@ -62,16 +62,16 @@ public class CourseService {
                          TeacherRepository teacherRepository,
                          SEOHelper seoHelper,
                          AccountService accountService,
-                         StudentRepository studentRepository,
-                         CloudinaryStorageService cloudinaryStorageService) {
+                         CloudinaryStorageService cloudinaryStorageService,
+                         vn.uit.lms.core.repository.learning.EnrollmentRepository enrollmentRepository) {
         this.seoHelper = seoHelper;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.teacherRepository = teacherRepository;
         this.accountService = accountService;
-        this.studentRepository = studentRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
+        this.enrollmentRepository = enrollmentRepository;
     }
     public Course validateCourse(Long courseId) {
         return courseRepository.findByIdAndDeletedAtIsNull(courseId)
@@ -100,34 +100,6 @@ public class CourseService {
         return teacher;
     }
 
-    /**
-     * Verify student has enrolled in the course
-     *
-     * TODO: Implement enrollment verification
-     * - Create Enrollment entity and repository
-     * - Inject EnrollmentRepository into this service
-     * - Query: enrollmentRepository.findByCourseAndStudent(course, student)
-     * - Throw UnauthorizedException if enrollment not found or not active
-     * - Check enrollment status (ACTIVE, COMPLETED, EXPIRED, DROPPED)
-     * - Validate enrollment expiration date if applicable
-     * - Consider adding caching for performance
-     */
-    public Student verifyStudent(Course course) {
-
-        Account account = accountService.verifyCurrentAccount();
-
-        Student student = studentRepository.findByAccount(account)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
-
-        // TODO: Verify enrollment
-        // Enrollment enrollment = enrollmentRepository.findByCourseAndStudent(course, student)
-        //     .orElseThrow(() -> new UnauthorizedException("Student not enrolled in this course"));
-        // if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
-        //     throw new UnauthorizedException("Enrollment is not active");
-        // }
-
-        return student;
-    }
 
 
     private void createSeoData(Course course) {
@@ -267,12 +239,8 @@ public class CourseService {
     /**
      * Close course to prevent new enrollments
      *
-     * TODO: Add active enrollment validation
-     * - Query enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE)
-     * - Consider warning if there are active students
-     * - Option to force close or notify students first
-     * - Send notification to enrolled students about course closure
-     * - Update enrollment access permissions
+     * Checks for active enrollments and logs warning.
+     * TODO: Send notification to enrolled students about course closure.
      */
     @Transactional
     @EnableSoftDeleteFilter
@@ -281,12 +249,16 @@ public class CourseService {
 
         verifyTeacher(course);
 
-        // TODO: Check if there are active enrollments
-        // long activeEnrollments = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE);
-        // if (activeEnrollments > 0) {
-        //     log.warn("Closing course with {} active enrollments", activeEnrollments);
-        //     // Consider sending notifications to students
-        // }
+        // Check if there are active enrollments
+        long activeEnrollments = enrollmentRepository.countByCourseIdAndStatus(
+                id, vn.uit.lms.shared.constant.EnrollmentStatus.ENROLLED);
+
+        if (activeEnrollments > 0) {
+            log.warn("Closing course {} with {} active enrollments. Students may need notification.",
+                    id, activeEnrollments);
+            // TODO: Send notification to enrolled students
+            // emailService.notifyStudentsAboutCourseClosure(course, activeEnrollments);
+        }
 
         course.setIsClosed(true);
         Course savedCourse = courseRepository.save(course);

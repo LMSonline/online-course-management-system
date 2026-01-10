@@ -22,9 +22,11 @@ import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.enrollment.CancelEnrollmentRequest;
 import vn.uit.lms.shared.dto.request.enrollment.EnrollCourseRequest;
+import vn.uit.lms.shared.dto.request.enrollment.UpdateScoreRequest;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentStatsResponse;
+import vn.uit.lms.shared.dto.response.enrollment.FinalExamEligibilityResponse;
 import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.EnrollmentMapper;
@@ -240,6 +242,168 @@ public class EnrollmentService {
 
         // TODO: Process refund if applicable
         return enrollmentMapper.toDetailResponse(enrollment);
+    }
+
+    /**
+     * Kick student from course (Ban)
+     *
+     * Preconditions:
+     * - Enrollment must exist
+     * - User must be teacher/admin
+     * - Cannot kick completed enrollments
+     * - Reason must be provided
+     *
+     * Postconditions:
+     * - Enrollment status changed to CANCELLED
+     * - Ban reason and timestamp recorded
+     */
+    @Transactional
+    public EnrollmentDetailResponse kickStudent(Long enrollmentId, CancelEnrollmentRequest request) {
+        log.info("Kicking student from enrollment: {}", enrollmentId);
+
+        // Precondition: Verify enrollment exists
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
+
+        // TODO: Verify teacher owns the course
+        // Account currentUser = accountService.verifyCurrentAccount();
+        // validateTeacherOwnership(enrollment.getCourse(), currentUser);
+
+        // Kick student using domain logic
+        try {
+            enrollment.kick(request.getReason());
+            enrollmentRepository.save(enrollment);
+            log.info("Successfully kicked student from enrollment: {}", enrollmentId);
+        } catch (IllegalStateException e) {
+            throw new InvalidRequestException(e.getMessage());
+        }
+
+        // Postcondition: Verify enrollment is cancelled
+        assert enrollment.getStatus() == EnrollmentStatus.CANCELLED;
+        assert enrollment.getBanReason() != null;
+
+        // TODO: Send notification to student
+        return enrollmentMapper.toDetailResponse(enrollment);
+    }
+
+
+
+    /**
+     * Update score after quiz/exam completion
+     *
+     * Preconditions:
+     * - Enrollment must exist and be active
+     * - Score must be 0-10
+     * - Quiz ID must be provided
+     *
+     * Postconditions:
+     * - Quiz score added to enrollment
+     * - Average score recalculated using formula
+     * - May trigger enrollment completion if requirements met
+     */
+    @Transactional
+    public EnrollmentDetailResponse updateScore(Long enrollmentId, UpdateScoreRequest request) {
+        log.info("Updating score for enrollment {}: quiz={}, score={}, isFinal={}",
+                enrollmentId, request.getQuizId(), request.getScore(), request.getIsFinalExam());
+
+        // Precondition: Verify enrollment exists and is active
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
+
+        if (!enrollment.isActive()) {
+            throw new InvalidRequestException("Cannot update score for inactive enrollment");
+        }
+
+        // Add quiz score using domain logic
+        boolean isFinalExam = Boolean.TRUE.equals(request.getIsFinalExam());
+
+        try {
+            enrollment.addQuizScore(request.getQuizId(), request.getScore(), isFinalExam);
+            enrollment = enrollmentRepository.save(enrollment);
+
+            log.info("Updated enrollment {} with new score. Average: {}",
+                    enrollmentId, enrollment.getAverageScore());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException(e.getMessage());
+        }
+
+        // Postcondition: Verify score was added
+        assert enrollment.getQuizScores() != null && !enrollment.getQuizScores().isEmpty();
+
+        // Check if eligible for certificate after score update
+        if (enrollment.getStatus() == EnrollmentStatus.COMPLETED &&
+            enrollment.isEligibleForCertificate() &&
+            !enrollment.getCertificateIssued()) {
+            log.info("Enrollment {} is eligible for certificate after score update", enrollmentId);
+            // TODO: Trigger certificate issuance
+        }
+
+        return enrollmentMapper.toDetailResponse(enrollment);
+    }
+
+    /**
+     * Check if student is eligible to take final exam
+     *
+     * Preconditions:
+     * - Enrollment must exist
+     *
+     * Returns:
+     * - Eligibility status with reason
+     * - Current progress percentage
+     * - Required progress percentage
+     */
+    public FinalExamEligibilityResponse checkFinalExamEligibility(Long enrollmentId) {
+        log.info("Checking final exam eligibility for enrollment: {}", enrollmentId);
+
+        // Precondition: Verify enrollment exists
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
+
+        boolean isEligible = enrollment.canTakeFinalExam();
+        Float currentProgress = enrollment.getCompletionPercentage();
+
+        CourseVersion courseVersion = enrollment.getCourseVersion();
+        Float requiredProgress = courseVersion != null && courseVersion.getMinProgressPct() != null
+                ? courseVersion.getMinProgressPct().floatValue()
+                : null;
+
+        // Calculate lesson counts
+        int totalLessons = 0;
+        int completedLessons = 0;
+
+        if (courseVersion != null && courseVersion.getChapters() != null) {
+            totalLessons = courseVersion.getChapters().stream()
+                    .mapToInt(chapter -> chapter.getLessons() != null ? chapter.getLessons().size() : 0)
+                    .sum();
+
+            if (currentProgress != null && totalLessons > 0) {
+                completedLessons = Math.round((currentProgress / 100f) * totalLessons);
+            }
+        }
+
+        String reason;
+        if (isEligible) {
+            reason = "Student has completed required progress and is eligible for final exam";
+        } else if (requiredProgress != null && currentProgress != null) {
+            reason = String.format("Student needs to complete %.0f%% of course content. Current: %.1f%%",
+                    requiredProgress, currentProgress);
+        } else {
+            reason = "Progress information not available";
+        }
+
+        return FinalExamEligibilityResponse.builder()
+                .enrollmentId(enrollmentId)
+                .isEligible(isEligible)
+                .reason(reason)
+                .currentProgress(currentProgress)
+                .requiredProgress(requiredProgress)
+                .completedLessons(completedLessons)
+                .totalLessons(totalLessons)
+                .build();
+
+
+
+
     }
 
     /**

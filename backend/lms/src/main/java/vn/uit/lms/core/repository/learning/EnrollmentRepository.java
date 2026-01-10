@@ -126,4 +126,18 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long>, J
             @Param("studentId") Long studentId,
             @Param("courseId") Long courseId
     );
+
+    /**
+     * Find active enrollment for a student in a course (most recent)
+     */
+    @Query("SELECT e FROM Enrollment e " +
+            "WHERE e.student.id = :studentId " +
+            "AND e.course.id = :courseId " +
+            "AND e.status = 'ENROLLED' " +
+            "AND e.deletedAt IS NULL " +
+            "ORDER BY e.enrolledAt DESC")
+    Optional<Enrollment> findByStudentIdAndCourseId(
+            @Param("studentId") Long studentId,
+            @Param("courseId") Long courseId
+    );
 }

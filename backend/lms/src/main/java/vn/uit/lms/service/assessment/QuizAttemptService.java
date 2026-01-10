@@ -1,6 +1,7 @@
 package vn.uit.lms.service.assessment;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
@@ -9,6 +10,7 @@ import vn.uit.lms.core.domain.assessment.*;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.assessment.*;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.constant.QuizAttemptStatus;
 import vn.uit.lms.shared.dto.request.assessment.SubmitAnswerRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuizAttemptResponse;
@@ -23,9 +25,14 @@ import java.util.stream.Collectors;
 /**
  * Service for orchestrating quiz attempt use cases
  * Business logic is delegated to domain models
+ *
+ * Access Control:
+ * - Students can only attempt quizzes if enrolled in the course
+ * - Students can only view their own attempts
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuizAttemptService {
     private final QuizAttemptRepository quizAttemptRepository;
     private final QuizRepository quizRepository;
@@ -34,24 +41,32 @@ public class QuizAttemptService {
     private final QuestionRepository questionRepository;
     private final AnswerOptionRepository answerOptionRepository;
     private final QuizAttemptAnswerRepository quizAttemptAnswerRepository;
+    private final EnrollmentAccessService enrollmentAccessService;
 
     /**
-     * Use Case: Start a new quiz attempt
+     * Use Case: Start a new quiz attempt (Student only)
+     *
+     * Access Control: Verifies student is enrolled in the course containing this quiz.
      */
     @Transactional
     public QuizAttemptResponse startQuiz(Long quizId) {
-        // Load entities
+        log.info("Starting quiz attempt for quiz: {}", quizId);
+
+        // STEP 1: Verify enrollment
+        enrollmentAccessService.verifyCurrentStudentQuizAccess(quizId);
+
+        // STEP 2: Load entities
         Account account = accountService.verifyCurrentAccount();
         Student student = loadStudent(account);
         Quiz quiz = loadQuiz(quizId);
 
-        // Check if student can attempt (domain logic)
+        // STEP 3: Check if student can attempt (domain logic)
         long attemptCount = countStudentAttempts(student.getId(), quizId);
         if (!quiz.canAttempt((int) attemptCount)) {
             throw new InvalidRequestException("Maximum attempts reached for this quiz");
         }
 
-        // Create and start attempt (domain logic)
+        // STEP 4: Create and start attempt (domain logic)
         QuizAttempt attempt = QuizAttempt.builder()
                 .quiz(quiz)
                 .student(student)
@@ -64,6 +79,7 @@ public class QuizAttemptService {
 
         // Persist and return
         attempt = quizAttemptRepository.save(attempt);
+        log.info("Quiz attempt started: attemptId={}", attempt.getId());
         return QuizAttemptMapper.toResponse(attempt);
     }
 
@@ -77,13 +93,27 @@ public class QuizAttemptService {
     }
 
     /**
-     * Use Case: Submit an answer for a question
+     * Use Case: Submit an answer for a question (Student only)
+     *
+     * Access Control: Verifies student is enrolled and owns the attempt.
      */
     @Transactional
     public void submitAnswer(Long quizId, Long attemptId, SubmitAnswerRequest request) {
-        // Load entities
+        log.info("Submitting answer for attempt: {}", attemptId);
+
+        // STEP 1: Verify enrollment
+        enrollmentAccessService.verifyCurrentStudentQuizAccess(quizId);
+
+        // STEP 2: Load entities
         QuizAttempt attempt = loadAttempt(attemptId);
         validateAttemptBelongsToQuiz(attempt, quizId);
+
+        // STEP 3: Verify ownership (student can only submit to their own attempt)
+        Account account = accountService.verifyCurrentAccount();
+        Student student = loadStudent(account);
+        if (!attempt.getStudent().getId().equals(student.getId())) {
+            throw new InvalidRequestException("You can only submit answers to your own quiz attempt");
+        }
 
         // Check if attempt is in progress (domain logic)
         if (!attempt.isInProgress()) {
@@ -114,15 +144,31 @@ public class QuizAttemptService {
 
         // Save answer
         quizAttemptAnswerRepository.save(answer);
+        log.info("Answer submitted for attempt: {}", attemptId);
     }
 
     /**
-     * Use Case: Finish quiz attempt
+     * Use Case: Finish quiz attempt (Student only)
+     *
+     * Access Control: Verifies student is enrolled and owns the attempt.
      */
     @Transactional
     public QuizAttemptResponse finishQuiz(Long quizId, Long attemptId) {
+        log.info("Finishing quiz attempt: {}", attemptId);
+
+        // STEP 1: Verify enrollment
+        enrollmentAccessService.verifyCurrentStudentQuizAccess(quizId);
+
+        // STEP 2: Load attempt
         QuizAttempt attempt = loadAttempt(attemptId);
         validateAttemptBelongsToQuiz(attempt, quizId);
+
+        // STEP 3: Verify ownership
+        Account account = accountService.verifyCurrentAccount();
+        Student student = loadStudent(account);
+        if (!attempt.getStudent().getId().equals(student.getId())) {
+            throw new InvalidRequestException("You can only finish your own quiz attempt");
+        }
 
         if (attempt.isCompleted()) {
             return QuizAttemptMapper.toResponse(attempt);
@@ -133,6 +179,7 @@ public class QuizAttemptService {
 
         // Persist and return
         attempt = quizAttemptRepository.save(attempt);
+        log.info("Quiz attempt finished: attemptId={}, score={}", attempt.getId(), attempt.getTotalScore());
         return QuizAttemptMapper.toResponse(attempt);
     }
 

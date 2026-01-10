@@ -1,78 +1,124 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
   BookOpen,
+  DollarSign,
+  MessageSquare,
   Settings,
+  Shield,
+  Award,
   FileText,
-  LogOut,
 } from "lucide-react";
-import { useLogout } from "@/hooks/useAuth";
 
-const navItems = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Courses", href: "/admin/courses", icon: BookOpen }, 
-  { label: "Reports", href: "/admin/logs", icon: FileText },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-];
+type Props = {
+  currentView: string;
+  setCurrentView: (view: any) => void;
+  stats: any;
+};
 
-export function AdminSidebar() {
-  const pathname = usePathname();
-  const { mutate: logout, isPending } = useLogout();
-
+export function AdminSidebar({ currentView, setCurrentView, stats }: Props) {
   return (
-    <aside className="w-64 min-h-screen bg-[#0a0f1e] border-r border-gray-800 flex flex-col">
-      
-      {/* Logo */}
-      <div className="px-6 py-6 border-b border-gray-800">
-        <Link
-          href="/admin/dashboard"
-          className="text-xl font-bold text-[#00ff00]"
-        >
-          LMS ADMIN
-        </Link>
+    <aside className="w-64 bg-[#0a0f1e] border-r border-gray-800 min-h-screen">
+      <div className="p-6 border-b border-gray-800">
+        <h1 className="text-xl font-bold text-[#00ff00]">ADMIN DASHBOARD</h1>
       </div>
-
-      {/* Menu */}
-      <nav className="flex-1 px-4 py-4 space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                ${
-                  active
-                    ? "bg-[#00ff00]/10 text-[#00ff00]"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                }
-              `}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
+      <nav className="p-4">
+        <div className="space-y-1">
+          <button
+            onClick={() => setCurrentView("dashboard")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "dashboard"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">Dashboard</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("users")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "users"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <Users className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">User Management</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("courses")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "courses"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <BookOpen className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">Course Approval</span>
+            {stats.pendingApproval > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0">
+                {stats.pendingApproval}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setCurrentView("payments")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "payments"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <DollarSign className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">Payments & Revenue</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("certificates")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "certificates"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <Award className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">Certificates</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("community")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "community"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <MessageSquare className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">Content Moderation</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("reports")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "reports"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <FileText className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">Reports & Analytics</span>
+          </button>
+          <button
+            onClick={() => setCurrentView("settings")}
+            className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+              currentView === "settings"
+                ? "bg-[#00ff00]/10 text-[#00ff00]"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+            }`}
+          >
+            <Settings className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium flex-1 text-left ml-3">System Settings</span>
+          </button>
+        </div>
       </nav>
-
-      {/* Logout */}
-      <div className="px-4 py-4 border-t border-gray-800">
-        <button
-          onClick={() => logout()}
-          disabled={isPending}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition disabled:opacity-50"
-        >
-          <LogOut className="w-5 h-5" />
-          {isPending ? "Logging out..." : "Logout"}
-        </button>
-      </div>
     </aside>
   );
 }

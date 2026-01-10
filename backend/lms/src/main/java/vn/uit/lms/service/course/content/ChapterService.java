@@ -6,11 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.course.CourseVersion;
 import vn.uit.lms.core.domain.course.content.Chapter;
+import vn.uit.lms.core.domain.learning.Enrollment;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.course.content.ChapterRepository;
 import vn.uit.lms.service.course.CourseService;
 import vn.uit.lms.service.course.CourseVersionService;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.dto.request.course.content.ChapterReorderRequest;
 import vn.uit.lms.shared.dto.request.course.content.ChapterRequest;
 import vn.uit.lms.shared.dto.response.course.content.ChapterDto;
@@ -23,6 +25,13 @@ import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Chapter Service - Manages course chapters with proper access control.
+ *
+ * Access Control:
+ * - Teachers can CRUD chapters in their own courses
+ * - Students can only view chapters if enrolled in the course
+ */
 @Service
 @Slf4j
 public class ChapterService {
@@ -32,17 +41,20 @@ public class ChapterService {
     private final CourseVersionRepository courseVersionRepository;
     private final CourseService courseService;
     private final CourseVersionService courseVersionService;
+    private final EnrollmentAccessService enrollmentAccessService;
 
     public ChapterService(CourseRepository courseRepository,
                           ChapterRepository chapterRepository,
                           CourseVersionRepository courseVersionRepository,
                           CourseService courseService,
-                          CourseVersionService courseVersionService) {
+                          CourseVersionService courseVersionService,
+                          EnrollmentAccessService enrollmentAccessService) {
         this.courseRepository = courseRepository;
         this.chapterRepository = chapterRepository;
         this.courseVersionRepository = courseVersionRepository;
         this.courseService = courseService;
         this.courseVersionService = courseVersionService;
+        this.enrollmentAccessService = enrollmentAccessService;
     }
 
     public Chapter validateChapterEditable(Long chapterId) {
@@ -237,6 +249,54 @@ public class ChapterService {
 
         this.chapterRepository.saveAll(chapters);
         log.info("Reordered {} chapters in version: {}", chapterIds.size(), versionId);
+    }
+
+    /* ==================== STUDENT ACCESS METHODS ==================== */
+
+    /**
+     * Get chapter details for student (with enrollment verification).
+     *
+     * Access Control: Student must be enrolled in the course.
+     */
+    public ChapterDto getChapterForStudent(Long chapterId) {
+        log.debug("Getting chapter {} for student", chapterId);
+
+        // Verify enrollment first
+        Enrollment enrollment = enrollmentAccessService.verifyCurrentStudentChapterAccess(chapterId);
+
+        // Load chapter
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found with id: " + chapterId));
+
+        return ChapterMapper.toChapterDto(chapter);
+    }
+
+    /**
+     * Get all chapters in a course for student (with enrollment verification).
+     * Returns chapters from the published version only.
+     *
+     * Access Control: Student must be enrolled in the course.
+     */
+    public List<ChapterDto> getChaptersForStudent(Long courseId) {
+        log.debug("Getting chapters for student in course {}", courseId);
+
+        // Verify enrollment
+        Enrollment enrollment = enrollmentAccessService.verifyCurrentStudentEnrollment(courseId);
+
+        // Get published version from enrollment
+        CourseVersion publishedVersion = enrollment.getCourseVersion();
+
+        if (publishedVersion == null) {
+            throw new ResourceNotFoundException("No published version available for this course");
+        }
+
+        // Load chapters
+        List<Chapter> chapters = chapterRepository
+                .findAllByCourseVersionOrderByOrderIndexAsc(publishedVersion);
+
+        return chapters.stream()
+                .map(ChapterMapper::toChapterDto)
+                .toList();
     }
 
 

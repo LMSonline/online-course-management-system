@@ -306,4 +306,42 @@ public class NotificationService {
         return notificationRepository.findByReferenceTypeAndReferenceId(referenceType, referenceId);
     }
 
+    /**
+     * Sends bulk notifications to multiple recipients.
+     * Used by admins to broadcast notifications.
+     *
+     * @param request the bulk notification request
+     * @return number of notifications sent
+     */
+    @Transactional
+    public int sendBulkNotification(SendBulkNotificationRequest request) {
+        log.info("Sending bulk notification to {} recipients", request.getAccountIds().size());
+
+        if (request.getAccountIds() == null || request.getAccountIds().isEmpty()) {
+            throw new IllegalArgumentException("Account IDs cannot be empty");
+        }
+
+        int sentCount = 0;
+        List<ChannelType> defaultChannels = List.of(ChannelType.WEB, ChannelType.EMAIL);
+
+        for (Long recipientId : request.getAccountIds()) {
+            try {
+                createAndSendNotification(
+                        recipientId,
+                        request.getType(),
+                        request.getTitle(),
+                        request.getContent(),
+                        defaultChannels
+                );
+                sentCount++;
+            } catch (Exception e) {
+                log.error("Failed to send notification to recipient {}: {}", recipientId, e.getMessage());
+                // Continue with next recipient
+            }
+        }
+
+        log.info("Sent {} out of {} bulk notifications", sentCount, request.getAccountIds().size());
+        return sentCount;
+    }
+
 }

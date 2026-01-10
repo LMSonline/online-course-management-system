@@ -1075,23 +1075,26 @@ public class FakeDataInitializer implements CommandLineRunner {
             Student reporter = students.get(faker.random().nextInt(students.size()));
             Course course = courses.get(faker.random().nextInt(courses.size()));
 
-            ViolationReport report = new ViolationReport();
-            report.setReporter(reporter.getAccount());
             String reportType = reportTypes[faker.random().nextInt(reportTypes.length)];
-            report.setReportType(reportType);
-            report.setDescription(generateReportDescription(reportType));
-            report.setStatus(ViolationReportStatus.PENDING);
+            String description = generateReportDescription(reportType);
+
+            // Use factory method instead of constructor
+            ViolationReport report = ViolationReport.create(
+                reporter.getAccount(),
+                reportType,
+                description
+            );
 
             // Randomly assign target
             if (faker.random().nextBoolean()) {
-                report.setCourse(course);
+                report.setTargetCourse(course);
             } else {
                 // Report a comment
                 List<Comment> comments = commentRepository.findByCourseIdAndParentIsNullAndDeletedAtIsNull(course.getId());
                 if (!comments.isEmpty()) {
                     Comment comment = comments.get(faker.random().nextInt(comments.size()));
-                    report.setComment(comment);
-                    report.setTarget(comment.getUser());
+                    report.setTargetComment(comment);
+                    report.setTargetAccount(comment.getUser());
                 }
             }
 

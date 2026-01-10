@@ -1,18 +1,19 @@
 package vn.uit.lms.service.assessment;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.assessment.Question;
 import vn.uit.lms.core.domain.assessment.Quiz;
 import vn.uit.lms.core.domain.assessment.QuizQuestion;
 import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.core.repository.assessment.QuestionRepository;
+import vn.uit.lms.core.repository.assessment.QuizAttemptRepository;
 import vn.uit.lms.core.repository.assessment.QuizQuestionRepository;
 import vn.uit.lms.core.repository.assessment.QuizRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
-import vn.uit.lms.service.TeacherService;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.dto.request.assessment.AddQuestionsRequest;
 import vn.uit.lms.shared.dto.request.assessment.QuizRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuizResponse;
@@ -26,27 +27,33 @@ import java.util.stream.Collectors;
 /**
  * Service for quiz management - orchestrates use cases
  * Business logic delegated to rich domain models (Quiz, QuizQuestion)
+ *
+ * Access Control:
+ * - Teachers can CRUD quizzes in their own course lessons
+ * - Students can take quizzes if enrolled in the course
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuizService {
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
     private final QuizQuestionRepository quizQuestionRepository;
+    private final QuizAttemptRepository quizAttemptRepository;
     private final LessonRepository lessonRepository;
-    private final TeacherService teacherService;
+    private final EnrollmentAccessService enrollmentAccessService;
 
     /**
-     * Use Case: Create quiz
+     * Use Case: Create quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the lesson's course.
      */
     @Transactional
     public QuizResponse createQuiz(Long lessonId, QuizRequest request) {
-        // Load lesson
-        Lesson lesson = loadLesson(lessonId);
+        log.info("Creating quiz in lesson: {}", lessonId);
 
-        // Validate ownership - teacher can only create quiz in their own course's lessons
-        Teacher lessonOwner = getLessonOwner(lesson);
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Lesson lesson = enrollmentAccessService.verifyTeacherLessonOwnership(lessonId);
 
         // Build quiz entity
         Quiz quiz = Quiz.builder()
@@ -66,6 +73,7 @@ public class QuizService {
 
         // Persist
         quiz = quizRepository.save(quiz);
+        log.info("Quiz created with id: {}", quiz.getId());
         return QuizMapper.toResponse(quiz);
     }
 
@@ -87,15 +95,16 @@ public class QuizService {
     }
 
     /**
-     * Use Case: Update quiz
+     * Use Case: Update quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public QuizResponse updateQuiz(Long id, QuizRequest request) {
-        Quiz quiz = loadQuiz(id);
+        log.info("Updating quiz: {}", id);
 
-        // Validate ownership - teacher can only update quiz in their own course's lessons
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(id);
 
         // Update fields
         quiz.setTitle(request.getTitle());
@@ -112,33 +121,50 @@ public class QuizService {
 
         // Persist
         quiz = quizRepository.save(quiz);
+        log.info("Quiz updated successfully: {}", id);
         return QuizMapper.toResponse(quiz);
     }
 
     /**
-     * Use Case: Delete quiz
+     * Use Case: Delete quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
+     * Cascade Delete: Deletes quiz questions and quiz attempts to prevent foreign key errors.
      */
     @Transactional
     public void deleteQuiz(Long id) {
-        Quiz quiz = loadQuiz(id);
+        log.info("Deleting quiz: {}", id);
 
-        // Validate ownership - teacher can only delete quiz in their own course's lessons
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(id);
 
+        // CASCADE DELETE to prevent foreign key constraint errors
+        // STEP 1: Delete all quiz questions (composition relationship)
+        log.debug("Deleting quiz questions for quiz: {}", id);
+        quizQuestionRepository.deleteByQuizId(id);
+
+        // STEP 2: Delete all quiz attempts (composition relationship)
+        // Note: QuizAnswer will be cascade deleted by database if configured,
+        // or we can delete manually here
+        log.debug("Deleting quiz attempts for quiz: {}", id);
+        quizAttemptRepository.deleteByQuizId(id);
+
+        // STEP 3: Delete quiz (aggregate root)
         quizRepository.deleteById(id);
+        log.info("Quiz deleted successfully: {}", id);
     }
 
     /**
-     * Use Case: Add questions to quiz
+     * Use Case: Add questions to quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public QuizResponse addQuestionsToQuiz(Long quizId, AddQuestionsRequest request) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Adding questions to quiz: {}", quizId);
 
-        // Validate ownership - teacher can only modify their own quiz
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         // Use rich domain method to get current count
         int currentOrder = quiz.getQuestionCount();
@@ -168,19 +194,21 @@ public class QuizService {
         quiz.recalculateTotalPoints();
         quizRepository.save(quiz);
 
+        log.info("Questions added successfully to quiz: {}", quizId);
         return getQuizById(quizId);
     }
 
     /**
-     * Use Case: Remove question from quiz
+     * Use Case: Remove question from quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public void removeQuestionFromQuiz(Long quizId, Long questionId) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Removing question {} from quiz: {}", questionId, quizId);
 
-        // Validate ownership - teacher can only modify their own quiz
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         QuizQuestion quizQuestion = quizQuestionRepository.findByQuizIdAndQuestionId(quizId, questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found in this quiz"));
@@ -190,6 +218,7 @@ public class QuizService {
 
         // Save quiz (cascade will handle quizQuestion deletion)
         quizRepository.save(quiz);
+        log.info("Question removed successfully from quiz: {}", quizId);
     }
 
     /**
@@ -215,16 +244,18 @@ public class QuizService {
     }
 
     /**
-     * Use Case: Clone quiz to another lesson
+     * Use Case: Clone quiz to another lesson (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the target lesson.
      */
     @Transactional
     public QuizResponse cloneQuiz(Long quizId, Long targetLessonId) {
-        Quiz sourceQuiz = loadQuiz(quizId);
-        Lesson targetLesson = loadLesson(targetLessonId);
+        log.info("Cloning quiz {} to lesson: {}", quizId, targetLessonId);
 
-        // Validate ownership of target lesson
-        Teacher targetLessonOwner = getLessonOwner(targetLesson);
-        teacherService.validateTeacherAccess(targetLessonOwner);
+        Quiz sourceQuiz = loadQuiz(quizId);
+
+        // Verify teacher ownership of target lesson using centralized service
+        Lesson targetLesson = enrollmentAccessService.verifyTeacherLessonOwnership(targetLessonId);
 
         // Create new quiz with same configuration
         Quiz clonedQuiz = Quiz.builder()
@@ -264,19 +295,21 @@ public class QuizService {
             quizRepository.save(clonedQuiz);
         }
 
+        log.info("Quiz cloned successfully to lesson: {}", targetLessonId);
         return QuizMapper.toResponse(clonedQuiz);
     }
 
     /**
-     * Use Case: Reorder questions in quiz
+     * Use Case: Reorder questions in quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public void reorderQuestions(Long quizId, List<Long> questionIdsInOrder) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Reordering questions in quiz: {}", quizId);
 
-        // Validate ownership
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         for (int i = 0; i < questionIdsInOrder.size(); i++) {
             Long questionId = questionIdsInOrder.get(i);
@@ -286,6 +319,8 @@ public class QuizService {
             quizQuestion.setOrderIndex(i + 1);
             quizQuestionRepository.save(quizQuestion);
         }
+
+        log.info("Questions reordered in quiz: {}", quizId);
     }
 
     /**
@@ -298,15 +333,16 @@ public class QuizService {
     }
 
     /**
-     * Use Case: Update time limit
+     * Use Case: Update time limit (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public QuizResponse updateTimeLimit(Long quizId, Integer timeLimitMinutes) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Updating time limit for quiz: {}", quizId);
 
-        // Validate ownership
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         // Basic validation (rich domain validate() will do full validation)
         if (timeLimitMinutes != null && timeLimitMinutes < 0) {
@@ -319,19 +355,21 @@ public class QuizService {
         quiz.validate();
 
         quiz = quizRepository.save(quiz);
+        log.info("Time limit updated for quiz: {}", quizId);
         return QuizMapper.toResponse(quiz);
     }
 
     /**
-     * Use Case: Update passing score
+     * Use Case: Update passing score (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public QuizResponse updatePassingScore(Long quizId, Double passingScore) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Updating passing score for quiz: {}", quizId);
 
-        // Validate ownership
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         quiz.setPassingScore(passingScore);
 
@@ -339,19 +377,21 @@ public class QuizService {
         quiz.validate();
 
         quiz = quizRepository.save(quiz);
+        log.info("Passing score updated for quiz: {}", quizId);
         return QuizMapper.toResponse(quiz);
     }
 
     /**
-     * Use Case: Add questions from question bank
+     * Use Case: Add questions from question bank (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public QuizResponse addQuestionsFromBank(Long quizId, Long questionBankId, Integer count) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Adding questions from bank {} to quiz: {}", questionBankId, quizId);
 
-        // Validate ownership
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         // Load questions from bank
         List<Question> bankQuestions = questionRepository.findByQuestionBankId(questionBankId);
@@ -396,15 +436,16 @@ public class QuizService {
     }
 
     /**
-     * Use Case: Remove all questions from quiz
+     * Use Case: Remove all questions from quiz (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public void removeAllQuestions(Long quizId) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Removing all questions from quiz: {}", quizId);
 
-        // Validate ownership
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quizId);
 
@@ -417,18 +458,20 @@ public class QuizService {
         quiz.setTotalPoints(0.0);
 
         quizRepository.save(quiz);
+        log.info("All questions removed from quiz: {}", quizId);
     }
 
     /**
-     * Use Case: Update max attempts
+     * Use Case: Update max attempts (Teacher only)
+     *
+     * Access Control: Verifies teacher owns the quiz.
      */
     @Transactional
     public QuizResponse updateMaxAttempts(Long quizId, Integer maxAttempts) {
-        Quiz quiz = loadQuiz(quizId);
+        log.info("Updating max attempts for quiz: {}", quizId);
 
-        // Validate ownership
-        Teacher lessonOwner = getLessonOwner(quiz.getLesson());
-        teacherService.validateTeacherAccess(lessonOwner);
+        // Verify teacher ownership using centralized service
+        Quiz quiz = enrollmentAccessService.verifyTeacherQuizOwnership(quizId);
 
         quiz.setMaxAttempts(maxAttempts);
 
@@ -453,33 +496,9 @@ public class QuizService {
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
     }
 
-    private Lesson loadLesson(Long id) {
-        return lessonRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
-    }
-
     private Question loadQuestion(Long id) {
         return questionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
-    }
-
-    /**
-     * Get teacher owner from lesson through: Lesson -> Chapter -> CourseVersion -> Course -> Teacher
-     */
-    private Teacher getLessonOwner(Lesson lesson) {
-        if (lesson.getChapter() == null) {
-            throw new IllegalStateException("Lesson must belong to a chapter");
-        }
-        if (lesson.getChapter().getCourseVersion() == null) {
-            throw new IllegalStateException("Chapter must belong to a course version");
-        }
-        if (lesson.getChapter().getCourseVersion().getCourse() == null) {
-            throw new IllegalStateException("Course version must belong to a course");
-        }
-        if (lesson.getChapter().getCourseVersion().getCourse().getTeacher() == null) {
-            throw new IllegalStateException("Course must have a teacher");
-        }
-        return lesson.getChapter().getCourseVersion().getCourse().getTeacher();
     }
 }
 

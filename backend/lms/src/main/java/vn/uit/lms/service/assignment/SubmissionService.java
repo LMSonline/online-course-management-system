@@ -1,6 +1,7 @@
 package vn.uit.lms.service.assignment;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
@@ -9,8 +10,10 @@ import vn.uit.lms.core.domain.assignment.Assignment;
 import vn.uit.lms.core.domain.assignment.Submission;
 import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.assignment.AssignmentRepository;
+import vn.uit.lms.core.repository.assignment.SubmissionFileRepository;
 import vn.uit.lms.core.repository.assignment.SubmissionRepository;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.constant.SubmissionStatus;
 import vn.uit.lms.shared.dto.request.assignment.FeedbackSubmissionRequest;
 import vn.uit.lms.shared.dto.request.assignment.GradeSubmissionRequest;
@@ -24,21 +27,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service for managing assignment submissions
+ *
+ * Access Control:
+ * - Students can only submit if enrolled in the course
+ * - Students can only view/edit their own submissions
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final AssignmentRepository assignmentRepository;
     private final StudentRepository studentRepository;
+    private final SubmissionFileRepository submissionFileRepository;
     private final AccountService accountService;
     private final SubmissionFileService submissionFileService;
+    private final EnrollmentAccessService enrollmentAccessService;
 
+    /**
+     * Submit assignment (Student only)
+     *
+     * Access Control: Verifies student is enrolled in the course.
+     */
     @Transactional
     public SubmissionResponse submitAssignment(Long assignmentId) {
+        log.info("Submitting assignment: {}", assignmentId);
+
+        // STEP 1: Verify enrollment
+        enrollmentAccessService.verifyCurrentStudentAssignmentAccess(assignmentId);
+
+        // STEP 2: Load student
         Account account = accountService.verifyCurrentAccount();
         Student student = studentRepository.findByAccount(account)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
+        // STEP 3: Load assignment
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
@@ -75,6 +100,7 @@ public class SubmissionService {
         submission.validate();
 
         submission = submissionRepository.save(submission);
+        log.info("Assignment submitted: submissionId={}", submission.getId());
         return AssignmentMapper.toSubmissionResponse(submission);
     }
 
@@ -121,11 +147,22 @@ public class SubmissionService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Delete submission (Student only)
+     *
+     * Access Control: Verifies student owns the submission and is enrolled.
+     * Cascade Delete: Deletes all submission files before deleting submission.
+     */
     @Transactional
     public void deleteSubmission(Long id) {
+        log.info("Deleting submission: {}", id);
+
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
         
+        // Verify enrollment
+        enrollmentAccessService.verifyCurrentStudentAssignmentAccess(submission.getAssignment().getId());
+
         // Validate ownership - student can only delete their own submission
         Account currentAccount = accountService.verifyCurrentAccount();
         Student currentStudent = studentRepository.findByAccount(currentAccount)
@@ -140,10 +177,14 @@ public class SubmissionService {
             throw new InvalidRequestException("Cannot delete a graded or rejected submission");
         }
         
-        // Delete all associated files first
-        submissionFileService.deleteAllSubmissionFiles(id);
+        // CASCADE DELETE to prevent foreign key constraint errors
+        // STEP 1: Delete all submission files (composition relationship)
+        log.debug("Deleting submission files for submission: {}", id);
+        submissionFileRepository.deleteBySubmissionId(id);
 
+        // STEP 2: Delete submission (aggregate root)
         submissionRepository.deleteById(id);
+        log.info("Submission deleted successfully: {}", id);
     }
 
     /**

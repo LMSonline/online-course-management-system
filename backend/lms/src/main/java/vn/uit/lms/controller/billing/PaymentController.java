@@ -50,6 +50,15 @@ public class PaymentController {
     }
 
     /**
+     * Verify payment (Manual verification endpoint)
+     * Used for frontend to verify payment after redirect from gateway
+     */
+    @PostMapping("/verify-payment")
+    public ResponseEntity<PaymentTransactionResponse> verifyPayment(@RequestBody Map<String, String> params) {
+        return ResponseEntity.ok(paymentService.verifyPaymentAutoDetect(params));
+    }
+
+    /**
      * Unified Payment Callback Endpoint (RECOMMENDED)
      * Auto-detects payment gateway and processes callback
      * Supports: VNPay, ZaloPay, MoMo, and future gateways

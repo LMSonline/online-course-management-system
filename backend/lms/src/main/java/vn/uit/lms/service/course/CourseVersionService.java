@@ -132,20 +132,12 @@ public class CourseVersionService {
     /**
      * Submit course version for approval
      *
-     * TODO: Add comprehensive validation before submission
-     * - Validate version has minimum required content:
+     * Validates content requirements before submission:
      * - At least 1 chapter with lessons
      * - All lessons have content (video or text)
-     * - Price is set (if not free course)
-     * - Duration and passing criteria are configured
-     * - Validate all videos are processed and ready
-     * - Check all required fields are filled
-     * - Validate course has thumbnail
-     * - Ensure learning objectives are defined
-     * - Check for placeholder content
-     * - Validate total course duration meets minimum
-     * - Generate preview link for admin review
-     * - Send notification to admin queue
+     * - Price is set correctly
+     * - Thumbnail exists
+     * - Passing criteria configured
      */
     @Transactional
     @EnableSoftDeleteFilter
@@ -162,33 +154,87 @@ public class CourseVersionService {
             throw new InvalidRequestException("Course version is not DRAFT");
         }
 
-        // TODO: Add validation checks
-        // if (version.getChapters().isEmpty()) {
-        // throw new InvalidRequestException("Course must have at least one chapter");
-        // }
-        //
-        // long totalLessons = version.getChapters().stream()
-        // .mapToLong(Chapter::getLessons().size())
-        // .sum();
-        // if (totalLessons < 3) {
-        // throw new InvalidRequestException("Course must have at least 3 lessons");
-        // }
-        //
-        // boolean hasUnprocessedVideos = checkForUnprocessedVideos(version);
-        // if (hasUnprocessedVideos) {
-        // throw new InvalidRequestException("All videos must be processed before
-        // submission");
-        // }
-        //
-        // if (version.getPrice() == null || version.getPrice() < 0) {
-        // throw new InvalidRequestException("Course price must be set");
-        // }
+        // ✅ Validate content requirements before submission
+        validateContentRequirements(version, course);
+
         version.setStatus(CourseStatus.PENDING);
 
         courseVersionRepository.save(version);
 
         eventPublisher.publishEvent(new CourseVersionStatusChangeEvent(version, ""));
         return CourseVersionMapper.toCourseVersionResponse(version);
+    }
+
+    /**
+     * Validate content requirements before submission
+     */
+    private void validateContentRequirements(CourseVersion version, Course course) {
+        // Check minimum chapters
+        if (version.getChapters() == null || version.getChapters().isEmpty()) {
+            throw new InvalidRequestException("Course must have at least 1 chapter before submission");
+        }
+
+        // Check minimum lessons
+        long totalLessons = version.getChapters().stream()
+                .filter(chapter -> chapter.getLessons() != null)
+                .mapToLong(chapter -> chapter.getLessons().size())
+                .sum();
+
+        if (totalLessons == 0) {
+            throw new InvalidRequestException("Course must have at least 1 lesson before submission");
+        }
+
+        // Check all lessons have content (video or description)
+        boolean hasInvalidLesson = version.getChapters().stream()
+                .filter(chapter -> chapter.getLessons() != null)
+                .flatMap(chapter -> chapter.getLessons().stream())
+                .anyMatch(lesson -> {
+                    // Video lesson must have video
+                    if (lesson.isVideoLesson()) {
+                        return lesson.getVideoObjectKey() == null || lesson.getVideoObjectKey().isBlank();
+                    }
+                    // Text lesson must have description
+                    return lesson.getShortDescription() == null || lesson.getShortDescription().isBlank();
+                });
+
+        if (hasInvalidLesson) {
+            throw new InvalidRequestException("All lessons must have content (video for VIDEO type, description for others)");
+        }
+
+        // Check price is set
+        if (version.getPrice() == null) {
+            throw new InvalidRequestException("Price must be set (use 0 for free courses)");
+        }
+
+        if (version.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new InvalidRequestException("Price cannot be negative");
+        }
+
+        // Check thumbnail exists
+        if (course.getThumbnailUrl() == null || course.getThumbnailUrl().isBlank()) {
+            throw new InvalidRequestException("Course must have a thumbnail before submission");
+        }
+
+        // Check passing score configured
+        if (version.getPassScore() == null || version.getPassScore() <= 0) {
+            throw new InvalidRequestException("Passing score must be configured (e.g., 8.0)");
+        }
+
+        // Check duration is set
+        if (version.getDurationDays() <= 0) {
+            throw new InvalidRequestException("Course duration must be set (days)");
+        }
+
+        // Validate final weight
+        if (version.getFinalWeight() == null || version.getFinalWeight() < 0 || version.getFinalWeight() > 1) {
+            throw new InvalidRequestException("Final exam weight must be between 0 and 1 (e.g., 0.6 for 60%)");
+        }
+
+        // TODO: Future enhancements
+        // - Check all videos are processed (not in PENDING state)
+        // - Validate minimum course duration
+        // - Check for placeholder content
+        // - Generate preview link for admin
     }
 
     @Transactional

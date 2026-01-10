@@ -14,6 +14,7 @@ import vn.uit.lms.core.repository.course.content.ChapterRepository;
 import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.core.repository.course.content.LessonResourceRepository;
 import vn.uit.lms.service.event.VideoConvertMessage;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.service.storage.MinioService;
 import vn.uit.lms.shared.dto.request.course.content.CreateLessonRequest;
 import vn.uit.lms.shared.dto.request.course.content.ReorderLessonsRequest;
@@ -40,6 +41,7 @@ public class LessonService {
     private final ChapterRepository chapterRepository;
     private final MinioBucketProperties minioBucketProperties;
     private final RabbitTemplate rabbitTemplate;
+    private final EnrollmentAccessService enrollmentAccessService;
 
     public Lesson validateLessonEditable(Long lessonId) {
         Lesson lesson = lessonRepository.findById(lessonId)
@@ -361,5 +363,95 @@ public class LessonService {
         log.info("Cleared video data for lesson: {}", lessonId);
 
         return LessonMapper.toResponse(updatedLesson);
+    }
+
+    /* ==================== STUDENT ACCESS METHODS ==================== */
+
+    /**
+     * Get lesson details for student (with enrollment verification).
+     *
+     * Access Control:
+     * - Preview lessons can be viewed without enrollment
+     * - Non-preview lessons require active enrollment
+     */
+    public LessonDTO getLessonForStudent(Long lessonId) {
+        log.debug("Getting lesson {} for student", lessonId);
+
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
+
+        // If lesson is preview, allow access without enrollment
+        if (lesson.getIsPreview() != null && lesson.getIsPreview()) {
+            log.debug("Lesson {} is preview, allowing access", lessonId);
+            return LessonMapper.toResponse(lesson);
+        }
+
+        // Otherwise, verify enrollment
+        vn.uit.lms.core.domain.learning.Enrollment enrollment =
+            enrollmentAccessService.verifyCurrentStudentLessonAccess(lessonId);
+
+        if (!enrollment.isActive()) {
+            throw new vn.uit.lms.shared.exception.UnauthorizedException(
+                "Enrollment is not active. Cannot view this lesson."
+            );
+        }
+
+        return LessonMapper.toResponse(lesson);
+    }
+
+    /**
+     * Get lessons in chapter for student (with enrollment verification).
+     * Returns only lessons the student has access to.
+     *
+     * Access Control: Student must be enrolled in the course.
+     */
+    public List<LessonDTO> getLessonsForStudent(Long chapterId) {
+        log.debug("Getting lessons for student in chapter {}", chapterId);
+
+        // Verify enrollment
+        enrollmentAccessService.verifyCurrentStudentChapterAccess(chapterId);
+
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chapter not found with id: " + chapterId));
+
+        List<Lesson> lessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+
+        return lessons.stream()
+                .map(LessonMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * Get video streaming URL for student (with enrollment verification).
+     * Returns HLS playlist with presigned URLs.
+     *
+     * Access Control: Student must be enrolled (or lesson is preview).
+     */
+    public String getVideoStreamingUrlForStudent(Long lessonId) {
+        log.debug("Getting video streaming URL for student, lesson {}", lessonId);
+
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
+
+        // Check if lesson is preview
+        if (lesson.getIsPreview() == null || !lesson.getIsPreview()) {
+            // Verify enrollment for non-preview lessons
+            enrollmentAccessService.verifyCurrentStudentLessonAccess(lessonId);
+        }
+
+        if (!lesson.isVideoReady()) {
+            throw new InvalidRequestException("Video is not ready for streaming");
+        }
+
+        // Generate HLS playlist with presigned URLs for segments (valid for 1 hour)
+        String modifiedPlaylist = minioService.generateHLSPlaylistWithPresignedUrls(
+                lesson.getVideoObjectKey(),
+                minioBucketProperties.getVideos(),
+                3600 // 1 hour
+        );
+
+        // Return as data URI that video players can use
+        return "data:application/vnd.apple.mpegurl;base64," +
+               java.util.Base64.getEncoder().encodeToString(modifiedPlaylist.getBytes());
     }
 }
