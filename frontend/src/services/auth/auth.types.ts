@@ -1,5 +1,5 @@
 export type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
-export type AccountStatus = "ACTIVE" | "PENDING" | "SUSPENDED" | "INACTIVE";
+export type AccountStatus = "ACTIVE" | "PENDING_APPROVAL" |"PENDING_EMAIL" | "SUSPENDED" | "INACTIVE";
 export type Gender = "MALE" | "FEMALE" | "OTHER" | "UNKNOWN";
 
 //Request
@@ -61,6 +61,10 @@ export interface MeUser {
   bio?: string;
   gender?: Gender;
   lastLoginAt?: string;
+  profile?: {
+    studentId?: number;
+    teacherId?: number;
+  };
 }
 
 export interface RegisterResponse {
