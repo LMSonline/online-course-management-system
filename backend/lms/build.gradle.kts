@@ -42,6 +42,7 @@ dependencies {
 	implementation("com.cloudinary:cloudinary-http5:2.0.0")
 	implementation("com.github.slugify:slugify:3.0.7")
 	implementation("com.ibm.icu:icu4j:76.1")
+	implementation ("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("org.springframework.boot:spring-boot-starter-amqp")
 	implementation("io.minio:minio:8.5.17")
 	implementation("org.apache.poi:poi-ooxml:5.2.5")

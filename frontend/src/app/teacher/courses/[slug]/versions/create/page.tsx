@@ -26,7 +26,7 @@ export default function CreateVersionPage() {
         description: "",
         price: 0,
         durationDays: 0,
-        passScore: 70,
+        passScore: 8.0,
     });
 
     const { data: course, isLoading: loadingCourse } = useQuery({
@@ -65,8 +65,8 @@ export default function CreateVersionPage() {
             return;
         }
 
-        if (formData.passScore && (formData.passScore < 0 || formData.passScore > 100)) {
-            toast.error("Pass score must be between 0 and 100");
+        if (formData.passScore && (formData.passScore < 0 || formData.passScore > 10)) {
+            toast.error("Pass score must be between 0 and 10");
             return;
         }
 
@@ -171,12 +171,12 @@ export default function CreateVersionPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Price ($) *
+                                    Giá khóa học (VND) *
                                 </label>
                                 <input
                                     type="number"
                                     min="0"
-                                    step="0.01"
+                                    step="1000"
                                     value={formData.price}
                                     onChange={(e) =>
                                         setFormData({
@@ -185,9 +185,12 @@ export default function CreateVersionPage() {
                                         })
                                     }
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    placeholder="0.00"
+                                    placeholder="0"
                                     required
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Đặt giá 0 cho khóa học miễn phí
+                                </p>
                             </div>
 
                             <div>
@@ -212,23 +215,27 @@ export default function CreateVersionPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Pass Score (%) *
+                                    Điểm đạt (0-10) *
                                 </label>
                                 <input
                                     type="number"
                                     min="0"
-                                    max="100"
+                                    max="10"
+                                    step="0.1"
                                     value={formData.passScore}
                                     onChange={(e) =>
                                         setFormData({
                                             ...formData,
-                                            passScore: parseInt(e.target.value) || 70,
+                                            passScore: parseFloat(e.target.value) || 8.0,
                                         })
                                     }
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    placeholder="70"
+                                    placeholder="8.0"
                                     required
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Ví dụ: 8.0 = điểm trung bình đạt
+                                </p>
                             </div>
                         </div>
                     </div>

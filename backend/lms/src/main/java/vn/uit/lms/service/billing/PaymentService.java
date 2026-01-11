@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.billing.PaymentTransaction;
 import vn.uit.lms.core.domain.billing.RevenueShareConfig;
 import vn.uit.lms.core.domain.course.Course;
@@ -22,8 +23,12 @@ import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.CourseVersionRepository;
 import vn.uit.lms.core.repository.learning.EnrollmentRepository;
 import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.billing.gateway.PaymentFactory;
 import vn.uit.lms.service.billing.gateway.PaymentGateway;
 import vn.uit.lms.service.learning.EnrollmentService;
+import vn.uit.lms.service.learning.EnrollmentService;
+import vn.uit.lms.shared.constant.CourseStatus;
+import vn.uit.lms.shared.constant.PaymentProvider;
 import vn.uit.lms.shared.constant.PaymentStatus;
 import vn.uit.lms.shared.dto.request.billing.CreatePaymentRequest;
 import vn.uit.lms.shared.dto.request.billing.RefundRequest;
@@ -35,7 +40,6 @@ import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.billing.BillingMapper;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +58,13 @@ public class PaymentService {
     private final RevenueShareConfigRepository revenueShareConfigRepository;
     private final AccountService accountService;
     private final EnrollmentService enrollmentService;
-    private final PaymentGateway paymentGateway; // Will use VNPayGateway by default
+    private final PaymentFactory paymentFactory; // Use factory for multi-gateway support
+    private final PaymentCallbackDetector callbackDetector;
+    private final PaymentEnrollmentOrchestrator enrollmentOrchestrator;
+
+    private final String ORDER_ID_PREFIX = "PAY";
+    private final String CREATE_PAYMENT_MESSAGE = "Please complete payment within 15 minutes";
+    private final String CURRENCY_VND = "VND";
 
     /**
      * Create payment transaction
@@ -85,7 +95,7 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Course version not found"));
 
         // Precondition: Check course is published
-        if (courseVersion.getStatus() != vn.uit.lms.shared.constant.CourseStatus.PUBLISHED) {
+        if (courseVersion.getStatus() != CourseStatus.PUBLISHED) {
             throw new InvalidRequestException("Course is not published yet");
         }
 
@@ -114,23 +124,32 @@ public class PaymentService {
         }
 
         // Create payment transaction
+        // Determine payment provider
+        PaymentProvider paymentProvider = request.getPaymentMethod();
+        if (paymentProvider == null) {
+            paymentProvider = PaymentProvider.ZALOPAY; // Default
+        }
+
+        // Get appropriate payment gateway
+        PaymentGateway paymentGateway = paymentFactory.getProcessor(paymentProvider);
+
         PaymentTransaction payment = PaymentTransaction.builder()
                 .student(student)
                 .course(course)
                 .courseVersion(courseVersion)
                 .amount(courseVersion.getPrice())
-                .currency("VND")
-                .paymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "VNPAY")
+                .currency(CURRENCY_VND)
+                .paymentMethod(paymentProvider)
                 .status(PaymentStatus.PENDING)
                 .userAgent(request.getUserAgent())
                 .build();
 
         payment = paymentRepository.save(payment);
-        log.info("Created payment transaction ID: {} for student: {} course: {}",
-                payment.getId(), student.getId(), course.getId());
+        log.info("Created payment transaction ID: {} for student: {} course: {} using gateway: {}",
+                payment.getId(), student.getId(), course.getId(), paymentProvider);
 
         // Create payment URL
-        String orderId = "PAY_" + payment.getId();
+        String orderId = ORDER_ID_PREFIX + payment.getId();
         String orderInfo = "Thanh toan khoa hoc: " + course.getTitle();
         String returnUrl = request.getReturnUrl() != null ?
                 request.getReturnUrl() :
@@ -151,8 +170,47 @@ public class PaymentService {
         return PaymentUrlResponse.builder()
                 .paymentId(payment.getId())
                 .paymentUrl(paymentUrl)
-                .message("Please complete payment within 15 minutes")
+                .message(CREATE_PAYMENT_MESSAGE)
                 .build();
+    }
+
+    /**
+     * Verify payment from gateway callback (AUTO-DETECT)
+     * Automatically detects payment provider from callback data
+     *
+     * Preconditions:
+     * - Callback data must contain valid gateway-specific fields
+     * - Payment must exist and be in PENDING status
+     * - Payment data from gateway must be valid
+     *
+     * Postconditions:
+     * - Payment status updated (SUCCESS or FAILED)
+     * - If successful: Student enrolled in course
+     * - If failed: Failure reason recorded
+     */
+    @Transactional
+    public PaymentTransactionResponse verifyPaymentAutoDetect(Map<String, String> paymentData) {
+        log.info("Auto-detecting payment provider from callback data");
+
+        // Auto-detect payment provider
+        PaymentProvider paymentProvider;
+        try {
+            paymentProvider = callbackDetector.detectProvider(paymentData);
+        } catch (IllegalArgumentException e) {
+            log.error("Failed to detect payment provider", e);
+            throw new InvalidRequestException("Cannot determine payment gateway from callback data");
+        }
+
+        // Validate callback structure
+        if (!callbackDetector.hasValidStructure(paymentData, paymentProvider)) {
+            log.warn("Invalid callback structure for provider: {}", paymentProvider);
+            throw new InvalidRequestException("Invalid callback data structure for " + paymentProvider);
+        }
+
+        log.info("Detected payment provider: {}, processing callback", paymentProvider);
+
+        // Use the existing verification logic
+        return verifyPayment(paymentData, paymentProvider);
     }
 
     /**
@@ -168,20 +226,25 @@ public class PaymentService {
      * - If failed: Failure reason recorded
      */
     @Transactional
-    public PaymentTransactionResponse verifyPayment(Map<String, String> paymentData) {
+    public PaymentTransactionResponse verifyPayment(Map<String, String> paymentData, PaymentProvider paymentProvider) {
+
+        // Get appropriate payment gateway
+        PaymentGateway paymentGateway = paymentFactory.getProcessor(paymentProvider);
+
         // Verify signature from payment gateway
         if (!paymentGateway.verifyPayment(paymentData)) {
-            log.warn("Invalid payment signature: {}", paymentData);
+            log.warn("Invalid payment signature from {}: {}", paymentProvider, paymentData);
             throw new InvalidRequestException("Invalid payment signature");
         }
 
-        // Get payment ID from order ID
-        String orderId = paymentData.get("vnp_TxnRef");
-        if (orderId == null || !orderId.startsWith("PAY_")) {
-            throw new InvalidRequestException("Invalid order ID");
+        // Extract order ID using detector (supports all gateways dynamically)
+        String orderId = callbackDetector.extractOrderId(paymentData, paymentProvider);
+
+        if (orderId == null || !orderId.startsWith(ORDER_ID_PREFIX)) {
+            throw new InvalidRequestException("Invalid order ID format");
         }
 
-        Long paymentId = Long.parseLong(orderId.substring(4));
+        Long paymentId = Long.parseLong(orderId.substring(ORDER_ID_PREFIX.length()));
 
         // Precondition: Payment must exist
         PaymentTransaction payment = paymentRepository.findById(paymentId)
@@ -203,38 +266,40 @@ public class PaymentService {
             BigDecimal transactionFee = payment.getAmount().multiply(new BigDecimal("0.02"));
             payment.setTransactionFee(transactionFee);
 
+            // Save payment first before enrollment
             payment = paymentRepository.save(payment);
-            log.info("Payment {} marked as SUCCESS", paymentId);
+            log.info("Payment {} marked as SUCCESS via {}", paymentId, paymentProvider);
 
-            // Postcondition: Enroll student in course
+            // Postcondition: Enroll student in course using orchestrator
+            // Orchestrator handles enrollment in separate transaction for data consistency
             try {
-                enrollmentService.enrollStudent(
-                        payment.getStudent().getId(),
-                        payment.getCourseVersion().getId()
-                );
-                log.info("Student {} enrolled in course {} after successful payment",
-                        payment.getStudent().getId(),
-                        payment.getCourse().getId());
+                enrollmentOrchestrator.processEnrollmentAfterPayment(payment);
+                log.info("Enrollment processing completed for payment {}", paymentId);
             } catch (Exception e) {
-                log.error("Failed to enroll student after payment", e);
-                // Payment was successful but enrollment failed
-                // This should be handled by admin or retry mechanism
+                // All errors are logged by orchestrator
+                // Payment is already saved, so this won't affect payment status
+                log.error("Enrollment orchestration failed for payment {}: {}", paymentId, e.getMessage());
             }
 
-            // Postcondition: Payment is SUCCESS and student is enrolled
-            assert payment.getStatus() == PaymentStatus.SUCCESS;
+            // Postcondition: Payment is SUCCESS (enrollment success is tracked in metadata)
+            assert payment.getStatus() == PaymentStatus.SUCCESS : "Payment must be SUCCESS after marking";
+            assert payment.getPaidAt() != null : "Payment must have paid_at timestamp";
+            assert payment.getProviderTransactionId() != null : "Payment must have provider transaction ID";
 
         } else {
             // Mark payment as failed using rich domain logic
             String errorMessage = paymentGateway.getErrorMessage(paymentData);
-            String errorCode = paymentData.get("vnp_ResponseCode");
+            String errorCode = paymentProvider == PaymentProvider.VNPAY ?
+                    paymentData.get("vnp_ResponseCode") : paymentData.get("return_code");
             payment.markAsFailed(errorMessage, errorCode);
 
             payment = paymentRepository.save(payment);
-            log.warn("Payment {} marked as FAILED: {}", paymentId, errorMessage);
+            log.warn("Payment {} marked as FAILED: {} (error code: {})", paymentId, errorMessage, errorCode);
 
             // Postcondition: Payment is FAILED
-            assert payment.getStatus() == PaymentStatus.FAILED;
+            assert payment.getStatus() == PaymentStatus.FAILED : "Payment must be FAILED after marking";
+            assert payment.getFailedAt() != null : "Payment must have failed_at timestamp";
+            assert payment.getFailureReason() != null : "Payment must have failure reason";
         }
 
         return BillingMapper.toPaymentResponse(payment);
@@ -244,8 +309,29 @@ public class PaymentService {
      * Get payment transaction by ID
      */
     public PaymentTransactionResponse getPaymentById(Long id) {
+
+        Account account = accountService.verifyCurrentAccount();
         PaymentTransaction payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+        Student ownerStudent = payment.getStudent();
+        Teacher teacherOwnCourse = payment.getCourse().getTeacher();
+        // Authorization: Only the student who made the payment or the teacher of the course can access
+        switch (account.getRole()) {
+            case STUDENT -> {
+                if (ownerStudent == null || !ownerStudent.getAccount().getId().equals(account.getId())) {
+                    throw new InvalidRequestException("You are not authorized to view this payment");
+                }
+            }
+            case TEACHER -> {
+                if (teacherOwnCourse == null || !teacherOwnCourse.getAccount().getId().equals(account.getId())) {
+                    throw new InvalidRequestException("You are not authorized to view this payment");
+                }
+            }
+            case ADMIN -> {
+                // Admins have access to all payments
+            }
+            default -> throw new InvalidRequestException("You are not authorized to view this payment");
+        }
 
         return BillingMapper.toPaymentResponse(payment);
     }
@@ -259,7 +345,7 @@ public class PaymentService {
             Long courseId,
             Pageable pageable
     ) {
-        Specification<PaymentTransaction> spec = Specification.where(null);
+        Specification<PaymentTransaction> spec = (root, query, cb) -> cb.conjunction();
 
         if (status != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));

@@ -1,20 +1,28 @@
 package vn.uit.lms.service.course;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.course.CourseReview;
+import vn.uit.lms.core.domain.learning.Enrollment;
+import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.CourseReviewRepository;
+import vn.uit.lms.service.AccountService;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
+import vn.uit.lms.shared.constant.Role;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.CourseReviewRequest;
 import vn.uit.lms.shared.dto.response.course.RatingSummaryResponse;
 import vn.uit.lms.shared.dto.response.course.CourseReviewResponse;
 import vn.uit.lms.shared.exception.DuplicateResourceException;
+import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.course.CourseReviewMapper;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
@@ -23,19 +31,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Course Review Service - Manages course reviews with enrollment verification.
+ *
+ * Access Control: Students can only review courses they are enrolled in.
+ */
 @Service
+@Slf4j
 public class CourseReviewService {
 
     private final CourseReviewRepository courseReviewRepository;
     private final CourseRepository courseRepository;
-    private final CourseService courseService;
+    private final EnrollmentAccessService enrollmentAccessService;
+    private final AccountService accountService;
+    private final StudentRepository studentRepository;
 
     public CourseReviewService(CourseReviewRepository courseReviewRepository,
                                CourseRepository courseRepository,
-                               CourseService courseService) {
+                               EnrollmentAccessService enrollmentAccessService,
+                               AccountService accountService,
+                               StudentRepository studentRepository) {
         this.courseReviewRepository = courseReviewRepository;
         this.courseRepository = courseRepository;
-        this.courseService = courseService;
+        this.enrollmentAccessService = enrollmentAccessService;
+        this.accountService = accountService;
+        this.studentRepository = studentRepository;
     }
 
     /**
@@ -55,42 +75,42 @@ public class CourseReviewService {
     /**
      * Create a new course review
      *
-     * TODO: Implement enrollment and eligibility validation
-     * - Verify student is enrolled in the course
-     * - Check enrollment status (must be ACTIVE or COMPLETED)
-     * - Validate minimum course progress before allowing review (e.g., >50%)
-     * - Check if student has completed at least X lessons or chapters
-     * - Consider adding time-based restrictions (enrolled for at least X days)
-     * - Update course average rating after review submission
-     * - Send notification to instructor about new review
+     * Access Control: Student must be enrolled in the course.
+     * Business Rule: Student can only review once per course.
+     *
+     * TODO: Add minimum progress requirement (e.g., >50% completion)
      */
     @Transactional
     @EnableSoftDeleteFilter
     public CourseReviewResponse createNewReview(CourseReviewRequest courseReviewRequest, Long courseId) {
+        log.info("Creating review for course: {}", courseId);
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        // STEP 1: Verify student is enrolled in the course
+        Enrollment enrollment = enrollmentAccessService.verifyCurrentStudentEnrollment(courseId);
 
-        Student student = courseService.verifyStudent(course);
+        // STEP 2: Get student and course (already validated)
+        Student student = enrollment.getStudent();
+        Course course = enrollment.getCourse();
 
-        // TODO: Verify enrollment and eligibility
-        // Enrollment enrollment = enrollmentRepository.findByCourseAndStudent(course, student)
-        //     .orElseThrow(() -> new UnauthorizedException("Must enroll in course before reviewing"));
-        // if (enrollment.getProgressPercentage() < 50.0) {
+        // TODO: Check minimum progress requirement
+        // if (enrollment.getCompletionPercentage() != null && enrollment.getCompletionPercentage() < 50.0f) {
         //     throw new InvalidRequestException("Must complete at least 50% of the course before reviewing");
         // }
 
+        // STEP 3: Check if already reviewed
         if(hasReviewed(course, student)){
             throw new DuplicateResourceException("Student already has reviewed this course");
         }
 
+        // STEP 4: Create review
         CourseReview courseReview = CourseReviewMapper.fromRequest(courseReviewRequest);
-
         courseReview.setStudent(student);
         courseReview.setCourse(course);
 
         try {
             CourseReview savedReview = courseReviewRepository.save(courseReview);
+            log.info("Review created successfully for course {} by student {}", courseId, student.getId());
+
             // TODO: Update course average rating
             // courseService.updateAverageRating(course);
             return CourseReviewMapper.toResponse(savedReview);
@@ -123,31 +143,32 @@ public class CourseReviewService {
     /**
      * Update an existing review
      *
-     * TODO: Implement rating recalculation
-     * - Recalculate course average rating after update
-     * - Update course rating statistics
-     * - Send notification to instructor if rating changed significantly
-     * - Consider adding edit history/audit trail for reviews
+     * Access Control: Student must be enrolled and own the review.
      */
     @Transactional
     @EnableSoftDeleteFilter
     public CourseReviewResponse updateReview(Long courseId, Long reviewId, CourseReviewRequest request) {
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        log.info("Updating review {} for course {}", reviewId, courseId);
 
-        Student student = courseService.verifyStudent(course);
+        // STEP 1: Verify student is enrolled
+        Enrollment enrollment = enrollmentAccessService.verifyCurrentStudentEnrollment(courseId);
+        Student student = enrollment.getStudent();
 
+        // STEP 2: Verify review exists and belongs to student
         CourseReview review = courseReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
-        if (!review.getStudent().getId().equals(student.getId()))
-            throw new SecurityException("Cannot update other student's review");
+        if (!review.getStudent().getId().equals(student.getId())) {
+            throw new InvalidRequestException("Cannot update other student's review");
+        }
 
+        // STEP 3: Update review
         review.setRating(request.getRating());
         review.setTitle(request.getTitle());
         review.setContent(request.getContent());
 
         CourseReview saved = courseReviewRepository.save(review);
+        log.info("Review {} updated successfully", reviewId);
 
         // TODO: Recalculate course average rating
         // courseService.updateAverageRating(course);
@@ -158,28 +179,28 @@ public class CourseReviewService {
     /**
      * Delete a review
      *
-     * TODO: Implement rating recalculation after deletion
-     * - Recalculate course average rating after deletion
-     * - Update course rating statistics and distribution
-     * - Consider soft delete instead of hard delete for audit purposes
-     * - Add admin override capability to delete inappropriate reviews
+     * Access Control: Student must be enrolled and own the review.
      */
     @Transactional
     @EnableSoftDeleteFilter
     public void deleteReview(Long courseId, Long reviewId) {
+        log.info("Deleting review {} for course {}", reviewId, courseId);
 
-        Course course = courseRepository.findByIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        // STEP 1: Verify student is enrolled
+        Enrollment enrollment = enrollmentAccessService.verifyCurrentStudentEnrollment(courseId);
+        Student student = enrollment.getStudent();
 
+        // STEP 2: Verify review exists and belongs to student
         CourseReview review = courseReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
-        Student student = courseService.verifyStudent(course);
+        if (!review.getStudent().getId().equals(student.getId())) {
+            throw new InvalidRequestException("Cannot delete other student's review");
+        }
 
-        if (!review.getStudent().getId().equals(student.getId()))
-            throw new SecurityException("Cannot delete other student's review");
-
+        // STEP 3: Delete review
         courseReviewRepository.delete(review);
+        log.info("Review {} deleted successfully", reviewId);
 
         // TODO: Recalculate course average rating
         // courseService.updateAverageRating(course);

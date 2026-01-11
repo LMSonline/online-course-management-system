@@ -77,5 +77,11 @@ public class EnrollmentResponse {
 
     @Schema(description = "Can take final exam", example = "true")
     private Boolean canTakeFinalExam;
+
+    @Schema(description = "Final exam score", example = "9.0")
+    private Float finalExamScore;
+
+    @Schema(description = "Final exam weight (k factor)", example = "0.6")
+    private Float finalExamWeight;
 }
 

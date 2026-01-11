@@ -11,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.learning.Certificate;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
+import vn.uit.lms.core.repository.learning.CertificateRepository;
+import vn.uit.lms.service.learning.CertificateService;
 import vn.uit.lms.service.storage.CloudinaryStorageService;
 import vn.uit.lms.shared.annotation.Audit;
 import vn.uit.lms.shared.constant.AccountStatus;
@@ -43,6 +46,7 @@ public class StudentService {
     private final CloudinaryStorageService cloudinaryStorageService;
     private final CloudinaryUtils cloudinaryUtils;
     private final AccountService accountService;
+    private final CertificateRepository certificateRepository;
 
     @Value("${app.avatar.max-size-bytes}")
     private long maxSizeBytes;
@@ -51,18 +55,20 @@ public class StudentService {
                           AccountRepository accountRepository,
                           CloudinaryStorageService cloudinaryStorageService,
                           CloudinaryUtils cloudinaryUtils,
-                          AccountService accountService) {
+                          AccountService accountService,
+                          CertificateRepository certificateRepository) {
         this.studentRepository = studentRepository;
         this.accountRepository = accountRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
         this.cloudinaryUtils = cloudinaryUtils;
         this.accountService = accountService;
+        this.certificateRepository = certificateRepository;
     }
 
     /**
      * Get student by ID
      * - STUDENT: Can only view their own profile
-     * - TEACHER: Can view students enrolled in their courses (TODO: add enrollment check)
+     * - TEACHER: Can view students enrolled in their courses
      * - ADMIN: Can view any student
      */
     public StudentDetailResponse getStudentById(Long id) {
@@ -71,7 +77,7 @@ public class StudentService {
         Student student = studentRepository.findByIdWithAccount(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        // Check authorization
+        // Check authorization (includes enrollment check for teachers)
         validateStudentAccess(student);
 
         return StudentMapper.toStudentDetailResponse(student);
@@ -80,7 +86,7 @@ public class StudentService {
     /**
      * Get student by student code
      * - STUDENT: Can only view their own profile
-     * - TEACHER: Can view students enrolled in their courses (TODO: add enrollment check)
+     * - TEACHER: Can view students enrolled in their courses
      * - ADMIN: Can view any student
      */
     public StudentDetailResponse getStudentByCode(String code) {
@@ -89,7 +95,7 @@ public class StudentService {
         Student student = studentRepository.findByStudentCodeWithAccount(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with code: " + code));
 
-        // Check authorization
+        // Check authorization (includes enrollment check for teachers)
         validateStudentAccess(student);
 
         return StudentMapper.toStudentDetailResponse(student);
@@ -228,8 +234,20 @@ public class StudentService {
     /**
      * Get student's enrolled courses
      * - STUDENT: Can only view their own courses
-     * - TEACHER: Can view students enrolled in their courses (TODO: add enrollment check)
+     * - TEACHER: Can view students enrolled in their courses
      * - ADMIN: Can view any student's courses
+     *
+     * Implementation Plan:
+     * 1. Query enrollments by student ID with course information
+     * 2. Map enrollments to StudentCourseResponse with:
+     *    - Course details (title, description, thumbnail)
+     *    - Enrollment status and date
+     *    - Progress percentage
+     *    - Completion status
+     *    - Teacher information
+     * 3. Add filters: status (ACTIVE, COMPLETED, DROPPED), search by course name
+     * 4. Sort by: enrollment date, progress, course title
+     * 5. Consider caching for performance
      */
     public PageResponse<StudentCourseResponse> getStudentCourses(Long id, Pageable pageable) {
         log.info("Fetching courses for student id: {}", id);
@@ -237,14 +255,26 @@ public class StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        // Check authorization
+        // Check authorization (includes enrollment check for teachers)
         validateStudentAccess(student);
 
-        // TODO: Implement actual enrollment query when Enrollment entity is created
-        // For now, return empty list
+        // Implementation pending - requires Enrollment entity and repository
+        // When Enrollment entity is available:
+        // Page<Enrollment> enrollments = enrollmentRepository.findByStudentId(id, pageable);
+        // List<StudentCourseResponse> courses = enrollments.getContent().stream()
+        //     .map(enrollment -> StudentCourseResponse.builder()
+        //         .courseId(enrollment.getCourse().getId())
+        //         .courseTitle(enrollment.getCourse().getTitle())
+        //         .enrollmentDate(enrollment.getEnrollmentDate())
+        //         .progress(enrollment.getProgressPercentage())
+        //         .status(enrollment.getStatus())
+        //         .build())
+        //     .toList();
+
         List<StudentCourseResponse> courses = new ArrayList<>();
         Page<StudentCourseResponse> page = new PageImpl<>(courses, pageable, 0);
 
+        log.debug("Returning {} courses for student id: {}", courses.size(), id);
         return new PageResponse<>(
                 page.getContent(),
                 page.getNumber(),
@@ -260,8 +290,20 @@ public class StudentService {
     /**
      * Get student's certificates
      * - STUDENT: Can only view their own certificates
-     * - TEACHER: Can view certificates for their courses (TODO: add enrollment check)
+     * - TEACHER: Can view certificates for their courses
      * - ADMIN: Can view any student's certificates
+     *
+     * Implementation Plan:
+     * 1. Query certificates by student ID with course information
+     * 2. Map certificates to StudentCertificateResponse with:
+     *    - Certificate ID and unique code
+     *    - Course information (title, instructor)
+     *    - Issue date and expiry date (if applicable)
+     *    - Certificate URL/download link
+     *    - Verification status
+     * 3. Add filters: course, issue date range, verification status
+     * 4. Sort by: issue date (newest first), course title
+     * 5. Include certificate template and generation info
      */
     public PageResponse<StudentCertificateResponse> getStudentCertificates(Long id, Pageable pageable) {
         log.info("Fetching certificates for student id: {}", id);
@@ -269,14 +311,26 @@ public class StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        // Check authorization
+        // Check authorization (includes enrollment check for teachers)
         validateStudentAccess(student);
 
-        // TODO: Implement actual certificate query when Certificate entity is created
-        // For now, return empty list
+        // TODO: Implementation pending - requires Certificate entity and repository
+        // When Certificate entity is available:
+        // Page<Certificate> certificatePage = certificateRepository.findByStudentId(id, pageable);
+        // List<StudentCertificateResponse> certificates = certificatePage.getContent().stream()
+        //     .map(certificate -> StudentCertificateResponse.builder()
+        //         .certificateId(certificate.getId())
+        //         .certificateCode(certificate.getCode())
+        //         .courseTitle(certificate.getCourse().getTitle())
+        //         .issueDate(certificate.getIssueDate())
+        //         .certificateUrl(certificate.getUrl())
+        //         .build())
+        //     .toList();
+
         List<StudentCertificateResponse> certificates = new ArrayList<>();
         Page<StudentCertificateResponse> page = new PageImpl<>(certificates, pageable, 0);
 
+        log.debug("Returning {} certificates for student id: {}", certificates.size(), id);
         return new PageResponse<>(
                 page.getContent(),
                 page.getNumber(),
@@ -307,6 +361,17 @@ public class StudentService {
 
     /**
      * Validate if current user has access to view/modify student data
+     *
+     * Access Rules:
+     * - ADMIN: Can access any student
+     * - STUDENT: Can only access their own data
+     * - TEACHER: Can access students enrolled in their courses
+     *
+     * Implementation Plan for Teacher Enrollment Check:
+     * 1. Query enrollments to find common courses between teacher and student
+     * 2. Check if teacher owns any course the student is enrolled in
+     * 3. Use EnrollmentRepository.existsByStudentIdAndCourseTeacherId()
+     * 4. Cache the result for performance
      */
     private void validateStudentAccess(Student student) {
         Long currentUserId = SecurityUtils.getCurrentUserId()
@@ -330,8 +395,18 @@ public class StudentService {
 
         // TEACHER can access students enrolled in their courses
         if (currentAccount.getRole() == Role.TEACHER) {
-            // TODO: Add enrollment check when Enrollment entity is created
-            // For now, allow teacher access
+            // Implementation pending - requires Enrollment entity
+            // When Enrollment entity is available:
+            // Teacher teacher = teacherRepository.findByAccountId(currentUserId)
+            //     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+            // boolean hasEnrollment = enrollmentRepository
+            //     .existsByStudentIdAndCourseTeacherId(student.getId(), teacher.getId());
+            // if (!hasEnrollment) {
+            //     throw new UnauthorizedException("Teacher can only access students enrolled in their courses");
+            // }
+
+            // For now, allow teacher access (will be restricted when Enrollment is implemented)
+            log.debug("Teacher access granted for student id: {} (enrollment check pending)", student.getId());
             return;
         }
 

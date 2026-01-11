@@ -309,4 +309,17 @@ public class CategoryService {
     //     - Verify parent is visible if child is visible
     // }
 
+    // ========== PUBLIC API METHODS ==========
+
+    /**
+     * Get all active (visible) categories for public access
+     */
+    @EnableSoftDeleteFilter
+    public List<CategoryResponseDto> getActiveCategories() {
+        List<Category> categories = categoryRepository.findByVisibleTrueAndDeletedAtIsNull();
+        return categories.stream()
+                .map(CategoryMapper::toCategoryResponseDto)
+                .collect(Collectors.toList());
+    }
+
 }

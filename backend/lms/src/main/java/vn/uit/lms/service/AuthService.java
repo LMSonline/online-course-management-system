@@ -42,14 +42,15 @@ public class AuthService {
 
     private final AccountRepository accountRepository;
     private final MailService emailService;
-    private final EmailVerificationRepository emailVerificationRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final SecurityUtils securityUtils;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final RefreshTokenService refreshTokenService;
+    private final EmailVerificationService emailVerificationService;
+    private final EmailVerificationRepository emailVerificationRepository;
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
@@ -59,24 +60,26 @@ public class AuthService {
      */
     public AuthService(AccountRepository accountRepository,
                        MailService emailService,
-                       EmailVerificationRepository emailVerificationRepository,
                        AuthenticationManagerBuilder authenticationManagerBuilder,
                        SecurityUtils securityUtils,
                        StudentRepository studentRepository,
                        TeacherRepository teacherRepository,
-                       RefreshTokenRepository refreshTokenRepository,
                        PasswordEncoder passwordEncoder,
-                       ApplicationEventPublisher eventPublisher) {
+                       ApplicationEventPublisher eventPublisher,
+                       RefreshTokenService refreshTokenService,
+                       EmailVerificationService emailVerificationService,
+                       EmailVerificationRepository emailVerificationRepository) {
+        this.emailVerificationRepository = emailVerificationRepository;
         this.accountRepository = accountRepository;
         this.emailService = emailService;
-        this.emailVerificationRepository = emailVerificationRepository;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.securityUtils = securityUtils;
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.refreshTokenService = refreshTokenService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     /**
@@ -118,20 +121,8 @@ public class AuthService {
         // Save account (entity manages its own status)
         Account saved = accountRepository.save(account);
 
-        // Create email verification token
-        String rawToken = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
-        String hashedToken = TokenHashUtil.hashToken(rawToken);
-
-        EmailVerification verification = EmailVerification.builder()
-                .account(saved)
-                .tokenHash(hashedToken)
-                .tokenType(TokenType.VERIFY_EMAIL)
-                .expiresAt(expiresAt)
-                .isUsed(false)
-                .build();
-
-        emailVerificationRepository.save(verification);
+        EmailVerification emailVerification = emailVerificationService.generateVerificationToken(saved, TokenType.VERIFY_EMAIL);
+        String rawToken = emailVerification.getPlainToken();
 
         // Publish event for email sending
         eventPublisher.publishEvent(new AccountActiveEvent(saved, rawToken));
@@ -196,16 +187,13 @@ public class AuthService {
 
         // Generate and save refresh token
         String rawRefreshToken = securityUtils.createRefreshToken(accountDB.getEmail());
-        String hashedRefreshToken = TokenHashUtil.hashToken(rawRefreshToken);
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setAccount(accountDB);
-        refreshToken.setTokenHash(hashedRefreshToken);
-        refreshToken.setIpAddress(reqLoginDTO.getIpAddress());
-        refreshToken.setDeviceInfo(reqLoginDTO.getDeviceInfo()!=null? reqLoginDTO.getDeviceInfo() : "Unknown device");
-        refreshToken.setExpiresAt(now.plus(securityUtils.getRefreshTokenExpiration(), ChronoUnit.SECONDS));
-
-        refreshTokenRepository.save(refreshToken);
+        RefreshToken refreshToken = refreshTokenService.issueRefreshToken(
+                            accountDB,
+                            rawRefreshToken,
+                            reqLoginDTO.getDeviceInfo(),
+                            reqLoginDTO.getIpAddress()
+                   );
 
         resLoginDTO.setRefreshToken(rawRefreshToken);
         resLoginDTO.setRefreshTokenExpiresAt(refreshToken.getExpiresAt());
@@ -227,19 +215,8 @@ public class AuthService {
                 });
 
         // Create password reset token
-        String rawToken = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
-        String hashedToken = TokenHashUtil.hashToken(rawToken);
-
-        EmailVerification verification = EmailVerification.builder()
-                .account(accountDB)
-                .tokenHash(hashedToken)
-                .tokenType(TokenType.RESET_PASSWORD)
-                .expiresAt(expiresAt)
-                .isUsed(false)
-                .build();
-
-        emailVerificationRepository.save(verification);
+        EmailVerification verification = emailVerificationService.generateVerificationToken(accountDB, TokenType.RESET_PASSWORD);
+        String rawToken = verification.getPlainToken();
 
         // Publish event for email sending
         eventPublisher.publishEvent(new PasswordResetEvent(accountDB, rawToken));
@@ -269,8 +246,8 @@ public class AuthService {
         account.resetPassword(newPassword, passwordEncoder);
         accountRepository.save(account);
 
-        // Mark token as used using domain behavior
-        verification.markAsUsed();
+        // Consume token using domain behavior
+        verification.consume();
         emailVerificationRepository.save(verification);
 
         log.info("Password reset successfully for account id={}", account.getId());
@@ -349,6 +326,8 @@ public class AuthService {
         accountRepository.save(account);
     }
 
+    @Transactional
+    @EnableSoftDeleteFilter
     public void resendVerificationEmail(String email) {
         Account accountDB = this.accountRepository.findByEmail(email)
                 .orElseThrow(() -> {
@@ -375,23 +354,14 @@ public class AuthService {
             throw new TooManyRequestsException("Too many resend attempts. Please try again later.");
         }
 
-        // Create new verification token
-        String rawToken = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plus(30, ChronoUnit.MINUTES);
-        String hashedToken = TokenHashUtil.hashToken(rawToken);
+        // Generate new verification token using domain behavior
+        EmailVerification verification = emailVerificationService.generateVerificationToken(
+                accountDB,
+                TokenType.VERIFY_EMAIL
+        );
 
-        EmailVerification verification = EmailVerification.builder()
-                .account(accountDB)
-                .tokenHash(hashedToken)
-                .tokenType(TokenType.VERIFY_EMAIL)
-                .expiresAt(expiresAt)
-                .isUsed(false)
-                .build();
-
-        emailVerificationRepository.save(verification);
-
-        // Publish event for email sending
-        eventPublisher.publishEvent(new AccountActiveEvent(accountDB, rawToken));
+        // Publish event for email sending with plain token
+        eventPublisher.publishEvent(new AccountActiveEvent(accountDB, verification.getPlainToken()));
 
         log.info("Verification email resent to: {}", email);
     }

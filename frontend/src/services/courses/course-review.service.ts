@@ -1,16 +1,12 @@
-import { CourseReviewRequest,
+import{  CourseReviewRequest,
   CourseReviewResponse,
-  RatingSummaryResponse } from "./course.types";
+  RatingSummaryResponse, } from "./course.types";
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
-import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
-
 export const courseReviewService = {
   /**
-   * Create a new review (REVIEW_CREATE)
-   * Contract Key: REVIEW_CREATE
-   * Endpoint: POST /api/v1/courses/{courseId}/reviews
+   * Create a new review (Student only)
    */
   createReview: async (
     courseId: number,
@@ -18,10 +14,7 @@ export const courseReviewService = {
   ): Promise<CourseReviewResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseReviewResponse>>(
       `/courses/${courseId}/reviews`,
-      payload,
-      {
-        contractKey: CONTRACT_KEYS.REVIEW_CREATE,
-      }
+      payload
     );
 
     return unwrapResponse(response);
@@ -29,7 +22,6 @@ export const courseReviewService = {
 
   /**
    * Get course reviews
-   * Contract Key: REVIEW_GET_COURSE_LIST
    */
   getCourseReviews: async (
     courseId: number,
@@ -40,16 +32,13 @@ export const courseReviewService = {
       ApiResponse<PageResponse<CourseReviewResponse>>
     >(`/courses/${courseId}/reviews`, {
       params: { page, size },
-      contractKey: CONTRACT_KEYS.REVIEW_GET_COURSE_LIST,
     });
 
     return unwrapResponse(response);
   },
 
   /**
-   * Update a review (REVIEW_UPDATE)
-   * Contract Key: REVIEW_UPDATE
-   * Endpoint: PUT /api/v1/courses/{courseId}/reviews/{reviewId}
+   * Update a review (Student only)
    */
   updateReview: async (
     courseId: number,
@@ -58,38 +47,27 @@ export const courseReviewService = {
   ): Promise<CourseReviewResponse> => {
     const response = await axiosClient.put<ApiResponse<CourseReviewResponse>>(
       `/courses/${courseId}/reviews/${reviewId}`,
-      payload,
-      {
-        contractKey: CONTRACT_KEYS.REVIEW_UPDATE,
-      }
+      payload
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Delete a review (REVIEW_DELETE)
-   * Contract Key: REVIEW_DELETE
-   * Endpoint: DELETE /api/v1/courses/{courseId}/reviews/{reviewId}
+   * Delete a review (Student only)
    */
   deleteReview: async (courseId: number, reviewId: number): Promise<void> => {
-    await axiosClient.delete<void>(`/courses/${courseId}/reviews/${reviewId}`, {
-      contractKey: CONTRACT_KEYS.REVIEW_DELETE,
-    });
+    await axiosClient.delete<void>(`/courses/${courseId}/reviews/${reviewId}`);
   },
 
   /**
    * Get course rating summary
-   * Contract Key: REVIEW_GET_RATING_SUMMARY
    */
   getRatingSummary: async (
     courseId: number
   ): Promise<RatingSummaryResponse> => {
     const response = await axiosClient.get<ApiResponse<RatingSummaryResponse>>(
-      `/courses/${courseId}/rating-summary`,
-      {
-        contractKey: CONTRACT_KEYS.REVIEW_GET_RATING_SUMMARY,
-      }
+      `/courses/${courseId}/rating-summary`
     );
 
     return unwrapResponse(response);

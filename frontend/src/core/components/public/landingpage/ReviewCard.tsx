@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { Quote, ArrowRight } from "lucide-react";
 import { motion, type Variants, type Transition } from "framer-motion";
-import { SafeImage } from "@/core/components/ui/SafeImage";
 
 export type Review = {
   quote: string;
@@ -53,29 +53,19 @@ export default function ReviewCard({
       {/* badge / source */}
       {badge && (
         <div className="mt-5 flex items-center gap-3">
-          <SafeImage
-            src={badge.img}
-            alt={badge.label}
-            width={26}
-            height={26}
-            fallback="/images/avatars/avatar.png"
-            className="rounded"
-            objectFit="cover"
-          />
+          <Image src={badge.img} alt={badge.label} width={26} height={26} className="rounded" />
           <div className="text-sm text-muted-foreground">{meta}</div>
         </div>
       )}
 
       {/* author */}
       <div className="mt-5 flex items-center gap-3">
-        <SafeImage
+        <Image
           src={avatar}
           alt={author}
           width={40}
           height={40}
-          fallback="/images/avatars/avatar.png"
-          className="rounded-full"
-          objectFit="cover"
+          className="rounded-full object-cover"
         />
         <div className="text-sm">
           <div className="text-white font-medium">{author}</div>

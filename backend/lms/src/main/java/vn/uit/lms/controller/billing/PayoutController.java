@@ -15,6 +15,9 @@ import vn.uit.lms.shared.dto.response.billing.PayoutResponse;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class PayoutController {
      */
     @PostMapping("/payouts")
     @TeacherOnly
-    public ResponseEntity<?> createPayoutRequest(@RequestBody @Valid CreatePayoutRequest request) {
+    public ResponseEntity<PayoutResponse> createPayoutRequest(@RequestBody @Valid CreatePayoutRequest request) {
         return ResponseEntity.ok(payoutService.createPayoutRequest(request));
     }
 
@@ -36,8 +39,18 @@ public class PayoutController {
      */
     @GetMapping("/payouts/{id}")
     @TeacherOnly
-    public ResponseEntity<?> getPayoutById(@PathVariable Long id) {
+    public ResponseEntity<PayoutResponse> getPayoutById(@PathVariable Long id) {
         return ResponseEntity.ok(payoutService.getPayoutById(id));
+    }
+
+    /**
+     * Get payouts for current user (Teacher sees own, Admin sees all)
+     * GET /payouts
+     */
+    @GetMapping("/payouts")
+    @TeacherOnly
+    public ResponseEntity<List<PayoutResponse>> getPayouts() {
+        return ResponseEntity.ok(payoutService.getMyPayouts());
     }
 
     /**
@@ -59,7 +72,7 @@ public class PayoutController {
      */
     @GetMapping("/my-payouts")
     @TeacherOnly
-    public ResponseEntity<?> getMyPayouts() {
+    public ResponseEntity<List<PayoutResponse>> getMyPayouts() {
         return ResponseEntity.ok(payoutService.getMyPayouts());
     }
 
@@ -68,7 +81,7 @@ public class PayoutController {
      */
     @GetMapping("/teachers/{teacherId}/payouts")
     @AdminOnly
-    public ResponseEntity<?> getTeacherPayouts(@PathVariable Long teacherId) {
+    public ResponseEntity<List<PayoutResponse>> getTeacherPayouts(@PathVariable Long teacherId) {
         return ResponseEntity.ok(payoutService.getTeacherPayouts(teacherId));
     }
 
@@ -77,7 +90,7 @@ public class PayoutController {
      */
     @PostMapping("/admin/payouts/{id}/complete")
     @AdminOnly
-    public ResponseEntity<?> completePayout(
+    public ResponseEntity<PayoutResponse> completePayout(
             @PathVariable Long id,
             @RequestBody @Valid CompletePayoutRequest request
     ) {
@@ -89,7 +102,7 @@ public class PayoutController {
      */
     @PostMapping("/admin/payouts/{id}/reject")
     @AdminOnly
-    public ResponseEntity<?> rejectPayout(
+    public ResponseEntity<PayoutResponse> rejectPayout(
             @PathVariable Long id,
             @RequestBody @Valid RejectPayoutRequest request
     ) {
@@ -110,7 +123,7 @@ public class PayoutController {
      */
     @GetMapping("/my-available-payout")
     @TeacherOnly
-    public ResponseEntity<?> getMyAvailablePayoutAmount() {
+    public ResponseEntity<BigDecimal> getMyAvailablePayoutAmount() {
         return ResponseEntity.ok(payoutService.getMyAvailablePayoutAmount());
     }
 }

@@ -8,7 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.domain.course.content.FileStorage;
 import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.core.domain.course.content.LessonResource;
+import vn.uit.lms.core.repository.course.content.LessonRepository;
 import vn.uit.lms.core.repository.course.content.LessonResourceRepository;
+import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.constant.ResourceType;
 import vn.uit.lms.shared.dto.request.resource.LessonResourceRequest;
 import vn.uit.lms.shared.dto.request.resource.ReorderResourcesRequest;
@@ -21,6 +23,10 @@ import java.util.List;
 
 /**
  * Service for managing lesson resources
+ *
+ * Access Control:
+ * - Teachers can CRUD resources through validateLessonEditable()
+ * - Students can view resources if enrolled (through EnrollmentAccessService)
  */
 @Service
 @RequiredArgsConstructor
@@ -28,8 +34,10 @@ import java.util.List;
 public class LessonResourceService {
 
     private final LessonResourceRepository lessonResourceRepository;
+    private final LessonRepository lessonRepository;
     private final LessonService lessonService;
     private final FileStorageService fileStorageService;
+    private final EnrollmentAccessService enrollmentAccessService;
 
     /**
      * Add resource to lesson (FILE type - with file upload)
@@ -314,5 +322,61 @@ public class LessonResourceService {
             return LessonResourceMapper.toResponseWithDownloadUrl(resource, downloadUrl);
         }
         return LessonResourceMapper.toResponse(resource);
+    }
+
+    /* ==================== STUDENT ACCESS METHODS ==================== */
+
+    /**
+     * Get lesson resources for student (with enrollment verification).
+     *
+     * Access Control:
+     * - Preview lessons: accessible without enrollment
+     * - Non-preview lessons: requires active enrollment
+     */
+    public List<LessonResourceResponse> getLessonResourcesForStudent(Long lessonId) {
+        log.debug("Getting resources for student in lesson {}", lessonId);
+
+        // Load lesson first to check preview status
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found with id: " + lessonId));
+
+        // If not preview, verify enrollment
+        if (lesson.getIsPreview() == null || !lesson.getIsPreview()) {
+            enrollmentAccessService.verifyCurrentStudentLessonAccess(lessonId);
+        }
+
+        // Get resources
+        List<LessonResource> resources = lessonResourceRepository.findByLessonOrderByOrderIndexAsc(lesson);
+
+        return resources.stream()
+                .map(this::toResponseWithDownloadUrl)
+                .toList();
+    }
+
+    /**
+     * Get specific resource for student (with enrollment verification).
+     *
+     * Access Control:
+     * - Preview lessons: accessible without enrollment
+     * - Non-preview lessons: requires active enrollment
+     */
+    public LessonResourceResponse getResourceByIdForStudent(Long lessonId, Long resourceId) {
+        log.debug("Getting resource {} for student in lesson {}", resourceId, lessonId);
+
+        LessonResource resource = lessonResourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+
+        // Verify resource belongs to lesson
+        if (!resource.getLesson().getId().equals(lessonId)) {
+            throw new InvalidRequestException("Resource does not belong to this lesson");
+        }
+
+        // If not preview lesson, verify enrollment
+        Lesson lesson = resource.getLesson();
+        if (lesson.getIsPreview() == null || !lesson.getIsPreview()) {
+            enrollmentAccessService.verifyCurrentStudentLessonAccess(lessonId);
+        }
+
+        return toResponseWithDownloadUrl(resource);
     }
 }

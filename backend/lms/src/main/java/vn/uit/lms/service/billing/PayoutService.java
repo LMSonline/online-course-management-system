@@ -203,7 +203,7 @@ public class PayoutService {
             String period,
             Pageable pageable
     ) {
-        Specification<Payout> spec = Specification.where(null);
+        Specification<Payout> spec = (root, query, cb) -> cb.conjunction();
 
         if (status != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));

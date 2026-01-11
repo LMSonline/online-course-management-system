@@ -61,7 +61,7 @@ export const formatQuestionContent = (
 export const validateQuestion = (
   content: string,
   type: QuestionType,
-  answerOptions?: Array<{ content: string; isCorrect: boolean }>
+  answerOptions?: Array<{ content: string; correct: boolean }>
 ): { valid: boolean; error?: string } => {
   if (!content.trim()) {
     return { valid: false, error: "Question content is required" };
@@ -76,7 +76,7 @@ export const validateQuestion = (
       return { valid: false, error: "Answer options are required" };
     }
 
-    const hasCorrect = answerOptions.some((opt) => opt.isCorrect);
+    const hasCorrect = answerOptions.some((opt) => opt.correct);
     if (!hasCorrect) {
       return {
         valid: false,
@@ -90,7 +90,7 @@ export const validateQuestion = (
     }
 
     if (type === "MULTIPLE_CHOICE") {
-      const correctCount = answerOptions.filter((opt) => opt.isCorrect).length;
+      const correctCount = answerOptions.filter((opt) => opt.correct).length;
       if (correctCount > 1) {
         return {
           valid: false,

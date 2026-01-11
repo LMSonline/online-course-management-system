@@ -2,14 +2,11 @@ import { CourseVersionRequest, CourseVersionResponse } from "./course.types";
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
-import { CONTRACT_KEYS } from "@/lib/api/contractKeys";
 import { RejectRequest } from "../account";
 
 export const courseVersionService = {
   /**
-   * Create a new course version (VERSION_CREATE)
-   * Contract Key: VERSION_CREATE
-   * Endpoint: POST /api/v1/courses/{courseId}/versions
+   * Create a new course version (Teacher only)
    */
   createCourseVersion: async (
     courseId: number,
@@ -17,28 +14,21 @@ export const courseVersionService = {
   ): Promise<CourseVersionResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseVersionResponse>>(
       `/courses/${courseId}/versions`,
-      payload,
-      {
-        contractKey: CONTRACT_KEYS.VERSION_CREATE,
-      }
+      payload
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Get all course versions (VERSION_GET_LIST)
-   * Contract Key: VERSION_GET_LIST
-   * Endpoint: GET /api/v1/courses/{courseId}/versions
+   * Get all course versions (Teacher only)
    */
   getCourseVersions: async (
     courseId: number
   ): Promise<CourseVersionResponse[]> => {
     const response = await axiosClient.get<
       ApiResponse<CourseVersionResponse[]>
-    >(`/courses/${courseId}/versions`, {
-      contractKey: CONTRACT_KEYS.VERSION_GET_LIST,
-    });
+    >(`/courses/${courseId}/versions`);
 
     return unwrapResponse(response);
   },
@@ -57,19 +47,32 @@ export const courseVersionService = {
   },
 
   /**
-   * Get course version by ID (VERSION_GET_DETAIL)
-   * Contract Key: VERSION_GET_DETAIL
-   * Endpoint: GET /api/v1/courses/{courseId}/versions/{versionId}
+   * Get course version by ID (Teacher only)
    */
   getCourseVersionById: async (
     courseId: number,
     versionId: number
   ): Promise<CourseVersionResponse> => {
     const response = await axiosClient.get<ApiResponse<CourseVersionResponse>>(
+      `/courses/${courseId}/versions/${versionId}`
+    );
+
+    return unwrapResponse(response);
+  },
+
+  /**
+   * Update course version (Teacher only)
+   */
+  updateCourseVersion: async (
+    courseId: number,
+    versionId: number,
+    payload: CourseVersionRequest
+  ): Promise<CourseVersionResponse> => {
+    console.log("Updating course version:", { courseId, versionId, payload });
+
+    const response = await axiosClient.put<ApiResponse<CourseVersionResponse>>(
       `/courses/${courseId}/versions/${versionId}`,
-      {
-        contractKey: CONTRACT_KEYS.VERSION_GET_DETAIL,
-      }
+      payload
     );
 
     return unwrapResponse(response);
@@ -102,49 +105,35 @@ export const courseVersionService = {
   },
 
   /**
-   * Submit version for approval (VERSION_SUBMIT_APPROVAL_ACTION)
-   * Contract Key: VERSION_SUBMIT_APPROVAL_ACTION
-   * Endpoint: POST /api/v1/courses/{courseId}/versions/{versionId}/submit-approval
+   * Submit version for approval (Teacher only)
    */
   submitApproval: async (
     courseId: number,
     versionId: number
   ): Promise<CourseVersionResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseVersionResponse>>(
-      `/courses/${courseId}/versions/${versionId}/submit-approval`,
-      {},
-      {
-        contractKey: CONTRACT_KEYS.VERSION_SUBMIT_APPROVAL_ACTION,
-      }
+      `/courses/${courseId}/versions/${versionId}/submit-approval`
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Approve course version (VERSION_APPROVE_ACTION)
-   * Contract Key: VERSION_APPROVE_ACTION
-   * Endpoint: POST /api/v1/courses/{courseId}/versions/{versionId}/approve
+   * Approve course version (Admin only)
    */
   approveCourseVersion: async (
     courseId: number,
     versionId: number
   ): Promise<CourseVersionResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseVersionResponse>>(
-      `/courses/${courseId}/versions/${versionId}/approve`,
-      {},
-      {
-        contractKey: CONTRACT_KEYS.VERSION_APPROVE_ACTION,
-      }
+      `/courses/${courseId}/versions/${versionId}/approve`
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Reject course version (VERSION_REJECT_ACTION)
-   * Contract Key: VERSION_REJECT_ACTION
-   * Endpoint: POST /api/v1/courses/{courseId}/versions/{versionId}/reject
+   * Reject course version (Admin only)
    */
   rejectCourseVersion: async (
     courseId: number,
@@ -153,30 +142,21 @@ export const courseVersionService = {
   ): Promise<CourseVersionResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseVersionResponse>>(
       `/courses/${courseId}/versions/${versionId}/reject`,
-      payload,
-      {
-        contractKey: CONTRACT_KEYS.VERSION_REJECT_ACTION,
-      }
+      payload
     );
 
     return unwrapResponse(response);
   },
 
   /**
-   * Publish course version (VERSION_PUBLISH_ACTION)
-   * Contract Key: VERSION_PUBLISH_ACTION
-   * Endpoint: POST /api/v1/courses/{courseId}/versions/{versionId}/publish
+   * Publish course version (Teacher only)
    */
   publishCourseVersion: async (
     courseId: number,
     versionId: number
   ): Promise<CourseVersionResponse> => {
     const response = await axiosClient.post<ApiResponse<CourseVersionResponse>>(
-      `/courses/${courseId}/versions/${versionId}/publish`,
-      {},
-      {
-        contractKey: CONTRACT_KEYS.VERSION_PUBLISH_ACTION,
-      }
+      `/courses/${courseId}/versions/${versionId}/publish`
     );
 
     return unwrapResponse(response);

@@ -108,4 +108,50 @@ public class CategoryController {
         CategoryResponseDto category = categoryService.getCategoryBySlug(slug);
         return ResponseEntity.ok(category);
     }
+
+    // ========== PUBLIC APIs - No Authentication Required ==========
+
+    @Operation(
+            summary = "Get all active categories (Public)",
+            description = "Get all active categories. No authentication required."
+    )
+    @GetMapping("/public/categories")
+    public ResponseEntity<List<CategoryResponseDto>> getPublicCategories() {
+        List<CategoryResponseDto> categories = categoryService.getActiveCategories();
+        return ResponseEntity.ok(categories);
+    }
+
+    @Operation(
+            summary = "Get category tree (Public)",
+            description = "Get hierarchical category tree structure. No authentication required."
+    )
+    @GetMapping("/public/categories/tree")
+    public ResponseEntity<List<CategoryResponseDto>> getPublicCategoryTree() {
+        List<CategoryResponseDto> categoryTree = categoryService.getCategoryTree();
+        return ResponseEntity.ok(categoryTree);
+    }
+
+    @Operation(
+            summary = "Get category by ID (Public)",
+            description = "Get category details by ID. No authentication required."
+    )
+    @GetMapping("/public/categories/{id}")
+    public ResponseEntity<CategoryResponseDto> getPublicCategoryById(
+            @Parameter(description = "Category ID") @PathVariable Long id
+    ) {
+        CategoryResponseDto category = categoryService.getCategoryById(id);
+        return ResponseEntity.ok(category);
+    }
+
+    @Operation(
+            summary = "Get category by slug (Public)",
+            description = "Get category details by slug. No authentication required."
+    )
+    @GetMapping("/public/categories/slug/{slug}")
+    public ResponseEntity<CategoryResponseDto> getPublicCategoryBySlug(
+            @Parameter(description = "Category slug") @PathVariable String slug
+    ) {
+        CategoryResponseDto category = categoryService.getCategoryBySlug(slug);
+        return ResponseEntity.ok(category);
+    }
 }

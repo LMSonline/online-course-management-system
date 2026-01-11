@@ -1,13 +1,27 @@
 "use client";
 
+import { memo } from "react";
 import { TeacherSidebar, TeacherNavbar } from "@/core/components/teacher/layout";
 import { useTeacherLayout } from "./TeacherLayoutProvider";
+import { RoutePrefetcher } from "@/core/components/ui/OptimizedNavigation";
 
-export function TeacherLayoutContent({ children }: { children: React.ReactNode }) {
+const PREFETCH_ROUTES = [
+    "/teacher/dashboard",
+    "/teacher/courses",
+    "/teacher/question-banks",
+    "/teacher/students",
+    "/teacher/assignments",
+    "/teacher/qna",
+    "/teacher/analytics",
+];
+
+export const TeacherLayoutContent = memo(({ children }: { children: React.ReactNode }) => {
     const { isCollapsed, isMobileOpen, toggleCollapsed, openMobile, closeMobile } = useTeacherLayout();
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+            <RoutePrefetcher routes={PREFETCH_ROUTES} />
+
             <TeacherSidebar
                 isCollapsed={isCollapsed}
                 onToggle={toggleCollapsed}
@@ -24,4 +38,6 @@ export function TeacherLayoutContent({ children }: { children: React.ReactNode }
             </div>
         </div>
     );
-}
+});
+
+TeacherLayoutContent.displayName = 'TeacherLayoutContent';

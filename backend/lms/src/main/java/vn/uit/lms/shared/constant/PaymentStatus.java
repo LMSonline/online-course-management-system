@@ -1,17 +1,15 @@
 package vn.uit.lms.shared.constant;
 
 /**
- * Trạng thái thanh toán
- *
- * PENDING - Đang chờ xử lý
- * SUCCESS - Thanh toán thành công
- * FAILED - Thanh toán thất bại
- * REFUNDED - Đã hoàn tiền
+ * Payment transaction status
  */
 public enum PaymentStatus {
-    PENDING,   // Đang chờ
-    SUCCESS,   // Thành công
-    FAILED,    // Thất bại
-    REFUNDED   // Đã hoàn tiền
+    PENDING,        // Chờ thanh toán
+    PROCESSING,     // Đang xử lý
+    SUCCESS,        // Thành công
+    FAILED,         // Thất bại
+    CANCELLED,      // Đã hủy
+    REFUNDED,       // Đã hoàn tiền
+    EXPIRED         // Hết hạn
 }
 

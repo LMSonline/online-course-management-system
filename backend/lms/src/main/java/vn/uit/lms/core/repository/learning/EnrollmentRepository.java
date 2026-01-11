@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.learning.Enrollment;
+import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.EnrollmentStatus;
 
 import java.util.List;
@@ -126,4 +128,21 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long>, J
             @Param("studentId") Long studentId,
             @Param("courseId") Long courseId
     );
+
+    /**
+     * Find active enrollment for a student in a course (most recent)
+     */
+    @Query("SELECT e FROM Enrollment e " +
+            "WHERE e.student.id = :studentId " +
+            "AND e.course.id = :courseId " +
+            "AND e.status = 'ENROLLED' " +
+            "AND e.deletedAt IS NULL " +
+            "ORDER BY e.enrolledAt DESC")
+    Optional<Enrollment> findByStudentIdAndCourseId(
+            @Param("studentId") Long studentId,
+            @Param("courseId") Long courseId
+    );
+
+    boolean existsByCourse(Course course);
+    int countByCourseAndStatus(Course course, EnrollmentStatus status);
 }

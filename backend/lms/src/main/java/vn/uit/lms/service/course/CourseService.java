@@ -1,5 +1,6 @@
 package vn.uit.lms.service.course;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -7,14 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.Account;
-import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.course.*;
-import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.core.repository.course.CategoryRepository;
 import vn.uit.lms.core.repository.course.CourseRepository;
 import vn.uit.lms.core.repository.course.TagRepository;
+import vn.uit.lms.core.repository.learning.EnrollmentRepository;
 import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.helper.SEOHelper;
 import vn.uit.lms.service.storage.CloudinaryStorageService;
@@ -32,11 +32,13 @@ import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.mapper.course.CourseMapper;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
+import vn.uit.lms.shared.constant.EnrollmentStatus;
 
 import java.util.List;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class CourseService {
 
     private static final String PREFIX_CANONICAL_URL = "/courses";
@@ -51,10 +53,10 @@ public class CourseService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final TeacherRepository teacherRepository;
-    private final StudentRepository studentRepository;
     private final SEOHelper seoHelper;
     private final AccountService accountService;
     private final CloudinaryStorageService cloudinaryStorageService;
+    private final EnrollmentRepository enrollmentRepository;
 
     public CourseService(CourseRepository courseRepository,
                          CategoryRepository categoryRepository,
@@ -62,16 +64,16 @@ public class CourseService {
                          TeacherRepository teacherRepository,
                          SEOHelper seoHelper,
                          AccountService accountService,
-                         StudentRepository studentRepository,
-                         CloudinaryStorageService cloudinaryStorageService) {
+                         CloudinaryStorageService cloudinaryStorageService,
+                         EnrollmentRepository enrollmentRepository) {
         this.seoHelper = seoHelper;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.teacherRepository = teacherRepository;
         this.accountService = accountService;
-        this.studentRepository = studentRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
+        this.enrollmentRepository = enrollmentRepository;
     }
     public Course validateCourse(Long courseId) {
         return courseRepository.findByIdAndDeletedAtIsNull(courseId)
@@ -100,34 +102,6 @@ public class CourseService {
         return teacher;
     }
 
-    /**
-     * Verify student has enrolled in the course
-     *
-     * TODO: Implement enrollment verification
-     * - Create Enrollment entity and repository
-     * - Inject EnrollmentRepository into this service
-     * - Query: enrollmentRepository.findByCourseAndStudent(course, student)
-     * - Throw UnauthorizedException if enrollment not found or not active
-     * - Check enrollment status (ACTIVE, COMPLETED, EXPIRED, DROPPED)
-     * - Validate enrollment expiration date if applicable
-     * - Consider adding caching for performance
-     */
-    public Student verifyStudent(Course course) {
-
-        Account account = accountService.verifyCurrentAccount();
-
-        Student student = studentRepository.findByAccount(account)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
-
-        // TODO: Verify enrollment
-        // Enrollment enrollment = enrollmentRepository.findByCourseAndStudent(course, student)
-        //     .orElseThrow(() -> new UnauthorizedException("Student not enrolled in this course"));
-        // if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
-        //     throw new UnauthorizedException("Enrollment is not active");
-        // }
-
-        return student;
-    }
 
 
     private void createSeoData(Course course) {
@@ -267,12 +241,8 @@ public class CourseService {
     /**
      * Close course to prevent new enrollments
      *
-     * TODO: Add active enrollment validation
-     * - Query enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE)
-     * - Consider warning if there are active students
-     * - Option to force close or notify students first
-     * - Send notification to enrolled students about course closure
-     * - Update enrollment access permissions
+     * Checks for active enrollments and logs warning.
+     * TODO: Send notification to enrolled students about course closure.
      */
     @Transactional
     @EnableSoftDeleteFilter
@@ -281,12 +251,15 @@ public class CourseService {
 
         verifyTeacher(course);
 
-        // TODO: Check if there are active enrollments
-        // long activeEnrollments = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE);
-        // if (activeEnrollments > 0) {
-        //     log.warn("Closing course with {} active enrollments", activeEnrollments);
-        //     // Consider sending notifications to students
-        // }
+        // Check if there are active enrollments
+        long activeEnrollments = enrollmentRepository.countByCourseIdAndStatus(
+                id, vn.uit.lms.shared.constant.EnrollmentStatus.ENROLLED);
+
+        if (activeEnrollments > 0) {
+            log.warn("Closing course {} with {} active enrollments. Students may need notification.",
+                    id, activeEnrollments);
+//             emailService.notifyStudentsAboutCourseClosure(course, activeEnrollments);
+        }
 
         course.setIsClosed(true);
         Course savedCourse = courseRepository.save(course);
@@ -441,16 +414,16 @@ public class CourseService {
             throw new InvalidRequestException("Course has published version, cannot delete");
         }
 
-        // TODO: Check if course has any enrollments
-        // boolean hasEnrollments = enrollmentRepository.existsByCourse(course);
-        // if (hasEnrollments) {
-        //     long activeCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ACTIVE);
-        //     long completedCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.COMPLETED);
-        //     throw new InvalidRequestException(
-        //         String.format("Cannot delete course with enrollments: %d active, %d completed",
-        //                       activeCount, completedCount)
-        //     );
-        // }
+
+         boolean hasEnrollments = enrollmentRepository.existsByCourse(course);
+         if (hasEnrollments) {
+             long activeCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.ENROLLED);
+             long completedCount = enrollmentRepository.countByCourseAndStatus(course, EnrollmentStatus.COMPLETED);
+             throw new InvalidRequestException(
+                 String.format("Cannot delete course with enrollments: %d active, %d completed",
+                               activeCount, completedCount)
+             );
+         }
 
         verifyTeacher(course);
 
@@ -547,6 +520,141 @@ public class CourseService {
 
         Course savedCourse = courseRepository.save(course);
         return CourseMapper.toCourseDetailResponse(savedCourse);
+    }
+
+    // ========== PUBLIC API METHODS ==========
+
+    /**
+     * Get course entity by slug for internal use
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public Course getCourseEntityBySlug(String slug) {
+        return courseRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with slug: " + slug));
+    }
+
+    /**
+     * Get all courses that have at least one published version
+     * For public access - no authentication required
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public PageResponse<CourseResponse> getPublishedCourses(Specification<Course> spec, Pageable pageable) {
+        // Create specification to filter courses with published versions
+        Specification<Course> publishedSpec = (root, query, cb) -> {
+            var versionsJoin = root.join("versions");
+            return cb.equal(versionsJoin.get("status"), CourseStatus.PUBLISHED);
+        };
+
+        // Combine with user's specification if provided
+        Specification<Course> combinedSpec = spec != null ? spec.and(publishedSpec) : publishedSpec;
+
+        Page<Course> coursePage = courseRepository.findAll(combinedSpec, pageable);
+        List<CourseResponse> items = coursePage.getContent().stream()
+                .map(CourseMapper::toCourseResponse)
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                coursePage.getNumber(),
+                coursePage.getSize(),
+                coursePage.getTotalElements(),
+                coursePage.getTotalPages(),
+                coursePage.hasNext(),
+                coursePage.hasPrevious()
+        );
+    }
+
+    /**
+     * Get published course details by slug
+     * Shows only published version information
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public CourseDetailResponse getPublishedCourseBySlug(String slug) {
+        Course course = courseRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with slug: " + slug));
+
+        // Verify course has a published version
+        CourseVersion publishedVersion = course.getVersionPublish();
+        if (publishedVersion == null) {
+            throw new ResourceNotFoundException("No published version available for this course");
+        }
+
+        return CourseMapper.toCourseDetailResponse(course);
+    }
+
+    /**
+     * Search published courses with filters
+     * Supports: text search, category filter, difficulty filter, tag filter
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public PageResponse<CourseResponse> searchPublishedCourses(
+            String query,
+            Long categoryId,
+            String difficulty,
+            String tags,
+            Pageable pageable
+    ) {
+        Specification<Course> spec = (root, criteriaQuery, cb) -> {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+
+            // Must have published version
+            var versionsJoin = root.join("versions");
+            predicates.add(cb.equal(versionsJoin.get("status"), CourseStatus.PUBLISHED));
+
+            // Text search in title and short description
+            if (query != null && !query.isBlank()) {
+                String searchPattern = "%" + query.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("title")), searchPattern),
+                        cb.like(cb.lower(root.get("shortDescription")), searchPattern)
+                ));
+            }
+
+            // Category filter
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            }
+
+            // Difficulty filter
+            if (difficulty != null && !difficulty.isBlank()) {
+                try {
+                    predicates.add(cb.equal(root.get("difficulty"),
+                        vn.uit.lms.shared.constant.Difficulty.valueOf(difficulty.toUpperCase())));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid difficulty filter value: {}", difficulty);
+                }
+            }
+
+            // Tag filter
+            if (tags != null && !tags.isBlank()) {
+                String[] tagNames = tags.split(",");
+                var courseTagsJoin = root.join("courseTags");
+                var tagJoin = courseTagsJoin.join("tag");
+                predicates.add(tagJoin.get("name").in((Object[]) tagNames));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        Page<Course> coursePage = courseRepository.findAll(spec, pageable);
+        List<CourseResponse> items = coursePage.getContent().stream()
+                .map(CourseMapper::toCourseResponse)
+                .distinct() // Remove duplicates from joins
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                coursePage.getNumber(),
+                coursePage.getSize(),
+                coursePage.getTotalElements(),
+                coursePage.getTotalPages(),
+                coursePage.hasNext(),
+                coursePage.hasPrevious()
+        );
     }
 
 }

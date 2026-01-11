@@ -30,7 +30,7 @@ export function QuestionDialog({
         metadata: question?.metadata || "",
         answerOptions: question?.answerOptions?.map((opt) => ({
             content: opt.content,
-            isCorrect: opt.isCorrect,
+            correct: opt.correct,
             orderIndex: opt.orderIndex,
         })) || [],
     });
@@ -44,18 +44,18 @@ export function QuestionDialog({
                 setFormData((prev) => ({
                     ...prev,
                     answerOptions: [
-                        { content: "", isCorrect: false, orderIndex: 0 },
-                        { content: "", isCorrect: false, orderIndex: 1 },
-                        { content: "", isCorrect: false, orderIndex: 2 },
-                        { content: "", isCorrect: false, orderIndex: 3 },
+                        { content: "", correct: false, orderIndex: 0 },
+                        { content: "", correct: false, orderIndex: 1 },
+                        { content: "", correct: false, orderIndex: 2 },
+                        { content: "", correct: false, orderIndex: 3 },
                     ],
                 }));
             } else if (formData.type === "TRUE_FALSE") {
                 setFormData((prev) => ({
                     ...prev,
                     answerOptions: [
-                        { content: "True", isCorrect: false, orderIndex: 0 },
-                        { content: "False", isCorrect: false, orderIndex: 1 },
+                        { content: "True", correct: false, orderIndex: 0 },
+                        { content: "False", correct: false, orderIndex: 1 },
                     ],
                 }));
             }
@@ -69,15 +69,15 @@ export function QuestionDialog({
 
             if (type === "MULTIPLE_CHOICE" || type === "MULTI_SELECT") {
                 answerOptions = [
-                    { content: "", isCorrect: false, orderIndex: 0 },
-                    { content: "", isCorrect: false, orderIndex: 1 },
-                    { content: "", isCorrect: false, orderIndex: 2 },
-                    { content: "", isCorrect: false, orderIndex: 3 },
+                    { content: "", correct: false, orderIndex: 0 },
+                    { content: "", correct: false, orderIndex: 1 },
+                    { content: "", correct: false, orderIndex: 2 },
+                    { content: "", correct: false, orderIndex: 3 },
                 ];
             } else if (type === "TRUE_FALSE") {
                 answerOptions = [
-                    { content: "True", isCorrect: false, orderIndex: 0 },
-                    { content: "False", isCorrect: false, orderIndex: 1 },
+                    { content: "True", correct: false, orderIndex: 0 },
+                    { content: "False", correct: false, orderIndex: 1 },
                 ];
             }
 
@@ -92,7 +92,7 @@ export function QuestionDialog({
                 ...(prev.answerOptions || []),
                 {
                     content: "",
-                    isCorrect: false,
+                    correct: false,
                     orderIndex: prev.answerOptions?.length || 0,
                 },
             ],
@@ -116,9 +116,9 @@ export function QuestionDialog({
             newOptions[index] = { ...newOptions[index], [field]: value };
 
             // For MULTIPLE_CHOICE, only one option can be correct
-            if (field === "isCorrect" && value && prev.type === "MULTIPLE_CHOICE") {
+            if (field === "correct" && value && prev.type === "MULTIPLE_CHOICE") {
                 newOptions.forEach((opt, i) => {
-                    if (i !== index) opt.isCorrect = false;
+                    if (i !== index) opt.correct = false;
                 });
             }
 
@@ -142,7 +142,7 @@ export function QuestionDialog({
                 formData.type === "TRUE_FALSE") &&
             formData.answerOptions
         ) {
-            const hasCorrect = formData.answerOptions.some((opt) => opt.isCorrect);
+            const hasCorrect = formData.answerOptions.some((opt) => opt.correct);
             if (!hasCorrect) {
                 setError("At least one answer must be marked as correct");
                 return;
@@ -228,8 +228,8 @@ export function QuestionDialog({
                                         type="button"
                                         onClick={() => handleTypeChange(type.value as QuestionType)}
                                         className={`px-4 py-3 text-sm font-medium rounded-lg border-2 transition-colors ${formData.type === type.value
-                                                ? "border-purple-600 bg-purple-50 text-purple-700"
-                                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                                            ? "border-purple-600 bg-purple-50 text-purple-700"
+                                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                                             }`}
                                     >
                                         {type.label}
@@ -308,11 +308,11 @@ export function QuestionDialog({
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    handleOptionChange(index, "isCorrect", !option.isCorrect)
+                                                    handleOptionChange(index, "correct", !option.correct)
                                                 }
-                                                className={`mt-2 flex-shrink-0 ${option.isCorrect
-                                                        ? "text-green-600"
-                                                        : "text-gray-300 hover:text-gray-400"
+                                                className={`mt-2 flex-shrink-0 ${option.correct
+                                                    ? "text-green-600"
+                                                    : "text-gray-300 hover:text-gray-400"
                                                     }`}
                                             >
                                                 <CheckCircle2 className="h-6 w-6" />

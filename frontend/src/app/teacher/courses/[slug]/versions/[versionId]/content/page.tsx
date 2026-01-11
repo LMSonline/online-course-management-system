@@ -23,6 +23,8 @@ import { CourseDetailResponse, CourseVersionResponse } from "@/services/courses/
 import { ChapterResponse } from "@/services/courses/content/chapter.types";
 import { toast } from "sonner";
 import { lessonService } from "@/services/courses/content/lesson.service";
+import { assessmentService } from "@/services/assessment";
+import { assignmentService } from "@/services/assignment";
 
 export default function CourseContentPage() {
     const params = useParams();
@@ -47,6 +49,8 @@ export default function CourseContentPage() {
     const [previewMode, setPreviewMode] = useState(false);
     const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
     const [previewLessons, setPreviewLessons] = useState<Record<number, any[]>>({});
+    const [previewQuizzes, setPreviewQuizzes] = useState<Record<number, any[]>>({});
+    const [previewAssignments, setPreviewAssignments] = useState<Record<number, any[]>>({});
 
     // Sensors for drag and drop
     const sensors = useSensors(
@@ -95,18 +99,38 @@ export default function CourseContentPage() {
 
     const handleOpenPreview = async () => {
         setPreviewMode(true);
-        // Load all lessons for preview
+        // Load all lessons, quizzes, and assignments for preview
         const lessonsData: Record<number, any[]> = {};
+        const quizzesData: Record<number, any[]> = {};
+        const assignmentsData: Record<number, any[]> = {};
+
         for (const chapter of chapters) {
             try {
                 const lessons = await lessonService.getLessonsByChapter(chapter.id);
                 lessonsData[chapter.id] = lessons;
+
+                // Load quizzes and assignments for each lesson
+                for (const lesson of lessons) {
+                    try {
+                        if (lesson.type === 'QUIZ') {
+                            const quizzes = await assessmentService.getQuizzesByLesson(lesson.id);
+                            quizzesData[lesson.id] = quizzes;
+                        } else if (lesson.type === 'ASSIGNMENT') {
+                            const assignments = await assignmentService.getAssignmentsByLesson(lesson.id);
+                            assignmentsData[lesson.id] = assignments;
+                        }
+                    } catch (error) {
+                        console.error(`Failed to load quiz/assignment for lesson ${lesson.id}:`, error);
+                    }
+                }
             } catch (error) {
                 console.error(`Failed to load lessons for chapter ${chapter.id}:`, error);
                 lessonsData[chapter.id] = [];
             }
         }
         setPreviewLessons(lessonsData);
+        setPreviewQuizzes(quizzesData);
+        setPreviewAssignments(assignmentsData);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -128,8 +152,8 @@ export default function CourseContentPage() {
 
     if (!course || !currentVersion) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center justify-center min-h-[60vh]" suppressHydrationWarning>
+                <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" suppressHydrationWarning />
             </div>
         );
     }
@@ -193,9 +217,9 @@ export default function CourseContentPage() {
                             <CheckCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                         </div>
                         <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
-                            {currentVersion.passScore || 0}%
+                            {currentVersion.passScore || 0}/10
                         </p>
-                        <p className="text-sm text-amber-600/70 dark:text-amber-400/70">Pass Score</p>
+                        <p className="text-sm text-amber-600/70 dark:text-amber-400/70">Điểm đạt</p>
                     </div>
                 </div>
 
@@ -303,9 +327,13 @@ export default function CourseContentPage() {
                 onClose={() => {
                     setPreviewMode(false);
                     setPreviewLessons({});
+                    setPreviewQuizzes({});
+                    setPreviewAssignments({});
                 }}
                 chapters={chapters}
                 lessons={previewLessons}
+                quizzes={previewQuizzes}
+                assignments={previewAssignments}
                 resources={{}}
                 courseTitle={course.title}
             />

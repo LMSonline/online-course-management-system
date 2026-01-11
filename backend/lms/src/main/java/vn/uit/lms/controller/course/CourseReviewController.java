@@ -81,4 +81,31 @@ public class CourseReviewController {
         RatingSummaryResponse summary = courseReviewService.getRatingSummary(courseId);
         return ResponseEntity.ok(summary);
     }
+
+    // ========== PUBLIC APIs - No Authentication Required ==========
+
+    @Operation(
+            summary = "Get course reviews (Public)",
+            description = "Get all reviews for a course. No authentication required."
+    )
+    @GetMapping("/public/courses/{courseId}/reviews")
+    public ResponseEntity<PageResponse<CourseReviewResponse>> getPublicCourseReviews(
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Pagination parameters") Pageable pageable
+    ) {
+        PageResponse<CourseReviewResponse> response = courseReviewService.getCourseReviews(courseId, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Get course rating summary (Public)",
+            description = "Get rating statistics and summary for a course. No authentication required."
+    )
+    @GetMapping("/public/courses/{courseId}/rating-summary")
+    public ResponseEntity<RatingSummaryResponse> getPublicRatingSummary(
+            @Parameter(description = "Course ID") @PathVariable Long courseId
+    ) {
+        RatingSummaryResponse summary = courseReviewService.getRatingSummary(courseId);
+        return ResponseEntity.ok(summary);
+    }
 }

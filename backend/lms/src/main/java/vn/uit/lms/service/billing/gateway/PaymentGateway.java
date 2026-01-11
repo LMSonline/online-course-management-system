@@ -1,5 +1,7 @@
 package vn.uit.lms.service.billing.gateway;
 
+import vn.uit.lms.shared.constant.PaymentProvider;
+
 import java.math.BigDecimal;
 import java.util.Map;
 
@@ -12,7 +14,7 @@ public interface PaymentGateway {
     /**
      * Get the gateway name
      */
-    String getGatewayName();
+    PaymentProvider getGatewayName();
 
     /**
      * Create a payment URL for the user to complete payment

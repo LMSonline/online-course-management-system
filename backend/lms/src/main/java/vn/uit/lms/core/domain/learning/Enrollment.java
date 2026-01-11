@@ -2,7 +2,9 @@ package vn.uit.lms.core.domain.learning;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.type.SqlTypes;
 import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.course.CourseVersion;
@@ -11,6 +13,8 @@ import vn.uit.lms.shared.entity.BaseEntity;
 
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(
@@ -92,7 +96,38 @@ public class Enrollment extends BaseEntity {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
-    /* ================= DOMAIN LOGIC ================= */
+    /**
+     * List of quiz scores for calculating average
+     * Format: [{quizId: 1, score: 8.5, isFinalExam: false}, ...]
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "quiz_scores", columnDefinition = "JSON")
+    private List<Map<String, Object>> quizScores;
+
+    /**
+     * Final exam score
+     */
+    @Column(name = "final_exam_score")
+    private Float finalExamScore;
+
+    /**
+     * Final exam weight (k factor)
+     */
+    @Column(name = "final_exam_weight")
+    private Float finalExamWeight;
+
+    /**
+     * Ban reason if kicked from course
+     */
+    @Column(name = "ban_reason", columnDefinition = "TEXT")
+    private String banReason;
+
+    /**
+     * Banned at timestamp
+     */
+    @Column(name = "banned_at")
+    private Instant bannedAt;
+
 
     public void start() {
         if (this.startAt != null) return;
@@ -206,6 +241,140 @@ public class Enrollment extends BaseEntity {
                 || (this.completionPercentage != null && this.completionPercentage >= minProgress);
     }
 
+    /**
+     * Kick student from course (Ban)
+     *
+     * @param reason Ban reason
+     */
+    public void kick(String reason) {
+        if (this.status == EnrollmentStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot kick student who completed the course");
+        }
+
+        this.status = EnrollmentStatus.CANCELLED;
+        this.banReason = reason;
+        this.bannedAt = Instant.now();
+    }
+
+    /**
+     * Add quiz score to enrollment
+     *
+     * @param quizId Quiz ID
+     * @param score Score (0-10)
+     * @param isFinalExam Is this the final exam
+     */
+    public void addQuizScore(Long quizId, Float score, boolean isFinalExam) {
+        if (score < 0 || score > 10) {
+            throw new IllegalArgumentException("Score must be between 0 and 10");
+        }
+
+        if (this.quizScores == null) {
+            this.quizScores = new java.util.ArrayList<>();
+        }
+
+        Map<String, Object> quizScore = new java.util.HashMap<>();
+        quizScore.put("quizId", quizId);
+        quizScore.put("score", score);
+        quizScore.put("isFinalExam", isFinalExam);
+        quizScore.put("timestamp", java.time.Instant.now().toString());
+
+        this.quizScores.add(quizScore);
+
+        if (isFinalExam) {
+            this.finalExamScore = score;
+        }
+
+        // Recalculate average score
+        calculateAverageScore();
+    }
+
+    /**
+     * Calculate average score using formula:
+     * DTB = (Σ DKTBT_i + DKTCK × k) / (n + k)
+     *
+     * Where:
+     * - DKTBT_i: Score of regular quiz i
+     * - DKTCK: Final exam score
+     * - k: Final exam weight
+     * - n: Number of regular quizzes
+     */
+    public void calculateAverageScore() {
+        if (this.quizScores == null || this.quizScores.isEmpty()) {
+            this.averageScore = null;
+            return;
+        }
+
+        // Get final exam weight from course version
+        Float k = this.finalExamWeight;
+        if (k == null && this.courseVersion != null) {
+            k = this.courseVersion.getFinalWeight();
+        }
+        if (k == null) {
+            k = 0.6f; // Default weight
+        }
+
+        // Separate regular quizzes and final exam
+        List<Float> regularScores = new java.util.ArrayList<>();
+        Float finalExamScore = null;
+
+        for (Map<String, Object> quizScore : this.quizScores) {
+            Float score = ((Number) quizScore.get("score")).floatValue();
+            Boolean isFinalExam = (Boolean) quizScore.getOrDefault("isFinalExam", false);
+
+            if (Boolean.TRUE.equals(isFinalExam)) {
+                finalExamScore = score;
+            } else {
+                regularScores.add(score);
+            }
+        }
+
+        // Calculate DTB
+        float sumRegular = (float) regularScores.stream()
+                .mapToDouble(Float::doubleValue)
+                .sum();
+
+        int n = regularScores.size();
+
+        if (finalExamScore != null) {
+            // DTB = (Σ DKTBT_i + DKTCK × k) / (n + k)
+            this.averageScore = (sumRegular + (finalExamScore * k)) / (n + k);
+        } else {
+            // No final exam yet, only regular quizzes
+            this.averageScore = n > 0 ? sumRegular / n : 0f;
+        }
+
+        // Check if can complete
+        if (canComplete()) {
+            complete();
+        }
+    }
+
+    /**
+     * Check if eligible for certificate
+     *
+     * @return true if student can receive certificate
+     */
+    public boolean isEligibleForCertificate() {
+        if (this.status != EnrollmentStatus.COMPLETED) {
+            return false;
+        }
+
+        if (isExpired()) {
+            return false;
+        }
+
+        if (this.courseVersion == null) {
+            return false;
+        }
+
+        Float passScore = this.courseVersion.getPassScore();
+        if (passScore == null) {
+            return true; // No pass score requirement
+        }
+
+        return this.averageScore != null && this.averageScore >= passScore;
+    }
+
     public Long getRemainingDays() {
         if (this.endAt == null) return null;
 
@@ -213,3 +382,4 @@ public class Enrollment extends BaseEntity {
         return Math.max(0, seconds / (24 * 3600));
     }
 }
+

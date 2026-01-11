@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
     Search,
@@ -14,57 +13,40 @@ import {
     Clock,
     BookOpen,
     FileText,
+    Download,
 } from "lucide-react";
-import { courseService } from "@/services/courses";
-import { enrollmentService } from "@/services/courses/enrollment.service";
-import type { CourseEnrollmentResponse } from "@/services/courses/enrollment.types";
-import type { PageResponse } from "@/lib/api/api.types";
+import { useTeacherCourses } from "@/hooks/teacher/useTeacherCourses";
+import {
+    useCourseEnrollments,
+    useCourseEnrollmentStats,
+    useExportEnrollments
+} from "@/hooks/teacher/useStudentManagement";
+import type { EnrollmentResponse } from "@/services/learning/enrollment.types";
+import Button from "@/core/components/ui/Button";
 
 export default function TeacherStudentsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCourse, setFilterCourse] = useState<number | "all">("all");
-    const [filterStatus, setFilterStatus] = useState<"all" | "ACTIVE" | "COMPLETED" | "DROPPED">("all");
+    const [filterStatus, setFilterStatus] = useState<"all" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "EXPIRED">("all");
 
-    const { data: courses, isLoading: coursesLoading } = useQuery({
-        queryKey: ["teacher-courses"],
-        queryFn: () => courseService.getMyCourses(0, 100),
-    });
+    // Use custom hooks
+    const { courses, isLoading: coursesLoading } = useTeacherCourses();
+    const exportMutation = useExportEnrollments();
 
-    const firstCourseId = courses?.items[0]?.id;
+    const firstCourseId = courses?.[0]?.id;
+    const selectedCourseId = filterCourse === "all" ? firstCourseId : filterCourse;
 
-    const { data: enrollmentsData, isLoading: enrollmentsLoading } = useQuery({
-        queryKey: ["course-enrollments", filterCourse === "all" ? firstCourseId : filterCourse],
-        queryFn: async (): Promise<PageResponse<CourseEnrollmentResponse>> => {
-            const courseId = filterCourse === "all" ? firstCourseId : filterCourse;
-            if (!courseId) {
-                return Promise.resolve({
-                    items: [],
-                    page: 0,
-                    size: 0,
-                    totalItems: 0,
-                    totalPages: 0,
-                    hasNext: false,
-                    hasPrevious: false,
-                });
-            }
-            return enrollmentService.getCourseEnrollments(courseId, 0, 100);
-        },
-        enabled: !!firstCourseId,
-    });
+    const { data: enrollmentsData, isLoading: enrollmentsLoading } = useCourseEnrollments(
+        selectedCourseId,
+        0,
+        100
+    );
 
-    const { data: stats } = useQuery({
-        queryKey: ["enrollment-stats", filterCourse === "all" ? firstCourseId : filterCourse],
-        queryFn: () => {
-            const courseId = filterCourse === "all" ? firstCourseId : filterCourse;
-            if (!courseId) return Promise.resolve(null);
-            return enrollmentService.getCourseEnrollmentStats(courseId);
-        },
-        enabled: !!firstCourseId,
-    });
+    const { data: stats } = useCourseEnrollmentStats(selectedCourseId);
 
     const filteredStudents = useMemo(() => {
         const enrollments = enrollmentsData?.items || [];
-        return enrollments.filter((enrollment: CourseEnrollmentResponse) => {
+        return enrollments.filter((enrollment: EnrollmentResponse) => {
             const matchesSearch =
                 searchTerm === "" ||
                 enrollment.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,7 +62,7 @@ export default function TeacherStudentsPage() {
     const topPerformers = useMemo(() => {
         const enrollments = enrollmentsData?.items || [];
         return [...enrollments]
-            .sort((a, b) => b.progress - a.progress)
+            .sort((a, b) => b.completionPercentage - a.completionPercentage)
             .slice(0, 3);
     }, [enrollmentsData]);
 
@@ -88,8 +70,8 @@ export default function TeacherStudentsPage() {
         const statusConfig = {
             ACTIVE: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-300", label: "Active" },
             COMPLETED: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", label: "Completed" },
-            DROPPED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", label: "Dropped" },
-            PAUSED: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", label: "Paused" },
+            CANCELLED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", label: "Cancelled" },
+            EXPIRED: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", label: "Expired" },
         };
         const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
 
@@ -114,6 +96,12 @@ export default function TeacherStudentsPage() {
         if (diffDays < 7) return `${diffDays} days ago`;
         if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
         return date.toLocaleDateString();
+    };
+
+    const handleExportData = () => {
+        if (selectedCourseId) {
+            exportMutation.mutate({ courseId: selectedCourseId, format: "CSV" });
+        }
     };
 
     const isLoading = coursesLoading || enrollmentsLoading;
@@ -141,7 +129,7 @@ export default function TeacherStudentsPage() {
                             </span>
                         </div>
                         <p className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
-                            {isLoading ? "..." : stats?.total || 0}
+                            {isLoading ? "..." : stats?.totalEnrollments || 0}
                         </p>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">
                             Total Students
@@ -154,11 +142,11 @@ export default function TeacherStudentsPage() {
                                 <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <span className="text-slate-600 dark:text-slate-400 text-sm">
-                                {stats?.total ? Math.round((stats.active / stats.total) * 100) : 0}% of total
+                                {stats?.totalEnrollments ? Math.round((stats.activeEnrollments / stats.totalEnrollments) * 100) : 0}% of total
                             </span>
                         </div>
                         <p className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
-                            {isLoading ? "..." : stats?.active || 0}
+                            {isLoading ? "..." : stats?.activeEnrollments || 0}
                         </p>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">
                             Active Students
@@ -175,7 +163,7 @@ export default function TeacherStudentsPage() {
                             </span>
                         </div>
                         <p className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
-                            {isLoading ? "..." : `${Math.round(stats?.averageProgress || 0)}%`}
+                            {isLoading ? "..." : `${Math.round(stats?.averageCompletionPercentage || 0)}%`}
                         </p>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">
                             Avg. Progress
@@ -192,7 +180,7 @@ export default function TeacherStudentsPage() {
                             </span>
                         </div>
                         <p className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
-                            {isLoading ? "..." : stats?.completed || 0}
+                            {isLoading ? "..." : stats?.completedEnrollments || 0}
                         </p>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">
                             Completions
@@ -227,7 +215,7 @@ export default function TeacherStudentsPage() {
                                     className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
                                     <option value="all">All Courses</option>
-                                    {courses?.items.map((course: any) => (
+                                    {courses?.map((course: any) => (
                                         <option key={course.id} value={course.id}>
                                             {course.title}
                                         </option>
@@ -242,7 +230,8 @@ export default function TeacherStudentsPage() {
                                     <option value="all">All Status</option>
                                     <option value="ACTIVE">Active</option>
                                     <option value="COMPLETED">Completed</option>
-                                    <option value="DROPPED">Dropped</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                    <option value="EXPIRED">Expired</option>
                                 </select>
                             </div>
 
@@ -252,14 +241,14 @@ export default function TeacherStudentsPage() {
                                 ) : filteredStudents.length === 0 ? (
                                     <div className="text-center py-12 text-slate-500">No students found</div>
                                 ) : (
-                                    filteredStudents.map((student: CourseEnrollmentResponse) => (
+                                    filteredStudents.map((student: EnrollmentResponse) => (
                                         <div
                                             key={student.id}
                                             className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
                                         >
                                             <div className="flex items-center gap-4 flex-1">
                                                 <img
-                                                    src={student.studentAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.studentName)}&background=6366f1&color=fff`}
+                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.studentName)}&background=6366f1&color=fff`}
                                                     alt={student.studentName}
                                                     className="w-12 h-12 rounded-full"
                                                 />
@@ -276,7 +265,7 @@ export default function TeacherStudentsPage() {
                                             <div className="hidden md:flex items-center gap-6">
                                                 <div className="text-center">
                                                     <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                                        {student.progress}%
+                                                        {Math.round(student.completionPercentage)}%
                                                     </p>
                                                     <p className="text-xs text-slate-500">Progress</p>
                                                 </div>
@@ -295,7 +284,7 @@ export default function TeacherStudentsPage() {
                                                 <div className="text-center min-w-[80px]">
                                                     <p className="text-xs text-slate-500 flex items-center gap-1">
                                                         <Clock className="w-3 h-3" />
-                                                        {getLastActive(student.lastActivityAt)}
+                                                        {getLastActive(student.lastAccessedAt)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -333,7 +322,7 @@ export default function TeacherStudentsPage() {
                                                 {index + 1}
                                             </div>
                                             <img
-                                                src={student.studentAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.studentName)}&background=6366f1&color=fff`}
+                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.studentName)}&background=6366f1&color=fff`}
                                                 alt={student.studentName}
                                                 className="w-10 h-10 rounded-full"
                                             />
@@ -342,7 +331,7 @@ export default function TeacherStudentsPage() {
                                                     {student.studentName}
                                                 </h3>
                                                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                                                    {student.progress}% complete
+                                                    {Math.round(student.completionPercentage)}% complete
                                                 </p>
                                             </div>
                                             <Award className="w-5 h-5 text-amber-500" />
@@ -357,9 +346,14 @@ export default function TeacherStudentsPage() {
                             <p className="text-sm text-indigo-100 mb-4">
                                 Download detailed reports of your students' progress
                             </p>
-                            <button className="w-full px-4 py-2.5 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors">
-                                Download CSV
-                            </button>
+                            <Button
+                                onClick={handleExportData}
+                                disabled={!selectedCourseId || exportMutation.isPending}
+                                className="w-full px-4 py-2.5 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                {exportMutation.isPending ? "Exporting..." : "Download CSV"}
+                            </Button>
                         </div>
                     </div>
                 </div>

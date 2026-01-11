@@ -16,9 +16,11 @@ import vn.uit.lms.service.learning.EnrollmentService;
 import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.enrollment.CancelEnrollmentRequest;
 import vn.uit.lms.shared.dto.request.enrollment.EnrollCourseRequest;
+import vn.uit.lms.shared.dto.request.enrollment.UpdateScoreRequest;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentStatsResponse;
+import vn.uit.lms.shared.dto.response.enrollment.FinalExamEligibilityResponse;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
 import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
@@ -120,6 +122,24 @@ public class EnrollmentController {
     }
 
     /**
+     * POST /enrollments/{id}/kick - Xóa học viên khỏi khóa (Ban)
+     */
+    @Operation(
+            summary = "Kick student from course",
+            description = "Teacher or Admin removes a student from course due to violation"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/enrollments/{id}/kick")
+    @TeacherOnly
+    public ResponseEntity<EnrollmentDetailResponse> kickStudent(
+            @Parameter(description = "Enrollment ID") @PathVariable Long id,
+            @Parameter(description = "Kick request with reason")
+            @Valid @RequestBody CancelEnrollmentRequest request) {
+        EnrollmentDetailResponse response = enrollmentService.kickStudent(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * POST /enrollments/{id}/complete - Hoàn thành khóa học
      */
     @Operation(
@@ -149,6 +169,40 @@ public class EnrollmentController {
     public ResponseEntity<EnrollmentStatsResponse> getEnrollmentStats(
             @Parameter(description = "Course ID") @PathVariable Long courseId) {
         EnrollmentStatsResponse response = enrollmentService.getEnrollmentStats(courseId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /enrollments/{enrollmentId}/update-score - Cập nhật điểm (Internal/System)
+     */
+    @Operation(
+            summary = "Update enrollment score",
+            description = "Update enrollment score after quiz/exam completion (Internal/System call)"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/enrollments/{enrollmentId}/update-score")
+    @TeacherOnly
+    public ResponseEntity<EnrollmentDetailResponse> updateScore(
+            @Parameter(description = "Enrollment ID") @PathVariable Long enrollmentId,
+            @Parameter(description = "Score update request")
+            @Valid @RequestBody UpdateScoreRequest request) {
+        EnrollmentDetailResponse response = enrollmentService.updateScore(enrollmentId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /enrollments/{enrollmentId}/final-exam-eligibility - Kiểm tra điều kiện thi cuối khóa
+     */
+    @Operation(
+            summary = "Check final exam eligibility",
+            description = "Check if student is eligible to take final exam based on progress"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/enrollments/{enrollmentId}/final-exam-eligibility")
+    @StudentOnly
+    public ResponseEntity<FinalExamEligibilityResponse> checkFinalExamEligibility(
+            @Parameter(description = "Enrollment ID") @PathVariable Long enrollmentId) {
+        FinalExamEligibilityResponse response = enrollmentService.checkFinalExamEligibility(enrollmentId);
         return ResponseEntity.ok(response);
     }
 }

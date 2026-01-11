@@ -5,6 +5,7 @@ import lombok.*;
 import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.shared.entity.BaseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -48,7 +49,8 @@ public class Quiz extends BaseEntity {
     private Double passingScore;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QuizQuestion> quizQuestions;
+    @Builder.Default
+    private List<QuizQuestion> quizQuestions = new ArrayList<>();
 
     /**
      * Check if quiz has time limit
@@ -136,5 +138,83 @@ public class Quiz extends BaseEntity {
      */
     public int getQuestionCount() {
         return quizQuestions != null ? quizQuestions.size() : 0;
+    }
+
+    /**
+     * Add question to quiz
+     */
+    public void addQuestion(QuizQuestion quizQuestion) {
+        if (quizQuestions == null) {
+            quizQuestions = new ArrayList<>();
+        }
+        quizQuestion.setQuiz(this);
+        quizQuestions.add(quizQuestion);
+    }
+
+    /**
+     * Remove question from quiz
+     */
+    public void removeQuestion(QuizQuestion quizQuestion) {
+        if (quizQuestions != null) {
+            quizQuestions.remove(quizQuestion);
+            quizQuestion.setQuiz(null);
+        }
+    }
+
+    /**
+     * Calculate total points from all questions
+     */
+    public Double calculateTotalPoints() {
+        if (quizQuestions == null || quizQuestions.isEmpty()) {
+            return 0.0;
+        }
+        return quizQuestions.stream()
+                .map(QuizQuestion::getEffectivePoints)
+                .reduce(0.0, Double::sum);
+    }
+
+    /**
+     * Update total points based on questions
+     */
+    public void recalculateTotalPoints() {
+        this.totalPoints = calculateTotalPoints();
+    }
+
+    /**
+     * Check if quiz has questions
+     */
+    public boolean hasQuestions() {
+        return getQuestionCount() > 0;
+    }
+
+    /**
+     * Check if quiz is ready to be taken (has questions and valid config)
+     */
+    public boolean isReadyToTake() {
+        return hasQuestions() && totalPoints != null && totalPoints > 0;
+    }
+
+    /**
+     * Get passing score percentage
+     */
+    public Double getPassingPercentage() {
+        if (passingScore == null || totalPoints == null || totalPoints == 0) {
+            return null;
+        }
+        return (passingScore / totalPoints) * 100;
+    }
+
+    /**
+     * Check if quiz belongs to specific lesson
+     */
+    public boolean belongsToLesson(Long lessonId) {
+        return lesson != null && lesson.getId().equals(lessonId);
+    }
+
+    /**
+     * Check if quiz has unlimited attempts
+     */
+    public boolean hasUnlimitedAttempts() {
+        return maxAttempts == null;
     }
 }

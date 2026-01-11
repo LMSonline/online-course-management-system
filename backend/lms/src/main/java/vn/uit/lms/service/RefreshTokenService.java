@@ -40,79 +40,48 @@ public class RefreshTokenService {
 
     /**
      * Refresh an expired access token using a valid refresh token.
-     * - Validate and revoke the old refresh token.
-     * - Generate a new access token and refresh token.
+     * - Validate and rotate the refresh token.
+     * - Generate a new access token.
      */
     @Transactional
     public ResLoginDTO refreshAccessToken(ReqRefreshTokenDTO reqRefreshTokenDTO) {
         Instant now = Instant.now();
 
-        // Hash the incoming refresh token
+        // Hash the incoming refresh token and find it in database
         String tokenHash = TokenHashUtil.hashToken(reqRefreshTokenDTO.getRefreshToken());
-
-        // Find refresh token in database
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
+        RefreshToken oldRefreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
 
-        // Validate token status
-        if (refreshToken.isRevoked()) {
-            throw new InvalidTokenException("Refresh token revoked");
-        }
-        if (refreshToken.getExpiresAt().isBefore(now)) {
-            throw new InvalidTokenException("Refresh token expired");
-        }
+        // Validate token (throws exception if invalid)
+        oldRefreshToken.validate();
 
-        Account accountDB = refreshToken.getAccount();
+        Account accountDB = oldRefreshToken.getAccount();
 
-        // Revoke old refresh token
-        refreshToken.setRevoked(true);
-        refreshTokenRepository.save(refreshToken);
+        // Generate new refresh token plain text
+        String newRefreshTokenPlain = securityUtils.createRefreshToken(accountDB.getEmail());
 
-        // Map account to response DTO
-        ResLoginDTO resLoginDTO;
-        switch (accountDB.getRole()) {
-            case STUDENT -> {
-                Student student = studentRepository.findByAccount(accountDB)
-                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
-                resLoginDTO = AccountMapper.studentToResLoginDTO(student);
-            }
+        // Rotate the refresh token (revokes old, creates new)
+        RefreshToken newRefreshToken = oldRefreshToken.rotate(
+                newRefreshTokenPlain,
+                reqRefreshTokenDTO.getIpAddress(),
+                securityUtils.getRefreshTokenExpiration()
+        );
 
-            case TEACHER -> {
-                Teacher teacher = teacherRepository.findByAccount(accountDB)
-                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
-                resLoginDTO = AccountMapper.teacherToResLoginDTO(teacher);
-            }
+        // Save both tokens (old is revoked, new is created)
+        refreshTokenRepository.save(oldRefreshToken);
+        refreshTokenRepository.save(newRefreshToken);
 
-            case ADMIN -> {
-                resLoginDTO = AccountMapper.adminToResLoginDTO(accountDB);
-            }
-
-            default -> throw new IllegalStateException("Unexpected role: " + accountDB.getRole());
-        }
+        // Map account to response DTO based on role
+        ResLoginDTO resLoginDTO = mapAccountToLoginDTO(accountDB);
 
         // Generate new access token
         String newAccessToken = securityUtils.createAccessToken(accountDB.getEmail(), resLoginDTO);
         Instant accessTokenExpiresAt = now.plus(securityUtils.getAccessTokenExpiration(), ChronoUnit.SECONDS);
+
         resLoginDTO.setAccessToken(newAccessToken);
         resLoginDTO.setAccessTokenExpiresAt(accessTokenExpiresAt);
-
-        // Generate new refresh token
-        String newRefreshTokenPlain = securityUtils.createRefreshToken(accountDB.getEmail());
-        String newRefreshTokenHash = TokenHashUtil.hashToken(newRefreshTokenPlain);
-        Instant refreshTokenExpiresAt = now.plus(securityUtils.getRefreshTokenExpiration(), ChronoUnit.SECONDS);
-
-        RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.setAccount(accountDB);
-        newRefreshToken.setTokenHash(newRefreshTokenHash);
-        newRefreshToken.setExpiresAt(refreshTokenExpiresAt);
-        newRefreshToken.setDeviceInfo(reqRefreshTokenDTO.getDeviceInfo() != null
-                ? refreshToken.getDeviceInfo() : "Unknown device");
-        newRefreshToken.setIpAddress(reqRefreshTokenDTO.getIpAddress());
-        newRefreshToken.setRevoked(false);
-        refreshTokenRepository.save(newRefreshToken);
-
         resLoginDTO.setRefreshToken(newRefreshTokenPlain);
-        resLoginDTO.setRefreshTokenExpiresAt(refreshTokenExpiresAt);
+        resLoginDTO.setRefreshTokenExpiresAt(newRefreshToken.getExpiresAt());
 
         return resLoginDTO;
     }
@@ -127,10 +96,46 @@ public class RefreshTokenService {
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
 
-        if (!refreshToken.isRevoked()) {
-            refreshToken.setRevoked(true);
-            refreshTokenRepository.save(refreshToken);
-        }
+        refreshToken.revoke();
+        refreshTokenRepository.save(refreshToken);
+    }
+
+    /**
+     * Issue a new refresh token for an account during login.
+     */
+    @Transactional
+    public RefreshToken issueRefreshToken(Account account, String tokenPlain,
+                                          String deviceInfo, String ipAddress) {
+        RefreshToken refreshToken = RefreshToken.issue(
+                account,
+                tokenPlain,
+                deviceInfo,
+                ipAddress,
+                securityUtils.getRefreshTokenExpiration()
+        );
+
+        return refreshTokenRepository.save(refreshToken);
+    }
+
+
+    /**
+     * Helper method to map account to login DTO based on role.
+     */
+    private ResLoginDTO mapAccountToLoginDTO(Account account) {
+        return switch (account.getRole()) {
+            case STUDENT -> {
+                Student student = studentRepository.findByAccount(account)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                yield AccountMapper.studentToResLoginDTO(student);
+            }
+            case TEACHER -> {
+                Teacher teacher = teacherRepository.findByAccount(account)
+                        .orElseThrow(() -> new UserNotActivatedException("Account not activated"));
+                yield AccountMapper.teacherToResLoginDTO(teacher);
+            }
+            case ADMIN -> AccountMapper.adminToResLoginDTO(account);
+            default -> throw new IllegalStateException("Unexpected role: " + account.getRole());
+        };
     }
 }
 

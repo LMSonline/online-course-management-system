@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, X, Video, CheckCircle, AlertCircle, Play, Loader2 } from "lucide-react";
+import { Upload, X, Video, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { lessonService } from "@/services/courses/content/lesson.service";
 import { toast } from "sonner";
 import Hls from "hls.js";
@@ -27,19 +27,25 @@ export function VideoUpload({ lessonId, currentVideoStatus, onUploadComplete }: 
     useEffect(() => {
         if (currentVideoStatus === "READY") {
             loadVideoStream();
+        } else {
+            // Reset nếu status không còn là READY
+            setStreamUrl(null);
         }
     }, [currentVideoStatus, lessonId]);
 
-    // Setup HLS player when stream URL changes
+    // --- FIX: Logic xử lý HLS Player giống hệt TeacherViewCoursePage ---
     useEffect(() => {
         if (!streamUrl || !videoRef.current) return;
 
         const video = videoRef.current;
 
+        // Cleanup instance cũ
         if (hlsRef.current) {
             hlsRef.current.destroy();
+            hlsRef.current = null;
         }
 
+        // Trường hợp 1: Backend trả về playlist dạng Base64 Data URI
         if (streamUrl.startsWith("data:application/vnd.apple.mpegurl")) {
             const base64Data = streamUrl.split(",")[1];
             const playlistContent = atob(base64Data);
@@ -59,23 +65,52 @@ export function VideoUpload({ lessonId, currentVideoStatus, onUploadComplete }: 
                 hls.attachMedia(video);
 
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    console.log("Video ready to play");
+                    // Tự động play hoặc để user bấm play
+                    // video.play().catch(e => console.log("Auto-play prevented:", e));
+                    console.log("Video manifest loaded");
                 });
 
+                // Xử lý lỗi (Quan trọng: Copy từ page view để player ổn định)
                 hls.on(Hls.Events.ERROR, (event, data) => {
                     console.error("HLS Error:", data);
                     if (data.fatal) {
-                        toast.error("Video playback error");
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log("Network error, trying to recover...");
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log("Media error, trying to recover...");
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                console.log("Fatal error, cannot recover");
+                                hls.destroy();
+                                break;
+                        }
                     }
                 });
+
+                return () => {
+                    URL.revokeObjectURL(blobUrl);
+                    hls.destroy();
+                };
             } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                // Fallback cho Safari native
                 video.src = streamUrl;
+                video.addEventListener("loadedmetadata", () => {
+                    // video.play().catch(e => console.log("Auto-play prevented:", e));
+                });
             }
+        } else {
+            // Trường hợp 2: URL thường (mp4 hoặc m3u8 trực tiếp) -> FALLBACK QUAN TRỌNG ĐÃ BỊ THIẾU
+            video.src = streamUrl;
         }
 
         return () => {
             if (hlsRef.current) {
                 hlsRef.current.destroy();
+                hlsRef.current = null;
             }
         };
     }, [streamUrl]);

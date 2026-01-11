@@ -14,4 +14,9 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long>, J
     List<Submission> findByStudentId(Long studentId);
     List<Submission> findByAssignmentIdAndStudentId(Long assignmentId, Long studentId);
     Optional<Submission> findFirstByAssignmentIdAndStudentIdOrderByAttemptNumberDesc(Long assignmentId, Long studentId);
+
+    /**
+     * Count submissions for an assignment (used for business rule validation)
+     */
+    long countByAssignmentId(Long assignmentId);
 }

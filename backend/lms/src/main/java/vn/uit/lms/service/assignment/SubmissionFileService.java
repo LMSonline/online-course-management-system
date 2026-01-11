@@ -5,16 +5,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import vn.uit.lms.core.domain.Account;
+import vn.uit.lms.core.domain.Student;
 import vn.uit.lms.core.domain.assignment.Submission;
 import vn.uit.lms.core.domain.assignment.SubmissionFile;
 import vn.uit.lms.core.domain.course.content.FileStorage;
+import vn.uit.lms.core.repository.StudentRepository;
 import vn.uit.lms.core.repository.assignment.SubmissionFileRepository;
 import vn.uit.lms.core.repository.assignment.SubmissionRepository;
+import vn.uit.lms.service.AccountService;
 import vn.uit.lms.service.course.content.FileStorageService;
 import vn.uit.lms.shared.constant.StorageProvider;
 import vn.uit.lms.shared.dto.response.storage.FileStorageResponse;
 import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
+import vn.uit.lms.shared.exception.UnauthorizedException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +34,8 @@ public class SubmissionFileService {
     private final SubmissionFileRepository submissionFileRepository;
     private final SubmissionRepository submissionRepository;
     private final FileStorageService fileStorageService;
+    private final AccountService accountService;
+    private final StudentRepository studentRepository;
 
     /**
      * Upload file and attach to submission
@@ -37,6 +44,9 @@ public class SubmissionFileService {
     public FileStorageResponse uploadSubmissionFile(Long submissionId, MultipartFile file) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
+
+        // Validate ownership - student can only upload files to their own submission
+        validateStudentOwnership(submission);
 
         // Check if submission can be edited
         if (!submission.canBeEdited()) {
@@ -103,6 +113,9 @@ public class SubmissionFileService {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
+        // Validate ownership - student can only delete files from their own submission
+        validateStudentOwnership(submission);
+
         // Check if submission can be edited
         if (!submission.canBeEdited()) {
             throw new InvalidRequestException("Cannot delete files from a graded or rejected submission");
@@ -167,6 +180,48 @@ public class SubmissionFileService {
      */
     public int getFileCount(Long submissionId) {
         return submissionFileRepository.findBySubmissionId(submissionId).size();
+    }
+
+    /**
+     * Get specific submission file detail
+     */
+    public FileStorageResponse getSubmissionFile(Long submissionId, Long fileId) {
+        // Verify file belongs to submission using rich domain logic
+        SubmissionFile submissionFile = submissionFileRepository.findBySubmissionId(submissionId).stream()
+                .filter(sf -> sf.getFile().getId().equals(fileId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("File not found in this submission"));
+
+        // Use domain logic to get file information
+        submissionFile.validate();
+
+        return fileStorageService.getFileStorage(fileId);
+    }
+
+    /**
+     * Get total file size for submission (uses rich domain logic)
+     */
+    public Long getTotalFileSize(Long submissionId) {
+        List<SubmissionFile> files = submissionFileRepository.findBySubmissionId(submissionId);
+
+        return files.stream()
+                .map(SubmissionFile::getFileSizeBytes) // Use rich domain method
+                .filter(java.util.Objects::nonNull)
+                .reduce(0L, Long::sum);
+    }
+
+
+    /**
+     * Validate that current user (student) owns the submission
+     */
+    private void validateStudentOwnership(Submission submission) {
+        Account currentAccount = accountService.verifyCurrentAccount();
+        Student currentStudent = studentRepository.findByAccount(currentAccount)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        if (!submission.getStudent().getId().equals(currentStudent.getId())) {
+            throw new UnauthorizedException("You can only access your own submissions");
+        }
     }
 }
 

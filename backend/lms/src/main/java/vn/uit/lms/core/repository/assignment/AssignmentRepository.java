@@ -10,4 +10,10 @@ import java.util.List;
 @Repository
 public interface AssignmentRepository extends JpaRepository<Assignment, Long>, JpaSpecificationExecutor<Assignment> {
     List<Assignment> findByLessonId(Long lessonId);
+
+    /**
+     * Find independent assignments (not linked to any lesson)
+     * Useful for assignment library/pool management
+     */
+    List<Assignment> findByLessonIsNull();
 }

@@ -34,6 +34,8 @@ public class EnrollmentMapper {
                 .remainingDays(enrollment.getRemainingDays())
                 .isActive(enrollment.isActive())
                 .canTakeFinalExam(enrollment.canTakeFinalExam())
+                .finalExamScore(enrollment.getFinalExamScore())
+                .finalExamWeight(enrollment.getFinalExamWeight())
                 .build();
     }
 
@@ -68,6 +70,12 @@ public class EnrollmentMapper {
                 .isActive(enrollment.isActive())
                 .canTakeFinalExam(enrollment.canTakeFinalExam())
                 .passScore(enrollment.getCourseVersion() != null ? enrollment.getCourseVersion().getPassScore() : null)
+                .quizScores(enrollment.getQuizScores())
+                .finalExamScore(enrollment.getFinalExamScore())
+                .finalExamWeight(enrollment.getFinalExamWeight())
+                .banReason(enrollment.getBanReason())
+                .bannedAt(enrollment.getBannedAt())
+                .isEligibleForCertificate(enrollment.isEligibleForCertificate())
                 .minProgressPct(enrollment.getCourseVersion() != null ? enrollment.getCourseVersion().getMinProgressPct() : null)
                 .finalWeight(enrollment.getCourseVersion() != null ? enrollment.getCourseVersion().getFinalWeight() : null)
                 .build();

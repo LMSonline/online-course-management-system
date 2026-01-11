@@ -8,6 +8,7 @@ import vn.uit.lms.shared.entity.BaseEntity;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -49,8 +50,9 @@ public class QuizAttempt extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String metadata;
 
-    @OneToMany(mappedBy = "quizAttempt", cascade = CascadeType.ALL)
-    private List<QuizAttemptAnswer> answers;
+    @OneToMany(mappedBy = "quizAttempt", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<QuizAttemptAnswer> answers = new ArrayList<>();
 
     /**
      * Check if attempt is in progress
@@ -178,5 +180,104 @@ public class QuizAttempt extends BaseEntity {
         if (attemptNumber == null || attemptNumber < 1) {
             throw new IllegalStateException("Attempt number must be at least 1");
         }
+    }
+
+    /**
+     * Add answer to attempt
+     */
+    public void addAnswer(QuizAttemptAnswer answer) {
+        if (answers == null) {
+            answers = new ArrayList<>();
+        }
+        answer.setQuizAttempt(this);
+        answers.add(answer);
+    }
+
+    /**
+     * Get number of answered questions
+     */
+    public int getAnsweredQuestionCount() {
+        if (answers == null) {
+            return 0;
+        }
+        return (int) answers.stream()
+                .filter(QuizAttemptAnswer::hasAnswer)
+                .count();
+    }
+
+    /**
+     * Get number of correctly answered questions
+     */
+    public int getCorrectAnswerCount() {
+        if (answers == null) {
+            return 0;
+        }
+        return (int) answers.stream()
+                .filter(QuizAttemptAnswer::isCorrect)
+                .count();
+    }
+
+    /**
+     * Calculate score based on answers
+     */
+    public Double calculateScore() {
+        if (answers == null || answers.isEmpty()) {
+            return 0.0;
+        }
+        return answers.stream()
+                .filter(QuizAttemptAnswer::isGraded)
+                .map(QuizAttemptAnswer::getScore)
+                .filter(score -> score != null)
+                .reduce(0.0, Double::sum);
+    }
+
+    /**
+     * Auto-grade all answers that can be auto-graded
+     */
+    public void autoGradeAnswers() {
+        if (answers == null) {
+            return;
+        }
+        answers.stream()
+                .filter(answer -> answer.getQuestion() != null && !answer.getQuestion().needsManualGrading())
+                .filter(answer -> !answer.isGraded())
+                .forEach(QuizAttemptAnswer::autoGrade);
+    }
+
+    /**
+     * Check if all answers have been graded
+     */
+    public boolean areAllAnswersGraded() {
+        if (answers == null || answers.isEmpty()) {
+            return false;
+        }
+        return answers.stream().allMatch(QuizAttemptAnswer::isGraded);
+    }
+
+    /**
+     * Check if attempt has any answers needing manual grading
+     */
+    public boolean hasAnswersNeedingManualGrading() {
+        if (answers == null) {
+            return false;
+        }
+        return answers.stream()
+                .anyMatch(answer -> answer.getQuestion() != null && answer.getQuestion().needsManualGrading());
+    }
+
+    /**
+     * Finish attempt with auto-grading
+     */
+    public void finishWithAutoGrading() {
+        autoGradeAnswers();
+        Double score = calculateScore();
+        finish(score);
+    }
+
+    /**
+     * Check if this attempt belongs to a specific student
+     */
+    public boolean belongsToStudent(Long studentId) {
+        return student != null && student.getId().equals(studentId);
     }
 }

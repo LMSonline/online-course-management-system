@@ -126,4 +126,43 @@ public class Assignment extends BaseEntity {
     public boolean isGraded() {
         return assignmentType != AssignmentType.PRACTICE;
     }
+
+    /**
+     * Check if assignment is practice type
+     */
+    public boolean isPractice() {
+        return assignmentType == AssignmentType.PRACTICE;
+    }
+
+    /**
+     * Check if assignment belongs to a specific lesson
+     */
+    public boolean belongsToLesson(Long lessonId) {
+        return lesson != null && lesson.getId().equals(lessonId);
+    }
+
+    /**
+     * Get number of submissions
+     */
+    public int getSubmissionCount() {
+        return submissions != null ? submissions.size() : 0;
+    }
+
+    /**
+     * Check if assignment has unlimited attempts
+     */
+    public boolean hasUnlimitedAttempts() {
+        return maxAttempts == null;
+    }
+
+    /**
+     * Add submission to assignment
+     */
+    public void addSubmission(Submission submission) {
+        if (submissions == null) {
+            submissions = new java.util.ArrayList<>();
+        }
+        submission.setAssignment(this);
+        submissions.add(submission);
+    }
 }

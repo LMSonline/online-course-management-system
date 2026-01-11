@@ -2,8 +2,10 @@ package vn.uit.lms.shared.mapper.billing;
 
 import vn.uit.lms.core.domain.billing.PaymentTransaction;
 import vn.uit.lms.core.domain.billing.Payout;
+import vn.uit.lms.core.domain.billing.RevenueShareConfig;
 import vn.uit.lms.shared.dto.response.billing.PaymentTransactionResponse;
 import vn.uit.lms.shared.dto.response.billing.PayoutResponse;
+import vn.uit.lms.shared.dto.response.billing.RevenueShareConfigResponse;
 
 public class BillingMapper {
 
@@ -23,7 +25,7 @@ public class BillingMapper {
                 .versionNumber(payment.getCourseVersion() != null ? payment.getCourseVersion().getVersionNumber() : null)
                 .amount(payment.getAmount())
                 .currency(payment.getCurrency())
-                .paymentMethod(payment.getPaymentMethod())
+                .paymentMethod(payment.getPaymentMethod() != null ? payment.getPaymentMethod() : null)
                 .status(payment.getStatus())
                 .providerTransactionId(payment.getProviderTransactionId())
                 .paidAt(payment.getPaidAt())
@@ -73,6 +75,29 @@ public class BillingMapper {
                 .netAmount(payout.getNetAmount())
                 .createdAt(payout.getCreatedAt())
                 .updatedAt(payout.getUpdatedAt())
+                .build();
+    }
+
+    public static RevenueShareConfigResponse toRevenueShareConfigResponse(RevenueShareConfig config) {
+        if (config == null) {
+            return null;
+        }
+
+        return RevenueShareConfigResponse.builder()
+                .id(config.getId())
+                .percentage(config.getPercentage())
+                .platformPercentage(config.getPlatformPercentage())
+                .effectiveFrom(config.getEffectiveFrom())
+                .effectiveTo(config.getEffectiveTo())
+                .isActive(config.getIsActive())
+                .description(config.getDescription())
+                .minimumPayoutAmount(config.getMinimumPayoutAmount())
+                .categoryId(config.getCategoryId())
+                .categoryName(null) // Can be populated from category if needed
+                .versionNote(config.getVersionNote())
+                .metadata(config.getMetadata())
+                .createdAt(config.getCreatedAt())
+                .updatedAt(config.getUpdatedAt())
                 .build();
     }
 }

@@ -1,7 +1,6 @@
 // src/components/learner/course/CourseTeacherCard.tsx
 import { UserCircle2 } from "lucide-react";
 import type { CourseDetail } from "@/lib/learner/course/types";
-import { SafeImage } from "@/core/components/ui/SafeImage";
 
 export function CourseTeacherCard({ course }: { course: CourseDetail }) {
   const inst = course.instructor;
@@ -11,15 +10,17 @@ export function CourseTeacherCard({ course }: { course: CourseDetail }) {
       <h2 className="text-lg font-semibold mb-3">Teacher</h2>
       <div className="flex gap-3">
         <div className="flex-shrink-0">
-          <SafeImage
-            src={inst.avatarUrl}
-            alt={inst.name}
-            fallback="/images/avatars/avatar.png"
-            width={48}
-            height={48}
-            className="h-12 w-12 rounded-full"
-            objectFit="cover"
-          />
+          {inst.avatarUrl ? (
+            <img
+              src={inst.avatarUrl}
+              alt={inst.name}
+              className="h-12 w-12 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-12 w-12 rounded-full bg-slate-900 flex items-center justify-center border border-white/10">
+              <UserCircle2 className="w-7 h-7 text-slate-300" />
+            </div>
+          )}
         </div>
         <div>
           <p className="text-sm font-semibold">{inst.name}</p>

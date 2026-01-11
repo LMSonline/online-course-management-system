@@ -147,4 +147,49 @@ public class CourseController {
         PageResponse<CourseResponse> myCourses = courseService.getMyCourses(specification, pageable);
         return ResponseEntity.ok(myCourses);
     }
+
+    // ========== PUBLIC APIs - No Authentication Required ==========
+
+    @Operation(
+            summary = "Get all published courses (Public)",
+            description = "Get all courses that have at least one published version. No authentication required. Supports filtering and search."
+    )
+    @GetMapping("/public/courses")
+    public ResponseEntity<PageResponse<CourseResponse>> getPublishedCourses(
+            @Parameter(hidden = true) @Filter Specification<Course> specification,
+            @Parameter(description = "Pagination parameters") Pageable pageable
+    ) {
+        PageResponse<CourseResponse> publishedCourses = courseService.getPublishedCourses(specification, pageable);
+        return ResponseEntity.ok(publishedCourses);
+    }
+
+    @Operation(
+            summary = "Get published course by slug (Public)",
+            description = "Get detailed information about a published course by its slug. Shows only published version info. No authentication required."
+    )
+    @GetMapping("/public/courses/{slug}")
+    public ResponseEntity<CourseDetailResponse> getPublishedCourseBySlug(
+            @Parameter(description = "Course slug") @PathVariable String slug
+    ) {
+        CourseDetailResponse course = courseService.getPublishedCourseBySlug(slug);
+        return ResponseEntity.ok(course);
+    }
+
+    @Operation(
+            summary = "Search published courses (Public)",
+            description = "Search courses by title, description, or tags. Only returns courses with published versions. No authentication required."
+    )
+    @GetMapping("/public/courses/search")
+    public ResponseEntity<PageResponse<CourseResponse>> searchPublishedCourses(
+            @Parameter(description = "Search query") @RequestParam(required = false) String query,
+            @Parameter(description = "Category ID filter") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "Difficulty level filter") @RequestParam(required = false) String difficulty,
+            @Parameter(description = "Tag names (comma-separated)") @RequestParam(required = false) String tags,
+            @Parameter(description = "Pagination parameters") Pageable pageable
+    ) {
+        PageResponse<CourseResponse> searchResults = courseService.searchPublishedCourses(
+                query, categoryId, difficulty, tags, pageable
+        );
+        return ResponseEntity.ok(searchResults);
+    }
 }

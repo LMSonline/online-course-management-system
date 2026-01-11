@@ -1,7 +1,6 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
 import { ApiResponse, PageResponse } from "@/lib/api/api.types";
-import { DEMO_MODE } from "@/lib/env";
 import {
   UpdateProfileRequest,
   AccountActionRequest,
@@ -22,13 +21,6 @@ export const accountService = {
    * Get current user profile
    */
   getProfile: async (): Promise<AccountProfileResponse> => {
-    // DEMO_MODE: Skip protected endpoint
-    if (DEMO_MODE) {
-      const error: any = new Error("DEMO_MODE: Auth disabled");
-      error.code = "DEMO_SKIP_AUTH";
-      throw error;
-    }
-    
     const response = await axiosClient.get<ApiResponse<AccountProfileResponse>>(
       `${ACCOUNT_PREFIX}/me`
     );
@@ -40,13 +32,6 @@ export const accountService = {
    * Upload user avatar
    */
   uploadAvatar: async (file: File): Promise<UploadAvatarResponse> => {
-    // DEMO_MODE: Skip protected endpoint
-    if (DEMO_MODE) {
-      const error: any = new Error("DEMO_MODE: Auth disabled");
-      error.code = "DEMO_SKIP_AUTH";
-      throw error;
-    }
-    
     const formData = new FormData();
     formData.append("file", file);
 
@@ -69,13 +54,6 @@ export const accountService = {
   updateProfile: async (
     payload: UpdateProfileRequest
   ): Promise<AccountProfileResponse> => {
-    // DEMO_MODE: Skip protected endpoint
-    if (DEMO_MODE) {
-      const error: any = new Error("DEMO_MODE: Auth disabled");
-      error.code = "DEMO_SKIP_AUTH";
-      throw error;
-    }
-    
     const response = await axiosClient.put<ApiResponse<AccountProfileResponse>>(
       `${ACCOUNT_PREFIX}/me`,
       payload

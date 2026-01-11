@@ -4,10 +4,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.learning.ProgressService;
+import vn.uit.lms.shared.dto.request.progress.UpdateWatchedDurationRequest;
 import vn.uit.lms.shared.dto.response.progress.*;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
@@ -101,6 +103,27 @@ public class ProgressController {
     public ResponseEntity<LessonProgressResponse> markLessonAsCompleted(
             @Parameter(description = "Lesson ID") @PathVariable Long lessonId) {
         LessonProgressResponse response = progressService.markLessonAsCompleted(lessonId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /lessons/{lessonId}/update-duration - Cập nhật thời gian xem video
+     */
+    @Operation(
+            summary = "Update watched duration",
+            description = "Update watched duration for video lessons. " +
+                    "Automatically marks lesson as VIEWED or COMPLETED based on percentage watched. " +
+                    "Lesson is auto-completed when watched >= 90% of video duration."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/lessons/{lessonId}/update-duration")
+    @StudentOnly
+    public ResponseEntity<LessonProgressResponse> updateWatchedDuration(
+            @Parameter(description = "Lesson ID") @PathVariable Long lessonId,
+            @Parameter(description = "Watched duration update request")
+            @Valid @RequestBody UpdateWatchedDurationRequest request) {
+        LessonProgressResponse response = progressService.updateWatchedDuration(
+                lessonId, request.getDurationSeconds());
         return ResponseEntity.ok(response);
     }
 

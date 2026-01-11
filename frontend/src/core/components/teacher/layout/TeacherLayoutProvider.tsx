@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useMemo, useCallback, ReactNode } from "react";
 
 interface TeacherLayoutContextType {
     isCollapsed: boolean;
@@ -18,15 +18,19 @@ export function TeacherLayoutProvider({ children }: { children: ReactNode }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-    const value = {
+    const toggleCollapsed = useCallback(() => setIsCollapsed((prev) => !prev), []);
+    const openMobile = useCallback(() => setIsMobileOpen(true), []);
+    const closeMobile = useCallback(() => setIsMobileOpen(false), []);
+
+    const value = useMemo(() => ({
         isCollapsed,
         isMobileOpen,
         setIsCollapsed,
         setIsMobileOpen,
-        toggleCollapsed: () => setIsCollapsed((prev) => !prev),
-        openMobile: () => setIsMobileOpen(true),
-        closeMobile: () => setIsMobileOpen(false),
-    };
+        toggleCollapsed,
+        openMobile,
+        closeMobile,
+    }), [isCollapsed, isMobileOpen, toggleCollapsed, openMobile, closeMobile]);
 
     return (
         <TeacherLayoutContext.Provider value={value}>

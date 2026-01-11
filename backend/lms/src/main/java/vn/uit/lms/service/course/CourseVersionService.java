@@ -132,20 +132,12 @@ public class CourseVersionService {
     /**
      * Submit course version for approval
      *
-     * TODO: Add comprehensive validation before submission
-     * - Validate version has minimum required content:
+     * Validates content requirements before submission:
      * - At least 1 chapter with lessons
      * - All lessons have content (video or text)
-     * - Price is set (if not free course)
-     * - Duration and passing criteria are configured
-     * - Validate all videos are processed and ready
-     * - Check all required fields are filled
-     * - Validate course has thumbnail
-     * - Ensure learning objectives are defined
-     * - Check for placeholder content
-     * - Validate total course duration meets minimum
-     * - Generate preview link for admin review
-     * - Send notification to admin queue
+     * - Price is set correctly
+     * - Thumbnail exists
+     * - Passing criteria configured
      */
     @Transactional
     @EnableSoftDeleteFilter
@@ -162,33 +154,87 @@ public class CourseVersionService {
             throw new InvalidRequestException("Course version is not DRAFT");
         }
 
-        // TODO: Add validation checks
-        // if (version.getChapters().isEmpty()) {
-        // throw new InvalidRequestException("Course must have at least one chapter");
-        // }
-        //
-        // long totalLessons = version.getChapters().stream()
-        // .mapToLong(Chapter::getLessons().size())
-        // .sum();
-        // if (totalLessons < 3) {
-        // throw new InvalidRequestException("Course must have at least 3 lessons");
-        // }
-        //
-        // boolean hasUnprocessedVideos = checkForUnprocessedVideos(version);
-        // if (hasUnprocessedVideos) {
-        // throw new InvalidRequestException("All videos must be processed before
-        // submission");
-        // }
-        //
-        // if (version.getPrice() == null || version.getPrice() < 0) {
-        // throw new InvalidRequestException("Course price must be set");
-        // }
+        // ✅ Validate content requirements before submission
+        validateContentRequirements(version, course);
+
         version.setStatus(CourseStatus.PENDING);
 
         courseVersionRepository.save(version);
 
         eventPublisher.publishEvent(new CourseVersionStatusChangeEvent(version, ""));
         return CourseVersionMapper.toCourseVersionResponse(version);
+    }
+
+    /**
+     * Validate content requirements before submission
+     */
+    private void validateContentRequirements(CourseVersion version, Course course) {
+        // Check minimum chapters
+        if (version.getChapters() == null || version.getChapters().isEmpty()) {
+            throw new InvalidRequestException("Course must have at least 1 chapter before submission");
+        }
+
+        // Check minimum lessons
+        long totalLessons = version.getChapters().stream()
+                .filter(chapter -> chapter.getLessons() != null)
+                .mapToLong(chapter -> chapter.getLessons().size())
+                .sum();
+
+        if (totalLessons == 0) {
+            throw new InvalidRequestException("Course must have at least 1 lesson before submission");
+        }
+
+        // Check all lessons have content (video or description)
+        boolean hasInvalidLesson = version.getChapters().stream()
+                .filter(chapter -> chapter.getLessons() != null)
+                .flatMap(chapter -> chapter.getLessons().stream())
+                .anyMatch(lesson -> {
+                    // Video lesson must have video
+                    if (lesson.isVideoLesson()) {
+                        return lesson.getVideoObjectKey() == null || lesson.getVideoObjectKey().isBlank();
+                    }
+                    // Text lesson must have description
+                    return lesson.getShortDescription() == null || lesson.getShortDescription().isBlank();
+                });
+
+        if (hasInvalidLesson) {
+            throw new InvalidRequestException("All lessons must have content (video for VIDEO type, description for others)");
+        }
+
+        // Check price is set
+        if (version.getPrice() == null) {
+            throw new InvalidRequestException("Price must be set (use 0 for free courses)");
+        }
+
+        if (version.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new InvalidRequestException("Price cannot be negative");
+        }
+
+        // Check thumbnail exists
+        if (course.getThumbnailUrl() == null || course.getThumbnailUrl().isBlank()) {
+            throw new InvalidRequestException("Course must have a thumbnail before submission");
+        }
+
+        // Check passing score configured
+        if (version.getPassScore() == null || version.getPassScore() <= 0) {
+            throw new InvalidRequestException("Passing score must be configured (e.g., 8.0)");
+        }
+
+        // Check duration is set
+        if (version.getDurationDays() <= 0) {
+            throw new InvalidRequestException("Course duration must be set (days)");
+        }
+
+        // Validate final weight
+        if (version.getFinalWeight() == null || version.getFinalWeight() < 0 || version.getFinalWeight() > 1) {
+            throw new InvalidRequestException("Final exam weight must be between 0 and 1 (e.g., 0.6 for 60%)");
+        }
+
+        // TODO: Future enhancements
+        // - Check all videos are processed (not in PENDING state)
+        // - Validate minimum course duration
+        // - Check for placeholder content
+        // - Generate preview link for admin
     }
 
     @Transactional
@@ -371,56 +417,335 @@ public class CourseVersionService {
                 .toList();
     }
 
-    // TODO: Implement updateCourseVersion method
+    /**
+     * Update course version
+     * Only DRAFT or REJECTED versions can be updated
+     */
+    @Transactional
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse updateCourseVersion(Long courseId, Long versionId, CourseVersionRequest request) {
+        // Validate course and teacher ownership (same pattern as other methods)
+        Course course = courseService.validateCourse(courseId);
+        courseService.verifyTeacher(course);
+
+        // Get version and verify it belongs to course
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Course version not found or has been removed with id: " + versionId));
+
+        // Verify version belongs to this course
+        if (!version.getCourse().getId().equals(courseId)) {
+            throw new InvalidRequestException("Version does not belong to the specified course");
+        }
+
+        // Check if version is editable (only DRAFT or REJECTED)
+        if (version.getStatus() != CourseStatus.DRAFT && version.getStatus() != CourseStatus.REJECTED) {
+            throw new InvalidRequestException(
+                    "Only DRAFT or REJECTED versions can be updated. Current status: " + version.getStatus());
+        }
+
+        // Update fields (partial update - only provided fields)
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            version.setTitle(request.getTitle().trim());
+        }
+
+        if (request.getDescription() != null) {
+            version.setDescription(request.getDescription().trim());
+        }
+
+        // Update price with validation
+        if (request.getPrice() != null) {
+            if (request.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
+                throw new InvalidRequestException("Price cannot be negative");
+            }
+            version.setPrice(request.getPrice());
+        }
+
+        // Update duration with validation
+        if (request.getDurationDays() != null) {
+            if (request.getDurationDays() < 0) {
+                throw new InvalidRequestException("Duration cannot be negative");
+            }
+            version.setDurationDays(request.getDurationDays());
+        }
+
+        // Update passing score with validation
+        if (request.getPassScore() != null) {
+            if (request.getPassScore() < 0.0f || request.getPassScore() > 10.0f) {
+                throw new InvalidRequestException("Pass score must be between 0 and 10");
+            }
+            version.setPassScore(request.getPassScore());
+        }
+
+        // Update final weight with validation
+        if (request.getFinalWeight() != null) {
+            if (request.getFinalWeight() < 0.0f || request.getFinalWeight() > 1.0f) {
+                throw new InvalidRequestException("Final weight must be between 0 and 1");
+            }
+            version.setFinalWeight(request.getFinalWeight());
+        }
+
+        // Update min progress percentage with validation
+        if (request.getMinProgressPct() != null) {
+            if (request.getMinProgressPct() < 0 || request.getMinProgressPct() > 100) {
+                throw new InvalidRequestException("Minimum progress percentage must be between 0 and 100");
+            }
+            version.setMinProgressPct(request.getMinProgressPct());
+        }
+
+        if (request.getNotes() != null) {
+            version.setNotes(request.getNotes().trim());
+        }
+
+        // If status was REJECTED, reset to DRAFT when updating
+        if (version.getStatus() == CourseStatus.REJECTED) {
+            version.setStatus(CourseStatus.DRAFT);
+            version.setApprovedBy(null);
+            version.setApprovedAt(null);
+        }
+
+        // Save updated version
+        CourseVersion updatedVersion = courseVersionRepository.save(version);
+
+        // Return response (use same mapper as other methods)
+        return CourseVersionMapper.toCourseVersionResponse(updatedVersion);
+    }
+
+    /**
+     * Duplicate course version
+     *
+     * Implementation Plan:
+     * 1. Load source version with all relationships
+     * 2. Create new version entity with incremented version number
+     * 3. Deep copy all content:
+     *    - Chapters: Copy chapter structure and order
+     *    - Lessons: Copy lesson data, video references (NOT files)
+     *    - Resources: Copy resource metadata and S3 keys
+     * 4. Set new version to DRAFT status
+     * 5. Clear approval/publish metadata
+     * 6. Maintain video object keys (files stay in cloud storage)
+     *
+     * Use Case:
+     * - Teacher wants to create new version based on existing one
+     * - Updates content without affecting live students
+     *
+     * @param courseId Course ID
+     * @param versionId Source version ID to duplicate
+     * @return Created draft version
+     */
+//     @Transactional
+//     @EnableSoftDeleteFilter
+//     public CourseVersionResponse duplicateCourseVersion(Long courseId, Long versionId) {
+//         // Load source version with chapters and lessons
+//         CourseVersion sourceVersion = loadVersionWithContent(courseId, versionId);
+//         Course course = sourceVersion.getCourse();
+//
+//         // Create new version with incremented number
+//         Integer newVersionNumber = courseVersionRepository
+//             .findMaxVersionNumberByCourseId(courseId) + 1;
+//
+//         CourseVersion newVersion = CourseVersion.builder()
+//             .course(course)
+//             .versionNumber(newVersionNumber)
+//             .title(sourceVersion.getTitle() + " (Copy)")
+//             .shortDescription(sourceVersion.getShortDescription())
+//             .description(sourceVersion.getDescription())
+//             .price(sourceVersion.getPrice())
+//             .durationDays(sourceVersion.getDurationDays())
+//             .passScore(sourceVersion.getPassScore())
+//             .finalWeight(sourceVersion.getFinalWeight())
+//             .minProgressPct(sourceVersion.getMinProgressPct())
+//             .status(CourseStatus.DRAFT)
+//             .build();
+//
+//         newVersion = courseVersionRepository.save(newVersion);
+//
+//         // Deep copy chapters and lessons
+//         for (Chapter sourceChapter : sourceVersion.getChapters()) {
+//             Chapter newChapter = Chapter.builder()
+//                 .courseVersion(newVersion)
+//                 .title(sourceChapter.getTitle())
+//                 .orderIndex(sourceChapter.getOrderIndex())
+//                 .build();
+//             newChapter = chapterRepository.save(newChapter);
+//
+//             for (Lesson sourceLesson : sourceChapter.getLessons()) {
+//                 Lesson newLesson = Lesson.builder()
+//                     .chapter(newChapter)
+//                     .type(sourceLesson.getType())
+//                     .title(sourceLesson.getTitle())
+//                     .shortDescription(sourceLesson.getShortDescription())
+//                     .videoObjectKey(sourceLesson.getVideoObjectKey()) // Reference, not copy
+//                     .durationSeconds(sourceLesson.getDurationSeconds())
+//                     .orderIndex(sourceLesson.getOrderIndex())
+//                     .isPreview(sourceLesson.getIsPreview())
+//                     .build();
+//                 lessonRepository.save(newLesson);
+//             }
+//         }
+//
+//         return CourseVersionMapper.toCourseVersionResponse(newVersion);
+//     }
+
+    /**
+     * Compare two versions of a course
+     *
+     * Implementation Plan:
+     * 1. Load both versions with full content
+     * 2. Compare metadata (title, description, price, etc.)
+     * 3. Compare chapter structure:
+     *    - Added chapters
+     *    - Removed chapters
+     *    - Modified chapters
+     * 4. Compare lessons:
+     *    - Added/removed/modified lessons
+     *    - Video changes
+     *    - Order changes
+     * 5. Return structured diff
+     *
+     * Use Case:
+     * - Admin reviewing version changes before approval
+     * - Teacher reviewing what changed between versions
+     *
+     * @param courseId Course ID
+     * @param version1Id First version ID (older)
+     * @param version2Id Second version ID (newer)
+     * @return Comparison details
+     */
+    // public VersionComparisonResponse compareVersions(Long courseId, Long version1Id, Long version2Id) {
+    //     CourseVersion v1 = loadVersionWithContent(courseId, version1Id);
+    //     CourseVersion v2 = loadVersionWithContent(courseId, version2Id);
+    //
+    //     List<String> metadataChanges = new ArrayList<>();
+    //     if (!Objects.equals(v1.getTitle(), v2.getTitle())) {
+    //         metadataChanges.add("Title changed");
+    //     }
+    //     if (!Objects.equals(v1.getPrice(), v2.getPrice())) {
+    //         metadataChanges.add(String.format("Price changed from %s to %s",
+    //             v1.getPrice(), v2.getPrice()));
+    //     }
+    //
+    //     // Compare chapters and lessons
+    //     List<ChapterDiff> chapterDiffs = compareChapters(v1.getChapters(), v2.getChapters());
+    //
+    //     return VersionComparisonResponse.builder()
+    //         .version1Id(version1Id)
+    //         .version2Id(version2Id)
+    //         .metadataChanges(metadataChanges)
+    //         .chapterDiffs(chapterDiffs)
+    //         .build();
+    // }
+
+    /**
+     * Get analytics for a course version
+     *
+     * Implementation Plan:
+     * 1. Count content elements:
+     *    - Total chapters
+     *    - Total lessons by type (VIDEO, QUIZ, TEXT, etc.)
+     *    - Total resources
+     * 2. Calculate durations:
+     *    - Total video duration (sum of all video lessons)
+     *    - Estimated completion time (videos + reading + quizzes)
+     * 3. Content completeness:
+     *    - Percentage of lessons with descriptions
+     *    - Percentage of video lessons with videos uploaded
+     *    - Lessons missing content
+     * 4. Calculate course metrics:
+     *    - Average chapter size (lessons per chapter)
+     *    - Content distribution (video vs quiz vs text)
+     *
+     * Use Case:
+     * - Teacher reviewing content completeness before publishing
+     * - Admin validating course quality
+     *
+     * @param courseId Course ID
+     * @param versionId Version ID
+     * @return Analytics data
+     */
+    // public VersionAnalyticsResponse getVersionAnalytics(Long courseId, Long versionId) {
+    //     CourseVersion version = loadVersionWithContent(courseId, versionId);
+    //
+    //     int totalChapters = version.getChapters().size();
+    //     int totalLessons = version.getChapters().stream()
+    //         .mapToInt(c -> c.getLessons().size())
+    //         .sum();
+    //
+    //     Map<LessonType, Long> lessonsByType = version.getChapters().stream()
+    //         .flatMap(c -> c.getLessons().stream())
+    //         .collect(Collectors.groupingBy(Lesson::getType, Collectors.counting()));
+    //
+    //     int totalVideoDuration = version.getChapters().stream()
+    //         .flatMap(c -> c.getLessons().stream())
+    //         .filter(l -> l.getType() == LessonType.VIDEO && l.getDurationSeconds() != null)
+    //         .mapToInt(Lesson::getDurationSeconds)
+    //         .sum();
+    //
+    //     long lessonsWithVideo = version.getChapters().stream()
+    //         .flatMap(c -> c.getLessons().stream())
+    //         .filter(l -> l.getType() == LessonType.VIDEO)
+    //         .filter(l -> l.getVideoObjectKey() != null)
+    //         .count();
+    //
+    //     long videoLessons = lessonsByType.getOrDefault(LessonType.VIDEO, 0L);
+    //     float contentCompleteness = videoLessons > 0
+    //         ? (float) lessonsWithVideo / videoLessons * 100
+    //         : 100f;
+    //
+    //     return VersionAnalyticsResponse.builder()
+    //         .versionId(versionId)
+    //         .totalChapters(totalChapters)
+    //         .totalLessons(totalLessons)
+    //         .lessonsByType(lessonsByType)
+    //         .totalVideoDurationSeconds(totalVideoDuration)
+    //         .totalVideoDurationHours(totalVideoDuration / 3600f)
+    //         .estimatedCompletionHours(totalVideoDuration / 3600f * 1.5f) // +50% for exercises
+    //         .contentCompletenessPercentage(contentCompleteness)
+    //         .build();
+    // }
+
+    /**
+     * Archive course version manually
+     *
+     * Implementation Plan:
+     * 1. Verify version exists and is not currently published
+     * 2. Verify no active enrollments on this version
+     * 3. Set status to ARCHIVED
+     * 4. Keep all content for historical reference
+     *
+     * Use Case:
+     * - Manually archive old draft versions
+     * - Clean up unpublished versions
+     *
+     * @param courseId Course ID
+     * @param versionId Version ID to archive
+     * @return Archived version
+     */
     // @Transactional
-    // @EnableSoftDeleteFilter
-    // public CourseVersionResponse updateCourseVersion(Long courseId, Long
-    // versionId, CourseVersionRequest request) {
-    // - Validate version is editable (DRAFT or REJECTED)
-    // - Verify teacher ownership
-    // - Update title, description, price, duration, passing criteria
-    // - Validate business rules (price >= 0, duration > 0, etc.)
-    // - Log changes for audit
+    // public CourseVersionResponse archiveCourseVersion(Long courseId, Long versionId) {
+    //     CourseVersion version = loadVersion(courseId, versionId);
+    //
+    //     // Cannot archive current published version
+    //     if (version.getCourse().getVersionPublish() != null &&
+    //         version.getCourse().getVersionPublish().getId().equals(versionId)) {
+    //         throw new InvalidRequestException("Cannot archive currently published version");
+    //     }
+    //
+    //     // Check for active enrollments
+    //     long activeEnrollments = enrollmentRepository
+    //         .countByCourseVersionIdAndStatusIn(versionId,
+    //             Arrays.asList(EnrollmentStatus.ENROLLED, EnrollmentStatus.COMPLETED));
+    //
+    //     if (activeEnrollments > 0) {
+    //         throw new InvalidRequestException(
+    //             String.format("Cannot archive version with %d active enrollments", activeEnrollments));
+    //     }
+    //
+    //     version.setStatus(CourseStatus.ARCHIVED);
+    //     version = courseVersionRepository.save(version);
+    //
+    //     return CourseVersionMapper.toCourseVersionResponse(version);
     // }
-
-    // TODO: Implement duplicateCourseVersion method
-    // @Transactional
-    // @EnableSoftDeleteFilter
-    // public CourseVersionResponse duplicateCourseVersion(Long courseId, Long
-    // versionId) {
-    // - Copy all version data to new version
-    // - Deep copy chapters, lessons, resources
-    // - Copy video references (not files themselves)
-    // - Set status to DRAFT
-    // - Increment version number
-    // - Clear approval/publish dates
-    // }
-
-    // TODO: Implement compareVersions method
-    // public VersionComparisonResponse compareVersions(Long courseId, Long
-    // version1Id, Long version2Id) {
-    // - Compare content differences between two versions
-    // - Show added/removed/modified chapters and lessons
-    // - Compare pricing and configuration changes
-    // - Useful for admin review process
-    // }
-
-    // TODO: Implement getVersionAnalytics method
-    // public VersionAnalyticsResponse getVersionAnalytics(Long courseId, Long
-    // versionId) {
-    // - Count total chapters, lessons, resources
-    // - Calculate total video duration
-    // - Count different lesson types
-    // - Estimate completion time
-    // - Show content completeness percentage
-    // }
-
-    // TODO: Implement archiveCourseVersion method
-    // @Transactional
-    // public CourseVersionResponse archiveCourseVersion(Long courseId, Long
-    // versionId) {
-    // - Manually archive old published version
-    // - Verify not the current published version
     // - Update status to ARCHIVED
     // - Keep for historical reference
     // }
@@ -442,5 +767,52 @@ public class CourseVersionService {
     // - Show who made changes and when
     // - Include version comparison links
     // }
+
+    // ========== PUBLIC API METHODS ==========
+
+    /**
+     * Get published version by course slug for public access
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse getPublishedVersionBySlug(String courseSlug) {
+        // Get course by slug - this will throw exception if not found
+        courseService.getPublishedCourseBySlug(courseSlug);
+
+        // Find course again to get entity with versions
+        Course course = courseService.getCourseEntityBySlug(courseSlug);
+
+        CourseVersion publishedVersion = course.getVersionPublish();
+        if (publishedVersion == null) {
+            throw new ResourceNotFoundException("No published version available for this course");
+        }
+
+        return CourseVersionMapper.toCourseVersionResponse(publishedVersion);
+    }
+
+    /**
+     * Get public course version by ID
+     * Only returns PUBLISHED versions for public access
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse getPublicCourseVersionById(Long courseId, Long versionId) {
+        Course course = courseService.validateCourse(courseId);
+
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        // Verify version belongs to course
+        if (!version.getCourse().getId().equals(courseId)) {
+            throw new ResourceNotFoundException("Version not found for this course");
+        }
+
+        // Only allow access to PUBLISHED versions
+        if (version.getStatus() != CourseStatus.PUBLISHED) {
+            throw new ResourceNotFoundException("This version is not publicly available");
+        }
+
+        return CourseVersionMapper.toCourseVersionResponse(version);
+    }
 
 }

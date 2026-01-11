@@ -5,10 +5,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.assignment.AssignmentService;
+import vn.uit.lms.shared.constant.AssignmentType;
 import vn.uit.lms.shared.dto.request.assignment.AssignmentRequest;
+import vn.uit.lms.shared.dto.response.assignment.AssignmentEligibilityResponse;
+import vn.uit.lms.shared.dto.response.assignment.AssignmentResponse;
+import vn.uit.lms.shared.dto.response.assignment.StudentAssignmentProgressResponse;
+import vn.uit.lms.shared.dto.response.assignment.SubmissionResponse;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
 import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
+
+import java.time.Instant;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,46 +24,98 @@ import vn.uit.lms.shared.util.annotation.TeacherOnly;
 public class AssignmentController {
     private final AssignmentService assignmentService;
 
+
+    /**
+     * Create independent assignment (not linked to any lesson yet)
+     * Follows Association pattern: Assignment exists independently
+     */
+    @PostMapping("/assignments")
+    @TeacherOnly
+    public ResponseEntity<AssignmentResponse> createIndependentAssignment(@RequestBody @Valid AssignmentRequest request) {
+        return ResponseEntity.ok(assignmentService.createIndependentAssignment(request));
+    }
+
+    /**
+     * Get all independent assignments (assignment library/pool)
+     */
+    @GetMapping("/assignments")
+    @TeacherOnly
+    public ResponseEntity<List<AssignmentResponse>> getAllIndependentAssignments() {
+        return ResponseEntity.ok(assignmentService.getAllIndependentAssignments());
+    }
+
+    /**
+     * Link existing assignment to a lesson
+     * Allows assignment reusability across lessons
+     */
+    @PostMapping("/lessons/{lessonId}/assignments/{assignmentId}")
+    @TeacherOnly
+    public ResponseEntity<AssignmentResponse> linkAssignmentToLesson(
+            @PathVariable Long lessonId,
+            @PathVariable Long assignmentId) {
+        return ResponseEntity.ok(assignmentService.linkAssignmentToLesson(assignmentId, lessonId));
+    }
+
+    /**
+     * Unlink assignment from lesson
+     * Assignment becomes independent again
+     */
+    @DeleteMapping("/lessons/{lessonId}/assignments/{assignmentId}")
+    @TeacherOnly
+    public ResponseEntity<Void> unlinkAssignmentFromLesson(
+            @PathVariable Long lessonId,
+            @PathVariable Long assignmentId) {
+        assignmentService.unlinkAssignmentFromLesson(lessonId, assignmentId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    /**
+     * Create assignment and immediately link to lesson (convenience method)
+     * LEGACY: For UX convenience (quick creation during lesson editing)
+     * Internally calls: createIndependentAssignment() + linkAssignmentToLesson()
+     */
     @PostMapping("/lessons/{lessonId}/assignments")
     @TeacherOnly
-    public ResponseEntity<?> createAssignment(@PathVariable Long lessonId, @RequestBody @Valid AssignmentRequest request) {
+    public ResponseEntity<AssignmentResponse> createAssignment(@PathVariable Long lessonId, @RequestBody @Valid AssignmentRequest request) {
         return ResponseEntity.ok(assignmentService.createAssignment(lessonId, request));
     }
 
+
     @GetMapping("/lessons/{lessonId}/assignments")
     @StudentOrTeacher
-    public ResponseEntity<?> getAssignments(@PathVariable Long lessonId) {
+    public ResponseEntity<List<AssignmentResponse>> getAssignments(@PathVariable Long lessonId) {
         return ResponseEntity.ok(assignmentService.getAssignmentsByLesson(lessonId));
     }
 
     @GetMapping("/assignments/{id}")
     @StudentOrTeacher
-    public ResponseEntity<?> getAssignment(@PathVariable Long id) {
+    public ResponseEntity<AssignmentResponse> getAssignment(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.getAssignmentById(id));
     }
 
     @PutMapping("/assignments/{id}")
     @TeacherOnly
-    public ResponseEntity<?> updateAssignment(@PathVariable Long id, @RequestBody @Valid AssignmentRequest request) {
+    public ResponseEntity<AssignmentResponse> updateAssignment(@PathVariable Long id, @RequestBody @Valid AssignmentRequest request) {
         return ResponseEntity.ok(assignmentService.updateAssignment(id, request));
     }
 
     @DeleteMapping("/assignments/{id}")
     @TeacherOnly
-    public ResponseEntity<?> deleteAssignment(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAssignment(@PathVariable Long id) {
         assignmentService.deleteAssignment(id);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/assignments/{id}/submissions")
     @TeacherOnly
-    public ResponseEntity<?> getAssignmentSubmissions(@PathVariable Long id) {
+    public ResponseEntity<List<SubmissionResponse>> getAssignmentSubmissions(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.getAssignmentSubmissions(id));
     }
 
     @GetMapping("/assignments/{id}/eligibility")
     @StudentOnly
-    public ResponseEntity<?> checkEligibility(@PathVariable Long id) {
+    public ResponseEntity<AssignmentEligibilityResponse> checkEligibility(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.checkEligibility(id));
     }
 
@@ -67,40 +127,40 @@ public class AssignmentController {
 
     @GetMapping("/assignments/{assignmentId}/students/{studentId}/progress")
     @StudentOrTeacher
-    public ResponseEntity<?> getStudentProgress(@PathVariable Long assignmentId, @PathVariable Long studentId) {
+    public ResponseEntity<StudentAssignmentProgressResponse> getStudentProgress(@PathVariable Long assignmentId, @PathVariable Long studentId) {
         return ResponseEntity.ok(assignmentService.getStudentProgress(assignmentId, studentId));
     }
 
     @PostMapping("/assignments/{id}/clone")
     @TeacherOnly
-    public ResponseEntity<?> cloneAssignment(@PathVariable Long id, @RequestParam Long targetLessonId) {
+    public ResponseEntity<AssignmentResponse> cloneAssignment(@PathVariable Long id, @RequestParam Long targetLessonId) {
         return ResponseEntity.ok(assignmentService.cloneAssignment(id, targetLessonId));
     }
 
     @GetMapping("/assignments/{id}/late-submissions")
     @TeacherOnly
-    public ResponseEntity<?> getLateSubmissions(@PathVariable Long id) {
+    public ResponseEntity<List<SubmissionResponse>> getLateSubmissions(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.getLateSubmissions(id));
     }
 
     @GetMapping("/assignments/{id}/pending-submissions")
     @TeacherOnly
-    public ResponseEntity<?> getPendingSubmissions(@PathVariable Long id) {
+    public ResponseEntity<List<SubmissionResponse>> getPendingSubmissions(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.getPendingSubmissions(id));
     }
 
     @GetMapping("/lessons/{lessonId}/assignments/by-type")
     @StudentOrTeacher
-    public ResponseEntity<?> getAssignmentsByType(
+    public ResponseEntity<List<AssignmentResponse>> getAssignmentsByType(
             @PathVariable Long lessonId,
-            @RequestParam vn.uit.lms.shared.constant.AssignmentType type) {
+            @RequestParam AssignmentType type) {
         return ResponseEntity.ok(assignmentService.getAssignmentsByType(lessonId, type));
     }
 
     @PutMapping("/assignments/{id}/extend-due-date")
     @TeacherOnly
-    public ResponseEntity<?> extendDueDate(@PathVariable Long id, @RequestParam String newDueDate) {
-        java.time.Instant dueDate = java.time.Instant.parse(newDueDate);
+    public ResponseEntity<AssignmentResponse> extendDueDate(@PathVariable Long id, @RequestParam String newDueDate) {
+        Instant dueDate = Instant.parse(newDueDate);
         return ResponseEntity.ok(assignmentService.extendDueDate(id, dueDate));
     }
 }
