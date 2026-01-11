@@ -6,6 +6,8 @@ import { learnerCourseService } from "@/services/learner/courseService";
 import { useCategoryTree } from "@/hooks/learner/useCategory";
 import { MyCourseRow } from "@/core/components/learner/dashboard/MyCourseRow";
 import CourseCardMini from "@/core/components/course/CourseCardMini";
+import { formatCourseVersionPrice } from "@/lib/learner/course-version";
+import { learnerCourseVersionService } from "@/services/learner/course-version.service";
 import type { MyCourse } from "@/lib/learner/dashboard/types";
 import type { CategoryResponse } from "@/services/courses/course.types";
 
@@ -53,6 +55,29 @@ export default function CourseListScreen() {
             .toLowerCase()
             .includes(search.toLowerCase())
     );
+
+
+    // State lưu giá cho từng course (id: price string)
+    const [coursePrices, setCoursePrices] = React.useState<Record<string, string>>({});
+
+    React.useEffect(() => {
+        async function fetchPrices() {
+            if (!data?.items) return;
+            const prices: Record<string, string> = {};
+            await Promise.all(
+                data.items.map(async (course: any) => {
+                    try {
+                        const version = await learnerCourseVersionService.getPublishedVersionBySlug(course.slug);
+                        prices[String(course.id)] = formatCourseVersionPrice(version.price);
+                    } catch {
+                        prices[String(course.id)] = "-";
+                    }
+                })
+            );
+            setCoursePrices(prices);
+        }
+        fetchPrices();
+    }, [data]);
 
     const pagedCourses = React.useMemo(() => {
         const start = (page - 1) * PAGE_SIZE;
@@ -159,29 +184,19 @@ export default function CourseListScreen() {
                     </span>
                 </div>
                 <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-4">
-                    {pagedCourses.map(c => {
-                        // fallback price logic
-                        let price = "₫0";
-                        if ((data?.items || []).length) {
-                            const found = data?.items?.find((item: any) => String(item.id) === c.id);
-                            if (found && typeof found.price === "number") {
-                                price = found.price.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-                            }
-                        }
-                        return (
-                            <CourseCardMini
-                                key={c.id}
-                                id={c.id}
-                                title={c.title}
-                                teacher={c.instructor}
-                                image={c.thumbnailUrl || "/images/lesson_thum.png"}
-                                rating={c.rating}
-                                price={price}
-                                href={`/courses/${c.slug}`}
-                                category={c.category}
-                            />
-                        );
-                    })}
+                    {pagedCourses.map(c => (
+                        <CourseCardMini
+                            key={c.id}
+                            id={c.id}
+                            title={c.title}
+                            teacher={c.instructor}
+                            image={c.thumbnailUrl || "/images/lesson_thum.png"}
+                            rating={c.rating}
+                            price={coursePrices[c.id] || "-"}
+                            href={`/courses/${c.slug}`}
+                            category={c.category}
+                        />
+                    ))}
                 </div>
                 {/* Pagination */}
                 {totalPages > 1 && (
