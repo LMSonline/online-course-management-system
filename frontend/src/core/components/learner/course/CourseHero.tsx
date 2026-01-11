@@ -2,92 +2,149 @@
 import { Star, Globe2, Users } from "lucide-react";
 import type { CourseDetail } from "@/lib/learner/course/types";
 
-export function CourseHero({ course }: { course: CourseDetail }) {
+type CourseHeroProps = {
+  course: CourseDetail & {
+    price?: number;
+    oldPrice?: number;
+    discountPercent?: number;
+    currency?: string;
+    thumbnailUrl?: string;
+  };
+};
+
+export function CourseHero({ course }: CourseHeroProps) {
+  const {
+    title,
+    subtitle,
+    rating,
+    ratingCount,
+    studentsCount,
+    lastUpdated,
+    language,
+    subtitles,
+    level,
+    price,
+    oldPrice,
+    discountPercent,
+    currency = "$",
+    thumbnailUrl,
+  } = course;
+
+  // Fallback logic giống CourseCardMini
+  const safeThumbnail = thumbnailUrl && thumbnailUrl.trim() !== "" ? thumbnailUrl : "/images/lesson_thum.png";
+
   return (
-    <section className="border-b border-white/10 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-950/90 pb-6 md:pb-8">
-      <div className="mx-auto flex w-full max-w-6xl xl:max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-10 xl:px-0 pt-4 md:pt-6 md:flex-row">
-        {/* Left: info */}
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight">
-            {course.title}
-          </h1>
-          <p className="mt-3 text-sm md:text-base text-slate-200 max-w-2xl">
-            {course.subtitle}
-          </p>
+    <section className="relative border-b border-white/10 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900">
+      {/* subtle glow */}
+      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[var(--brand-600)]/10 blur-3xl" />
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs md:text-[13px] text-slate-300">
-            <span className="inline-flex items-center gap-1">
-              <span className="text-amber-300 font-semibold">
-                {course.rating.toFixed(1)}
-              </span>
-              <Star className="w-3.5 h-3.5 text-amber-300" />
-              <span>({course.ratingCount.toLocaleString()} ratings)</span>
-            </span>
-            <span className="h-1 w-1 rounded-full bg-slate-500" />
-            <span>
-              {course.studentsCount.toLocaleString()} students enrolled
-            </span>
-          </div>
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 py-6 md:py-10">
+        <div className="grid items-center gap-8 md:grid-cols-[minmax(0,640px)_360px] lg:grid-cols-[minmax(0,720px)_420px]">
+          {/* LEFT – VALUE */}
+          <div className="flex flex-col justify-center min-w-0">
+            {/* Title */}
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+              {title}
+            </h1>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
-            <span>Last updated {course.lastUpdated}</span>
-            <span className="h-1 w-1 rounded-full bg-slate-600" />
-            <span className="inline-flex items-center gap-1">
-              <Globe2 className="w-3 h-3" />
-              {course.language}
-            </span>
-            {course.subtitles.length > 0 && (
-              <>
-                <span className="h-1 w-1 rounded-full bg-slate-600" />
-                <span>Subtitles: {course.subtitles.join(", ")}</span>
-              </>
-            )}
-          </div>
+            {/* Accent underline */}
+            <div className="mt-2 h-1 w-24 rounded-full bg-[var(--brand-500)]" />
 
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/70 px-3 py-1 text-[11px] text-slate-300">
-            <Users className="w-3.5 h-3.5 text-[var(--brand-400)]" />
-            <span>{course.level} • Project-based</span>
-          </div>
-        </div>
+            {/* Subtitle */}
+            <p className="mt-4 max-w-xl text-sm md:text-base text-slate-300">
+              {subtitle}
+            </p>
 
-        {/* Right: card */}
-        <aside className="w-full md:w-80 lg:w-96">
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-[0_0_40px_rgba(15,23,42,0.8)]">
-            {/* Preview thumbnail */}
-            <div className="relative h-44 md:h-48 bg-gradient-to-br from-[var(--brand-600)]/40 via-slate-900 to-slate-950 flex items-center justify-center">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(132,204,22,0.35),_transparent)]" />
-              <button className="relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-950 shadow-lg hover:scale-105 transition">
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M9 7v10l8-5z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Pricing / CTA */}
-            <div className="p-4 md:p-5 space-y-3">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold">$19.99</span>
-                <span className="text-xs text-slate-400 line-through">$79.99</span>
-                <span className="text-xs text-emerald-300 font-semibold">
-                  75% off
+            {/* Rating / students */}
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs md:text-sm text-slate-300">
+              <div className="inline-flex items-center gap-1.5">
+                <span className="font-semibold text-amber-300">
+                  {rating.toFixed(1)}
+                </span>
+                <Star className="h-4 w-4 text-amber-300" />
+                <span className="text-slate-400">
+                  ({ratingCount.toLocaleString()} ratings)
                 </span>
               </div>
-              <button className="w-full rounded-xl bg-[var(--brand-600)] py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-900)] transition">
-                Add to cart
-              </button>
-              <button className="w-full rounded-xl border border-white/20 bg-slate-900/80 py-2.5 text-sm font-semibold text-slate-50 hover:bg-slate-800 transition">
-                Buy now
-              </button>
-              <p className="text-[11px] text-slate-400">
-                30-day money-back guarantee · Full lifetime access
-              </p>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-400">
+                {studentsCount.toLocaleString()} students
+              </span>
+            </div>
+
+            {/* Meta */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] md:text-xs text-slate-400">
+              <span>Last updated {lastUpdated}</span>
+              <span className="inline-flex items-center gap-1">
+                <Globe2 className="h-3.5 w-3.5" />
+                {language}
+              </span>
+              {subtitles && subtitles.length > 0 && (
+                <span>Subtitles: {subtitles.join(", ")}</span>
+              )}
+            </div>
+
+            {/* Level badge */}
+            <div className="mt-5 inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-slate-900/70 px-4 py-1.5 text-xs text-slate-200">
+              <Users className="h-4 w-4 text-[var(--brand-400)]" />
+              <span className="font-medium">
+                {level} • Project-based learning
+              </span>
             </div>
           </div>
-        </aside>
+
+          {/* RIGHT – SELL CARD */}
+          <aside className="w-full">
+            <div className="sticky top-20 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
+              {/* Thumbnail */}
+              <div className="relative h-40 lg:h-44 bg-slate-900">
+                <img
+                  src={safeThumbnail}
+                  alt={title}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
+              </div>
+
+              {/* Pricing & CTA */}
+              <div className="space-y-4 p-4 md:p-5">
+                {/* Price */}
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-extrabold text-white">
+                    {currency}
+                    {price?.toLocaleString() ?? "--"}
+                  </span>
+                  {oldPrice && (
+                    <span className="pb-1 text-sm text-slate-400 line-through">
+                      {currency}
+                      {oldPrice.toLocaleString()}
+                    </span>
+                  )}
+                  {discountPercent && (
+                    <span className="pb-1 text-sm font-semibold text-emerald-400">
+                      {discountPercent}% off
+                    </span>
+                  )}
+                </div>
+
+                {/* CTA */}
+                <div className="space-y-2">
+                  <button className="w-full rounded-xl bg-[var(--brand-600)] py-3 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition">
+                    Add to cart
+                  </button>
+                  <button className="w-full rounded-xl border border-white/20 bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition">
+                    Enroll now
+                  </button>
+                </div>
+
+                {/* Trust */}
+                <p className="text-center text-[11px] text-slate-400">
+                  30-day money-back guarantee · Lifetime access
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   );

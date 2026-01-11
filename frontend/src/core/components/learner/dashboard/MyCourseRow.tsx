@@ -1,10 +1,14 @@
 // src/components/learner/dashboard/MyCourseRow.tsx
+
+
+import Link from "next/link";
 import { Star, Play, Clock3 } from "lucide-react";
 import type { MyCourse } from "@/lib/learner/dashboard/types";
 
 export function MyCourseRow({ course }: { course: MyCourse }) {
+
   return (
-    <article className="group flex flex-col rounded-3xl border border-white/10 bg-slate-950/80 p-3 md:p-4 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_40px_rgba(22,163,74,0.35)] transition">
+    <Link href={`/learner/courses/${course.slug}`} prefetch={false} className="block group flex flex-col rounded-3xl border border-white/10 bg-slate-950/80 p-3 md:p-4 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_40px_rgba(22,163,74,0.35)] transition">
       {/* thumbnail / banner */}
       <div
         className={`relative mb-3 h-32 md:h-36 w-full overflow-hidden rounded-2xl ${course.thumbnailUrl ? '' : `bg-gradient-to-br ${course.thumbColor}`}`}
@@ -20,10 +24,10 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
         <div className="absolute left-3 top-3 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-slate-100 backdrop-blur">
           {course.category}
         </div>
-        <button className="absolute right-3 bottom-3 inline-flex items-center rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-slate-900 shadow-sm hover:bg-white group-hover:translate-y-0.5 transition">
+        <span className="absolute right-3 bottom-3 inline-flex items-center rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-slate-900 shadow-sm group-hover:translate-y-0.5 transition">
           <Play className="mr-1 h-3.5 w-3.5" />
           Resume
-        </button>
+        </span>
       </div>
 
       {/* title + instructor */}
@@ -57,6 +61,6 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
         </div>
         <span className="text-xs text-slate-300">{course.progress}%</span>
       </div>
-    </article>
+    </Link>
   );
 }

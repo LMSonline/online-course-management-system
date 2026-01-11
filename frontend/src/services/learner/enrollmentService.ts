@@ -9,7 +9,7 @@ export const learnerEnrollmentService = {
     const params: any = {};
     if (page) params.page = page;
     if (size) params.size = size;
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/enrollments`, { params });
+    const res = await axiosClient.get(`/students/${studentId}/enrollments`, { params });
     return unwrapResponse(res);
   },
 
