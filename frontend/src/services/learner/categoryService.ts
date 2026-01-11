@@ -5,7 +5,7 @@ import { axiosClient } from '@/lib/api/axios';
 import { unwrapResponse } from '@/lib/api/unwrap';
 import { Category, CategoryListResponse, CategoryTree } from '@/lib/learner/category/categories';
 
-const CATEGORY_PUBLIC_PREFIX = '/public/categories';
+const CATEGORY_PUBLIC_PREFIX = '/categories';
 
 export const learnerCategoryService = {
   /**
