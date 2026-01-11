@@ -314,18 +314,18 @@ public class StudentService {
         // Check authorization (includes enrollment check for teachers)
         validateStudentAccess(student);
 
-        // Implementation pending - requires Certificate entity and repository
+        // TODO: Implementation pending - requires Certificate entity and repository
         // When Certificate entity is available:
-         Page<Certificate> certificatePage = certificateRepository.findByStudentId(id, pageable);
-         List<StudentCertificateResponse> certificates = certificatePage.getContent().stream()
-             .map(certificate -> StudentCertificateResponse.builder()
-                 .certificateId(certificate.getId())
-                 .certificateCode(certificate.getCode())
-                 .courseTitle(certificate.getCourse().getTitle())
-                 .issueDate(certificate.getIssueDate())
-                 .certificateUrl(certificate.getUrl())
-                 .build())
-             .toList();
+        // Page<Certificate> certificatePage = certificateRepository.findByStudentId(id, pageable);
+        // List<StudentCertificateResponse> certificates = certificatePage.getContent().stream()
+        //     .map(certificate -> StudentCertificateResponse.builder()
+        //         .certificateId(certificate.getId())
+        //         .certificateCode(certificate.getCode())
+        //         .courseTitle(certificate.getCourse().getTitle())
+        //         .issueDate(certificate.getIssueDate())
+        //         .certificateUrl(certificate.getUrl())
+        //         .build())
+        //     .toList();
 
         List<StudentCertificateResponse> certificates = new ArrayList<>();
         Page<StudentCertificateResponse> page = new PageImpl<>(certificates, pageable, 0);

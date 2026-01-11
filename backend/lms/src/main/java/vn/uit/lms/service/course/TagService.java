@@ -130,8 +130,25 @@ public class TagService {
         return tagRepository.save(tagDB);
     }
 
+    // ========== PUBLIC API METHODS ==========
 
+    /**
+     * Get all active tags without pagination for public access
+     */
+    @EnableSoftDeleteFilter
+    public List<Tag> getAllActiveTags() {
+        return tagRepository.findAllByDeletedAtIsNull();
+    }
 
-
+    /**
+     * Search tags by name prefix for public access
+     */
+    @EnableSoftDeleteFilter
+    public List<Tag> searchTagsByName(String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+        return tagRepository.findByNameContainingIgnoreCaseAndDeletedAtIsNull(query);
+    }
 
 }

@@ -164,4 +164,31 @@ public class CourseVersionController {
             @Parameter(description = "Pagination parameters") Pageable pageable) {
         return ResponseEntity.ok(courseVersionService.getAllPendingCourseVersion(spec, pageable));
     }
+
+    // ========== PUBLIC APIs - No Authentication Required ==========
+
+    @Operation(
+            summary = "Get published version of a course (Public)",
+            description = "Get the currently published version of a course by course slug. No authentication required."
+    )
+    @GetMapping("/public/courses/{courseSlug}/version/published")
+    public ResponseEntity<CourseVersionResponse> getPublishedVersionBySlug(
+            @Parameter(description = "Course slug") @PathVariable("courseSlug") String courseSlug
+    ) {
+        CourseVersionResponse publishedVersion = courseVersionService.getPublishedVersionBySlug(courseSlug);
+        return ResponseEntity.ok(publishedVersion);
+    }
+
+    @Operation(
+            summary = "Get published version details (Public)",
+            description = "Get detailed information about a published course version. No authentication required."
+    )
+    @GetMapping("/public/courses/{courseId}/versions/{versionId}")
+    public ResponseEntity<CourseVersionResponse> getPublicCourseVersionById(
+            @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
+            @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId
+    ) {
+        CourseVersionResponse version = courseVersionService.getPublicCourseVersionById(courseId, versionId);
+        return ResponseEntity.ok(version);
+    }
 }

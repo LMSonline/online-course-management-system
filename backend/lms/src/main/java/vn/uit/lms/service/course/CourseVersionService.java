@@ -533,59 +533,59 @@ public class CourseVersionService {
      * @param versionId Source version ID to duplicate
      * @return Created draft version
      */
-    // @Transactional
-    // @EnableSoftDeleteFilter
-    // public CourseVersionResponse duplicateCourseVersion(Long courseId, Long versionId) {
-    //     // Load source version with chapters and lessons
-    //     CourseVersion sourceVersion = loadVersionWithContent(courseId, versionId);
-    //     Course course = sourceVersion.getCourse();
-    //
-    //     // Create new version with incremented number
-    //     Integer newVersionNumber = courseVersionRepository
-    //         .findMaxVersionNumberByCourseId(courseId) + 1;
-    //
-    //     CourseVersion newVersion = CourseVersion.builder()
-    //         .course(course)
-    //         .versionNumber(newVersionNumber)
-    //         .title(sourceVersion.getTitle() + " (Copy)")
-    //         .shortDescription(sourceVersion.getShortDescription())
-    //         .description(sourceVersion.getDescription())
-    //         .price(sourceVersion.getPrice())
-    //         .durationDays(sourceVersion.getDurationDays())
-    //         .passScore(sourceVersion.getPassScore())
-    //         .finalWeight(sourceVersion.getFinalWeight())
-    //         .minProgressPct(sourceVersion.getMinProgressPct())
-    //         .status(CourseStatus.DRAFT)
-    //         .build();
-    //
-    //     newVersion = courseVersionRepository.save(newVersion);
-    //
-    //     // Deep copy chapters and lessons
-    //     for (Chapter sourceChapter : sourceVersion.getChapters()) {
-    //         Chapter newChapter = Chapter.builder()
-    //             .courseVersion(newVersion)
-    //             .title(sourceChapter.getTitle())
-    //             .orderIndex(sourceChapter.getOrderIndex())
-    //             .build();
-    //         newChapter = chapterRepository.save(newChapter);
-    //
-    //         for (Lesson sourceLesson : sourceChapter.getLessons()) {
-    //             Lesson newLesson = Lesson.builder()
-    //                 .chapter(newChapter)
-    //                 .type(sourceLesson.getType())
-    //                 .title(sourceLesson.getTitle())
-    //                 .shortDescription(sourceLesson.getShortDescription())
-    //                 .videoObjectKey(sourceLesson.getVideoObjectKey()) // Reference, not copy
-    //                 .durationSeconds(sourceLesson.getDurationSeconds())
-    //                 .orderIndex(sourceLesson.getOrderIndex())
-    //                 .isPreview(sourceLesson.getIsPreview())
-    //                 .build();
-    //             lessonRepository.save(newLesson);
-    //         }
-    //     }
-    //
-    //     return CourseVersionMapper.toCourseVersionResponse(newVersion);
-    // }
+//     @Transactional
+//     @EnableSoftDeleteFilter
+//     public CourseVersionResponse duplicateCourseVersion(Long courseId, Long versionId) {
+//         // Load source version with chapters and lessons
+//         CourseVersion sourceVersion = loadVersionWithContent(courseId, versionId);
+//         Course course = sourceVersion.getCourse();
+//
+//         // Create new version with incremented number
+//         Integer newVersionNumber = courseVersionRepository
+//             .findMaxVersionNumberByCourseId(courseId) + 1;
+//
+//         CourseVersion newVersion = CourseVersion.builder()
+//             .course(course)
+//             .versionNumber(newVersionNumber)
+//             .title(sourceVersion.getTitle() + " (Copy)")
+//             .shortDescription(sourceVersion.getShortDescription())
+//             .description(sourceVersion.getDescription())
+//             .price(sourceVersion.getPrice())
+//             .durationDays(sourceVersion.getDurationDays())
+//             .passScore(sourceVersion.getPassScore())
+//             .finalWeight(sourceVersion.getFinalWeight())
+//             .minProgressPct(sourceVersion.getMinProgressPct())
+//             .status(CourseStatus.DRAFT)
+//             .build();
+//
+//         newVersion = courseVersionRepository.save(newVersion);
+//
+//         // Deep copy chapters and lessons
+//         for (Chapter sourceChapter : sourceVersion.getChapters()) {
+//             Chapter newChapter = Chapter.builder()
+//                 .courseVersion(newVersion)
+//                 .title(sourceChapter.getTitle())
+//                 .orderIndex(sourceChapter.getOrderIndex())
+//                 .build();
+//             newChapter = chapterRepository.save(newChapter);
+//
+//             for (Lesson sourceLesson : sourceChapter.getLessons()) {
+//                 Lesson newLesson = Lesson.builder()
+//                     .chapter(newChapter)
+//                     .type(sourceLesson.getType())
+//                     .title(sourceLesson.getTitle())
+//                     .shortDescription(sourceLesson.getShortDescription())
+//                     .videoObjectKey(sourceLesson.getVideoObjectKey()) // Reference, not copy
+//                     .durationSeconds(sourceLesson.getDurationSeconds())
+//                     .orderIndex(sourceLesson.getOrderIndex())
+//                     .isPreview(sourceLesson.getIsPreview())
+//                     .build();
+//                 lessonRepository.save(newLesson);
+//             }
+//         }
+//
+//         return CourseVersionMapper.toCourseVersionResponse(newVersion);
+//     }
 
     /**
      * Compare two versions of a course
@@ -767,5 +767,52 @@ public class CourseVersionService {
     // - Show who made changes and when
     // - Include version comparison links
     // }
+
+    // ========== PUBLIC API METHODS ==========
+
+    /**
+     * Get published version by course slug for public access
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse getPublishedVersionBySlug(String courseSlug) {
+        // Get course by slug - this will throw exception if not found
+        courseService.getPublishedCourseBySlug(courseSlug);
+
+        // Find course again to get entity with versions
+        Course course = courseService.getCourseEntityBySlug(courseSlug);
+
+        CourseVersion publishedVersion = course.getVersionPublish();
+        if (publishedVersion == null) {
+            throw new ResourceNotFoundException("No published version available for this course");
+        }
+
+        return CourseVersionMapper.toCourseVersionResponse(publishedVersion);
+    }
+
+    /**
+     * Get public course version by ID
+     * Only returns PUBLISHED versions for public access
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public CourseVersionResponse getPublicCourseVersionById(Long courseId, Long versionId) {
+        Course course = courseService.validateCourse(courseId);
+
+        CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        // Verify version belongs to course
+        if (!version.getCourse().getId().equals(courseId)) {
+            throw new ResourceNotFoundException("Version not found for this course");
+        }
+
+        // Only allow access to PUBLISHED versions
+        if (version.getStatus() != CourseStatus.PUBLISHED) {
+            throw new ResourceNotFoundException("This version is not publicly available");
+        }
+
+        return CourseVersionMapper.toCourseVersionResponse(version);
+    }
 
 }

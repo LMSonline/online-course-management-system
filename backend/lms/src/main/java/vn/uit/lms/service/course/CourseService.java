@@ -522,4 +522,139 @@ public class CourseService {
         return CourseMapper.toCourseDetailResponse(savedCourse);
     }
 
+    // ========== PUBLIC API METHODS ==========
+
+    /**
+     * Get course entity by slug for internal use
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public Course getCourseEntityBySlug(String slug) {
+        return courseRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with slug: " + slug));
+    }
+
+    /**
+     * Get all courses that have at least one published version
+     * For public access - no authentication required
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public PageResponse<CourseResponse> getPublishedCourses(Specification<Course> spec, Pageable pageable) {
+        // Create specification to filter courses with published versions
+        Specification<Course> publishedSpec = (root, query, cb) -> {
+            var versionsJoin = root.join("versions");
+            return cb.equal(versionsJoin.get("status"), CourseStatus.PUBLISHED);
+        };
+
+        // Combine with user's specification if provided
+        Specification<Course> combinedSpec = spec != null ? spec.and(publishedSpec) : publishedSpec;
+
+        Page<Course> coursePage = courseRepository.findAll(combinedSpec, pageable);
+        List<CourseResponse> items = coursePage.getContent().stream()
+                .map(CourseMapper::toCourseResponse)
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                coursePage.getNumber(),
+                coursePage.getSize(),
+                coursePage.getTotalElements(),
+                coursePage.getTotalPages(),
+                coursePage.hasNext(),
+                coursePage.hasPrevious()
+        );
+    }
+
+    /**
+     * Get published course details by slug
+     * Shows only published version information
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public CourseDetailResponse getPublishedCourseBySlug(String slug) {
+        Course course = courseRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with slug: " + slug));
+
+        // Verify course has a published version
+        CourseVersion publishedVersion = course.getVersionPublish();
+        if (publishedVersion == null) {
+            throw new ResourceNotFoundException("No published version available for this course");
+        }
+
+        return CourseMapper.toCourseDetailResponse(course);
+    }
+
+    /**
+     * Search published courses with filters
+     * Supports: text search, category filter, difficulty filter, tag filter
+     */
+    @Transactional(readOnly = true)
+    @EnableSoftDeleteFilter
+    public PageResponse<CourseResponse> searchPublishedCourses(
+            String query,
+            Long categoryId,
+            String difficulty,
+            String tags,
+            Pageable pageable
+    ) {
+        Specification<Course> spec = (root, criteriaQuery, cb) -> {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+
+            // Must have published version
+            var versionsJoin = root.join("versions");
+            predicates.add(cb.equal(versionsJoin.get("status"), CourseStatus.PUBLISHED));
+
+            // Text search in title and short description
+            if (query != null && !query.isBlank()) {
+                String searchPattern = "%" + query.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("title")), searchPattern),
+                        cb.like(cb.lower(root.get("shortDescription")), searchPattern)
+                ));
+            }
+
+            // Category filter
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            }
+
+            // Difficulty filter
+            if (difficulty != null && !difficulty.isBlank()) {
+                try {
+                    predicates.add(cb.equal(root.get("difficulty"),
+                        vn.uit.lms.shared.constant.Difficulty.valueOf(difficulty.toUpperCase())));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid difficulty filter value: {}", difficulty);
+                }
+            }
+
+            // Tag filter
+            if (tags != null && !tags.isBlank()) {
+                String[] tagNames = tags.split(",");
+                var courseTagsJoin = root.join("courseTags");
+                var tagJoin = courseTagsJoin.join("tag");
+                predicates.add(tagJoin.get("name").in((Object[]) tagNames));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        Page<Course> coursePage = courseRepository.findAll(spec, pageable);
+        List<CourseResponse> items = coursePage.getContent().stream()
+                .map(CourseMapper::toCourseResponse)
+                .distinct() // Remove duplicates from joins
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                coursePage.getNumber(),
+                coursePage.getSize(),
+                coursePage.getTotalElements(),
+                coursePage.getTotalPages(),
+                coursePage.hasNext(),
+                coursePage.hasPrevious()
+        );
+    }
+
 }

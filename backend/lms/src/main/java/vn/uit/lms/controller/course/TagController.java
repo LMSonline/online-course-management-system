@@ -83,4 +83,40 @@ public class TagController {
         vn.uit.lms.core.domain.course.Tag restoredTag = tagService.restoreTag(id);
         return ResponseEntity.ok(restoredTag);
     }
+
+    // ========== PUBLIC APIs - No Authentication Required ==========
+
+    @Operation(
+            summary = "Get all active tags (Public)",
+            description = "Get all active tags with pagination. No authentication required."
+    )
+    @GetMapping("/public/tags")
+    public ResponseEntity<PageResponse<vn.uit.lms.core.domain.course.Tag>> getPublicTags(
+            @Parameter(description = "Pagination parameters") Pageable pageable
+    ) {
+        PageResponse<vn.uit.lms.core.domain.course.Tag> tagsPage = tagService.getTagsActive(pageable);
+        return ResponseEntity.ok(tagsPage);
+    }
+
+    @Operation(
+            summary = "Get all tags (Public, no pagination)",
+            description = "Get all active tags without pagination. Useful for tag selection. No authentication required."
+    )
+    @GetMapping("/public/tags/all")
+    public ResponseEntity<java.util.List<vn.uit.lms.core.domain.course.Tag>> getAllPublicTags() {
+        java.util.List<vn.uit.lms.core.domain.course.Tag> allTags = tagService.getAllActiveTags();
+        return ResponseEntity.ok(allTags);
+    }
+
+    @Operation(
+            summary = "Search tags by name (Public)",
+            description = "Search tags by name prefix. No authentication required."
+    )
+    @GetMapping("/public/tags/search")
+    public ResponseEntity<java.util.List<vn.uit.lms.core.domain.course.Tag>> searchPublicTags(
+            @Parameter(description = "Search query") @RequestParam String query
+    ) {
+        java.util.List<vn.uit.lms.core.domain.course.Tag> searchResults = tagService.searchTagsByName(query);
+        return ResponseEntity.ok(searchResults);
+    }
 }
