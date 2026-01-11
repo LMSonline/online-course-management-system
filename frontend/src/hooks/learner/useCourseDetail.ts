@@ -69,7 +69,7 @@ export function useCourseDetail(slug: string) {
       oldPrice: undefined,
       discountPercent: undefined,
       currency: '$',
-      thumbnailUrl: version.thumbnailUrl || course.thumbnail || undefined,
+      thumbnailUrl: version.thumbnailUrl || course.thumbnailUrl || course.thumbnail || undefined,
       courseId: courseIdNum,
     };
   }

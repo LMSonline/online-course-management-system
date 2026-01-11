@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; // ⬅️ thêm
 import { useAssistantStore } from "@/core/components/public/store";
+import { CartQueue } from "@/core/components/learner/cart/CartQueue";
 
 function NavItem({
   href,
@@ -88,6 +89,7 @@ export default function LearnerNavbar() {
     return () => window.removeEventListener("click", onClick);
   }, [profileOpen]);
 
+  const [cartOpen, setCartOpen] = useState(false);
   return (
     <header className="navbar">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4 text-body">
@@ -143,7 +145,7 @@ export default function LearnerNavbar() {
           <Link href="/teach" className="hidden lg:block nav-link">
             Teacher
           </Link>
-          <Link href="/my-learning" className="hidden md:block nav-link">
+          <Link href="/learner/dashboard" className="hidden md:block nav-link">
             My learning
           </Link>
 
@@ -156,12 +158,20 @@ export default function LearnerNavbar() {
           </button>
 
           {/* Cart */}
-          <button
-            className="btn-icon hidden sm:inline-flex"
-            aria-label="Cart"
-          >
-            <ShoppingCart size={18} />
-          </button>
+          <div className="relative">
+            <button
+              className="btn-icon hidden sm:inline-flex"
+              aria-label="Cart"
+              onClick={() => setCartOpen((v) => !v)}
+            >
+              <ShoppingCart size={18} />
+            </button>
+            {cartOpen && (
+              <div className="absolute right-0 mt-2 z-50">
+                <CartQueue />
+              </div>
+            )}
+          </div>
 
           {/* Notifications */}
           <button className="btn-icon hidden sm:inline-flex" aria-label="Notifications">
@@ -265,7 +275,7 @@ export default function LearnerNavbar() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setOpen(false);
-                  location.href = "/explore";
+                  location.href = "/learner/courses";
                 }
               }}
             />
@@ -318,6 +328,6 @@ export default function LearnerNavbar() {
           </div>
         </div>
       </div>
-    </header>
+      </header>
   );
 }

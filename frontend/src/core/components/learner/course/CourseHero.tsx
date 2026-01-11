@@ -1,6 +1,7 @@
 // src/components/learner/course/CourseHero.tsx
 import { Star, Globe2, Users } from "lucide-react";
 import type { CourseDetail } from "@/lib/learner/course/types";
+import { useCart } from "@/core/components/learner/cart/CartContext";
 
 type CourseHeroProps = {
   course: CourseDetail & {
@@ -13,6 +14,7 @@ type CourseHeroProps = {
 };
 
 export function CourseHero({ course }: CourseHeroProps) {
+  const { addCourse, isInCart } = useCart();
   const {
     title,
     subtitle,
@@ -33,6 +35,7 @@ export function CourseHero({ course }: CourseHeroProps) {
   // Fallback logic giống CourseCardMini
   const safeThumbnail = thumbnailUrl && thumbnailUrl.trim() !== "" ? thumbnailUrl : "/images/lesson_thum.png";
 
+  const added = isInCart(course.id);
   return (
     <section className="relative border-b border-white/10 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900">
       {/* subtle glow */}
@@ -129,8 +132,27 @@ export function CourseHero({ course }: CourseHeroProps) {
 
                 {/* CTA */}
                 <div className="space-y-2">
-                  <button className="w-full rounded-xl bg-[var(--brand-600)] py-3 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition">
-                    Add to cart
+                  <button
+                    className={`w-full rounded-xl py-3 text-sm font-semibold transition ${added ? "bg-emerald-700 text-white cursor-not-allowed" : "bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]"}`}
+                    disabled={added}
+                    onClick={() => {
+                      if (!added) {
+                        addCourse({
+                          id: course.id,
+                          title,
+                          price: price ?? 0,
+                          oldPrice,
+                          discountPercent,
+                          currency,
+                          thumbnailUrl: safeThumbnail,
+                          level,
+                          rating,
+                          studentsCount,
+                        });
+                      }
+                    }}
+                  >
+                    {added ? "Added to cart" : "Add to cart"}
                   </button>
                   <button className="w-full rounded-xl border border-white/20 bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition">
                     Enroll now

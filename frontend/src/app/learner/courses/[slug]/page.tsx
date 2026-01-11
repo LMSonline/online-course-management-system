@@ -8,9 +8,11 @@ import { CourseContentOutline } from "@/core/components/learner/course/CourseCon
 import { CourseTeacherCard } from "@/core/components/learner/course/CourseTeacherCard";
 import { CourseStudentFeedback } from "@/core/components/learner/course/CourseStudentFeedback";
 import { useCourseDetail } from "@/hooks/learner/useCourseDetail";
+import { use } from "react";
 
-export default function CourseDetailPage({ params }: { params: { slug: string } }) {
-  const { courseDetail, comments, ratingSummary, loading, loadingComments, loadingRating } = useCourseDetail(params.slug);
+export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params); // <-- dùng React.use để unwrap Promise
+  const { courseDetail, comments, ratingSummary, loading, loadingComments, loadingRating } = useCourseDetail(slug);
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (!courseDetail) return notFound();
