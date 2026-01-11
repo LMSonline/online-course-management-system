@@ -19,6 +19,7 @@ import vn.uit.lms.shared.dto.request.course.CourseVersionRequest;
 import vn.uit.lms.shared.dto.response.course.CourseVersionResponse;
 import vn.uit.lms.shared.util.annotation.AdminOnly;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.util.annotation.TeacherOrAdmin;
 
 import java.util.List;
 
@@ -68,7 +69,7 @@ public class CourseVersionController {
     @Operation(summary = "Get course version by ID")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/courses/{courseId}/versions/{versionId}")
-    @TeacherOnly
+    @TeacherOrAdmin
     public ResponseEntity<CourseVersionResponse> getCourseVersionById(
             @Parameter(description = "Course ID") @PathVariable("courseId") Long courseId,
             @Parameter(description = "Version ID") @PathVariable("versionId") Long versionId) {

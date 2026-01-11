@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.mapper.course.CourseMapper;
 import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
 import vn.uit.lms.shared.constant.EnrollmentStatus;
+import vn.uit.lms.shared.constant.Role;
 
 import java.util.List;
 import java.util.Objects;
@@ -101,6 +103,35 @@ public class CourseService {
 
         return teacher;
     }
+
+
+   public Teacher verifyTeacherOrAdmin(Course course) {
+
+    Account account = accountService.verifyCurrentAccount();
+
+    //  ADMIN → cho qua ngay
+    if (account.getRole() == Role.ADMIN) {
+        return null; // hoặc return fake Teacher nếu bạn cần
+    }
+
+    //  TEACHER → xử lý như verifyTeacher cũ
+    Teacher teacher = teacherRepository.findByAccount(account)
+            .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+
+    if (!teacher.isApproved()) {
+        throw new UnauthorizedException("Teacher is not approved");
+    }
+
+    if (course != null) {
+        if (!Objects.equals(course.getTeacher().getId(), teacher.getId())) {
+            throw new UnauthorizedException("Teacher does not own this course");
+        }
+    }
+
+    return teacher;
+}
+
+
 
 
 
