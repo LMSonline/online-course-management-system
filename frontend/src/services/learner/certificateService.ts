@@ -6,13 +6,13 @@ import { CertificateListResponse, CertificateResponse } from '@/lib/learner/cert
 export const learnerCertificateService = {
   /** Lấy danh sách certificate của student */
   getCertificates: async (studentId: number): Promise<CertificateListResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/certificates`);
+    const res = await axiosClient.get(`/students/${studentId}/certificates`);
     return unwrapResponse(res);
   },
 
   /** Lấy chi tiết certificate */
   getCertificateDetail: async (certificateId: number): Promise<CertificateResponse> => {
-    const res = await axiosClient.get(`/api/v1/certificates/${certificateId}`);
+    const res = await axiosClient.get(`/certificates/${certificateId}`);
     return unwrapResponse(res);
   },
 };

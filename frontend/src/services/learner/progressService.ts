@@ -10,7 +10,7 @@ export const learnerProgressService = {
    * Lấy tổng quan tiến độ học tập của student
    */
   getStudentProgress: async (studentId: number): Promise<StudentProgressOverview> => {
-    const response = await axiosClient.get(`/api/v1/students/${studentId}/progress`);
+    const response = await axiosClient.get(`/students/${studentId}/progress`);
     return unwrapResponse(response);
   },
 
@@ -18,7 +18,7 @@ export const learnerProgressService = {
    * Lấy tiến độ từng khoá học
    */
   getCourseProgress: async (studentId: number, courseId: number): Promise<CourseProgress> => {
-    const response = await axiosClient.get(`/api/v1/students/${studentId}/courses/${courseId}/progress`);
+    const response = await axiosClient.get(`/students/${studentId}/courses/${courseId}/progress`);
     return unwrapResponse(response);
   },
 
@@ -26,7 +26,7 @@ export const learnerProgressService = {
    * Lấy tiến độ từng bài học
    */
   getLessonProgress: async (studentId: number, lessonId: number): Promise<LessonProgress> => {
-    const response = await axiosClient.get(`/api/v1/students/${studentId}/lessons/${lessonId}/progress`);
+    const response = await axiosClient.get(`students/${studentId}/lessons/${lessonId}/progress`);
     return unwrapResponse(response);
   },
 
@@ -34,7 +34,7 @@ export const learnerProgressService = {
    * Đánh dấu đã xem bài học
    */
   markLessonViewed: async (lessonId: number): Promise<LessonProgress> => {
-    const response = await axiosClient.post(`/api/v1/lessons/${lessonId}/mark-viewed`);
+    const response = await axiosClient.post(`/lessons/${lessonId}/mark-viewed`);
     return unwrapResponse(response);
   },
 
@@ -42,7 +42,7 @@ export const learnerProgressService = {
    * Đánh dấu hoàn thành bài học
    */
   markLessonCompleted: async (lessonId: number): Promise<LessonProgress> => {
-    const response = await axiosClient.post(`/api/v1/lessons/${lessonId}/mark-completed`);
+    const response = await axiosClient.post(`/lessons/${lessonId}/mark-completed`);
     return unwrapResponse(response);
   },
 
@@ -50,7 +50,7 @@ export const learnerProgressService = {
    * Cập nhật thời lượng xem video bài học
    */
   updateWatchedDuration: async (lessonId: number, durationSeconds: number): Promise<LessonProgress> => {
-    const response = await axiosClient.post(`/api/v1/lessons/${lessonId}/update-duration`, { durationSeconds });
+    const response = await axiosClient.post(`/lessons/${lessonId}/update-duration`, { durationSeconds });
     return unwrapResponse(response);
   },
 };

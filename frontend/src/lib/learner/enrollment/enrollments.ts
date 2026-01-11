@@ -11,6 +11,7 @@ export interface Enrollment {
 
 export interface EnrollmentListResponse {
   enrollments: Enrollment[];
+  totalItems?: number;
 }
 
 export interface EnrollmentResponse {

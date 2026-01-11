@@ -6,23 +6,44 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { MyCourse } from "@/lib/learner/dashboard/types";
 import { MyCourseRow } from "./MyCourseRow";
+import { useCourses } from "@/hooks/learner/useCourse";
+import { useStudentEnrollmentsWithCourses } from "@/hooks/learner/useStudentEnrollmentsWithCourses";
 
-type Props = {
-  courses: MyCourse[];
-};
 
-export function RecommendedCarousel({ courses }: Props) {
+export function RecommendedCarousel() {
   const [index, setIndex] = useState(0);
+  // Lấy toàn bộ khoá học public
+  const { data: allCourses, isLoading } = useCourses({ size: 30 });
+  // Lấy danh sách khoá học đã đăng ký (chỉ lấy id)
+  const { courses: enrolledCourses } = useStudentEnrollmentsWithCourses(1, 1000);
+  const enrolledIds = new Set((enrolledCourses || []).map((c) => c.id));
+  // Lọc ra các khoá học chưa đăng ký
+  const recommended: MyCourse[] = (allCourses?.items || [])
+    .filter((c: any) => !enrolledIds.has(c.id))
+    .slice(0, 12)
+    .map((course: any) => ({
+      id: course.id,
+      slug: course.slug || "",
+      title: course.title,
+      instructor: course.teacherName || "Unknown",
+      thumbColor: "from-emerald-500 via-sky-500 to-indigo-500",
+      thumbnailUrl: course.thumbnailUrl,
+      progress: 0,
+      lastViewed: "-",
+      level: course.difficulty || "Beginner",
+      category: course.categoryName || "",
+      rating: course.rating || 0,
+    }));
 
   // 1 slide = 3 course
   const perSlide = 3;
   const slides = useMemo(() => {
     const result: MyCourse[][] = [];
-    for (let i = 0; i < courses.length; i += perSlide) {
-      result.push(courses.slice(i, i + perSlide));
+    for (let i = 0; i < recommended.length; i += perSlide) {
+      result.push(recommended.slice(i, i + perSlide));
     }
     return result;
-  }, [courses]);
+  }, [recommended]);
   const total = slides.length;
 
   function go(delta: number) {
@@ -34,7 +55,7 @@ export function RecommendedCarousel({ courses }: Props) {
     });
   }
 
-  if (!courses.length) return null;
+  if (isLoading || !recommended.length) return null;
 
   return (
     <section className="mt-10 md:mt-12">

@@ -7,8 +7,15 @@ export function MyCourseRow({ course }: { course: MyCourse }) {
     <article className="group flex flex-col rounded-3xl border border-white/10 bg-slate-950/80 p-3 md:p-4 hover:border-[var(--brand-500)]/70 hover:shadow-[0_0_40px_rgba(22,163,74,0.35)] transition">
       {/* thumbnail / banner */}
       <div
-        className={`relative mb-3 h-32 md:h-36 w-full overflow-hidden rounded-2xl bg-gradient-to-br ${course.thumbColor}`}
+        className={`relative mb-3 h-32 md:h-36 w-full overflow-hidden rounded-2xl ${course.thumbnailUrl ? '' : `bg-gradient-to-br ${course.thumbColor}`}`}
       >
+        {course.thumbnailUrl ? (
+          <img
+            src={course.thumbnailUrl}
+            alt={course.title}
+            className="absolute inset-0 w-full h-full object-cover rounded-2xl"
+          />
+        ) : null}
         <div className="absolute inset-0 bg-black/10" />
         <div className="absolute left-3 top-3 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-slate-100 backdrop-blur">
           {course.category}

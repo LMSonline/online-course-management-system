@@ -6,19 +6,19 @@ import { DiscussionListResponse, DiscussionDetailResponse, DiscussionCommentResp
 export const learnerDiscussionService = {
   /** Lấy danh sách discussion của course */
   getDiscussions: async (courseId: number): Promise<DiscussionListResponse> => {
-    const res = await axiosClient.get(`/api/v1/courses/${courseId}/discussions`);
+    const res = await axiosClient.get(`/courses/${courseId}/discussions`);
     return unwrapResponse(res);
   },
 
   /** Lấy chi tiết discussion và comment */
   getDiscussionDetail: async (discussionId: number): Promise<DiscussionDetailResponse> => {
-    const res = await axiosClient.get(`/api/v1/discussions/${discussionId}`);
+    const res = await axiosClient.get(`/discussions/${discussionId}`);
     return unwrapResponse(res);
   },
 
   /** Tạo mới discussion */
   createDiscussion: async (courseId: number, studentId: number, title: string, content: string): Promise<DiscussionDetailResponse> => {
-    const res = await axiosClient.post(`/api/v1/courses/${courseId}/discussions`, {
+    const res = await axiosClient.post(`courses/${courseId}/discussions`, {
       studentId,
       title,
       content,
@@ -28,7 +28,7 @@ export const learnerDiscussionService = {
 
   /** Thêm comment vào discussion */
   addComment: async (discussionId: number, studentId: number, content: string): Promise<DiscussionCommentResponse> => {
-    const res = await axiosClient.post(`/api/v1/discussions/${discussionId}/comments`, {
+    const res = await axiosClient.post(`/discussions/${discussionId}/comments`, {
       studentId,
       content,
     });

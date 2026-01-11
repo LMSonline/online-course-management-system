@@ -6,25 +6,25 @@ import { QuizListResponse, QuizDetailResponse, QuizSubmissionResponse } from '@/
 export const learnerQuizService = {
   /** Lấy danh sách quiz của student */
   getQuizzes: async (studentId: number): Promise<QuizListResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/quizzes`);
+    const res = await axiosClient.get(`/students/${studentId}/quizzes`);
     return unwrapResponse(res);
   },
 
   /** Lấy chi tiết quiz và câu hỏi */
   getQuizDetail: async (quizId: number): Promise<QuizDetailResponse> => {
-    const res = await axiosClient.get(`/api/v1/quizzes/${quizId}`);
+    const res = await axiosClient.get(`/quizzes/${quizId}`);
     return unwrapResponse(res);
   },
 
   /** Lấy submission của student cho quiz */
   getSubmission: async (quizId: number, studentId: number): Promise<QuizSubmissionResponse> => {
-    const res = await axiosClient.get(`/api/v1/quizzes/${quizId}/submissions/${studentId}`);
+    const res = await axiosClient.get(`/quizzes/${quizId}/submissions/${studentId}`);
     return unwrapResponse(res);
   },
 
   /** Nộp bài quiz */
   submitQuiz: async (quizId: number, studentId: number, answers: Array<{ questionId: number; selectedOptionId: number }>): Promise<QuizSubmissionResponse> => {
-    const res = await axiosClient.post(`/api/v1/quizzes/${quizId}/submissions`, {
+    const res = await axiosClient.post(`/quizzes/${quizId}/submissions`, {
       studentId,
       answers,
     });

@@ -12,7 +12,7 @@ export const learnerReviewService = {
    * Lấy danh sách review public cho khoá học
    */
   getPublicReviews: async (courseId: number, params?: Record<string, any>): Promise<ReviewListResponse> => {
-    const response = await axiosClient.get(`/api/v1/public/courses/${courseId}/reviews`, { params });
+    const response = await axiosClient.get(`/public/courses/${courseId}/reviews`, { params });
     return unwrapResponse(response);
   },
 
@@ -20,7 +20,7 @@ export const learnerReviewService = {
    * Lấy rating summary public cho khoá học
    */
   getPublicRatingSummary: async (courseId: number): Promise<RatingSummary> => {
-    const response = await axiosClient.get(`/api/v1/public/courses/${courseId}/rating-summary`);
+    const response = await axiosClient.get(`/public/courses/${courseId}/rating-summary`);
     return unwrapResponse(response);
   },
 
@@ -28,7 +28,7 @@ export const learnerReviewService = {
    * Lấy danh sách review (multi-role, có phân trang)
    */
   getReviews: async (courseId: number, params?: Record<string, any>): Promise<ReviewListResponse> => {
-    const response = await axiosClient.get(`/api/v1/courses/${courseId}/reviews`, { params });
+    const response = await axiosClient.get(`/courses/${courseId}/reviews`, { params });
     return unwrapResponse(response);
   },
 
@@ -36,7 +36,7 @@ export const learnerReviewService = {
    * Lấy rating summary (multi-role)
    */
   getRatingSummary: async (courseId: number): Promise<RatingSummary> => {
-    const response = await axiosClient.get(`/api/v1/courses/${courseId}/rating-summary`);
+    const response = await axiosClient.get(`/courses/${courseId}/rating-summary`);
     return unwrapResponse(response);
   },
 
@@ -44,7 +44,7 @@ export const learnerReviewService = {
    * Tạo review mới (chỉ student)
    */
   createReview: async (courseId: number, payload: Partial<Review>): Promise<Review> => {
-    const response = await axiosClient.post(`/api/v1/courses/${courseId}/reviews`, payload);
+    const response = await axiosClient.post(`/courses/${courseId}/reviews`, payload);
     return unwrapResponse(response);
   },
 
@@ -52,7 +52,7 @@ export const learnerReviewService = {
    * Cập nhật review (chỉ student)
    */
   updateReview: async (courseId: number, reviewId: number, payload: Partial<Review>): Promise<Review> => {
-    const response = await axiosClient.put(`/api/v1/courses/${courseId}/reviews/${reviewId}`, payload);
+    const response = await axiosClient.put(`/courses/${courseId}/reviews/${reviewId}`, payload);
     return unwrapResponse(response);
   },
 
@@ -60,6 +60,6 @@ export const learnerReviewService = {
    * Xoá review (chỉ student)
    */
   deleteReview: async (courseId: number, reviewId: number): Promise<void> => {
-    await axiosClient.delete(`/api/v1/courses/${courseId}/reviews/${reviewId}`);
+    await axiosClient.delete(`/courses/${courseId}/reviews/${reviewId}`);
   },
 };

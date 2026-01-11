@@ -5,6 +5,7 @@ export type MyCourse = {
   title: string;
   instructor: string;
   thumbColor: string; // Tailwind gradient classes
+  thumbnailUrl?: string; // URL ảnh thumbnail
   progress: number;
   lastViewed: string;
   level: "Beginner" | "Intermediate" | "Advanced";
@@ -20,6 +21,7 @@ export const MOCK_COURSES: MyCourse[] = [
     instructor: "Alex Nguyen",
     thumbColor: "from-emerald-500 via-sky-500 to-indigo-500",
     progress: 42,
+    thumbnailUrl: "https://placehold.co/600x400/0ea5e9/fff?text=React+TS",
     lastViewed: "2 days ago",
     level: "Intermediate",
     category: "Web Development",
@@ -32,6 +34,7 @@ export const MOCK_COURSES: MyCourse[] = [
     instructor: "Dr. Linh Tran",
     thumbColor: "from-purple-500 via-fuchsia-500 to-rose-500",
     progress: 68,
+    thumbnailUrl: "https://placehold.co/600x400/a21caf/fff?text=Python",
     lastViewed: "Yesterday",
     level: "Beginner",
     category: "Data Science",
@@ -44,6 +47,7 @@ export const MOCK_COURSES: MyCourse[] = [
     instructor: "Thanh D.",
     thumbColor: "from-lime-500 via-emerald-500 to-cyan-500",
     progress: 15,
+    thumbnailUrl: "https://placehold.co/600x400/22d3ee/fff?text=Spring+Boot",
     lastViewed: "5 days ago",
     level: "Advanced",
     category: "Backend",

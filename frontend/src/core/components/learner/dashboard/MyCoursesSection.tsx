@@ -1,27 +1,20 @@
-// src/components/learner/dashboard/MyCoursesSection.tsx
-"use client";
 
+"use client";
 import { useState } from "react";
-import type { MyCourse } from "@/lib/learner/dashboard/types";
 import { MyCourseRow } from "./MyCourseRow";
+import { useStudentEnrollmentsWithCourses } from "@/hooks/learner/useStudentEnrollmentsWithCourses";
+import { EmptyState } from "@/core/components/teacher/courses/EmptyState";
 
 const TABS = ["All courses", "My lists", "Wishlist", "Archived", "Learning tools"] as const;
-type TabKey = (typeof TABS)[number];
+type TabKey = typeof TABS[number];
 
-function EmptyState({ label }: { label: string }) {
-  return (
-    <div className="mt-6 rounded-3xl border border-dashed border-white/15 bg-slate-950/60 px-6 py-12 text-center">
-      <p className="text-sm font-medium text-slate-200">{label}</p>
-      <p className="mt-2 text-xs text-slate-400">
-        Browse the catalog and add courses to see them here.
-      </p>
-    </div>
-  );
-}
-
-export function MyCoursesSection({ courses }: { courses: MyCourse[] }) {
+export default function MyCoursesSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("All courses");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const size = 16;
+  const { courses, total, isLoading } = useStudentEnrollmentsWithCourses(page, size);
+
 
   const filtered =
     activeTab === "All courses"
@@ -88,29 +81,59 @@ export function MyCoursesSection({ courses }: { courses: MyCourse[] }) {
       {/* Content */}
       {activeTab === "All courses" && (
         <>
-          {filtered.length > 0 ? (
-            <div className="grid gap-4 md:gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((c) => (
-                <MyCourseRow key={c.id} course={c} />
-              ))}
-            </div>
+          {isLoading ? (
+            <div className="rounded-2xl bg-slate-900/40 h-[170px] flex items-center justify-center text-slate-400 text-sm">Loading...</div>
+          ) : filtered.length > 0 ? (
+            <>
+              <div className="grid gap-4 md:gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((c) => (
+                  <MyCourseRow key={c.id} course={c} />
+                ))}
+              </div>
+              {/* Pagination */}
+              <div className="flex justify-center mt-6 gap-2">
+                <button
+                  className="px-3 py-1 rounded bg-slate-800 text-white disabled:opacity-50"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span className="px-2 py-1 text-slate-300">Page {page} / {Math.ceil(total / size) || 1}</span>
+                <button
+                  className="px-3 py-1 rounded bg-slate-800 text-white disabled:opacity-50"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page >= Math.ceil(total / size)}
+                >
+                  Next
+                </button>
+              </div>
+            </>
           ) : (
-            <EmptyState label="No courses match your search." />
+            <div className="mt-6 flex flex-col items-center justify-center">
+              <p className="text-sm font-medium text-slate-200 mb-2">You haven't enrolled in any courses yet.</p>
+              <a
+                href="/learner/courses"
+                className="inline-flex items-center rounded-full bg-lime-600 px-5 py-2 text-white font-semibold shadow hover:bg-lime-700 transition"
+              >
+                Explore courses
+              </a>
+            </div>
           )}
         </>
       )}
 
       {activeTab === "Wishlist" && (
-        <EmptyState label="Your wishlist is empty." />
+        <EmptyState tabType="all" />
       )}
       {activeTab === "My lists" && (
-        <EmptyState label="You haven't created any custom lists yet." />
+        <EmptyState tabType="all" />
       )}
       {activeTab === "Archived" && (
-        <EmptyState label="No courses have been archived." />
+        <EmptyState tabType="ARCHIVED" />
       )}
       {activeTab === "Learning tools" && (
-        <EmptyState label="Learning tools will appear here soon." />
+        <EmptyState tabType="all" />
       )}
     </section>
   );

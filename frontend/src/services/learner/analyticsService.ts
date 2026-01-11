@@ -6,7 +6,7 @@ import { AnalyticsOverviewResponse } from '@/lib/learner/analytics/analytics';
 export const learnerAnalyticsService = {
   /** Lấy tổng quan analytics của student */
   getOverview: async (studentId: number): Promise<AnalyticsOverviewResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/analytics/overview`);
+    const res = await axiosClient.get(`/students/${studentId}/analytics/overview`);
     return unwrapResponse(res);
   },
 };

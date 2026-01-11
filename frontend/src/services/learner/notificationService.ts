@@ -6,19 +6,19 @@ import { Notification, NotificationListResponse, NotificationResponse } from '@/
 export const learnerNotificationService = {
   /** Lấy danh sách notification của student */
   getNotifications: async (studentId: number): Promise<NotificationListResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/notifications`);
+    const res = await axiosClient.get(`/students/${studentId}/notifications`);
     return unwrapResponse(res);
   },
 
   /** Lấy chi tiết notification */
   getNotificationDetail: async (notificationId: number): Promise<NotificationResponse> => {
-    const res = await axiosClient.get(`/api/v1/notifications/${notificationId}`);
+    const res = await axiosClient.get(`/notifications/${notificationId}`);
     return unwrapResponse(res);
   },
 
   /** Đánh dấu đã đọc notification */
   markAsRead: async (notificationId: number): Promise<NotificationResponse> => {
-    const res = await axiosClient.post(`/api/v1/notifications/${notificationId}/read`);
+    const res = await axiosClient.post(`/notifications/${notificationId}/read`);
     return unwrapResponse(res);
   },
 };

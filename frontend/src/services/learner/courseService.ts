@@ -1,13 +1,17 @@
-// CourseService for learner (student)
-// API public: /api/v1/public/courses, /public/courses/{slug}, /public/courses/search
-
 import { axiosClient } from '@/lib/api/axios';
 import { unwrapResponse } from '@/lib/api/unwrap';
 import { Course, CourseListResponse } from '@/lib/learner/course/courses';
 
-const COURSE_PUBLIC_PREFIX = '/api/v1/public/courses';
+const COURSE_PUBLIC_PREFIX = '/courses';
 
 export const learnerCourseService = {
+    /**
+     * Lấy chi tiết khoá học public theo id
+     */
+    getCourseById: async (id: number): Promise<Course> => {
+      const response = await axiosClient.get(`${COURSE_PUBLIC_PREFIX}/${id}`);
+      return unwrapResponse(response);
+    },
   /**
    * Lấy danh sách khoá học public (không cần đăng nhập)
    */

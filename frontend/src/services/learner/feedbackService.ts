@@ -6,13 +6,13 @@ import { FeedbackListResponse, FeedbackResponse } from '@/lib/learner/feedback/f
 export const learnerFeedbackService = {
   /** Lấy danh sách feedback của student */
   getFeedbacks: async (studentId: number): Promise<FeedbackListResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/feedbacks`);
+    const res = await axiosClient.get(`/students/${studentId}/feedbacks`);
     return unwrapResponse(res);
   },
 
   /** Gửi feedback mới */
   sendFeedback: async (studentId: number, content: string, courseId?: number): Promise<FeedbackResponse> => {
-    const res = await axiosClient.post(`/api/v1/feedbacks`, {
+    const res = await axiosClient.post(`/feedbacks`, {
       studentId,
       content,
       courseId,

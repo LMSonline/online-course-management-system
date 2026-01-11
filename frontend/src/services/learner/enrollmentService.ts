@@ -5,20 +5,23 @@ import { Enrollment, EnrollmentListResponse, EnrollmentResponse } from '@/lib/le
 
 export const learnerEnrollmentService = {
   /** Lấy danh sách enrollment của student */
-  getEnrollments: async (studentId: number): Promise<EnrollmentListResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/enrollments`);
+  getEnrollments: async (studentId: number, page?: number, size?: number): Promise<EnrollmentListResponse> => {
+    const params: any = {};
+    if (page) params.page = page;
+    if (size) params.size = size;
+    const res = await axiosClient.get(`/api/v1/students/${studentId}/enrollments`, { params });
     return unwrapResponse(res);
   },
 
   /** Lấy chi tiết enrollment */
   getEnrollmentDetail: async (enrollmentId: number): Promise<EnrollmentResponse> => {
-    const res = await axiosClient.get(`/api/v1/enrollments/${enrollmentId}`);
+    const res = await axiosClient.get(`/enrollments/${enrollmentId}`);
     return unwrapResponse(res);
   },
 
   /** Đăng ký khoá học */
   enrollCourse: async (studentId: number, courseId: number): Promise<EnrollmentResponse> => {
-    const res = await axiosClient.post(`/api/v1/enrollments`, {
+    const res = await axiosClient.post(`/enrollments`, {
       studentId,
       courseId,
     });
@@ -27,7 +30,7 @@ export const learnerEnrollmentService = {
 
   /** Huỷ đăng ký khoá học */
   cancelEnrollment: async (enrollmentId: number): Promise<EnrollmentResponse> => {
-    const res = await axiosClient.post(`/api/v1/enrollments/${enrollmentId}/cancel`);
+    const res = await axiosClient.post(`/enrollments/${enrollmentId}/cancel`);
     return unwrapResponse(res);
   },
 };

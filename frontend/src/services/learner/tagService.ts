@@ -5,7 +5,7 @@ import { axiosClient } from '@/lib/api/axios';
 import { unwrapResponse } from '@/lib/api/unwrap';
 import { Tag, TagListResponse } from '@/lib/learner/tag/tags';
 
-const TAG_PUBLIC_PREFIX = '/api/v1/public/tags';
+const TAG_PUBLIC_PREFIX = '/public/tags';
 
 export const learnerTagService = {
   /**

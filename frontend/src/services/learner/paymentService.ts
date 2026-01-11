@@ -6,19 +6,19 @@ import { PaymentListResponse, PaymentResponse } from '@/lib/learner/payment/paym
 export const learnerPaymentService = {
   /** Lấy danh sách payment của student */
   getPayments: async (studentId: number): Promise<PaymentListResponse> => {
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/payments`);
+    const res = await axiosClient.get(`/students/${studentId}/payments`);
     return unwrapResponse(res);
   },
 
   /** Lấy chi tiết payment */
   getPaymentDetail: async (paymentId: number): Promise<PaymentResponse> => {
-    const res = await axiosClient.get(`/api/v1/payments/${paymentId}`);
+    const res = await axiosClient.get(`/payments/${paymentId}`);
     return unwrapResponse(res);
   },
 
   /** Tạo payment mới */
   createPayment: async (studentId: number, courseId: number, amount: number, currency: string, method: string): Promise<PaymentResponse> => {
-    const res = await axiosClient.post(`/api/v1/payments`, {
+    const res = await axiosClient.post(`payments`, {
       studentId,
       courseId,
       amount,
