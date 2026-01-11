@@ -1,7 +1,7 @@
 "use client";
 // src/app/(learner)/courses/[slug]/page.tsx
 import { notFound } from "next/navigation";
-import { CourseHero } from "@/core/components/learner/course/CourseHero";
+import CourseHero from "@/core/components/learner/course/CourseHero";
 import { CourseWhatYouWillLearn } from "@/core/components/learner/course/CourseWhatYouWillLearn";
 import { CourseIncludes } from "@/core/components/learner/course/CourseIncludes";
 import { CourseContentOutline } from "@/core/components/learner/course/CourseContentOutline";

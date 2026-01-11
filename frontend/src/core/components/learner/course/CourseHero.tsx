@@ -2,6 +2,8 @@
 import { Star, Globe2, Users } from "lucide-react";
 import type { CourseDetail } from "@/lib/learner/course/types";
 import { useCart } from "@/core/components/learner/cart/CartContext";
+import dynamic from "next/dynamic";
+import { useState } from "react";
 
 type CourseHeroProps = {
   course: CourseDetail & {
@@ -13,8 +15,11 @@ type CourseHeroProps = {
   };
 };
 
-export function CourseHero({ course }: CourseHeroProps) {
+const CourseHero: React.FC<CourseHeroProps> = ({ course }) => {
   const { addCourse, isInCart } = useCart();
+  const [showEnroll, setShowEnroll] = useState(false);
+  const EnrollStepper = dynamic(() => import("../enroll/EnrollStepper"), { ssr: false });
+
   const {
     title,
     subtitle,
@@ -154,7 +159,10 @@ export function CourseHero({ course }: CourseHeroProps) {
                   >
                     {added ? "Added to cart" : "Add to cart"}
                   </button>
-                  <button className="w-full rounded-xl border border-white/20 bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition">
+                  <button
+                    className="w-full rounded-xl border border-white/20 bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition"
+                    onClick={() => setShowEnroll(true)}
+                  >
                     Enroll now
                   </button>
                 </div>
@@ -168,6 +176,14 @@ export function CourseHero({ course }: CourseHeroProps) {
           </aside>
         </div>
       </div>
+      {/* ENROLL MODAL */}
+      {showEnroll && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <EnrollStepper course={course} onClose={() => setShowEnroll(false)} />
+        </div>
+      )}
     </section>
   );
-}
+};
+
+export default CourseHero;
