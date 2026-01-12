@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, BookOpen, DollarSign, MessageSquare, Award, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, DollarSign, MessageSquare, Award, BarChart3, Settings, DollarSignIcon } from "lucide-react";
 import { useAdmin } from "@/core/components/admin/AdminContext";
 
 type Props = {
@@ -18,6 +18,7 @@ export function AdminSidebar({ stats }: Props) {
     { id: "users", label: "Users", icon: Users, href: "/admin/users" },
     { id: "courses", label: "Courses", icon: BookOpen, href: "/admin/courses" },
     { id: "payments", label: "Payments", icon: DollarSign, href: "/admin/payment" },
+        { id: "revenue", label: "Revenues", icon: DollarSignIcon, href: "/admin/revenue-share" },
     { id: "community", label: "Community", icon: MessageSquare, href: "/admin/community" },
     { id: "certificates", label: "Certificates", icon: Award, href: "/admin/certificate" },
     { id: "reports", label: "Reports", icon: BarChart3, href: "/admin/reports" },
