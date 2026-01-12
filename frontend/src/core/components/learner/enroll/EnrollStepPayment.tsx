@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 import { ExternalLink, Lock, QrCode } from "lucide-react";
+import { learnerPaymentService } from "@/services/learner/paymentService";
 
 interface EnrollStepPaymentProps {
   onNext: (data: any) => void;
@@ -7,8 +9,18 @@ interface EnrollStepPaymentProps {
 }
 
 const paymentMethods = [
-  { id: "vnpay", name: "VNPAY", logo: "/images/payment/vnpay.png", desc: "Fast bank transfer via VNPAY" },
-  { id: "momo", name: "MoMo", logo: "/images/payment/momo.png", desc: "Pay instantly with MoMo wallet" },
+  {
+    id: "vnpay",
+    name: "VNPAY",
+    logo: "/images/payment/vnpay.png",
+    desc: "Fast bank transfer via VNPAY",
+  },
+  {
+    id: "momo",
+    name: "MoMo",
+    logo: "/images/payment/momo.png",
+    desc: "Pay instantly with MoMo wallet",
+  },
 ];
 
 // giả lập link QR
@@ -21,17 +33,66 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
 }) => {
   const [selected, setSelected] = useState(paymentMethods[0].id);
   const [showQR, setShowQR] = useState(false);
-  const [paymentUrl] = useState<string>(MOCK_PAYMENT_URL);
+  const [paymentUrl, setPaymentUrl] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const total = useMemo(() => Number(enrollmentData?.price ?? 0), [enrollmentData]);
+  const total = useMemo(
+    () => Number(enrollmentData?.price ?? 0),
+    [enrollmentData]
+  );
 
-  const handlePay = () => {
-    // TODO: gọi API tạo payment thực tế, lấy paymentUrl
-    setShowQR(true);
+  const handlePay = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const studentId = enrollmentData?.studentId;
+      const courseId = enrollmentData?.courseId;
+      const courseVersionId = enrollmentData?.courseVersionId;
+
+      if (!studentId || !courseId || !courseVersionId)
+        throw new Error("Thiếu studentId, courseId hoặc courseVersionId");
+
+      const paymentRes = await learnerPaymentService.createPayment(
+        courseId,
+        courseVersionId,
+        selected.toUpperCase(),
+        window.location.origin + "/payment/callback"
+      );
+
+      setPaymentUrl(paymentRes.paymentUrl || "");
+      setShowQR(true);
+    } catch (err: any) {
+      setError(err?.message || "Không thể tạo payment, vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDone = () => {
-    onNext({ method: selected, paymentUrl });
+  const handleDone = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Nếu đã có enrollmentId thì không cần enroll lại
+      if (enrollmentData?.enrollmentId) {
+        onNext({ method: selected, paymentUrl });
+        return;
+      }
+      // Gọi enrollCourse
+      const studentId2 = enrollmentData?.studentId;
+      const courseId2 = enrollmentData?.courseId;
+      const courseVersionId2 = enrollmentData?.courseVersionId;
+      console.log("DEBUG ENROLL PARAMS", { studentId2, courseId2, courseVersionId2 });
+      if (!studentId2 || !courseId2 || !courseVersionId2) throw new Error("Thiếu thông tin enroll");
+      const { learnerEnrollmentService } = await import("@/services/learner/enrollmentService");
+      const enrollRes = await learnerEnrollmentService.enrollCourse(studentId2, courseId2, courseVersionId2);
+      console.log("DEBUG ENROLL RESPONSE", enrollRes);
+      onNext({ method: selected, paymentUrl, enrollmentId: enrollRes.enrollment.id });
+    } catch (err: any) {
+      setError(err?.message || "Không thể enroll, vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,7 +118,12 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
         </div>
       </div>
 
-      {/* Methods */}
+      {error && (
+        <div className="mb-4 text-red-500 text-sm font-semibold">
+          {error}
+        </div>
+      )}
+
       {!showQR ? (
         <>
           <div className="grid gap-3">
@@ -87,7 +153,11 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
 
                   <div
                     className={`h-4 w-4 rounded-full border transition
-                      ${active ? "border-[var(--brand-400)] bg-[var(--brand-600)]" : "border-slate-600 bg-transparent"}`}
+                      ${
+                        active
+                          ? "border-[var(--brand-400)] bg-[var(--brand-600)]"
+                          : "border-slate-600 bg-transparent"
+                      }`}
                   />
                 </button>
               );
@@ -96,9 +166,10 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
 
           <button
             onClick={handlePay}
-            className="w-full rounded-2xl bg-[var(--brand-600)] py-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
+            disabled={loading}
+            className="w-full rounded-2xl bg-[var(--brand-600)] py-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition shadow-[0_14px_40px_rgba(0,0,0,0.35)] disabled:opacity-60"
           >
-            Generate QR & Pay
+            {loading ? "Đang tạo mã QR..." : "Generate QR & Pay"}
           </button>
 
           <p className="text-center text-[11px] text-slate-500">
@@ -114,11 +185,17 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
 
           <div className="mt-4 flex flex-col items-center">
             <div className="rounded-2xl bg-slate-950 p-4 shadow-inner">
-              <img
-                src={paymentUrl}
-                alt="QR code"
-                className="h-56 w-56 rounded-xl bg-white p-2"
-              />
+              {paymentUrl ? (
+                <QRCodeCanvas
+                  value={paymentUrl}
+                  size={224}
+                  className="bg-white rounded-xl p-2"
+                />
+              ) : (
+                <div className="h-56 w-56 flex items-center justify-center text-slate-400">
+                  Không có QR code
+                </div>
+              )}
             </div>
 
             <a

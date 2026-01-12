@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { learnerEnrollmentService } from "@/services/learner/enrollmentService";
+import { learnerPaymentService } from "@/services/learner/paymentService";
 import { X } from "lucide-react";
 import EnrollStepperHeader, { EnrollStep } from "./EnrollStepperHeader";
 import EnrollStepCourseInfo from "./EnrollStepCourseInfo";
@@ -11,27 +14,90 @@ interface EnrollStepperProps {
 }
 
 const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
+
   const [step, setStep] = useState<EnrollStep>("course");
   const [enrollmentData, setEnrollmentData] = useState<any>(course);
   const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { user, isLoading: userLoading } = useAuth();
 
   const isPaidCourse = (enrollmentData?.price ?? course?.price ?? 0) > 0;
 
-  const handleNextFromCourse = (data?: any) => {
-    // giữ logic: confirm xong -> paid thì payment, free thì result
-    setEnrollmentData(data ?? enrollmentData ?? course);
-    if (isPaidCourse) setStep("payment");
-    else {
-      setResult({ success: true });
-      setStep("result");
+  // Bước 1: Nếu free -> enroll luôn, nếu paid -> sang bước payment
+  const handleNextFromCourse = async (data?: any) => {
+    setError(null);
+    setLoading(true);
+    try {
+      console.log("DEBUG user:", user);
+      const accountId = user?.accountId;
+      if (!user || !accountId) throw new Error("Bạn cần đăng nhập để đăng ký.");
+      const versionId = Number(course.id);
+      if (!versionId) {
+        setError("Không tìm thấy courseVersionId, vui lòng thử lại hoặc liên hệ hỗ trợ.");
+        setLoading(false);
+        return;
+      }
+      if (!isPaidCourse) {
+        // FREE: Gọi enroll luôn
+        const enrollRes = await learnerEnrollmentService.enrollCourse(
+          Number(user?.accountId),
+          Number(course.courseId),
+          Number(course.id)
+        );
+        setEnrollmentData({ ...course, enrollmentId: enrollRes.enrollment.id });
+        setResult({ success: true });
+        setStep("result");
+      } else {
+        // PAID: Sang bước payment, truyền đủ studentId, courseId, courseVersionId
+        const enrollmentObj = {
+          ...data,
+          studentId: Number(data?.studentId),
+          courseId: Number(data?.courseId),
+          courseVersionId: Number(data?.courseVersionId)
+        };
+        console.log("DEBUG enrollmentData sang payment:", enrollmentObj);
+        setEnrollmentData(enrollmentObj);
+        setStep("payment");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Đăng ký/thanh toán thất bại");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleNextFromPayment = (data?: any) => {
-    // giữ logic: payment xong -> result
-    // (data có thể chứa method/paymentUrl...)
-    setResult({ success: true, ...(data ?? {}) });
-    setStep("result");
+  // Bước 2: Chọn phương thức thanh toán, tạo payment, sau đó check trạng thái enrollment
+  const handleNextFromPayment = async (data?: any) => {
+    setError(null);
+    setLoading(true);
+    try {
+      console.log("DEBUG user:", user);
+      const accountId = user?.accountId;
+      if (!user || !accountId) throw new Error("Bạn cần đăng nhập để thanh toán.");
+      const courseId = course.courseId;
+      const versionId = Number(course.id);
+      if (!courseId || !versionId) throw new Error("Thiếu courseId hoặc courseVersionId");
+      // Gọi createPayment với method và callback
+      const paymentRes = await learnerPaymentService.createPayment(
+        courseId,
+        versionId,
+        data?.method || "VNPAY",
+        window.location.origin + "/payment/callback"
+      );
+      setEnrollmentData({ ...course, paymentId: paymentRes.payment.id, payment: paymentRes.payment });
+      // Sau khi tạo payment, có thể poll/check trạng thái enrollment nếu cần
+      // const statusRes = await learnerPaymentService.getEnrollmentStatus(paymentRes.payment.id);
+      setResult({ success: true, payment: paymentRes.payment });
+      setStep("result");
+    } catch (err: any) {
+      setError(err?.message || "Thanh toán thất bại");
+      setResult({ success: false });
+      setStep("result");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -49,6 +115,8 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
     // giữ logic: finish -> reset + close
     handleClose();
   };
+
+  console.log("DEBUG course object:", course);
 
   return (
     <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900 shadow-[0_45px_140px_rgba(0,0,0,0.75)]">
@@ -86,22 +154,27 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
       <div className="relative px-6 py-6">
         {/* min-height để UI “ôm” gọn, không nhảy */}
         <div className="min-h-[320px]">
-          {step === "course" && (
-            <EnrollStepCourseInfo
-              course={enrollmentData}
-              onNext={handleNextFromCourse}
-            />
-          )}
-
-          {step === "payment" && (
-            <EnrollStepPayment
-              enrollmentData={enrollmentData}
-              onNext={handleNextFromPayment}
-            />
-          )}
-
-          {step === "result" && (
-            <EnrollStepResult result={result} onReset={handleFinish} />
+          {error && <div className="mb-4 text-red-500 text-sm font-semibold">{error}</div>}
+          {loading || userLoading ? (
+            <div className="flex items-center justify-center min-h-[200px] text-slate-400">Đang xử lý...</div>
+          ) : (
+            <>
+              {step === "course" && (
+                <EnrollStepCourseInfo
+                  course={enrollmentData}
+                  onNext={handleNextFromCourse}
+                />
+              )}
+              {step === "payment" && (
+                <EnrollStepPayment
+                  enrollmentData={enrollmentData}
+                  onNext={handleNextFromPayment}
+                />
+              )}
+              {step === "result" && (
+                <EnrollStepResult result={result} onReset={handleFinish} />
+              )}
+            </>
           )}
         </div>
       </div>
