@@ -20,11 +20,10 @@ export const learnerEnrollmentService = {
   },
 
   /** Đăng ký khoá học */
-  enrollCourse: async (studentId: number, courseId: number, courseVersionId: number): Promise<EnrollmentResponse> => {
+  enrollCourse: async (studentId: number, courseId: number): Promise<EnrollmentResponse> => {
     const res = await axiosClient.post(`/enrollments`, {
       studentId,
       courseId,
-      courseVersionId,
     });
     return unwrapResponse(res);
   },

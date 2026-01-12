@@ -1,5 +1,4 @@
 import React from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { ShieldCheck, BadgeCheck, InfinityIcon } from "lucide-react";
 
 interface Props {
@@ -8,7 +7,6 @@ interface Props {
 }
 
 const EnrollStepCourseInfo: React.FC<Props> = ({ course, onNext }) => {
-  const { user } = useAuth();
   const title = course?.title || course?.name || "Untitled course";
   const desc = course?.description || "No description available.";
   const thumb =
@@ -69,12 +67,7 @@ const EnrollStepCourseInfo: React.FC<Props> = ({ course, onNext }) => {
 
       {/* Inline CTA (optional feel-good). Footer vẫn là CTA chính của step này */}
       <button
-        onClick={() => onNext({
-          ...course,
-          studentId: Number(user?.accountId), // chuẩn hóa tên cho backend
-          courseId: Number(course.courseId), // id của khoá học gốc
-          courseVersionId: Number(course.id) // id của version (phiên bản khoá học)
-        })}
+        onClick={() => onNext(course)}
         className="w-full rounded-2xl bg-[var(--brand-600)] py-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
       >
         {isPaid ? "Continue to payment" : "Enroll now"}
