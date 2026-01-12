@@ -91,7 +91,7 @@ export default function AdminRevenueSharePage() {
     );
   }
 
-  const configs: RevenueShareConfigResponse[] = data?.items ?? [];
+  const configs: RevenueShareConfigResponse[] = data?.content ?? [];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">

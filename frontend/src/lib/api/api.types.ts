@@ -24,3 +24,14 @@ export interface PageResponse<T> {
   hasNext: boolean;
   hasPrevious: boolean;
 }
+
+
+export interface SpringPage<T> {
+  content: T[];
+   page: number;
+  size: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}

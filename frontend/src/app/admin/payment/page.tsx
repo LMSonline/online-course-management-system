@@ -11,7 +11,7 @@ import type {
   PaymentTransactionResponse,
   PaymentStatus,
 } from "@/lib/admin/payment.types";
-import PaymentDetailModal from "@/core/components/admin/payments/PaymentDetailModal ";
+import PaymentDetailModal from "@/core/components/admin/payments/PaymentDetailModal";
 import { PaymentStats } from "@/core/components/admin/payments/PaymentStats";
 import { PaymentFilters } from "@/core/components/admin/payments/PaymentFilters";
 import { PaymentTable } from "@/core/components/admin/payments/PaymentTable";

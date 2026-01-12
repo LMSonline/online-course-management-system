@@ -1,6 +1,6 @@
 import { axiosClient } from "@/lib/api/axios";
 import { unwrapResponse } from "@/lib/api/unwrap";
-import { ApiResponse, PageResponse } from "@/lib/api/api.types";
+import { ApiResponse, PageResponse , SpringPage} from "@/lib/api/api.types";
 import {
   RevenueShareConfigResponse,
   CreateRevenueShareConfigRequest,
@@ -35,9 +35,9 @@ export const revenueShareService = {
     categoryId?: number;
     page?: number;
     size?: number;
-  }): Promise<PageResponse<RevenueShareConfigResponse>> => {
+  }): Promise<SpringPage<RevenueShareConfigResponse>> => {
     const response = await axiosClient.get<
-      ApiResponse<PageResponse<RevenueShareConfigResponse>>
+      ApiResponse<SpringPage<RevenueShareConfigResponse>>
     >(ADMIN_REVENUE_SHARE_PREFIX, {
       params,
     });
