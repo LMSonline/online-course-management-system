@@ -1,4 +1,3 @@
-// src/core/components/learner/navbar/LearnerProfileMenu.tsx
 "use client";
 
 import Link from "next/link";
@@ -33,7 +32,6 @@ export function LearnerProfileMenu({ onClose }: Props) {
                  bg-slate-950/95 shadow-[0_18px_40px_rgba(15,23,42,0.8)]
                  backdrop-blur p-3 text-sm text-slate-100 z-50"
     >
-      {/* Top – user info */}
       <div className="flex items-center gap-3 px-2 py-1.5">
         <div className="h-9 w-9 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-xs font-semibold">
           {initials}
@@ -48,7 +46,6 @@ export function LearnerProfileMenu({ onClose }: Props) {
 
       <div className="my-2 h-px bg-white/10" />
 
-      {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2 px-2 pb-2 text-[11px] text-slate-300">
         <div>
           <p className="font-semibold text-slate-50">12</p>
@@ -66,7 +63,6 @@ export function LearnerProfileMenu({ onClose }: Props) {
 
       <div className="my-2 h-px bg-white/10" />
 
-      {/* Navigation links */}
       <nav className="flex flex-col gap-1 text-[13px]">
         <Link
           href="/learner/profile"
@@ -107,7 +103,6 @@ export function LearnerProfileMenu({ onClose }: Props) {
 
       <div className="my-2 h-px bg-white/10" />
 
-      {/* Logout */}
       <button
         type="button"
         onClick={handleLogout}

@@ -1,18 +1,29 @@
 "use client";
 
+
 import { useMemo, useState } from "react";
 import { Play, Pause, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import type { PlayerCourse, PlayerLesson } from "@/lib/learner/player/types";
+import { useParams } from "next/navigation";
+import { useCoursePlayerData } from "@/core/hooks/useCoursePlayerData";
+import { MOCK_PLAYER_COURSE } from "@/lib/learner/player/types";
 
 type Props = {
-  course: PlayerCourse;
+  course?: PlayerCourse; // optional, fallback nếu không có API
 };
 
-export function CoursePlayerShell({ course }: Props) {
+export function CoursePlayerShell({ course: courseProp }: Props) {
+  const params = useParams<{ slug: string }>();
+  const slug = params?.slug;
+  const { data: apiCourse, isLoading, error } = useCoursePlayerData(slug);
+  const course: PlayerCourse = apiCourse || courseProp || MOCK_PLAYER_COURSE;
+
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+
+  if (!course) return <div className="p-8 text-center text-red-400">Course not found.</div>;
 
   const currentSection = course.sections[currentSectionIndex];
   const currentLesson = currentSection.lessons[currentLessonIndex];
@@ -88,17 +99,32 @@ export function CoursePlayerShell({ course }: Props) {
             </span>
           </div>
 
-          {/* Video player */}
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-[0_0_40px_rgba(15,23,42,0.9)]">
+          {/* Video player với tiêu đề động */}
+          <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-[0_0_40px_rgba(15,23,42,0.9)] mb-2">
+            <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+              <h2 className="text-lg font-semibold">
+                {currentSectionIndex === 0 && currentLessonIndex === 0 ? "Getting Started" : currentLesson.title}
+              </h2>
+            </div>
             <div className="relative aspect-video w-full bg-slate-900">
-              {/* Ở đây em có thể thay bằng component player thật (Mux, Plyr, v.v.) */}
-              <video
-                src={currentLesson.videoUrl}
-                controls
-                className="h-full w-full object-cover"
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-              />
+              {/* Nếu là YouTube thì dùng iframe, nếu là mp4 thì dùng video */}
+              {currentLesson.videoUrl.includes("youtube.com") ? (
+                <iframe
+                  src={currentLesson.videoUrl}
+                  title={currentLesson.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <video
+                  src={currentLesson.videoUrl}
+                  controls
+                  className="h-full w-full object-cover"
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                />
+              )}
               {/* Overlay nhẹ khi chưa play (optional) */}
               {!playing && (
                 <div className="pointer-events-none absolute inset-0 bg-black/20" />

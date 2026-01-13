@@ -271,8 +271,7 @@ public class Comment extends BaseEntity {
     /**
      * Ensure business rules are maintained
      */
-    @PrePersist
-    @PreUpdate
+
     private void validateInvariants() {
         // A comment must belong to either a course or a lesson (via parent)
         if (this.course == null && this.lesson == null && this.parent == null) {

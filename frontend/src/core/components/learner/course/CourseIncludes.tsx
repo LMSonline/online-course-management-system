@@ -1,24 +1,76 @@
 // src/components/learner/course/CourseIncludes.tsx
-import type { CourseDetail } from "@/lib/learner/course/types";
-import { FileVideo, Download, InfinityIcon, Award, Smartphone } from "lucide-react";
+"use client";
 
-const iconMap = [FileVideo, Download, InfinityIcon, Smartphone, Award];
+import {
+  FileVideo,
+  Download,
+  InfinityIcon,
+  Award,
+  Smartphone,
+  Code,
+  Sparkles,
+} from "lucide-react";
 
-export function CourseIncludes({ course }: { course: CourseDetail }) {
+const COURSE_INCLUDES = [
+  {
+    icon: FileVideo,
+    label: "18 hours of on-demand video",
+  },
+  {
+    icon: Code,
+    label: "25 hands-on coding exercises",
+  },
+  {
+    icon: Download,
+    label: "Downloadable resources",
+  },
+  {
+    icon: InfinityIcon,
+    label: "Full lifetime access",
+  },
+  {
+    icon: Smartphone,
+    label: "Access on mobile and TV",
+  },
+  {
+    icon: Award,
+    label: "Certificate of completion",
+  },
+];
+
+export function CourseIncludes() {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/90 p-4 md:p-5">
-      <h3 className="text-base font-semibold mb-3">This course includes</h3>
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-200">
-        {course.includes.map((inc, i) => {
-          const Icon = iconMap[i] ?? FileVideo;
-          return (
-            <li key={i} className="inline-flex items-center gap-2">
-              <Icon className="w-4 h-4 text-[var(--brand-400)]" />
-              <span>{inc}</span>
+    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-950 to-slate-900 p-5 md:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+      {/* subtle accent */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.08),transparent_60%)]" />
+
+      <div className="relative">
+        {/* Header */}
+        <div className="mb-5 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-[var(--brand-400)]" />
+          <h3 className="text-base md:text-lg font-semibold text-white">
+            This course includes
+          </h3>
+        </div>
+
+        {/* Content */}
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm md:text-[15px] text-slate-200">
+          {COURSE_INCLUDES.map(({ icon: Icon, label }, idx) => (
+            <li
+              key={idx}
+              className="group flex items-start gap-3 rounded-xl p-2 transition hover:bg-white/[0.04]"
+            >
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand-600)]/15 text-[var(--brand-400)] transition group-hover:bg-[var(--brand-600)]/25">
+                <Icon className="h-4.5 w-4.5" />
+              </span>
+
+              <span className="leading-relaxed text-slate-200">
+                {label}
+              </span>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
