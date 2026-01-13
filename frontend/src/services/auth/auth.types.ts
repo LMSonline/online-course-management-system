@@ -71,7 +71,10 @@ export interface MeUser {
   bio?: string;
   gender?: Gender;
   lastLoginAt?: string;
-  profile?: StudentProfile;
+  profile?: {
+    studentId?: number;
+    teacherId?: number;
+  };
 }
 
 export interface RegisterResponse {
