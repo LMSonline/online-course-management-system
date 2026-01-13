@@ -48,7 +48,7 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
     const gradeMutation = useGradeSubmission();
     const rejectMutation = useRejectSubmission();
     const feedbackMutation = useFeedbackSubmission();
-    const { data: files = [] } = useSubmissionFiles(submission?.id ?? null);
+    const { data: files = [] } = useSubmissionFiles(submission?.id ?? 0);
 
     useEffect(() => {
         if (submission) {
@@ -62,7 +62,7 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
     if (!submission) return null;
 
     const handleGrade = () => {
-        gradeMutation.mutate({ id: submission.id, payload: { score, feedback } }, {
+        gradeMutation.mutate({ id: submission.id, payload: { grade: score, feedback } }, {
             onSuccess: () => onOpenChange(false),
         });
     };
@@ -81,8 +81,8 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
 
     const handleDownloadFile = async (fileId: number, fileName: string) => {
         try {
-            const response = await assignmentService.getFileDownloadUrl(submission.id, fileId);
-            window.open(response.downloadUrl, "_blank");
+            const downloadUrl = await assignmentService.getFileDownloadUrl(submission.id, fileId);
+            window.open(downloadUrl, "_blank");
         } catch (error) {
             console.error("Failed to get download URL:", error);
         }
@@ -94,7 +94,7 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
-    const isPending = submission.status === "SUBMITTED" || submission.status === "LATE";
+    const isPending = submission.status === "PENDING";
     const isGraded = submission.status === "GRADED";
 
     return (
@@ -121,19 +121,16 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
                                     </div>
                                     <div>
                                         <p className="font-medium text-slate-800 dark:text-white">{submission.studentName}</p>
-                                        {submission.studentCode && (
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">{submission.studentCode}</p>
-                                        )}
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">ID: {submission.studentId}</p>
                                     </div>
                                 </div>
                                 {submission.submittedAt && (
-                                    <div className={`flex items-center gap-3 ${submission.isLate ? "text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400"}`}>
-                                        <div className={`p-2 rounded-lg ${submission.isLate ? "bg-red-100 dark:bg-red-500/20" : "bg-slate-100 dark:bg-slate-700"}`}>
-                                            <Clock className={`h-4 w-4 ${submission.isLate ? "text-red-600 dark:text-red-400" : "text-slate-500"}`} />
+                                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                                        <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
+                                            <Clock className="h-4 w-4 text-slate-500" />
                                         </div>
                                         <div>
                                             <p className="text-sm">{format(new Date(submission.submittedAt), "MMM d, yyyy h:mm a")}</p>
-                                            {submission.isLate && <span className="text-xs">Late submission</span>}
                                         </div>
                                     </div>
                                 )}
@@ -166,7 +163,6 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
                                                         <p className="text-sm font-medium text-slate-800 dark:text-white truncate max-w-[180px]">
                                                             {file.fileName}
                                                         </p>
-                                                        <p className="text-xs text-slate-400">{formatFileSize(file.fileSize)}</p>
                                                     </div>
                                                 </div>
                                                 <Button

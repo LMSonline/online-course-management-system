@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import  Button  from "@/core/components/ui/Button";
+import Button from "@/core/components/ui/Button";
 import Dialog, {
     DialogContent,
     DialogHeader,
@@ -105,13 +105,6 @@ export function LessonAssignmentManagement({
     };
 
     const getStatusBadge = (assignment: AssignmentResponse) => {
-        if (assignment.status === "DRAFT") {
-            return <Badge variant="secondary">Draft</Badge>;
-        }
-        if (assignment.status === "ARCHIVED") {
-            return <Badge variant="outline">Archived</Badge>;
-        }
-
         // Check if due date has passed
         if (assignment.dueDate && isPast(new Date(assignment.dueDate))) {
             return (
@@ -207,14 +200,11 @@ export function LessonAssignmentManagement({
                                             <span className="text-muted-foreground">No due date</span>
                                         )}
                                     </TableCell>
-                                    <TableCell>{assignment.maxScore || "-"} pts</TableCell>
+                                    <TableCell>{assignment.totalPoints || "-"} pts</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1">
                                             <Users className="h-4 w-4" />
-                                            <span>
-                                                {assignment.gradedSubmissions || 0}/
-                                                {assignment.totalSubmissions || 0}
-                                            </span>
+                                            <span>-</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>{getStatusBadge(assignment)}</TableCell>

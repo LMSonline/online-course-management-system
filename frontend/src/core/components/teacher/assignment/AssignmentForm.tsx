@@ -41,23 +41,19 @@ export function AssignmentForm({
         defaultValues: {
             title: initialData?.title || "",
             description: initialData?.description || "",
-            instructions: initialData?.instructions || "",
             dueDate: initialData?.dueDate || "",
-            maxScore: initialData?.maxScore ?? 100,
-            allowLateSubmission: initialData?.allowLateSubmission ?? false,
         },
     });
-
-    const allowLateSubmission = watch("allowLateSubmission");
 
     const handleFormSubmit = (data: AssignmentRequest) => {
         const payload: AssignmentRequest = {
             title: data.title,
+            assignmentType: data.assignmentType,
             description: data.description || undefined,
-            instructions: data.instructions || undefined,
             dueDate: formatToInstant(data.dueDate || ""),
-            maxScore: data.maxScore || undefined,
-            allowLateSubmission: data.allowLateSubmission,
+            totalPoints: data.totalPoints || undefined,
+            timeLimitMinutes: data.timeLimitMinutes || undefined,
+            maxAttempts: data.maxAttempts || undefined,
         };
         onSubmit(payload);
     };
@@ -90,17 +86,6 @@ export function AssignmentForm({
                 />
             </div>
 
-            {/* Instructions */}
-            <div className="space-y-2">
-                <Label htmlFor="instructions">Instructions</Label>
-                <Textarea
-                    id="instructions"
-                    {...register("instructions")}
-                    placeholder="Detailed instructions for students"
-                    rows={6}
-                />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Due Date */}
                 <div className="space-y-2">
@@ -123,36 +108,6 @@ export function AssignmentForm({
                     {errors.dueDate && (
                         <p className="text-sm text-red-500">{errors.dueDate.message}</p>
                     )}
-                </div>
-
-                {/* Max Score */}
-                <div className="space-y-2">
-                    <Label htmlFor="maxScore">Maximum Score</Label>
-                    <Input
-                        id="maxScore"
-                        type="number"
-                        {...register("maxScore", { valueAsNumber: true })}
-                        placeholder="100"
-                        min={1}
-                    />
-                </div>
-            </div>
-
-            {/* Settings */}
-            <div className="space-y-4 border rounded-lg p-4">
-                <h3 className="font-medium">Assignment Settings</h3>
-
-                <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                        <Label>Allow Late Submission</Label>
-                        <p className="text-sm text-muted-foreground">
-                            Students can submit after the due date
-                        </p>
-                    </div>
-                    <Switch
-                        checked={allowLateSubmission}
-                        onCheckedChange={(checked) => setValue("allowLateSubmission", checked)}
-                    />
                 </div>
             </div>
 

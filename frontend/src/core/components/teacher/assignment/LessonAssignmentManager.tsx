@@ -7,7 +7,7 @@ import {
     useAllIndependentAssignments,
     useLinkAssignmentToLesson,
     useUnlinkAssignmentFromLesson,
-    useCreateAssignment,
+    useCreateIndependentAssignment,
 } from "@/hooks/teacher/useTeacherAssignment";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/core/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/core/components/ui/Dialog";
@@ -63,9 +63,9 @@ interface LessonAssignmentManagerProps {
 export function LessonAssignmentManager({ lessonId }: LessonAssignmentManagerProps) {
     const { data: linkedAssignments = [], isLoading } = useAssignmentsByLesson(lessonId);
     const { data: libraryAssignments = [] } = useAllIndependentAssignments();
-    const linkMutation = useLinkAssignmentToLesson(lessonId);
-    const unlinkMutation = useUnlinkAssignmentFromLesson(lessonId);
-    const createMutation = useCreateAssignment(lessonId);
+    const linkMutation = useLinkAssignmentToLesson();
+    const unlinkMutation = useUnlinkAssignmentFromLesson();
+    const createMutation = useCreateIndependentAssignment();
 
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -80,26 +80,26 @@ export function LessonAssignmentManager({ lessonId }: LessonAssignmentManagerPro
     );
 
     const handleLinkAssignment = (assignment: AssignmentResponse) => {
-        linkMutation.mutate(assignment.id, {
+        linkMutation.mutate({ lessonId, assignmentId: assignment.id }, {
             onSuccess: () => setShowLinkModal(false),
         });
     };
 
     const handleUnlinkAssignment = () => {
         if (assignmentToUnlink) {
-            unlinkMutation.mutate(assignmentToUnlink.id, {
+            unlinkMutation.mutate({ lessonId, assignmentId: assignmentToUnlink.id }, {
                 onSuccess: () => setAssignmentToUnlink(null),
             });
         }
     };
 
-    const handleCreateAssignment = (data: { title: string; description?: string; dueDate?: string; maxScore?: number }) => {
+    const handleCreateAssignment = (data: { title: string; description?: string; dueDate?: string; totalPoints?: number }) => {
         const payload: AssignmentRequest = {
             title: data.title,
+            assignmentType: "HOMEWORK",
             description: data.description,
             dueDate: formatToInstant(data.dueDate || ""),
-            maxScore: data.maxScore,
-            allowLateSubmission: true,
+            totalPoints: data.totalPoints,
         };
         createMutation.mutate(payload, {
             onSuccess: () => setShowCreateModal(false),
@@ -171,7 +171,6 @@ export function LessonAssignmentManager({ lessonId }: LessonAssignmentManagerPro
                     {linkedAssignments.map((assignment) => {
                         const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
                         const isOverdue = dueDate && dueDate < new Date();
-                        const pendingCount = (assignment.totalSubmissions ?? 0) - (assignment.gradedSubmissions ?? 0);
 
                         return (
                             <Card key={assignment.id} className="bg-white dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/50 shadow-sm">
@@ -186,13 +185,17 @@ export function LessonAssignmentManager({ lessonId }: LessonAssignmentManagerPro
                                                     <h4 className="font-semibold text-slate-800 dark:text-white">
                                                         {assignment.title}
                                                     </h4>
-                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium ${assignment.status === "PUBLISHED"
-                                                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                                        : "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                                                        }`}>
-                                                        {assignment.status === "PUBLISHED" ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                                                        {assignment.status}
-                                                    </span>
+                                                    {isOverdue ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400">
+                                                            <AlertCircle className="h-3 w-3" />
+                                                            Overdue
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            Active
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                                                     {dueDate && (
@@ -201,20 +204,10 @@ export function LessonAssignmentManager({ lessonId }: LessonAssignmentManagerPro
                                                             {format(dueDate, "MMM d")}
                                                         </span>
                                                     )}
-                                                    {assignment.maxScore && (
+                                                    {assignment.totalPoints && (
                                                         <span className="flex items-center gap-1">
                                                             <Target className="h-3 w-3" />
-                                                            {assignment.maxScore} pts
-                                                        </span>
-                                                    )}
-                                                    <span className="flex items-center gap-1">
-                                                        <FileText className="h-3 w-3" />
-                                                        {assignment.totalSubmissions ?? 0} submissions
-                                                    </span>
-                                                    {pendingCount > 0 && (
-                                                        <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                                                            <Clock className="h-3 w-3" />
-                                                            {pendingCount} pending
+                                                            {assignment.totalPoints} pts
                                                         </span>
                                                     )}
                                                 </div>
@@ -286,7 +279,7 @@ export function LessonAssignmentManager({ lessonId }: LessonAssignmentManagerPro
                                                 {assignment.title}
                                             </p>
                                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                {assignment.maxScore} pts • Updated {formatDistanceToNow(new Date(assignment.updatedAt), { addSuffix: true })}
+                                                {assignment.totalPoints || 0} pts • Updated {formatDistanceToNow(new Date(assignment.updatedAt), { addSuffix: true })}
                                             </p>
                                         </div>
                                     </button>
@@ -363,18 +356,18 @@ function QuickCreateForm({
     isLoading,
     onCancel,
 }: {
-    onSubmit: (data: { title: string; description?: string; dueDate?: string; maxScore?: number }) => void;
+    onSubmit: (data: { title: string; description?: string; dueDate?: string; totalPoints?: number }) => void;
     isLoading: boolean;
     onCancel: () => void;
 }) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [dueDate, setDueDate] = useState("");
-    const [maxScore, setMaxScore] = useState(100);
+    const [totalPoints, setTotalPoints] = useState(100);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({ title, description, dueDate, maxScore });
+        onSubmit({ title, description, dueDate, totalPoints });
     };
 
     return (
@@ -410,12 +403,12 @@ function QuickCreateForm({
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-slate-700 dark:text-slate-300">Max Score</Label>
+                    <Label className="text-slate-700 dark:text-slate-300">Total Points</Label>
                     <Input
                         type="number"
                         min={0}
-                        value={maxScore}
-                        onChange={(e) => setMaxScore(Number(e.target.value))}
+                        value={totalPoints}
+                        onChange={(e) => setTotalPoints(Number(e.target.value))}
                         className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                     />
                 </div>

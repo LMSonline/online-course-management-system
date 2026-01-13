@@ -8,6 +8,7 @@ export const axiosClient = axios.create({
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   },
 });
 
@@ -112,7 +113,6 @@ axiosClient.interceptors.response.use(
     );
   }
 );
-
 
 axiosClient.interceptors.response.use(
   (response) => response,

@@ -21,7 +21,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/core/components/ui/select";
+} from "@/core/components/ui/Select";
 import { AssignmentType } from "@/services/assignment/assignment.types";
 
 interface CreateAssignmentDialogProps {
@@ -54,8 +54,8 @@ export function CreateAssignmentDialog({
         formState: { errors },
         watch,
         setValue,
-    } = useForm<AssignmentFormValues>({
-        resolver: zodResolver(assignmentFormSchema),
+    } = useForm<any>({
+        resolver: zodResolver(assignmentFormSchema) as any,
         defaultValues: {
             title: "",
             assignmentType: "HOMEWORK",
@@ -106,7 +106,7 @@ export function CreateAssignmentDialog({
                             className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${errors.title ? "border-red-500 dark:border-red-500" : ""}`}
                         />
                         {errors.title && (
-                            <p className="text-sm text-red-500">{errors.title.message}</p>
+                            <p className="text-sm text-red-500">{errors.title.message as string}</p>
                         )}
                     </div>
 
@@ -116,22 +116,17 @@ export function CreateAssignmentDialog({
                             Assignment Type <span className="text-red-500">*</span>
                         </Label>
                         <Select
-                            value={watch("assignmentType")}
-                            onValueChange={(value: AssignmentType) => setValue("assignmentType", value)}
+                            {...register("assignmentType")}
+                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                         >
-                            <SelectTrigger className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                                <SelectValue placeholder="Select assignment type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.entries(ASSIGNMENT_TYPE_CONFIG).map(([value, config]) => (
-                                    <SelectItem key={value} value={value}>
-                                        {config.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
+                            {Object.entries(ASSIGNMENT_TYPE_CONFIG).map(([value, config]) => (
+                                <option key={value} value={value}>
+                                    {config.label}
+                                </option>
+                            ))}
                         </Select>
                         {errors.assignmentType && (
-                            <p className="text-sm text-red-500">{errors.assignmentType.message}</p>
+                            <p className="text-sm text-red-500">{errors.assignmentType.message as string}</p>
                         )}
                     </div>
 

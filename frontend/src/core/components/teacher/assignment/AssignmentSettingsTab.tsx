@@ -42,10 +42,7 @@ const formatToDateTimeLocal = (isoString: string | undefined): string => {
 const assignmentSettingsSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters").max(200),
     description: z.string().optional().nullable(),
-    instructions: z.string().optional().nullable(),
     dueDate: z.string().optional().nullable(),
-    maxScore: z.number().min(0).optional().nullable(),
-    allowLateSubmission: z.boolean(),
 });
 
 type AssignmentSettingsFormData = z.infer<typeof assignmentSettingsSchema>;
@@ -71,23 +68,19 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
         defaultValues: {
             title: assignment.title || "",
             description: assignment.description || "",
-            instructions: assignment.instructions || "",
-            dueDate: formatToDateTimeLocal(assignment.dueDate),
-            maxScore: assignment.maxScore ?? 100,
-            allowLateSubmission: assignment.allowLateSubmission ?? true,
+            dueDate: formatToDateTimeLocal(assignment.dueDate || undefined),
         },
     });
-
-    const allowLateSubmission = watch("allowLateSubmission");
 
     const onSubmit = (data: AssignmentSettingsFormData) => {
         const payload: AssignmentRequest = {
             title: data.title,
+            assignmentType: assignment.assignmentType,
             description: data.description || undefined,
-            instructions: data.instructions || undefined,
             dueDate: formatToInstant(data.dueDate || ""),
-            maxScore: data.maxScore || undefined,
-            allowLateSubmission: data.allowLateSubmission,
+            totalPoints: assignment.totalPoints || undefined,
+            timeLimitMinutes: assignment.timeLimitMinutes || undefined,
+            maxAttempts: assignment.maxAttempts || undefined,
         };
         updateMutation.mutate({ id: assignment.id, payload });
     };
@@ -144,17 +137,6 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
                                 className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                             />
                         </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="instructions" className="text-slate-700 dark:text-slate-300">Instructions</Label>
-                            <Textarea
-                                id="instructions"
-                                rows={4}
-                                placeholder="Detailed instructions for students..."
-                                {...register("instructions")}
-                                className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            />
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -174,7 +156,7 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
                         </div>
                     </CardHeader>
                     <CardContent className="pt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="dueDate" className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                                     <Calendar className="h-4 w-4 text-slate-400" />
@@ -186,30 +168,6 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
                                     {...register("dueDate")}
                                     className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                                 />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="maxScore" className="text-slate-700 dark:text-slate-300">Max Score</Label>
-                                <Input
-                                    id="maxScore"
-                                    type="number"
-                                    min={0}
-                                    {...register("maxScore", { valueAsNumber: true })}
-                                    className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-slate-700 dark:text-slate-300">Late Submission</Label>
-                                <div className="flex items-center gap-3 h-10">
-                                    <Switch
-                                        checked={allowLateSubmission}
-                                        onCheckedChange={(checked) => setValue("allowLateSubmission", checked, { shouldDirty: true })}
-                                    />
-                                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                                        {allowLateSubmission ? "Allowed" : "Not allowed"}
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </CardContent>

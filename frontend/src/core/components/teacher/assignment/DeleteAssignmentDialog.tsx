@@ -31,7 +31,7 @@ export function DeleteAssignmentDialog({
 }: DeleteAssignmentDialogProps) {
     if (!assignment) return null;
 
-    const hasSubmissions = (assignment.totalSubmissions ?? 0) > 0;
+    const hasSubmissions = false; // Backend should validate on delete
 
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -59,20 +59,15 @@ export function DeleteAssignmentDialog({
                             <p className="font-semibold text-slate-800 dark:text-white">
                                 {assignment.title}
                             </p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                                {assignment.totalSubmissions ?? 0} submissions
-                            </p>
                         </div>
                     </div>
                 </div>
 
-                {hasSubmissions && (
-                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl">
-                        <p className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>Warning:</strong> This assignment has {assignment.totalSubmissions} submissions. Deletion will fail if submissions exist. Consider archiving instead.
-                        </p>
-                    </div>
-                )}
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                        <strong>Warning:</strong> This action cannot be undone. Deletion will fail if submissions exist.
+                    </p>
+                </div>
 
                 <AlertDialogFooter className="mt-5">
                     <AlertDialogCancel

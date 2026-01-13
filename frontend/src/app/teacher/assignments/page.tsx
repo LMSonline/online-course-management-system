@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Button from "@/core/components/ui/Button";
 import Input from "@/core/components/ui/Input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/core/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/core/components/ui/Select";
 import {
     useAllIndependentAssignments,
     useCreateIndependentAssignment,

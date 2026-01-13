@@ -15,16 +15,9 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
+        config.setAllowedOriginPatterns(List.of("*"));
 
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
-                "http://127.0.0.1:*",
-                "http://192.168.*.*:*"
-        ));
-
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
+        config.setAllowedMethods(List.of("*"));
 
         config.setAllowedHeaders(List.of("*"));
 
@@ -35,8 +28,9 @@ public class CorsConfig {
                 "Content-Disposition"
         ));
 
-        config.setAllowCredentials(true);
+       config.setAllowCredentials(true);
 
+        // Cache CORS preflight (OPTIONS)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
