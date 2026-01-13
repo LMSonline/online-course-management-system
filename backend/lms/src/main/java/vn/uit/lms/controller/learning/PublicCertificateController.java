@@ -13,7 +13,7 @@ public class PublicCertificateController {
     private final CertificateService certificateService;
 
     /**
-     * UC-4-06: Tra cứu / xác minh chứng chỉ (public)
+     *  Tra cứu / xác minh chứng chỉ (public)
      */
     @GetMapping("/verify")
     public CertificateVerificationResponse verifyCertificate(
