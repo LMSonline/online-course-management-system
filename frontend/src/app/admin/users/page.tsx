@@ -11,7 +11,7 @@ import {
 } from "@/hooks/useAdminAccounts";
 import { AccountResponse } from "@/services/account/account.types";
 import AdminExportUsersScreen from "./export/page";
-import AdminUserStatsScreen from "./stats/page";
+import { AdminUserStatsScreen } from "./stats/page";
 
 import { UserHeader ,UserStatsCards,
   UserSearchBar,
@@ -79,25 +79,33 @@ export default function AdminUsersScreen() {
  */
 // (alias) type AccountStatus = "ACTIVE" | "PENDING_APPROVAL" | "PENDING_EMAIL" | "SUSPENDED" | "INACTIVE"
   // Calculate stats
-  const stats = useMemo(() => ({
-    totalUsers: data?.totalItems || 0,
-    learners: users.filter((u: AccountResponse) => u.role === "STUDENT").length,
-    instructors: users.filter((u: AccountResponse) => u.role === "TEACHER").length,
-    suspended: users.filter((u: AccountResponse) => u.status === "SUSPENDED").length,
-    pending: users.filter((u: AccountResponse) => u.status === "PENDING_APPROVAL").length,
-  }), [data, users]);
+// const stats = useMemo(() => ({
+//   total: users.length,
+//   learners: users.filter(u => u.role === "STUDENT").length,
+//   instructors: users.filter(u => u.role === "TEACHER").length,
+//   pending: users.filter(u => u.status === "PENDING_APPROVAL").length,
+//   suspended: users.filter(u => u.status === "SUSPENDED").length,
+// }), [users]);
+const stats = useMemo(() => ({
+  totalUsers: users.length,
+  learners: users.filter(u => u.role === "STUDENT").length,
+  instructors: users.filter(u => u.role === "TEACHER").length,
+  suspended: users.filter(u => u.status === "SUSPENDED").length,
+  pending: users.filter(u => u.status === "PENDING_APPROVAL").length,
+}), [data, users]);
+
 
   // Filter users by tab
-  const filteredUsers = useMemo(() => {
-    return users.filter((user: AccountResponse) => {
-      if (selectedTab === "all") return true;
-      if (selectedTab === "learners") return user.role === "STUDENT";
-      if (selectedTab === "instructors") return user.role === "TEACHER";
-      if (selectedTab === "suspended") return user.status === "SUSPENDED";
-      if (selectedTab === "pending") return user.status === "PENDING_APPROVAL";
-      return true;
-    });
-  }, [users, selectedTab]);
+  // const filteredUsers = useMemo(() => {
+  //   return users.filter((user: AccountResponse) => {
+  //     if (selectedTab === "all") return true;
+  //     if (selectedTab === "learners") return user.role === "STUDENT";
+  //     if (selectedTab === "instructors") return user.role === "TEACHER";
+  //     if (selectedTab === "suspended") return user.status === "SUSPENDED";
+  //     if (selectedTab === "pending") return user.status === "PENDING_APPROVAL";
+  //     return true;
+  //   });
+  // }, [users, selectedTab]);
 
   // Action handlers
   const handleLock = async (userId: number) => {
@@ -196,7 +204,7 @@ export default function AdminUsersScreen() {
 
       {/* Users Table */}
       <UserTable
-        users={filteredUsers}
+        users={users}
         loading={isLoading}
         error={error}
         isProcessing={isProcessing}

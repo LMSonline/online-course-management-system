@@ -1,10 +1,44 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import { useAdmin } from "@/core/components/admin/AdminContext";
 import { userService } from "@/services/user/user.service";
-import { Users, UserCheck, UserX, Ban, ShieldCheck, Mail, XCircle, GraduationCap, BookOpen, Loader2, AlertTriangle } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { ArrowLeft } from "lucide-react";
-export default function AdminUserStatsScreen() {
+import {
+  Users,
+  UserCheck,
+  UserX,
+  Ban,
+  ShieldCheck,
+  Mail,
+  XCircle,
+  GraduationCap,
+  BookOpen,
+  Loader2,
+  AlertTriangle,
+  ArrowLeft,
+  TrendingUp,
+  Activity,
+  Clock,
+} from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+interface AdminUserStatsScreenProps {
+  onBack?: () => void;
+}
+
+export function AdminUserStatsScreen({ onBack }: AdminUserStatsScreenProps) {
+  const { darkMode } = useAdmin();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +46,8 @@ export default function AdminUserStatsScreen() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    userService.getUserStats()
+    userService
+      .getUserStats()
       .then((data) => {
         setStats(data);
         setLoading(false);
@@ -27,8 +62,24 @@ export default function AdminUserStatsScreen() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin w-10 h-10 text-blue-500 mb-4" />
-        <span className="text-gray-400">Loading user statistics...</span>
+        <div
+          className={`p-6 rounded-2xl ${
+            darkMode ? "bg-[#12182b]" : "bg-white"
+          } shadow-xl`}
+        >
+          <Loader2
+            className={`animate-spin w-12 h-12 mb-4 mx-auto ${
+              darkMode ? "text-emerald-400" : "text-emerald-600"
+            }`}
+          />
+          <span
+            className={`block text-center ${
+              darkMode ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            Loading user statistics...
+          </span>
+        </div>
       </div>
     );
   }
@@ -37,8 +88,24 @@ export default function AdminUserStatsScreen() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <AlertTriangle className="w-10 h-10 text-red-500 mb-4" />
-        <span className="text-red-400">{error}</span>
+        <div
+          className={`p-6 rounded-2xl ${
+            darkMode ? "bg-[#12182b]" : "bg-white"
+          } shadow-xl`}
+        >
+          <AlertTriangle
+            className={`w-12 h-12 mb-4 mx-auto ${
+              darkMode ? "text-rose-400" : "text-rose-600"
+            }`}
+          />
+          <span
+            className={`block text-center ${
+              darkMode ? "text-rose-400" : "text-rose-600"
+            }`}
+          >
+            {error}
+          </span>
+        </div>
       </div>
     );
   }
@@ -48,11 +115,19 @@ export default function AdminUserStatsScreen() {
 
   // Prepare chart data
   const statusData = [
-    { name: "Active", value: stats.activeUsers, color: "#00ff00" },
+    { name: "Active", value: stats.activeUsers, color: "#10b981" },
     { name: "Inactive", value: stats.inactiveUsers, color: "#6b7280" },
     { name: "Suspended", value: stats.suspendedUsers, color: "#ef4444" },
-    { name: "Pending Approval", value: stats.pendingApprovalUsers, color: "#fbbf24" },
-    { name: "Pending Email", value: stats.pendingEmailUsers, color: "#f59e0b" },
+    {
+      name: "Pending Approval",
+      value: stats.pendingApprovalUsers,
+      color: "#f59e0b",
+    },
+    {
+      name: "Pending Email",
+      value: stats.pendingEmailUsers,
+      color: "#fbbf24",
+    },
     { name: "Rejected", value: stats.rejectedUsers, color: "#dc2626" },
   ];
 
@@ -76,260 +151,824 @@ export default function AdminUserStatsScreen() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a1123]">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6 px-8 pt-8">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 text-gray-400 hover:text-white hover:bg-[#1a2237] rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-2">User Statistics</h2>
-          <p className="text-gray-400">Overview of user metrics and trends</p>
+      <div className="flex items-center gap-4">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className={`p-2 rounded-xl transition-all ${
+              darkMode
+                ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <div className="flex-1">
+          <h2
+            className={`text-2xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            User Statistics
+          </h2>
+          <p
+            className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+          >
+            Overview of user metrics and trends
+          </p>
         </div>
       </div>
-      <div className="space-y-6 px-8 pb-8">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-900/30 rounded">
-                <Users className="w-5 h-5 text-blue-400" />
-              </div>
-              <span className="text-gray-400 text-sm">Total Users</span>
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Users */}
+        <div
+          className={`rounded-xl border p-5 transition-all hover:scale-105 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+              : "bg-white border-gray-200 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-blue-500/10" : "bg-blue-50"
+              }`}
+            >
+              <Users
+                className={`w-5 h-5 ${
+                  darkMode ? "text-blue-400" : "text-blue-600"
+                }`}
+              />
             </div>
-            <p className="text-white text-2xl font-bold">{stats.totalUsers?.toLocaleString()}</p>
+            <span
+              className={`text-sm font-medium ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Total Users
+            </span>
           </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-900/30 rounded">
-                <UserCheck className="w-5 h-5 text-green-400" />
-              </div>
-              <span className="text-gray-400 text-sm">Active</span>
+          <p
+            className={`text-3xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {stats.totalUsers?.toLocaleString()}
+          </p>
+        </div>
+
+        {/* Active Users */}
+        <div
+          className={`rounded-xl border p-5 transition-all hover:scale-105 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10"
+              : "bg-white border-gray-200 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-emerald-500/10" : "bg-emerald-50"
+              }`}
+            >
+              <UserCheck
+                className={`w-5 h-5 ${
+                  darkMode ? "text-emerald-400" : "text-emerald-600"
+                }`}
+              />
             </div>
-            <p className="text-white text-2xl font-bold">{stats.activeUsers?.toLocaleString()}</p>
+            <span
+              className={`text-sm font-medium ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Active
+            </span>
           </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-gray-700/30 rounded">
-                <UserX className="w-5 h-5 text-gray-400" />
-              </div>
-              <span className="text-gray-400 text-sm">Inactive</span>
+          <p
+            className={`text-3xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {stats.activeUsers?.toLocaleString()}
+          </p>
+          <p
+            className={`text-xs mt-2 ${
+              darkMode ? "text-emerald-400" : "text-emerald-600"
+            }`}
+          >
+            {((stats.activeUsers / stats.totalUsers) * 100).toFixed(1)}% of
+            total
+          </p>
+        </div>
+
+        {/* Inactive Users */}
+        <div
+          className={`rounded-xl border p-5 transition-all hover:scale-105 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-gray-600/50 hover:shadow-lg hover:shadow-gray-600/10"
+              : "bg-white border-gray-200 hover:border-gray-400 hover:shadow-lg hover:shadow-gray-400/10"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-gray-700/30" : "bg-gray-100"
+              }`}
+            >
+              <UserX
+                className={`w-5 h-5 ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              />
             </div>
-            <p className="text-white text-2xl font-bold">{stats.inactiveUsers?.toLocaleString()}</p>
+            <span
+              className={`text-sm font-medium ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Inactive
+            </span>
           </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-red-900/30 rounded">
-                <Ban className="w-5 h-5 text-red-400" />
-              </div>
-              <span className="text-gray-400 text-sm">Suspended</span>
+          <p
+            className={`text-3xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {stats.inactiveUsers?.toLocaleString()}
+          </p>
+          <p
+            className={`text-xs mt-2 ${
+              darkMode ? "text-gray-500" : "text-gray-500"
+            }`}
+          >
+            {((stats.inactiveUsers / stats.totalUsers) * 100).toFixed(1)}% of
+            total
+          </p>
+        </div>
+
+        {/* Suspended Users */}
+        <div
+          className={`rounded-xl border p-5 transition-all hover:scale-105 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-500/10"
+              : "bg-white border-gray-200 hover:border-rose-500 hover:shadow-lg hover:shadow-rose-500/10"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-rose-500/10" : "bg-rose-50"
+              }`}
+            >
+              <Ban
+                className={`w-5 h-5 ${
+                  darkMode ? "text-rose-400" : "text-rose-600"
+                }`}
+              />
             </div>
-            <p className="text-white text-2xl font-bold">{stats.suspendedUsers?.toLocaleString()}</p>
+            <span
+              className={`text-sm font-medium ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Suspended
+            </span>
+          </div>
+          <p
+            className={`text-3xl font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {stats.suspendedUsers?.toLocaleString()}
+          </p>
+          <p
+            className={`text-xs mt-2 ${
+              darkMode ? "text-rose-400" : "text-rose-600"
+            }`}
+          >
+            Requires attention
+          </p>
+        </div>
+      </div>
+
+      {/* Pending Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div
+          className={`rounded-xl border p-5 transition-all ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-amber-500/30"
+              : "bg-white border-gray-200 hover:border-amber-500/30"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-amber-500/10" : "bg-amber-50"
+              }`}
+            >
+              <ShieldCheck
+                className={`w-5 h-5 ${
+                  darkMode ? "text-amber-400" : "text-amber-600"
+                }`}
+              />
+            </div>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Pending Approval
+              </p>
+              <p
+                className={`text-2xl font-bold mt-1 ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {stats.pendingApprovalUsers?.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Pending Status */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-900/30 rounded">
-                <ShieldCheck className="w-5 h-5 text-yellow-400" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Pending Approval</p>
-                <p className="text-white text-xl font-bold">{stats.pendingApprovalUsers?.toLocaleString()}</p>
-              </div>
+        <div
+          className={`rounded-xl border p-5 transition-all ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-orange-500/30"
+              : "bg-white border-gray-200 hover:border-orange-500/30"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-orange-500/10" : "bg-orange-50"
+              }`}
+            >
+              <Mail
+                className={`w-5 h-5 ${
+                  darkMode ? "text-orange-400" : "text-orange-600"
+                }`}
+              />
             </div>
-          </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-900/30 rounded">
-                <Mail className="w-5 h-5 text-orange-400" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Pending Email</p>
-                <p className="text-white text-xl font-bold">{stats.pendingEmailUsers?.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-900/30 rounded">
-                <XCircle className="w-5 h-5 text-red-400" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Rejected</p>
-                <p className="text-white text-xl font-bold">{stats.rejectedUsers?.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Status Distribution */}
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
-            <h3 className="text-white text-lg font-semibold mb-4">Status Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(1)}%`}
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1a2237",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          {/* Role Distribution */}
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
-            <h3 className="text-white text-lg font-semibold mb-4">Role Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={roleData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(1)}%`}
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {roleData.map((entry, index) => (
-                    <Cell key={`cell-role-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1a2237",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Role Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-900/30 rounded">
-                <GraduationCap className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Students</p>
-                <p className="text-white text-xl font-bold">{stats.roleStats.students?.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-900/30 rounded">
-                <BookOpen className="w-5 h-5 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Teachers</p>
-                <p className="text-white text-xl font-bold">{stats.roleStats.teachers?.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Approved: {stats.roleStats.approvedTeachers} | Pending: {stats.roleStats.pendingTeachers}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-900/30 rounded">
-                <ShieldCheck className="w-5 h-5 text-red-400" />
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">Admins</p>
-                <p className="text-white text-xl font-bold">{stats.roleStats.admins?.toLocaleString()}</p>
-              </div>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Pending Email
+              </p>
+              <p
+                className={`text-2xl font-bold mt-1 ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {stats.pendingEmailUsers?.toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Registration & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Registration Stats */}
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
-            <h3 className="text-white text-lg font-semibold mb-4">New Registrations</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={registrationData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="period" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1a2237",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-                <Bar dataKey="users" fill="#00ff00" />
-              </BarChart>
-            </ResponsiveContainer>
+        <div
+          className={`rounded-xl border p-5 transition-all ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800 hover:border-red-500/30"
+              : "bg-white border-gray-200 hover:border-red-500/30"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2.5 rounded-lg ${
+                darkMode ? "bg-red-500/10" : "bg-red-50"
+              }`}
+            >
+              <XCircle
+                className={`w-5 h-5 ${
+                  darkMode ? "text-red-400" : "text-red-600"
+                }`}
+              />
+            </div>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Rejected
+              </p>
+              <p
+                className={`text-2xl font-bold mt-1 ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {stats.rejectedUsers?.toLocaleString()}
+              </p>
+            </div>
           </div>
-          {/* Activity Stats */}
-          <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6">
-            <h3 className="text-white text-lg font-semibold mb-4">Active Users</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={activityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="period" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1a2237",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-                <Bar dataKey="users" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Status Distribution */}
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Activity
+              className={`w-5 h-5 ${
+                darkMode ? "text-emerald-400" : "text-emerald-600"
+              }`}
+            />
+            <h3
+              className={`text-lg font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Status Distribution
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={statusData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                }
+                outerRadius={90}
+                dataKey="value"
+                animationDuration={800}
+              >
+                {statusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? "#1a2237" : "#ffffff",
+                  border: darkMode
+                    ? "1px solid #374151"
+                    : "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  color: darkMode ? "#fff" : "#000",
+                  padding: "12px",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Role Distribution */}
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Users
+              className={`w-5 h-5 ${
+                darkMode ? "text-blue-400" : "text-blue-600"
+              }`}
+            />
+            <h3
+              className={`text-lg font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Role Distribution
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={roleData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                }
+                outerRadius={90}
+                dataKey="value"
+                animationDuration={800}
+              >
+                {roleData.map((entry, index) => (
+                  <Cell key={`cell-role-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? "#1a2237" : "#ffffff",
+                  border: darkMode
+                    ? "1px solid #374151"
+                    : "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  color: darkMode ? "#fff" : "#000",
+                  padding: "12px",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Role Details */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-3 rounded-xl ${
+                darkMode ? "bg-blue-500/10" : "bg-blue-50"
+              }`}
+            >
+              <GraduationCap
+                className={`w-6 h-6 ${
+                  darkMode ? "text-blue-400" : "text-blue-600"
+                }`}
+              />
+            </div>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Students
+              </p>
+              <p
+                className={`text-2xl font-bold ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {stats.roleStats.students?.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Inactivity Stats */}
-        <div className="bg-[#12182b] border border-gray-800 rounded-lg p-6 mt-6">
-          <h3 className="text-white text-lg font-semibold mb-4">Inactivity Overview</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-[#1a2237] rounded-lg">
-              <p className="text-gray-400 text-sm mb-1">Never Logged In</p>
-              <p className="text-white text-2xl font-bold">{stats.activityStats.neverLoggedIn?.toLocaleString()}</p>
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-3 rounded-xl ${
+                darkMode ? "bg-purple-500/10" : "bg-purple-50"
+              }`}
+            >
+              <BookOpen
+                className={`w-6 h-6 ${
+                  darkMode ? "text-purple-400" : "text-purple-600"
+                }`}
+              />
             </div>
-            <div className="p-4 bg-[#1a2237] rounded-lg">
-              <p className="text-gray-400 text-sm mb-1">Inactive 30+ Days</p>
-              <p className="text-white text-2xl font-bold">{stats.activityStats.inactiveFor30Days?.toLocaleString()}</p>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Teachers
+              </p>
+              <p
+                className={`text-2xl font-bold ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {stats.roleStats.teachers?.toLocaleString()}
+              </p>
             </div>
-            <div className="p-4 bg-[#1a2237] rounded-lg">
-              <p className="text-gray-400 text-sm mb-1">Inactive 90+ Days</p>
-              <p className="text-white text-2xl font-bold">{stats.activityStats.inactiveFor90Days?.toLocaleString()}</p>
+          </div>
+          <div className="flex gap-4 mt-3">
+            <div>
+              <p
+                className={`text-xs ${
+                  darkMode ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                Approved
+              </p>
+              <p
+                className={`text-sm font-semibold ${
+                  darkMode ? "text-emerald-400" : "text-emerald-600"
+                }`}
+              >
+                {stats.roleStats.approvedTeachers}
+              </p>
             </div>
+            <div>
+              <p
+                className={`text-xs ${
+                  darkMode ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                Pending
+              </p>
+              <p
+                className={`text-sm font-semibold ${
+                  darkMode ? "text-amber-400" : "text-amber-600"
+                }`}
+              >
+                {stats.roleStats.pendingTeachers}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-3 rounded-xl ${
+                darkMode ? "bg-rose-500/10" : "bg-rose-50"
+              }`}
+            >
+              <ShieldCheck
+                className={`w-6 h-6 ${
+                  darkMode ? "text-rose-400" : "text-rose-600"
+                }`}
+              />
+            </div>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Admins
+              </p>
+              <p
+                className={`text-2xl font-bold ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {stats.roleStats.admins?.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Registration & Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Registration Stats */}
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <TrendingUp
+              className={`w-5 h-5 ${
+                darkMode ? "text-emerald-400" : "text-emerald-600"
+              }`}
+            />
+            <h3
+              className={`text-lg font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              New Registrations
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={registrationData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={darkMode ? "#374151" : "#e5e7eb"}
+              />
+              <XAxis
+                dataKey="period"
+                stroke={darkMode ? "#9ca3af" : "#6b7280"}
+                style={{ fontSize: "12px" }}
+              />
+              <YAxis
+                stroke={darkMode ? "#9ca3af" : "#6b7280"}
+                style={{ fontSize: "12px" }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? "#1a2237" : "#ffffff",
+                  border: darkMode
+                    ? "1px solid #374151"
+                    : "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  color: darkMode ? "#fff" : "#000",
+                  padding: "12px",
+                }}
+                cursor={{ fill: darkMode ? "#374151" : "#f3f4f6" }}
+              />
+              <Bar
+                dataKey="users"
+                fill={darkMode ? "#10b981" : "#059669"}
+                radius={[8, 8, 0, 0]}
+                animationDuration={800}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Activity Stats */}
+        <div
+          className={`rounded-xl border p-6 ${
+            darkMode
+              ? "bg-[#12182b] border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Activity
+              className={`w-5 h-5 ${
+                darkMode ? "text-blue-400" : "text-blue-600"
+              }`}
+            />
+            <h3
+              className={`text-lg font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Active Users
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={activityData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={darkMode ? "#374151" : "#e5e7eb"}
+              />
+              <XAxis
+                dataKey="period"
+                stroke={darkMode ? "#9ca3af" : "#6b7280"}
+                style={{ fontSize: "12px" }}
+              />
+              <YAxis
+                stroke={darkMode ? "#9ca3af" : "#6b7280"}
+                style={{ fontSize: "12px" }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? "#1a2237" : "#ffffff",
+                  border: darkMode
+                    ? "1px solid #374151"
+                    : "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  color: darkMode ? "#fff" : "#000",
+                  padding: "12px",
+                }}
+                cursor={{ fill: darkMode ? "#374151" : "#f3f4f6" }}
+              />
+              <Bar
+                dataKey="users"
+                fill={darkMode ? "#3b82f6" : "#2563eb"}
+                radius={[8, 8, 0, 0]}
+                animationDuration={800}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Inactivity Stats */}
+      <div
+        className={`rounded-xl border p-6 ${
+          darkMode
+            ? "bg-[#12182b] border-gray-800"
+            : "bg-white border-gray-200"
+        }`}
+      >
+        <div className="flex items-center gap-2 mb-6">
+          <Clock
+            className={`w-5 h-5 ${
+              darkMode ? "text-amber-400" : "text-amber-600"
+            }`}
+          />
+          <h3
+            className={`text-lg font-bold ${
+              darkMode ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Inactivity Overview
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div
+            className={`p-5 rounded-xl border ${
+              darkMode
+                ? "bg-[#1a2237] border-gray-800"
+                : "bg-gray-50 border-gray-200"
+            }`}
+          >
+            <p
+              className={`text-sm font-medium mb-2 ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Never Logged In
+            </p>
+            <p
+              className={`text-3xl font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {stats.activityStats.neverLoggedIn?.toLocaleString()}
+            </p>
+            <p
+              className={`text-xs mt-2 ${
+                darkMode ? "text-gray-500" : "text-gray-500"
+              }`}
+            >
+              New accounts inactive
+            </p>
+          </div>
+
+          <div
+            className={`p-5 rounded-xl border ${
+              darkMode
+                ? "bg-[#1a2237] border-gray-800"
+                : "bg-gray-50 border-gray-200"
+            }`}
+          >
+            <p
+              className={`text-sm font-medium mb-2 ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Inactive 30+ Days
+            </p>
+            <p
+              className={`text-3xl font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {stats.activityStats.inactiveFor30Days?.toLocaleString()}
+            </p>
+            <p
+              className={`text-xs mt-2 ${
+                darkMode ? "text-amber-400" : "text-amber-600"
+              }`}
+            >
+              May need re-engagement
+            </p>
+          </div>
+
+          <div
+            className={`p-5 rounded-xl border ${
+              darkMode
+                ? "bg-[#1a2237] border-gray-800"
+                : "bg-gray-50 border-gray-200"
+            }`}
+          >
+            <p
+              className={`text-sm font-medium mb-2 ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Inactive 90+ Days
+            </p>
+            <p
+              className={`text-3xl font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {stats.activityStats.inactiveFor90Days?.toLocaleString()}
+            </p>
+            <p
+              className={`text-xs mt-2 ${
+                darkMode ? "text-rose-400" : "text-rose-600"
+              }`}
+            >
+              Consider for cleanup
+            </p>
           </div>
         </div>
       </div>
