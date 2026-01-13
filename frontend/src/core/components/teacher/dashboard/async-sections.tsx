@@ -20,8 +20,9 @@ async function getStatsData() {
         };
     } catch (error) {
         console.error("Failed to fetch stats:", error);
+        // Return mock data on error to prevent UI crash
+        return TEACHER_DASHBOARD_MOCK.overview;
     }
-    return TEACHER_DASHBOARD_MOCK.overview;
 }
 
 async function getChartData() {
@@ -50,6 +51,10 @@ async function getQuickSectionsData() {
 async function getCoursesData() {
     try {
         const response = await courseService.getMyCourses(0, 10);
+        // If no courses, return empty array instead of mock
+        if (!response.items || response.items.length === 0) {
+            return [];
+        }
         return response.items.map(course => ({
             id: course.id.toString(),
             title: course.title,
@@ -64,7 +69,9 @@ async function getCoursesData() {
         }));
     } catch (error) {
         console.error("Failed to fetch courses:", error);
-        return TEACHER_DASHBOARD_MOCK.courses;
+        // Return empty array on error - this indicates user might not have courses yet
+        // or there's an auth issue
+        return [];
     }
 }
 
