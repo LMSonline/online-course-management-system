@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AssignmentResponse, AssignmentStatus } from "@/services/assignment/assignment.types";
+import { AssignmentResponse } from "@/services/assignment/assignment.types";
 import {
     Clock,
     FileText,
@@ -24,24 +24,6 @@ interface AssignmentCardProps {
     onClone?: (assignment: AssignmentResponse) => void;
 }
 
-const statusConfig: Record<AssignmentStatus, { label: string; bgColor: string; textColor: string }> = {
-    DRAFT: {
-        label: "Draft",
-        bgColor: "bg-amber-50 dark:bg-amber-500/10",
-        textColor: "text-amber-700 dark:text-amber-400",
-    },
-    PUBLISHED: {
-        label: "Published",
-        bgColor: "bg-emerald-50 dark:bg-emerald-500/10",
-        textColor: "text-emerald-700 dark:text-emerald-400",
-    },
-    ARCHIVED: {
-        label: "Archived",
-        bgColor: "bg-slate-100 dark:bg-slate-700/50",
-        textColor: "text-slate-600 dark:text-slate-400",
-    },
-};
-
 export function AssignmentCard({ assignment, onEdit, onDelete, onClone }: AssignmentCardProps) {
     const [showMenu, setShowMenu] = React.useState(false);
     const menuRef = React.useRef<HTMLDivElement>(null);
@@ -56,10 +38,8 @@ export function AssignmentCard({ assignment, onEdit, onDelete, onClone }: Assign
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const status = statusConfig[assignment.status] || statusConfig.DRAFT;
     const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
     const isOverdue = dueDate && isPast(dueDate);
-    const pendingCount = (assignment.totalSubmissions ?? 0) - (assignment.gradedSubmissions ?? 0);
 
     return (
         <div className="group relative bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 dark:hover:shadow-indigo-500/10 transition-all duration-300 overflow-hidden backdrop-blur-sm">
@@ -70,17 +50,7 @@ export function AssignmentCard({ assignment, onEdit, onDelete, onClone }: Assign
             <div className="p-5 pt-6">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium ${status.bgColor} ${status.textColor}`}>
-                                {assignment.status === "PUBLISHED" ? (
-                                    <CheckCircle2 className="h-3 w-3" />
-                                ) : assignment.status === "DRAFT" ? (
-                                    <AlertCircle className="h-3 w-3" />
-                                ) : null}
-                                {status.label}
-                            </span>
-                        </div>
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">
                             {assignment.title}
                         </h3>
                         {assignment.description && (
@@ -140,41 +110,15 @@ export function AssignmentCard({ assignment, onEdit, onDelete, onClone }: Assign
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3 mt-5">
-                    <div className="flex items-center gap-2.5 px-3 py-2.5 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
-                        <div className="p-1.5 bg-blue-100 dark:bg-blue-500/20 rounded-lg">
-                            <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Submissions</p>
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                {assignment.totalSubmissions ?? 0}
-                            </p>
-                        </div>
-                    </div>
-
-                    {pendingCount > 0 && (
-                        <div className="flex items-center gap-2.5 px-3 py-2.5 bg-amber-50 dark:bg-amber-500/10 rounded-xl">
-                            <div className="p-1.5 bg-amber-100 dark:bg-amber-500/20 rounded-lg">
-                                <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-amber-600 dark:text-amber-400">Pending</p>
-                                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                                    {pendingCount}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {assignment.maxScore != null && (
+                    {assignment.totalPoints != null && (
                         <div className="flex items-center gap-2.5 px-3 py-2.5 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
                             <div className="p-1.5 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg">
                                 <Target className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <div>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">Max Score</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Points</p>
                                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                    {assignment.maxScore}
+                                    {assignment.totalPoints}
                                 </p>
                             </div>
                         </div>

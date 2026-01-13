@@ -16,19 +16,18 @@ import {
 } from "lucide-react";
 import Button from "@/core/components/ui/Button";
 import Input from "@/core/components/ui/Input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/core/components/ui/Select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/core/components/ui/select";
 import {
     useAllIndependentAssignments,
     useCreateIndependentAssignment,
     useDeleteAssignment,
-} from "@/hooks/teacher/useAssignmentManagement";
+} from "@/hooks/teacher/useTeacherAssignment";
 import { AssignmentCard, CreateAssignmentDialog, DeleteAssignmentDialog } from "@/core/components/teacher/assignment";
-import type { AssignmentResponse, AssignmentRequest, AssignmentStatus } from "@/services/assignment/assignment.types";
+import type { AssignmentResponse, AssignmentRequest } from "@/services/assignment/assignment.types";
 
 export default function TeacherAssignmentsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<AssignmentStatus | "all">("all");
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [assignmentToDelete, setAssignmentToDelete] = useState<AssignmentResponse | null>(null);
 
@@ -62,22 +61,13 @@ export default function TeacherAssignmentsPage() {
                 assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 assignment.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-            const matchesStatus =
-                statusFilter === "all" || assignment.status === statusFilter;
-
-            return matchesSearch && matchesStatus;
+            return matchesSearch;
         });
-    }, [assignments, searchQuery, statusFilter]);
+    }, [assignments, searchQuery]);
 
     const stats = useMemo(() => {
         const total = assignments.length;
-        const published = assignments.filter((a) => a.status === "PUBLISHED").length;
-        const drafts = assignments.filter((a) => a.status === "DRAFT").length;
-        const pendingGrading = assignments.reduce((sum, a) => {
-            return sum + ((a.totalSubmissions ?? 0) - (a.gradedSubmissions ?? 0));
-        }, 0);
-
-        return { total, published, drafts, pendingGrading };
+        return { total };
     }, [assignments]);
 
     if (isLoading) {
@@ -125,7 +115,7 @@ export default function TeacherAssignmentsPage() {
                                 variant="outline"
                                 onClick={() => refetch()}
                                 disabled={isRefetching}
-                                className="hidden md:flex bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                className="hidden md:flex bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                             >
                                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
                                 Refresh
@@ -142,34 +132,13 @@ export default function TeacherAssignmentsPage() {
 
                     {/* Stats */}
                     <div className="relative mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/50">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mb-1">
                                     <FileText className="h-4 w-4" />
-                                    Total
+                                    Total Assignments
                                 </div>
                                 <span className="text-2xl font-bold text-slate-800 dark:text-white">{stats.total}</span>
-                            </div>
-                            <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
-                                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm mb-1">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    Published
-                                </div>
-                                <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.published}</span>
-                            </div>
-                            <div className="px-4 py-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl">
-                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm mb-1">
-                                    <FileText className="h-4 w-4" />
-                                    Drafts
-                                </div>
-                                <span className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.drafts}</span>
-                            </div>
-                            <div className="px-4 py-3 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
-                                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm mb-1">
-                                    <Clock className="h-4 w-4" />
-                                    Pending Grading
-                                </div>
-                                <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.pendingGrading}</span>
                             </div>
                         </div>
                     </div>
@@ -188,18 +157,6 @@ export default function TeacherAssignmentsPage() {
                                 className="pl-12 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-base"
                             />
                         </div>
-                        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-                            <SelectTrigger className="w-[180px] h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl">
-                                <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                                <SelectValue placeholder="Filter by status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="PUBLISHED">Published</SelectItem>
-                                <SelectItem value="DRAFT">Draft</SelectItem>
-                                <SelectItem value="ARCHIVED">Archived</SelectItem>
-                            </SelectContent>
-                        </Select>
                     </div>
                 </div>
 
@@ -214,18 +171,17 @@ export default function TeacherAssignmentsPage() {
                                 </div>
                             </div>
                             <h3 className="text-xl font-semibold text-slate-800 dark:text-white mt-6 mb-2">
-                                {searchQuery || statusFilter !== "all" ? "No assignments found" : "No assignments yet"}
+                                {searchQuery ? "No assignments found" : "No assignments yet"}
                             </h3>
                             <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm mb-8">
-                                {searchQuery || statusFilter !== "all"
-                                    ? "Try adjusting your search or filters."
+                                {searchQuery
+                                    ? "Try adjusting your search."
                                     : "Create your first assignment to get started."}
                             </p>
-                            {!searchQuery && statusFilter === "all" && (
+                            {!searchQuery && (
                                 <Button
                                     onClick={() => setShowCreateDialog(true)}
-                                    size="lg"
-                                    className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 border-0 shadow-lg shadow-indigo-500/25"
+                                    className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 border-0 shadow-lg shadow-indigo-500/25 px-6 py-3 text-base"
                                 >
                                     <Plus className="mr-2 h-5 w-5" />
                                     Create Your First Assignment

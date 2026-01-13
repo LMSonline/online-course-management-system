@@ -15,17 +15,20 @@ import {
     Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCreateIndependentAssignment } from "@/hooks/teacher/useTeacherAssignment";
+import { AssignmentType } from "@/services/assignment/assignment.types";
 
 export default function CreateAssignmentPage() {
     const router = useRouter();
-    const [course, setCourse] = useState("");
+    const createMutation = useCreateIndependentAssignment();
+
     const [title, setTitle] = useState("");
-    const [shortDescription, setShortDescription] = useState("");
-    const [detailedInstructions, setDetailedInstructions] = useState("");
+    const [assignmentType, setAssignmentType] = useState<AssignmentType>("HOMEWORK");
+    const [description, setDescription] = useState("");
     const [dueDate, setDueDate] = useState("");
-    const [maxScore, setMaxScore] = useState("100");
-    const [submissionType, setSubmissionType] = useState("Text Submission");
-    const [allowLateSubmissions, setAllowLateSubmissions] = useState(false);
+    const [totalPoints, setTotalPoints] = useState("100");
+    const [timeLimitMinutes, setTimeLimitMinutes] = useState("");
+    const [maxAttempts, setMaxAttempts] = useState("");
     const [rubricItems, setRubricItems] = useState<{ criteria: string; points: string }[]>([]);
     const [attachments, setAttachments] = useState<File[]>([]);
 
@@ -57,16 +60,31 @@ export default function CreateAssignmentPage() {
         setAttachments(attachments.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!course || !title || !dueDate) {
+        if (!title || !assignmentType) {
             toast.error("Please fill in all required fields");
             return;
         }
 
-        toast.success("Assignment created successfully!");
-        router.push("/teacher/assignments");
+        try {
+            await createMutation.mutateAsync({
+                title,
+                assignmentType,
+                description: description || null,
+                totalPoints: totalPoints ? Number(totalPoints) : null,
+                timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : null,
+                maxAttempts: maxAttempts ? Number(maxAttempts) : null,
+                dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+            });
+
+            toast.success("Assignment created successfully!");
+            router.push("/teacher/assignments");
+        } catch (error) {
+            toast.error("Failed to create assignment");
+            console.error(error);
+        }
     };
 
     return (
@@ -100,21 +118,21 @@ export default function CreateAssignmentPage() {
                         </h2>
 
                         <div className="space-y-4">
-                            {/* Course */}
+                            {/* Assignment Type */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Course <span className="text-red-500">*</span>
+                                    Assignment Type <span className="text-red-500">*</span>
                                 </label>
                                 <select
-                                    value={course}
-                                    onChange={(e) => setCourse(e.target.value)}
+                                    value={assignmentType}
+                                    onChange={(e) => setAssignmentType(e.target.value as AssignmentType)}
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                     required
                                 >
-                                    <option value="">Select a course...</option>
-                                    <option>Complete Web Development Bootcamp</option>
-                                    <option>Advanced React Patterns</option>
-                                    <option>Node.js Complete Guide</option>
+                                    <option value="PRACTICE">Practice</option>
+                                    <option value="HOMEWORK">Homework</option>
+                                    <option value="PROJECT">Project</option>
+                                    <option value="FINAL_REPORT">Final Report</option>
                                 </select>
                             </div>
 
@@ -127,40 +145,26 @@ export default function CreateAssignmentPage() {
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="e.g., Responsive Design Project"
+                                    placeholder="e.g., Build a Responsive Portfolio Website"
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                     required
                                 />
                             </div>
 
-                            {/* Short Description */}
+                            {/* Description */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Short Description <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={shortDescription}
-                                    onChange={(e) => setShortDescription(e.target.value)}
-                                    placeholder="Brief overview of the assignment"
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                                />
-                            </div>
-
-                            {/* Detailed Instructions */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Detailed Instructions <span className="text-red-500">*</span>
+                                    Description
                                 </label>
                                 <textarea
-                                    value={detailedInstructions}
-                                    onChange={(e) => setDetailedInstructions(e.target.value)}
-                                    placeholder="Include all requirements, deliverables, and guidelines..."
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Provide detailed instructions, requirements, and guidelines for this assignment..."
                                     rows={6}
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none"
                                 />
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                    Include all requirements, deliverables, and guidelines
+                                    Include all requirements, deliverables, and evaluation criteria
                                 </p>
                             </div>
                         </div>
@@ -177,76 +181,75 @@ export default function CreateAssignmentPage() {
                             {/* Due Date */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Due Date <span className="text-red-500">*</span>
+                                    Due Date (Optional)
                                 </label>
                                 <div className="relative">
                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
-                                        type="date"
+                                        type="datetime-local"
                                         value={dueDate}
                                         onChange={(e) => setDueDate(e.target.value)}
                                         className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                                        required
                                     />
                                 </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    Leave empty for no deadline
+                                </p>
                             </div>
 
-                            {/* Maximum Score */}
+                            {/* Total Points */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Maximum Score <span className="text-red-500">*</span>
+                                    Total Points (Optional)
                                 </label>
                                 <input
                                     type="number"
-                                    value={maxScore}
-                                    onChange={(e) => setMaxScore(e.target.value)}
+                                    value={totalPoints}
+                                    onChange={(e) => setTotalPoints(e.target.value)}
                                     placeholder="100"
-                                    min="1"
+                                    min="0"
+                                    step="0.1"
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                                    required
                                 />
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    Leave empty for ungraded assignment
+                                </p>
                             </div>
 
-                            {/* Submission Type */}
+                            {/* Time Limit */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Submission Type
+                                    Time Limit (Minutes)
                                 </label>
-                                <select
-                                    value={submissionType}
-                                    onChange={(e) => setSubmissionType(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                                >
-                                    <option>Text Submission</option>
-                                    <option>File Upload</option>
-                                    <option>URL Submission</option>
-                                    <option>Both Text and File</option>
-                                </select>
+                                <div className="relative">
+                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                    <input
+                                        type="number"
+                                        value={timeLimitMinutes}
+                                        onChange={(e) => setTimeLimitMinutes(e.target.value)}
+                                        placeholder="No time limit"
+                                        min="1"
+                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    />
+                                </div>
                             </div>
 
-                            {/* Allow Late Submissions */}
-                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                                <div>
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">
-                                        Allow Late Submissions
-                                    </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                        Students can submit after the due date
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setAllowLateSubmissions(!allowLateSubmissions)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${allowLateSubmissions
-                                            ? "bg-indigo-600"
-                                            : "bg-slate-300 dark:bg-slate-600"
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowLateSubmissions ? "translate-x-6" : "translate-x-1"
-                                            }`}
-                                    />
-                                </button>
+                            {/* Max Attempts */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Maximum Attempts
+                                </label>
+                                <input
+                                    type="number"
+                                    value={maxAttempts}
+                                    onChange={(e) => setMaxAttempts(e.target.value)}
+                                    placeholder="Unlimited"
+                                    min="1"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                />
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    Leave empty for unlimited attempts
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -389,9 +392,17 @@ export default function CreateAssignmentPage() {
                         </Link>
                         <button
                             type="submit"
-                            className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-medium transition-all shadow-lg"
+                            disabled={createMutation.isPending}
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Create Assignment
+                            {createMutation.isPending ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    Creating...
+                                </span>
+                            ) : (
+                                "Create Assignment"
+                            )}
                         </button>
                     </div>
                 </form>

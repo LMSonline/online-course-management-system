@@ -25,7 +25,7 @@ import {
     useAssignmentById,
     useAssignmentStatistics,
     usePassingRate,
-} from "@/hooks/teacher/useAssignmentManagement";
+} from "@/hooks/teacher/useTeacherAssignment";
 import { AssignmentSettingsTab } from "@/core/components/teacher/assignment/AssignmentSettingsTab";
 import { SubmissionsTab } from "@/core/components/teacher/assignment/SubmissionsTab";
 
@@ -81,7 +81,7 @@ export default function AssignmentDashboardPage({
 
     const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
     const isOverdue = dueDate && isPast(dueDate);
-    const pendingCount = (assignment.totalSubmissions ?? 0) - (assignment.gradedSubmissions ?? 0);
+    const pendingCount = statistics?.pendingCount ?? 0;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
@@ -100,32 +100,18 @@ export default function AssignmentDashboardPage({
                                 <h1 className="text-xl font-bold text-slate-900 dark:text-white truncate">
                                     {assignment.title}
                                 </h1>
-                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium ${assignment.status === "PUBLISHED"
-                                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                        : assignment.status === "DRAFT"
-                                            ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                                            : "bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400"
-                                    }`}>
-                                    {assignment.status === "PUBLISHED" && <CheckCircle2 className="h-3 w-3" />}
-                                    {assignment.status === "DRAFT" && <AlertCircle className="h-3 w-3" />}
-                                    {assignment.status}
-                                </span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-                                <span className="flex items-center gap-1.5">
-                                    <Users className="h-4 w-4" />
-                                    {assignment.totalSubmissions ?? 0} submissions
-                                </span>
                                 {dueDate && (
                                     <span className={`flex items-center gap-1.5 ${isOverdue ? "text-red-500" : ""}`}>
                                         <CalendarClock className="h-4 w-4" />
                                         {isOverdue ? "Overdue" : `Due ${format(dueDate, "MMM d, yyyy")}`}
                                     </span>
                                 )}
-                                {assignment.maxScore && (
+                                {assignment.totalPoints && (
                                     <span className="flex items-center gap-1.5">
                                         <Target className="h-4 w-4" />
-                                        {assignment.maxScore} points
+                                        {assignment.totalPoints} points
                                     </span>
                                 )}
                             </div>
@@ -179,7 +165,7 @@ export default function AssignmentDashboardPage({
                                         <div>
                                             <p className="text-sm text-slate-500 dark:text-slate-400">Total Submissions</p>
                                             <p className="text-2xl font-bold text-slate-800 dark:text-white">
-                                                {statistics?.submittedCount ?? assignment.totalSubmissions ?? 0}
+                                                {statistics?.submittedCount ?? 0}
                                             </p>
                                         </div>
                                     </div>
@@ -227,7 +213,7 @@ export default function AssignmentDashboardPage({
                                         <div>
                                             <p className="text-sm text-slate-500 dark:text-slate-400">Passing Rate</p>
                                             <p className="text-2xl font-bold text-slate-800 dark:text-white">
-                                                {passingRateData?.passingRate?.toFixed(1) ?? "N/A"}%
+                                                {typeof passingRateData === 'number' ? passingRateData.toFixed(1) : "N/A"}%
                                             </p>
                                         </div>
                                     </div>
@@ -243,12 +229,12 @@ export default function AssignmentDashboardPage({
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
-                                        <span className="text-slate-600 dark:text-slate-400">On-time Submissions</span>
-                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{statistics?.onTimeSubmissions ?? 0}</span>
+                                        <span className="text-slate-600 dark:text-slate-400">Total Submissions</span>
+                                        <span className="font-semibold text-blue-600 dark:text-blue-400">{statistics?.submittedCount ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
-                                        <span className="text-slate-600 dark:text-slate-400">Late Submissions</span>
-                                        <span className="font-semibold text-red-600 dark:text-red-400">{statistics?.lateSubmissions ?? 0}</span>
+                                        <span className="text-slate-600 dark:text-slate-400">Graded Submissions</span>
+                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{statistics?.gradedCount ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
                                         <span className="text-slate-600 dark:text-slate-400">Submission Rate</span>
@@ -281,7 +267,7 @@ export default function AssignmentDashboardPage({
 
                     {/* Submissions Tab */}
                     <TabsContent value="submissions" className="mt-6">
-                        <SubmissionsTab assignmentId={id} maxScore={assignment.maxScore ?? 100} />
+                        <SubmissionsTab assignmentId={id} maxScore={assignment.totalPoints ?? 100} />
                     </TabsContent>
 
                     {/* Settings Tab */}

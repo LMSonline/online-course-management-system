@@ -23,6 +23,7 @@ import {
 } from "@/hooks/teacher/useStudentManagement";
 import type { EnrollmentResponse } from "@/services/learning/enrollment.types";
 import Button from "@/core/components/ui/Button";
+import { mockStudents, mockEnrollmentStats, mockCourses } from "@/lib/teacher/mockData";
 
 export default function TeacherStudentsPage() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -30,8 +31,11 @@ export default function TeacherStudentsPage() {
     const [filterStatus, setFilterStatus] = useState<"all" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "EXPIRED">("all");
 
     // Use custom hooks
-    const { courses, isLoading: coursesLoading } = useTeacherCourses();
+    const { courses: apiCourses, isLoading: coursesLoading } = useTeacherCourses();
     const exportMutation = useExportEnrollments();
+
+    // Use mock data as fallback
+    const courses = apiCourses && apiCourses.length > 0 ? apiCourses : mockCourses;
 
     const firstCourseId = courses?.[0]?.id;
     const selectedCourseId = filterCourse === "all" ? firstCourseId : filterCourse;
@@ -42,11 +46,17 @@ export default function TeacherStudentsPage() {
         100
     );
 
-    const { data: stats } = useCourseEnrollmentStats(selectedCourseId);
+    const { data: apiStats } = useCourseEnrollmentStats(selectedCourseId);
+
+    // Use mock stats as fallback
+    const stats = apiStats || mockEnrollmentStats;
 
     const filteredStudents = useMemo(() => {
-        const enrollments = enrollmentsData?.items || [];
-        return enrollments.filter((enrollment: EnrollmentResponse) => {
+        // Use API data if available, otherwise use mock data
+        const enrollments = (enrollmentsData?.items && enrollmentsData.items.length > 0)
+            ? enrollmentsData.items
+            : mockStudents;
+        return enrollments.filter((enrollment: any) => {
             const matchesSearch =
                 searchTerm === "" ||
                 enrollment.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,7 +70,10 @@ export default function TeacherStudentsPage() {
     }, [enrollmentsData, searchTerm, filterStatus]);
 
     const topPerformers = useMemo(() => {
-        const enrollments = enrollmentsData?.items || [];
+        // Use API data if available, otherwise use mock data
+        const enrollments = (enrollmentsData?.items && enrollmentsData.items.length > 0)
+            ? enrollmentsData.items
+            : mockStudents;
         return [...enrollments]
             .sort((a, b) => b.completionPercentage - a.completionPercentage)
             .slice(0, 3);

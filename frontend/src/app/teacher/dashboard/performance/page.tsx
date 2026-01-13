@@ -12,64 +12,48 @@ import {
     ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { mockAnalytics, mockCourses } from "@/lib/teacher/mockData";
 
 export default function PerformanceDetailPage() {
     const [timeRange, setTimeRange] = useState("30");
 
-    // Mock data
+    // Use mock analytics data
     const performanceMetrics = {
         studentGrowth: {
-            current: 1234,
-            previous: 987,
-            change: 25,
+            current: mockAnalytics.totalStudents,
+            previous: Math.round(mockAnalytics.totalStudents / (1 + mockAnalytics.studentGrowth / 100)),
+            change: mockAnalytics.studentGrowth,
             trend: "up" as const,
         },
         revenueGrowth: {
-            current: 45678,
-            previous: 38234,
-            change: 19.5,
+            current: mockAnalytics.totalRevenue,
+            previous: Math.round(mockAnalytics.totalRevenue / (1 + mockAnalytics.revenueGrowth / 100)),
+            change: mockAnalytics.revenueGrowth,
             trend: "up" as const,
         },
         ratingChange: {
-            current: 4.8,
-            previous: 4.6,
-            change: 4.3,
-            trend: "up" as const,
+            current: mockAnalytics.averageRating,
+            previous: mockAnalytics.averageRating - mockAnalytics.ratingTrend,
+            change: (mockAnalytics.ratingTrend / mockAnalytics.averageRating) * 100,
+            trend: mockAnalytics.ratingTrend > 0 ? "up" as const : "down" as const,
         },
         courseCompletion: {
-            current: 68,
-            previous: 72,
-            change: -5.6,
-            trend: "down" as const,
+            current: 72,
+            previous: 68,
+            change: 5.9,
+            trend: "up" as const,
         },
     };
 
-    const topCourses = [
-        {
-            id: 1,
-            title: "Complete Web Development Bootcamp",
-            students: 12453,
-            revenue: 45670,
-            rating: 4.9,
-            growth: 23,
-        },
-        {
-            id: 2,
-            title: "Advanced React Patterns",
-            students: 8921,
-            revenue: 32140,
-            rating: 4.8,
-            growth: 18,
-        },
-        {
-            id: 3,
-            title: "Node.js Deep Dive",
-            students: 6234,
-            revenue: 21890,
-            rating: 4.7,
-            growth: 15,
-        },
-    ];
+    // Use top courses from mock analytics
+    const topCourses = mockAnalytics.topCourses.map(course => ({
+        id: course.id,
+        title: course.title,
+        students: course.students,
+        revenue: course.revenue,
+        rating: course.rating,
+        growth: Math.round(course.completionRate * 0.3), // Estimate growth from completion rate
+    }));
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
