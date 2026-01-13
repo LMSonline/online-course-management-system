@@ -1,0 +1,167 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  # Disable Flyway for tests - use JPA schema generation instead
+  flyway:
+    enabled: false
+
+  h2:
+    console:
+      enabled: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@example.com
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  servlet:
+    multipart:
+      max-file-size: 2GB
+      max-request-size: 2GB
+
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 4
+
+# Logging - reduce noise in tests
+logging:
+  level:
+    org.springframework: WARN
+    org.hibernate: WARN
+    vn.uit.lms: INFO
+
+# JWT configuration for tests
+jwt:
+  secret: Sk9Q3TwckIpyw0YWwfq8ln/7BWAY80oAaChfAbFtL3M=
+  access-token:
+    expiration: 3600000 # 1 hour in milliseconds
+  refresh-token:
+    expiration: 86400000 # 24 hours in milliseconds
+
+# MinIO configuration for tests
+minio:
+  url: http://localhost:9000
+  username: minioadmin
+  password: minioadmin123
+  buckets:
+    videos: lms-videos-test
+    images: lms-images-test
+    documents: lms-documents-test
+
+# VNPay configuration for tests
+vnpay:
+  url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  tmnCode: TEST_TMN_CODE
+  hashSecret: TEST_HASH_SECRET
+  returnUrl: http://localhost:8080/api/v1/payment/vnpay/callback
+
+# App custom configs for testing
+app:
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:3000
+  api-version: api/v1
+
+  admin:
+    username: admin
+    password: Admin@123
+    email: admin@test.com
+
+  student:
+    username: student
+    password: Student@123
+    email: student@test.com
+
+  teacher:
+    username: teacher
+    password: Teacher@123
+    email: teacher@test.com
+
+  avatar:
+    default-url: https://res.cloudinary.com/dpp4ax5fb/image/upload/v1761927017/vecteezy_user-profile-vector-flat-illustration-avatar-person-icon_37336395_t9vhnu.jpg
+    max-size-bytes: 10485760
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+    folder: avatars
+
+  fake-data:
+    enabled: false # Disable fake data generation in tests
+
+  course:
+    thumbnail:
+      folder: course_thumbnails
+      max-size-bytes: 10485760
+      allowed-content-types:
+        - image/jpeg
+        - image/png
+        - image/webp
+
+  file:
+    max-size-bytes: 104857600 # 100MB
+
+  metadata:
+    author: "© 2025 Group 5 / VN.UIT.LMS - Test Environment"
+    license: "MIT"
+    version: "1.0.0-TEST"
+
+  # FFmpeg configuration for tests
+  ffmpeg:
+    path: ffmpeg
+    timeout-minutes: 30
+    segment-duration: 10
+
+# Cloudinary config for tests
+cloudinary:
+  cloud-name: test-cloud
+  api-key: test-api-key
+  api-secret: test-api-secret
+
+# RabbitMQ config for tests
+rabbitmq:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+
+# ZaloPay configuration for tests
+zalo-pay:
+  config:
+    appid: 2553
+    key1: test-key1
+    key2: test-key2
+    endpoints:
+      base: https://sb-openapi.zalopay.vn
+      create: /v2/create
+      banks: https://sbgateway.zalopay.vn/api/getlistmerchantbanks
+      query: /v2/query
+      refund: /v2/refund
+      refund-query: /v2/query_refund
+      callback: http://localhost:8080/api/v1/payments/callback
