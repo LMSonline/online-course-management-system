@@ -3,7 +3,7 @@ import uuid
 from contextvars import ContextVar
 from typing import Callable
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -26,6 +26,19 @@ app = FastAPI(
     version="1.0.0",
     description="NLP chatbot for LMS (RAG + LLM + recommendations).",
 )
+
+
+class APIKeyAuthMiddleware(BaseHTTPMiddleware):
+    """
+    API key middleware (disabled for free-chat MVP).
+
+    For this MVP, authentication is not enforced so that the chatbot
+    can be called freely from the frontend without X-API-KEY.
+    """
+
+    async def dispatch(self, request: Request, call_next: Callable):
+        # Auth check is intentionally disabled – always allow the request.
+        return await call_next(request)
 
 
 class RequestTimingMiddleware(BaseHTTPMiddleware):
@@ -69,10 +82,21 @@ class RequestTimingMiddleware(BaseHTTPMiddleware):
         return response
 
 
+# Add API key auth middleware first (before timing middleware)
+app.add_middleware(APIKeyAuthMiddleware)
 app.add_middleware(RequestTimingMiddleware)
+
+# CORS Configuration: Parse allowed origins from settings
+def get_cors_origins() -> list[str]:
+    """Parse CORS_ALLOWED_ORIGINS from settings into a list."""
+    origins_str = settings.CORS_ALLOWED_ORIGINS
+    if not origins_str:
+        return ["http://localhost:3000", "http://localhost:5173"]  # Default FE dev servers
+    return [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # sau này có thể thu hẹp
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -124,10 +148,14 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize DB schema for chat_sessions and chat_messages on startup."""
+    """Initialize DB schema for chat_sessions and chat_messages on startup (skip if NO_DB_MODE)."""
+    if settings.NO_DB_MODE:
+        logger.info("NO_DB_MODE enabled: skipping database initialization")
+        return
+    
     try:
         await ensure_schema_initialized()
-        logger.info("Chat DB schema initialized successfully")
+        # Logging is done inside ensure_schema_initialized()
     except Exception as exc:
         core_logging.log_error(exc, context={"event": "startup"})
         # Don't crash the service, but log the error
@@ -135,4 +163,13 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": settings.SERVICE_NAME}
+    """Health check endpoint that returns service status without leaking secrets."""
+    return {
+        "status": "ok",
+        "service": settings.SERVICE_NAME,
+        "demo_mode": settings.DEMO_MODE,
+        "no_db_mode": settings.NO_DB_MODE,
+        "db_connected": not settings.NO_DB_MODE,
+        "llm_provider": "llama3",
+        "llm_configured": bool(settings.LLAMA3_API_KEY and settings.LLAMA3_MODEL_NAME),
+    }

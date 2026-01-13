@@ -54,15 +54,17 @@ class Settings(BaseSettings):
     CHAT_DB_PASSWORD: str | None = None
 
     # Fallback to LMS DB if CHAT_DB_* not set
-    LMS_DB_HOST: str = "localhost"
+    # Default to "postgres" for Docker Compose (service name), fallback to "localhost" for local dev
+    LMS_DB_HOST: str = "postgres"  # Docker Compose service name; override to "localhost" for local dev
     LMS_DB_PORT: int = 5432
     LMS_DB_NAME: str = "lms"
     LMS_DB_USER: str = "postgres"
     LMS_DB_PASSWORD: str = "postgres"
 
     # LLM Configuration
-    LLM_PROVIDER: str = "dummy"  # dummy | llama3
-    LLAMA3_API_BASE: str | None = None
+    LLM_PROVIDER: str = "llama3"  # dummy | llama3
+    # Default to Groq's OpenAI-compatible endpoint for free-chat MVP
+    LLAMA3_API_BASE: str | None = "https://api.groq.com/openai/v1"
     LLAMA3_API_KEY: str | None = None
     LLAMA3_MODEL_NAME: str = "llama-3-8b-instruct"
     LLAMA3_TIMEOUT: float = 30.0
@@ -94,8 +96,18 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"  # json | text
     
+    # CORS Configuration
+    CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"  # Comma-separated list of allowed origins
+    
     # Demo Mode
-    DEMO_MODE: bool = True  # If True, return hardcoded responses without external dependencies
+    DEMO_MODE: bool = False  # If True, return hardcoded responses without external dependencies
+    
+    # No DB Mode
+    # Default to True for free-chat MVP so that Postgres is never required
+    NO_DB_MODE: bool = True  # If True, skip database connections and use in-memory fallbacks
+    
+    # API Authentication (optional)
+    CHATBOT_INTERNAL_API_KEY: str | None = None  # If set, requires X-API-KEY header on /api/v1/* endpoints
 
     model_config = SettingsConfigDict(
         env_file=get_env_file(),

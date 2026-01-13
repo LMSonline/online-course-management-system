@@ -1,9 +1,10 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 import logging
 from app.domain.enums import Intent, Sender
 from app.domain.models import ChatSession
 from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
+from app.services.in_memory_context_manager import InMemoryContextManager
 from app.services.study_plan_service import StudyPlanService
 from app.services.retrieval_service import RetrievalService
 from app.services.handler_registry import HandlerRegistry
@@ -21,7 +22,7 @@ class ChatService:
     def __init__(
         self,
         nlu: NLUService,
-        context_manager: ContextManager,
+        context_manager: Union[ContextManager, InMemoryContextManager],
         vector_store: VectorStore,
         llm_primary: LLMClient,
         llm_fallback: Optional[LLMClient],
@@ -144,26 +145,18 @@ class ChatService:
     ) -> str:
         """
         Call the primary LLM, and gracefully fall back if it fails.
+        
+        Only falls back to dummy if DEMO_MODE=True or LLM is not configured.
+        Otherwise, errors are propagated as 5xx.
         """
-        try:
-            return await self.llm_primary.generate(
-                prompt,
-                system_prompt=system_prompt,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.error("Primary LLM call failed, falling back: %s", exc)
-            if self.llm_fallback is not None:
-                try:
-                    return await self.llm_fallback.generate(
-                        prompt,
-                        system_prompt=system_prompt,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                    )
-                except Exception as exc2:  # pragma: no cover
-                    logger.error("Fallback LLM call also failed: %s", exc2)
-            return "Sorry, the AI assistant is currently unavailable. Please try again later."
+        from app.services.llm_utils import safe_llm_generate
+        return await safe_llm_generate(
+            self.llm_primary,
+            self.llm_fallback,
+            prompt,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
 
 

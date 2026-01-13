@@ -16,6 +16,18 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Environment Variables
+
+Create a `.env.local` file in the frontend root directory:
+
+```bash
+# Chatbot Service Configuration
+NEXT_PUBLIC_CHATBOT_API_BASE_URL=http://localhost:8003
+NEXT_PUBLIC_CHATBOT_API_KEY=super-secret-key  # Optional: only if backend requires it
+```
+
+**Note:** The `NEXT_PUBLIC_CHATBOT_API_KEY` is optional. Only set it if the backend has `CHATBOT_INTERNAL_API_KEY` configured. For local development without API key auth, you can omit this variable.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

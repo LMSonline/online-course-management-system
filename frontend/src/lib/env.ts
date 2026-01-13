@@ -10,4 +10,8 @@ export const ENV = {
       return `${this.BASE_URL}/${this.VERSION}`;
     },
   },
+  CHATBOT: {
+    BASE_URL: process.env.NEXT_PUBLIC_CHATBOT_API_BASE_URL ?? "",
+    API_KEY: process.env.NEXT_PUBLIC_CHATBOT_API_KEY ?? "",
+  },
 };

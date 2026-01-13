@@ -1,93 +1,97 @@
-from fastapi import APIRouter, Depends
+import time
+import uuid
+import logging
+
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
-from app.services.chat_service import ChatService
-from app.api.deps import get_chat_service
-from app.core.settings import settings
-from app.demo.chatbot_demo_responses import get_demo_chat_response
+
+from app.services.groq_client import groq_chat
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
 
-class ChatRequest(BaseModel):
-    session_id: str
-    user_id: str
+
+class FrontendChatRequest(BaseModel):
+    """Frontend-friendly request model - only text is required."""
     text: str
+    session_id: str | None = None
+    # Optional fields (ignored in free-chat MVP but accepted for compatibility)
+    user_id: str | None = None
     current_course_id: str | None = None
-    debug: bool = False  # If True, include debug info (chunks used for RAG)
-    language: str | None = None  # Language hint (vi, en)
-    lesson_id: str | None = None  # Specific lesson ID
-    exam_date: str | None = None  # ISO format date for study plan
-    free_days_per_week: int | None = None  # For study plan
-    completed_lessons: list[str] | None = None  # For study plan
-    top_k: int | None = None  # Number of chunks to retrieve
-    score_threshold: float | None = None  # Minimum score threshold
-
-
-class ChunkDebugInfo(BaseModel):
-    """Debug info for a single chunk."""
-    course_id: str
-    lesson_id: str | None
-    section: str | None
-    score: float | None
-    text_preview: str
-
-
-class DebugInfo(BaseModel):
-    """Debug information for RAG responses."""
-    chunks: list[ChunkDebugInfo]
 
 
 class ChatResponse(BaseModel):
+    """Response model for free-chat MVP."""
     reply: str
-    debug: DebugInfo | None = None  # Only present if debug=True in request
+    session_id: str
+    debug: None = None  # Always None for free-chat MVP
 
 
 @router.post("/chat/messages", response_model=ChatResponse)
 async def post_message(
-    req: ChatRequest,
-    chat_service: ChatService = Depends(get_chat_service),
+    req: FrontendChatRequest,
+    request: Request,
 ):
-    """Handle a chat message with optional parameters for enhanced features."""
-    # DEMO_MODE: Return hardcoded responses without external dependencies
-    if settings.DEMO_MODE:
-        reply, debug_info = get_demo_chat_response(
-            req.text, 
-            debug=req.debug,
-            exam_date=req.exam_date,
-            free_days_per_week=req.free_days_per_week,
-            completed_lessons=req.completed_lessons,
-        )
-        response = ChatResponse(reply=reply)
-        if debug_info and req.debug:
-            response.debug = DebugInfo(
-                chunks=[
-                    ChunkDebugInfo(**chunk) for chunk in debug_info["chunks"]
-                ]
-            )
-        return response
+    """
+    Free-chat MVP endpoint - always calls Groq, no DB, no demo fallback.
     
-    # Normal mode: Use real chat service
-    reply, debug_info = await chat_service.handle_message(
-        session_id=req.session_id,
-        user_id=req.user_id,
-        text=req.text,
-        current_course_id=req.current_course_id,
-        debug=req.debug,
-        language=req.language,
-        lesson_id=req.lesson_id,
-        exam_date=req.exam_date,
-        free_days_per_week=req.free_days_per_week,
-        completed_lessons=req.completed_lessons,
-        top_k=req.top_k,
-        score_threshold=req.score_threshold,
-    )
-
-    response = ChatResponse(reply=reply)
-    if debug_info and req.debug:
-        response.debug = DebugInfo(
-            chunks=[
-                ChunkDebugInfo(**chunk) for chunk in debug_info["chunks"]
-            ]
+    - Accepts minimal body: {"text": "..."}
+    - Optional: session_id (generated if missing)
+    - Always calls Groq and returns {"reply", "session_id"}
+    - Returns 502 if Groq fails (with error details)
+    """
+    # Generate session_id if missing
+    session_id = req.session_id or f"session_{uuid.uuid4().hex[:16]}"
+    
+    # Basic guard: text is required
+    if not req.text or not req.text.strip():
+        raise HTTPException(status_code=422, detail="Field 'text' is required")
+    
+    user_text = req.text.strip()
+    
+    # Get request_id for logging
+    request_id = getattr(request.state, "request_id", None) or str(uuid.uuid4())
+    start_time = time.monotonic()
+    
+    logger.info("Calling Groq chat/completions", extra={"request_id": request_id})
+    
+    try:
+        # Call Groq directly - no DB, no context manager, no demo fallback
+        reply = await groq_chat(user_text)
+        
+        latency_ms = (time.monotonic() - start_time) * 1000
+        logger.info(
+            "Groq OK",
+            extra={"request_id": request_id, "latency_ms": latency_ms},
         )
-
-    return response
+        
+        return ChatResponse(reply=reply, session_id=session_id)
+        
+    except HTTPException:
+        # Re-raise HTTPException (502 from groq_chat) as-is
+        latency_ms = (time.monotonic() - start_time) * 1000
+        logger.error(
+            "Groq failed",
+            extra={
+                "request_id": request_id,
+                "latency_ms": latency_ms,
+            },
+        )
+        raise
+    except Exception as exc:
+        # Unexpected error
+        latency_ms = (time.monotonic() - start_time) * 1000
+        logger.error(
+            "Unexpected error in chat endpoint",
+            extra={
+                "request_id": request_id,
+                "latency_ms": latency_ms,
+                "error_type": type(exc).__name__,
+            },
+            exc_info=exc,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=f"Unexpected error: {exc}",
+        ) from exc

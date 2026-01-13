@@ -65,23 +65,13 @@ class StudyPlanHandler(IntentHandler):
         max_tokens: int = 512,
     ) -> str:
         """Call LLM with fallback."""
-        try:
-            return await self.llm_primary.generate(
-                prompt,
-                system_prompt=system_prompt,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-        except Exception:
-            if self.llm_fallback is not None:
-                try:
-                    return await self.llm_fallback.generate(
-                        prompt,
-                        system_prompt=system_prompt,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                    )
-                except Exception:
-                    pass
-            return "Sorry, the AI assistant is currently unavailable. Please try again later."
+        from app.services.llm_utils import safe_llm_generate
+        return await safe_llm_generate(
+            self.llm_primary,
+            self.llm_fallback,
+            prompt,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
 
