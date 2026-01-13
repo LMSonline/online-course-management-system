@@ -1,4 +1,8 @@
-import { UserRole, AccountStatus, Gender } from "../auth/auth.types";
+import { UserRole as _UserRole, AccountStatus as _AccountStatus, Gender as _Gender } from "../auth/auth.types";
+
+export type UserRole = _UserRole;
+export type AccountStatus = _AccountStatus;
+export type Gender = _Gender;
 
 // Enums
 export type AccountActionType =

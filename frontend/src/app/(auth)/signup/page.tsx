@@ -28,6 +28,7 @@ export default function SignupPage() {
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -133,10 +134,11 @@ export default function SignupPage() {
 
             {/* Role selector */}
             <p className="block text-sm mb-2">I&apos;m signing up as</p>
+            <input type="hidden" {...registerField("role")} />
             <div className="mb-1 flex gap-3">
               <button
                 type="button"
-                onClick={() => registerField("role").onChange({ target: { value: "STUDENT" } })}
+                onClick={() => setValue("role", "STUDENT")}
                 disabled={isPending}
                 className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition disabled:opacity-50 ${role === "STUDENT"
                   ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"
@@ -148,7 +150,7 @@ export default function SignupPage() {
               </button>
               <button
                 type="button"
-                onClick={() => registerField("role").onChange({ target: { value: "TEACHER" } })}
+                onClick={() => setValue("role", "TEACHER")}
                 disabled={isPending}
                 className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition disabled:opacity-50 ${role === "TEACHER"
                   ? "bg-[var(--brand-600)] text-white border-[var(--brand-600)]"

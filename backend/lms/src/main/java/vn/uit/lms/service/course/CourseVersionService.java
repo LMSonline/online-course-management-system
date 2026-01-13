@@ -116,12 +116,14 @@ public class CourseVersionService {
         return versions.stream().map(CourseVersionMapper::toCourseVersionResponse).toList();
     }
 
+
+    
     @EnableSoftDeleteFilter
     public CourseVersionResponse getCourseVersionById(Long courseId, Long versionId) {
 
         Course course = courseService.validateCourse(courseId);
 
-        courseService.verifyTeacher(course);
+courseService.verifyTeacherOrAdmin(course);
 
         CourseVersion version = courseVersionRepository.findByIdAndDeletedAtIsNull(versionId)
                 .orElseThrow(() -> new ResourceNotFoundException(

@@ -11,6 +11,8 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - D:/lms-storage:/lms-storage
+
     networks:
       - lms-network
     healthcheck:

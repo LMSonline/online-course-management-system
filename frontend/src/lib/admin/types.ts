@@ -225,3 +225,51 @@ export const ADMIN_MOCK_DATA: AdminMockData = {
     },
   ],
 };
+
+
+export type AdminCourseTab =
+  | "all"
+  | "closed"
+  | "open"
+  | "pending_version"
+
+  ;
+
+export interface AdminCourseStats {
+  total: number;
+  closed: number;
+  open: number;
+  pending_version:number;
+}
+
+
+export type CourseStatus =
+  | "CLOSED"
+  | "OPEN"
+  | "PENDING_VERSION";
+
+
+
+export interface SystemSetting {
+  id: number;
+  keyName: string;
+  value: string;
+  description: string | null;
+}
+
+
+
+export interface PaymentTransaction {
+  id: number;
+  amount: number;
+  status: string;
+  studentId: number;
+  courseId: number;
+  createdAt: string;
+}
+
+export interface CoursePaymentStats {
+  totalRevenue: number;
+  totalPayments: number;
+  totalRefunds: number;
+}

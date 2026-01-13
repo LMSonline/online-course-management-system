@@ -180,8 +180,37 @@ export interface CourseVersionResponse {
   approvedAt?: string; // ISO datetime string
   publishedAt?: string; // ISO datetime string
   chapterCount: number;
-  thumbnailUrl?: string;
+  createdAt?: string; // ISO date string from backend
 }
+
+/** Backend: CourseVersionAdminResponse */
+// export interface AdminPendingCourseVersion {
+//   versionId: number;
+//   versionNumber: number;
+//   versionTitle: string;
+//   status: string;
+
+//   courseId: number;
+//   courseTitle: string;
+
+//   teacherName: string;
+
+//   createdAt: string;
+// }
+// /** Backend: AdminCourseResponse */
+
+// export interface AdminCourseResponse {
+//   id: number;
+//   title: string;
+//   shortDescription?: string;
+
+//   isClosed: boolean;
+
+//   teacherId: number;
+//   teacherName: string;
+
+//   pendingVersionCount: number; // 
+// }
 
 // Course Review
 /** Backend: CourseReviewResponse */
