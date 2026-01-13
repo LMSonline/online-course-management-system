@@ -49,6 +49,16 @@ export interface ResendVerifyEmailRequest {
 }
 
 //Response
+export interface StudentProfile {
+  studentId: number;
+  studentCode: string;
+  fullName: string;
+  phone?: string | null;
+  birthDate?: string | null;
+  bio?: string | null;
+  gender?: string | null;
+}
+
 export interface MeUser {
   accountId: number;
   username: string;
@@ -61,10 +71,7 @@ export interface MeUser {
   bio?: string;
   gender?: Gender;
   lastLoginAt?: string;
-  profile?: {
-    studentId?: number;
-    teacherId?: number;
-  };
+  profile?: StudentProfile;
 }
 
 export interface RegisterResponse {
