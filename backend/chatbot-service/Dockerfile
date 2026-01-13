@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy and install Python dependencies
 COPY requirements.txt .
+RUN python -m pip config unset global.require-hashes || true
+RUN python -m pip config unset install.require-hashes || true
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime

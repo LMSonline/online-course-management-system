@@ -116,3 +116,47 @@ async def test_llama3_client_error_handling():
         with pytest.raises(httpx.HTTPStatusError):
             await client.generate("test prompt")
 
+
+@pytest.mark.asyncio
+async def test_configured_llm_does_not_return_demo_response():
+    """
+    Test that when DEMO_MODE=False and LLM is configured, 
+    the response does NOT contain "[LLM demo response]".
+    """
+    from app.api.deps import get_llm_clients
+    from unittest.mock import patch, MagicMock
+    
+    mock_response = {
+        "choices": [{"message": {"content": "Real LLM response"}}]
+    }
+    
+    # Mock settings to return configured LLM values
+    mock_settings = MagicMock()
+    mock_settings.LLM_PROVIDER = "llama3"
+    mock_settings.LLAMA3_API_BASE = "https://api.groq.com/openai/v1"
+    mock_settings.LLAMA3_API_KEY = "test-key"
+    mock_settings.LLAMA3_MODEL_NAME = "llama-3-8b-instruct"
+    mock_settings.LLAMA3_TIMEOUT = 30.0
+    
+    with patch("app.api.deps.settings", mock_settings), \
+         patch("httpx.AsyncClient") as mock_client:
+        # Clear cache to force re-initialization
+        get_llm_clients.cache_clear()
+        
+        mock_post = AsyncMock()
+        mock_post.raise_for_status = AsyncMock()
+        mock_post.json.return_value = mock_response
+        mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_post)
+        
+        llm_primary, llm_fallback = get_llm_clients()
+        
+        # Verify primary is Llama3Client, not DummyLLMClient
+        assert isinstance(llm_primary, Llama3Client)
+        assert isinstance(llm_fallback, DummyLLMClient)
+        
+        # Generate response
+        result = await llm_primary.generate("test prompt")
+        
+        # Verify it's a real LLM response, not demo
+        assert result == "Real LLM response"
+        assert "[LLM demo response]" not in result

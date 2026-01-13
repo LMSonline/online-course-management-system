@@ -3,6 +3,7 @@ from functools import lru_cache
 from app.core.settings import settings
 from app.services.nlu import NLUService
 from app.services.context_manager import ContextManager
+from app.services.in_memory_context_manager import InMemoryContextManager
 from app.services.study_plan_service import StudyPlanService
 from app.services.chat_service import ChatService
 from app.services.retrieval_service import RetrievalService
@@ -22,7 +23,10 @@ def get_nlu() -> NLUService:
 
 
 @lru_cache
-def get_context_manager() -> ContextManager:
+def get_context_manager() -> ContextManager | InMemoryContextManager:
+    """Get context manager - in-memory if NO_DB_MODE, otherwise DB-backed."""
+    if settings.NO_DB_MODE:
+        return InMemoryContextManager()
     return ContextManager()
 
 
@@ -49,24 +53,40 @@ def get_llm_clients() -> tuple[LLMClient, LLMClient]:
     """
     Select primary + fallback LLM clients via settings:
     - LLM_PROVIDER=dummy  -> (Dummy, Dummy)
-    - LLM_PROVIDER=llama3 -> (Llama3, Dummy)
+    - LLM_PROVIDER=llama3 -> (Llama3, Dummy) if configured, else (Dummy, Dummy)
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     provider = settings.LLM_PROVIDER.lower()
-
     dummy = DummyLLMClient()
 
     if provider == "dummy":
+        logger.info("LLM path: demo (LLM_PROVIDER=dummy)")
         return dummy, dummy
+    
     if provider == "llama3":
-        return (
-            Llama3Client(
+        # Check if LLM is properly configured
+        llm_configured = bool(settings.LLAMA3_API_BASE and settings.LLAMA3_API_KEY and settings.LLAMA3_MODEL_NAME)
+        
+        if not llm_configured:
+            logger.warning("LLM_PROVIDER=llama3 but LLM not configured (missing API_BASE/API_KEY/MODEL_NAME). Using demo mode.")
+            logger.info("LLM path: demo (llama3 not configured)")
+            return dummy, dummy
+        
+        try:
+            llama3_client = Llama3Client(
                 api_base=settings.LLAMA3_API_BASE,
                 api_key=settings.LLAMA3_API_KEY,
                 model_name=settings.LLAMA3_MODEL_NAME,
                 timeout=settings.LLAMA3_TIMEOUT,
-            ),
-            dummy,
-        )
+            )
+            logger.info(f"LLM path: llama3 (groq) - {settings.LLAMA3_MODEL_NAME}")
+            return llama3_client, dummy
+        except ValueError as e:
+            logger.error(f"Failed to initialize Llama3Client: {e}. Using demo mode.")
+            logger.info("LLM path: demo (llama3 initialization failed)")
+            return dummy, dummy
 
     raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
 

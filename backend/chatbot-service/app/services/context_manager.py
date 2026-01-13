@@ -85,17 +85,43 @@ class ContextManager:
         await self.message_repo.close()
 
 
-async def ensure_schema_initialized() -> None:
+async def ensure_schema_initialized(max_retries: int = 30, retry_delay: float = 1.0) -> None:
     """
-    Initialize chat_sessions and chat_messages tables.
+    Initialize chat_sessions and chat_messages tables with retry logic for Docker Compose.
 
+    Retries connection up to max_retries times with exponential backoff.
     Call this once at service startup (e.g., in main.py startup event).
     """
-    from app.infra.chat_repositories import build_chat_db_dsn
+    import asyncio
+    from app.infra.chat_repositories import build_chat_db_dsn, get_db_host
+    from app.core import logging as core_logging
+    from app.core.settings import settings
 
+    logger = core_logging.logger
+    db_host = get_db_host()
     dsn = build_chat_db_dsn()
-    conn = await asyncpg.connect(dsn)
-    try:
-        await init_chat_schema(conn)
-    finally:
-        await conn.close()
+    db_port = settings.CHAT_DB_PORT if settings.CHAT_DB_PORT else settings.LMS_DB_PORT
+    
+    logger.info(f"Initializing chat DB schema (host: {db_host}, port: {db_port})")
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            conn = await asyncio.wait_for(asyncpg.connect(dsn), timeout=5.0)
+            try:
+                await init_chat_schema(conn)
+                logger.info(f"Chat DB schema initialized successfully (host: {db_host})")
+                return
+            finally:
+                await conn.close()
+        except (asyncpg.exceptions.InvalidPasswordError, asyncpg.exceptions.InvalidCatalogNameError) as e:
+            # These are configuration errors, don't retry
+            logger.error(f"DB configuration error: {e}")
+            raise
+        except Exception as e:
+            if attempt < max_retries:
+                wait_time = retry_delay * (2 ** (attempt - 1))  # Exponential backoff
+                logger.warning(f"DB connection attempt {attempt}/{max_retries} failed (host: {db_host}): {e}. Retrying in {wait_time:.1f}s...")
+                await asyncio.sleep(wait_time)
+            else:
+                logger.error(f"Failed to connect to DB after {max_retries} attempts (host: {db_host}): {e}")
+                raise

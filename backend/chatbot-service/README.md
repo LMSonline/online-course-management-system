@@ -41,22 +41,28 @@ pip install -r requirements-dev.txt  # For development
 
 Create a `.env` file (or use `.env.dev`, `.env.test`, `.env.prod`):
 
+**Required for production (real LLM):**
 ```bash
 # Environment
 ENV=dev
 
+# Disable demo mode to use real LLM
+DEMO_MODE=false
+
+# LLM Configuration (Groq API)
+LLM_PROVIDER=llama3
+LLAMA3_API_BASE=https://api.groq.com/openai/v1
+LLAMA3_API_KEY=your-groq-api-key-here
+LLAMA3_MODEL_NAME=llama-3-8b-instruct
+
 # Database (chat sessions/messages)
-CHAT_DB_HOST=localhost
+# For Docker Compose: use "postgres" as host (service name)
+# For local dev: use "localhost"
+CHAT_DB_HOST=localhost  # or postgres for Docker Compose
 CHAT_DB_PORT=5432
 CHAT_DB_NAME=lms
 CHAT_DB_USER=postgres
 CHAT_DB_PASSWORD=postgres
-
-# LLM Configuration
-LLM_PROVIDER=dummy  # or llama3
-LLAMA3_API_BASE=https://api.groq.com/openai/v1
-LLAMA3_API_KEY=your-api-key
-LLAMA3_MODEL_NAME=llama-3-8b-instruct
 
 # Vector Store
 VECTOR_STORE_BACKEND=faiss  # or inmemory
@@ -66,11 +72,49 @@ VECTOR_STORE_DIR=./vector_store
 SEARCH_MODE=hybrid  # vector | bm25 | hybrid
 HYBRID_ALPHA=0.6
 
+# CORS (comma-separated list of allowed frontend origins)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Optional: API Key Authentication (if set, requires X-API-KEY header)
+# Leave unset for dev mode (no auth required)
+# CHATBOT_INTERNAL_API_KEY=your-secret-api-key
+
 # Recommendation Service
 RS_BASE_URL=http://localhost:8002
 ```
 
+**Minimum required for frontend integration:**
+- `DEMO_MODE=false` (to use real LLM instead of mock responses)
+- `LLM_PROVIDER=llama3`
+- `LLAMA3_API_BASE` and `LLAMA3_API_KEY` (Groq API credentials)
+- `CORS_ALLOWED_ORIGINS` (frontend dev server URL, e.g., `http://localhost:3000`)
+
+**Stateless demo mode (no database):**
+```bash
+# Enable NO_DB_MODE to run without Postgres
+NO_DB_MODE=true
+
+# Still need LLM configuration
+DEMO_MODE=false
+LLM_PROVIDER=llama3
+LLAMA3_API_BASE=https://api.groq.com/openai/v1
+LLAMA3_API_KEY=your-groq-api-key
+LLAMA3_MODEL_NAME=llama-3-8b-instruct
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+```
+
+In `NO_DB_MODE`:
+- No database connection required
+- Sessions and messages stored in-memory only (lost on restart)
+- Session IDs are generated/echoed per request
+- LLM still works (real Groq/Llama3)
+- Perfect for demos and stateless deployments
+
 ## Running the Service
+
+### Local Development
 
 ```bash
 uvicorn app.main:app --reload --port 8003
@@ -79,6 +123,146 @@ uvicorn app.main:app --reload --port 8003
 The service will be available at `http://localhost:8003`.
 
 API documentation: `http://localhost:8003/docs`
+
+### Stateless Demo Mode (No Database)
+
+Run the chatbot without any database dependency:
+
+```bash
+# Set environment variable
+export NO_DB_MODE=true
+
+# Or in .env file
+NO_DB_MODE=true
+
+# Start service
+uvicorn app.main:app --reload --port 8003
+```
+
+**Features:**
+- ✅ No Postgres required
+- ✅ Real LLM (Groq/Llama3) still works
+- ✅ Sessions stored in-memory only
+- ✅ Perfect for demos and stateless deployments
+
+**Example free-chat request (no DB, no auth):**
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"hello"}'
+```
+
+**PowerShell examples:**
+```powershell
+# Health check
+Invoke-WebRequest -Uri "http://localhost:8003/health" -Method GET | Select-Object -ExpandProperty Content
+
+# Chat message (minimal body)
+$body = @{text="hello"} | ConvertTo-Json
+Invoke-WebRequest -Uri "http://localhost:8003/api/v1/chat/messages" -Method POST -Body $body -ContentType "application/json" | Select-Object -ExpandProperty Content
+```
+
+**Example response:**
+```json
+{
+  "reply": "Hi there! How can I help you study today?",
+  "session_id": "session_a1b2c3d4e5f6"
+}
+```
+
+**Note:** Session IDs are generated per request if not provided. Sessions and messages are stored in-memory and lost on service restart.
+
+### Docker Compose
+
+The service is configured to work with Docker Compose. It expects a Postgres service named `postgres`.
+
+**Required environment variables for Docker Compose:**
+
+```bash
+# Database (use "postgres" as host - Docker Compose service name)
+LMS_DB_HOST=postgres  # or CHAT_DB_HOST=postgres
+LMS_DB_PORT=5432
+LMS_DB_NAME=lms
+LMS_DB_USER=postgres
+LMS_DB_PASSWORD=postgres
+
+# LLM Configuration
+DEMO_MODE=false
+LLM_PROVIDER=llama3
+LLAMA3_API_BASE=https://api.groq.com/openai/v1
+LLAMA3_API_KEY=your-groq-api-key
+LLAMA3_MODEL_NAME=llama-3-8b-instruct
+
+# CORS (comma-separated)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Optional: API Key Authentication
+CHATBOT_INTERNAL_API_KEY=super-secret-key
+```
+
+**Example docker-compose.yml snippet:**
+
+```yaml
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: lms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  chatbot-service:
+    build: ./backend/chatbot-service
+    ports:
+      - "8003:8003"
+    environment:
+      LMS_DB_HOST: postgres
+      LMS_DB_PORT: 5432
+      LMS_DB_NAME: lms
+      LMS_DB_USER: postgres
+      LMS_DB_PASSWORD: postgres
+      DEMO_MODE: "false"
+      LLM_PROVIDER: llama3
+      LLAMA3_API_BASE: https://api.groq.com/openai/v1
+      LLAMA3_API_KEY: ${LLAMA3_API_KEY}
+      LLAMA3_MODEL_NAME: llama-3-8b-instruct
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173
+      CHATBOT_INTERNAL_API_KEY: ${CHATBOT_INTERNAL_API_KEY:-}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+```
+
+**Running with Docker Compose:**
+
+```bash
+# Start services
+docker-compose up -d chatbot-service
+
+# Check logs
+docker-compose logs -f chatbot-service
+
+# Test health endpoint
+curl http://localhost:8003/health
+
+# Test chat endpoint (no auth required for free-chat MVP)
+curl -X POST http://localhost:8003/api/v1/chat/messages \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello"}'
+```
+
+**Notes:**
+- The service automatically retries database connection up to 30 times with exponential backoff
+- Database host defaults to `postgres` (Docker Compose service name) but can be overridden
+- Startup logs show which database host is being used (no secrets)
+- Server binds to `0.0.0.0:8003` inside the container
 
 ## Ingesting Course Content
 
@@ -191,18 +375,80 @@ python -m app.cli show-config
 
 ## API Examples
 
-### Send a chat message
+### Send a chat message (Frontend-friendly format)
 
+**Minimal request (session_id and user_id are optional):**
 ```bash
 curl -X POST "http://localhost:8003/api/v1/chat/messages" \
   -H "Content-Type: application/json" \
   -d '{
+    "text": "What is Python?",
+    "current_course_id": "course_python_basic"
+  }'
+```
+
+**With session and user context:**
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "What is Python?",
     "session_id": "session-123",
     "user_id": "user1",
-    "text": "What is Python?",
     "current_course_id": "course_python_basic",
-    "debug": false
+    "language": "en"
   }'
+```
+
+**With API key (if CHATBOT_INTERNAL_API_KEY is set):**
+```bash
+curl -X POST "http://localhost:8003/api/v1/chat/messages" \
+  -H "Content-Type: application/json" \
+  -H "X-API-KEY: your-secret-api-key" \
+  -d '{
+    "text": "What is Python?",
+    "current_course_id": "course_python_basic"
+  }'
+```
+
+**Example response:**
+```json
+{
+  "reply": "Python is a high-level programming language...",
+  "session_id": "session_abc123def456"
+}
+```
+
+### Check service health
+
+```bash
+curl "http://localhost:8003/health"
+```
+
+**Example response (with DB):**
+```json
+{
+  "status": "ok",
+  "service": "chatbot-service",
+  "demo_mode": false,
+  "no_db_mode": false,
+  "db_connected": true,
+  "llm_provider": "llama3",
+  "llm_configured": true
+}
+```
+
+**Example response (NO_DB_MODE):**
+```json
+{
+  "status": "ok",
+  "service": "chatbot-service",
+  "demo_mode": false,
+  "no_db_mode": true,
+  "db_connected": false,
+  "llm_provider": "llama3",
+  "llm_configured": true
+}
 ```
 
 ### Generate quiz

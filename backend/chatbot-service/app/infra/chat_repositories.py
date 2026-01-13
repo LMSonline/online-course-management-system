@@ -19,13 +19,24 @@ from app.domain.enums import Sender
 
 
 def build_chat_db_dsn() -> str:
-    """Build Postgres DSN from env vars (can reuse LMS DB or use a separate one)."""
-    host = os.getenv("CHAT_DB_HOST") or os.getenv("LMS_DB_HOST", "localhost")
-    port = os.getenv("CHAT_DB_PORT") or os.getenv("LMS_DB_PORT", "5432")
-    name = os.getenv("CHAT_DB_NAME") or os.getenv("LMS_DB_NAME", "lms")
-    user = os.getenv("CHAT_DB_USER") or os.getenv("LMS_DB_USER", "postgres")
-    password = os.getenv("CHAT_DB_PASSWORD") or os.getenv("LMS_DB_PASSWORD", "postgres")
+    """Build Postgres DSN from settings (supports Docker Compose with 'postgres' host)."""
+    from app.core.settings import settings
+    
+    # Use CHAT_DB_* if set, otherwise fall back to LMS_DB_*
+    host = settings.CHAT_DB_HOST or settings.LMS_DB_HOST
+    port = settings.CHAT_DB_PORT if settings.CHAT_DB_PORT else settings.LMS_DB_PORT
+    name = settings.CHAT_DB_NAME or settings.LMS_DB_NAME
+    user = settings.CHAT_DB_USER or settings.LMS_DB_USER
+    password = settings.CHAT_DB_PASSWORD or settings.LMS_DB_PASSWORD
+    
     return f"postgresql://{user}:{password}@{host}:{port}/{name}"
+
+
+def get_db_host() -> str:
+    """Get the database host being used (for logging, no secrets)."""
+    from app.core.settings import settings
+    host = settings.CHAT_DB_HOST or settings.LMS_DB_HOST
+    return host
 
 
 async def init_chat_schema(conn: asyncpg.Connection) -> None:

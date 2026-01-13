@@ -169,36 +169,27 @@ services:
   #   volumes:
   #     - rs-models:/models
 
-  # chatbot:
-  #   build:
-  #     context: ../chatbot-service   
-  #     dockerfile: Dockerfile
-  #   container_name: chatbot-service
-  #   ports:
-  #     - "8003:8003"
-  #   environment:
-  #     RS_BASE_URL: http://rs-service:8002
-  #     LMS_DB_HOST: postgres
-  #     LMS_DB_PORT: 5432
-  #     LMS_DB_NAME: ${POSTGRES_DB}
-  #     LMS_DB_USER: ${POSTGRES_USER}
-  #     LMS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+  chatbot:
+    build:
+      context: ../chatbot-service
+      dockerfile: Dockerfile
+    container_name: chatbot-service
+    ports:
+      - "8003:8003"
+    env_file:
+      - ../chatbot-service/.env
+    environment:
 
-  #     # LLM provider & model can be configured via env / .env file
-  #     # LLM_PROVIDER: dummy | llama3
-  #     # LLAMA3_API_BASE: https://api.groq.com/openai/v1
-  #     # LLAMA3_API_KEY: your-key
-  #     # LLAMA3_MODEL_NAME: llama-3-8b-instruct
-
-  #     # Vector store configuration
-  #     VECTOR_STORE_BACKEND: faiss
-  #     VECTOR_STORE_DIR: /vector_store
-  #   depends_on:
-  #     - rs                     
-  #   networks:
-  #     - lms-network
-  #   restart: unless-stopped
-
+      VECTOR_STORE_BACKEND: faiss
+      VECTOR_STORE_DIR: /vector_store
+    volumes:
+      - chatbot-vectors:/vector_store
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lms-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
