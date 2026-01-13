@@ -60,22 +60,20 @@ export default function AssignmentSubmissionsPage() {
 
         const headers = [
             "Student Name",
-            "Student Code",
             "Status",
             "Submitted At",
             "Score",
-            "Is Late",
+            "Attempt",
         ];
 
         const rows = submissions.map((sub) => [
             sub.studentName || "",
-            sub.studentCode || "",
             sub.status,
             sub.submittedAt
                 ? format(new Date(sub.submittedAt), "yyyy-MM-dd HH:mm:ss")
                 : "",
             sub.score?.toString() || "",
-            sub.isLate ? "Yes" : "No",
+            sub.attemptNumber?.toString() || "1",
         ]);
 
         const csvContent = [
@@ -92,30 +90,21 @@ export default function AssignmentSubmissionsPage() {
         URL.revokeObjectURL(url);
     };
 
-    const getStatusBadge = (status: SubmissionStatus, isLate: boolean) => {
+    const getStatusBadge = (status: SubmissionStatus) => {
         const statusConfig = {
-            DRAFT: { variant: "secondary" as const, label: "Draft" },
-            SUBMITTED: {
-                variant: "default" as const,
-                label: "Submitted",
-                className: isLate ? "bg-orange-100 text-orange-800" : "",
-            },
+            PENDING: { variant: "secondary" as const, label: "Pending", className: "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300" },
             GRADED: {
                 variant: "default" as const,
                 label: "Graded",
-                className: "bg-green-100 text-green-800",
+                className: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
             },
-            RETURNED: { variant: "outline" as const, label: "Returned" },
-            LATE: { variant: "destructive" as const, label: "Late" },
+            REJECTED: { variant: "destructive" as const, label: "Rejected" },
         };
-        const config = statusConfig[status] || statusConfig.DRAFT;
+        const config = statusConfig[status] || statusConfig.PENDING;
         const badgeClassName = 'className' in config ? config.className : '';
         return (
             <Badge variant={config.variant} className={badgeClassName}>
                 {config.label}
-                {isLate && status === "SUBMITTED" && (
-                    <AlertCircle className="h-3 w-3 ml-1" />
-                )}
             </Badge>
         );
     };
@@ -124,8 +113,7 @@ export default function AssignmentSubmissionsPage() {
         const matchesSearch =
             (sub.studentName?.toLowerCase() || "").includes(
                 searchTerm.toLowerCase()
-            ) ||
-            (sub.studentCode?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+            );
 
         const matchesFilter = filterStatus === "ALL" || sub.status === filterStatus;
 
@@ -133,7 +121,7 @@ export default function AssignmentSubmissionsPage() {
     });
 
     const needsGradingCount = submissions.filter(
-        (s) => s.status === "SUBMITTED"
+        (s) => s.status === "PENDING"
     ).length;
 
     if (isLoading) {
@@ -232,7 +220,7 @@ export default function AssignmentSubmissionsPage() {
                         <CardContent>
                             <div className="text-2xl font-bold">
                                 {statistics.averageScore
-                                    ? `${statistics.averageScore.toFixed(1)}/${assignment.maxScore}`
+                                    ? `${statistics.averageScore.toFixed(1)}/${assignment.totalPoints || 100}`
                                     : "-"}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -256,7 +244,7 @@ export default function AssignmentSubmissionsPage() {
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by student name or code..."
+                                placeholder="Search by student name..."
                                 value={searchTerm}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                                 className="pl-9"
@@ -267,13 +255,12 @@ export default function AssignmentSubmissionsPage() {
                             onChange={(e) =>
                                 setFilterStatus(e.target.value as SubmissionStatus | "ALL")
                             }
-                            className="flex h-10 w-[180px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex h-10 w-[180px] rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="ALL">All Submissions</option>
-                            <option value="SUBMITTED">Needs Grading</option>
+                            <option value="PENDING">Needs Grading</option>
                             <option value="GRADED">Graded</option>
-                            <option value="DRAFT">Draft</option>
-                            <option value="LATE">Late</option>
+                            <option value="REJECTED">Rejected</option>
                         </select>
                     </div>
 
@@ -293,10 +280,10 @@ export default function AssignmentSubmissionsPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Student</TableHead>
-                                        <TableHead>Student Code</TableHead>
                                         <TableHead>Submitted At</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Score</TableHead>
+                                        <TableHead>Attempt</TableHead>
                                         <TableHead>Files</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
@@ -311,7 +298,6 @@ export default function AssignmentSubmissionsPage() {
                                             <TableCell className="font-medium">
                                                 {submission.studentName}
                                             </TableCell>
-                                            <TableCell>{submission.studentCode || "-"}</TableCell>
                                             <TableCell>
                                                 {submission.submittedAt ? (
                                                     <span className="text-sm">
@@ -325,17 +311,22 @@ export default function AssignmentSubmissionsPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {getStatusBadge(submission.status, submission.isLate)}
+                                                {getStatusBadge(submission.status)}
                                             </TableCell>
                                             <TableCell>
                                                 {submission.score !== undefined &&
                                                     submission.score !== null ? (
                                                     <span className="font-medium">
-                                                        {submission.score}/{assignment.maxScore}
+                                                        {submission.score}/{assignment.totalPoints ?? 100}
                                                     </span>
                                                 ) : (
                                                     <span className="text-muted-foreground">-</span>
                                                 )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-sm text-muted-foreground">
+                                                    #{submission.attemptNumber}
+                                                </span>
                                             </TableCell>
                                             <TableCell>
                                                 {submission.files && submission.files.length > 0 ? (
@@ -349,7 +340,7 @@ export default function AssignmentSubmissionsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm">
-                                                    {submission.status === "SUBMITTED"
+                                                    {submission.status === "PENDING"
                                                         ? "Grade"
                                                         : "View"}
                                                 </Button>

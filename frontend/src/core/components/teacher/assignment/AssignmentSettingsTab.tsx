@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AssignmentResponse, AssignmentRequest } from "@/services/assignment/assignment.types";
-import { useUpdateAssignment, useExtendDueDate } from "@/hooks/teacher/useAssignmentManagement";
+import { useUpdateAssignment, useExtendDueDate } from "@/hooks/teacher/useTeacherAssignment";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/core/components/ui/Card";
 import Button from "@/core/components/ui/Button";
 import Input from "@/core/components/ui/Input";

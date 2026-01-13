@@ -155,17 +155,17 @@ export default function EditCoursePage() {
 
     if (loadingCourse) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
             </div>
         );
     }
 
     if (!course) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
                 <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                         Course not found
                     </h1>
                     <Link
@@ -180,34 +180,34 @@ export default function EditCoursePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
                     <Link
                         href="/teacher/courses"
-                        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+                        className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-4"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back to courses
                     </Link>
-                    <h1 className="text-3xl font-bold text-gray-900">Edit Course</h1>
-                    <p className="text-gray-600 mt-2">
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Edit Course</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
                         Update course information and settings
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                            <BookOpen className="w-5 h-5 text-indigo-600" />
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             Basic Information
                         </h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Course Title *
                                 </label>
                                 <input
@@ -216,14 +216,14 @@ export default function EditCoursePage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, title: e.target.value })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Enter course title"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Description
                                 </label>
                                 <textarea
@@ -232,14 +232,14 @@ export default function EditCoursePage() {
                                         setFormData({ ...formData, shortDescription: e.target.value })
                                     }
                                     rows={4}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Describe your course..."
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                         Category *
                                     </label>
                                     <select
@@ -250,7 +250,7 @@ export default function EditCoursePage() {
                                                 categoryId: parseInt(e.target.value),
                                             })
                                         }
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                        className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                         required
                                     >
                                         <option value={0}>Select a category</option>
@@ -263,7 +263,7 @@ export default function EditCoursePage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                         Difficulty Level *
                                     </label>
                                     <select
@@ -274,7 +274,7 @@ export default function EditCoursePage() {
                                                 difficulty: e.target.value as any,
                                             })
                                         }
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                        className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                         required
                                     >
                                         <option value="BEGINNER">Beginner</option>
@@ -287,9 +287,9 @@ export default function EditCoursePage() {
                     </div>
 
                     {/* Tags */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                            <TagIcon className="w-5 h-5 text-indigo-600" />
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <TagIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             Tags
                         </h2>
 
@@ -301,7 +301,7 @@ export default function EditCoursePage() {
                                     onClick={() => toggleTag(tag.name)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedTags.includes(tag.name)
                                         ? "bg-indigo-600 text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                                         }`}
                                 >
                                     {tag.name}
@@ -311,15 +311,15 @@ export default function EditCoursePage() {
                     </div>
 
                     {/* SEO Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             SEO Settings
                         </h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Meta Title
                                 </label>
                                 <input
@@ -328,13 +328,13 @@ export default function EditCoursePage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, metaTitle: e.target.value })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Enter meta title for SEO"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Meta Description
                                 </label>
                                 <textarea
@@ -346,13 +346,13 @@ export default function EditCoursePage() {
                                         })
                                     }
                                     rows={3}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Enter meta description for SEO"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     SEO Keywords
                                 </label>
                                 <input
@@ -361,7 +361,7 @@ export default function EditCoursePage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, seoKeywords: e.target.value })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Enter keywords separated by commas"
                                 />
                             </div>
@@ -369,14 +369,14 @@ export default function EditCoursePage() {
                     </div>
 
                     {/* Thumbnail */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
                             Course Thumbnail
                         </h2>
 
                         <div className="space-y-4">
                             {thumbnailPreview && (
-                                <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                                <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
                                     <Image
                                         src={thumbnailPreview}
                                         alt="Thumbnail preview"
@@ -397,11 +397,11 @@ export default function EditCoursePage() {
 
                             <div>
                                 <label className="block w-full cursor-pointer">
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
-                                        <p className="text-sm text-gray-600 mb-2">
+                                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
+                                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                                             Click to upload new thumbnail
                                         </p>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-slate-500 dark:text-slate-500">
                                             PNG, JPG up to 10MB
                                         </p>
                                     </div>
@@ -437,7 +437,7 @@ export default function EditCoursePage() {
                         </button>
                         <Link
                             href="/teacher/courses"
-                            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium rounded-lg transition-colors inline-flex items-center justify-center"
+                            className="px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center"
                         >
                             Cancel
                         </Link>

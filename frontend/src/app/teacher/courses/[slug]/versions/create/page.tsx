@@ -75,17 +75,17 @@ export default function CreateVersionPage() {
 
     if (loadingCourse) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
             </div>
         );
     }
 
     if (!course) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
                 <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                         Course not found
                     </h1>
                     <Link
@@ -100,18 +100,18 @@ export default function CreateVersionPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
                     <Link
                         href={`/teacher/courses/${slug}/versions`}
-                        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+                        className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-4"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back to versions
                     </Link>
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                         Create New Version
                     </h1>
                     <p className="text-gray-600 mt-2">
@@ -121,15 +121,15 @@ export default function CreateVersionPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                            <BookOpen className="w-5 h-5 text-indigo-600" />
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             Version Information
                         </h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Version Title *
                                 </label>
                                 <input
@@ -138,14 +138,14 @@ export default function CreateVersionPage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, title: e.target.value })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="e.g., Version 2.0 - Updated Content"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Description
                                 </label>
                                 <textarea
@@ -154,7 +154,7 @@ export default function CreateVersionPage() {
                                         setFormData({ ...formData, description: e.target.value })
                                     }
                                     rows={4}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="Describe what's new in this version..."
                                 />
                             </div>
@@ -162,15 +162,15 @@ export default function CreateVersionPage() {
                     </div>
 
                     {/* Course Details */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-indigo-600" />
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                            <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             Course Details
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Giá khóa học (VND) *
                                 </label>
                                 <input
@@ -184,17 +184,17 @@ export default function CreateVersionPage() {
                                             price: parseFloat(e.target.value) || 0,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="0"
                                     required
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                     Đặt giá 0 cho khóa học miễn phí
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Duration (days) *
                                 </label>
                                 <input
@@ -207,14 +207,14 @@ export default function CreateVersionPage() {
                                             durationDays: parseInt(e.target.value) || 0,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="30"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Điểm đạt (0-10) *
                                 </label>
                                 <input
@@ -229,11 +229,11 @@ export default function CreateVersionPage() {
                                             passScore: parseFloat(e.target.value) || 8.0,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     placeholder="8.0"
                                     required
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                     Ví dụ: 8.0 = điểm trung bình đạt
                                 </p>
                             </div>
@@ -261,7 +261,7 @@ export default function CreateVersionPage() {
                         </button>
                         <Link
                             href={`/teacher/courses/${slug}/versions`}
-                            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium rounded-lg transition-colors inline-flex items-center justify-center"
+                            className="px-6 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center"
                         >
                             Cancel
                         </Link>

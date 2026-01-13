@@ -7,7 +7,7 @@ import {
     useRejectSubmission,
     useFeedbackSubmission,
     useSubmissionFiles,
-} from "@/hooks/teacher/useAssignmentManagement";
+} from "@/hooks/teacher/useTeacherAssignment";
 import { assignmentService } from "@/services/assignment/assignment.service";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/core/components/ui/Dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/Card";
@@ -275,10 +275,10 @@ export function GradingModal({ submission, maxScore, open, onOpenChange }: Gradi
                                             <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-2">
                                                 <div
                                                     className={`h-full rounded-full transition-all ${score / maxScore >= 0.7
-                                                            ? "bg-emerald-500"
-                                                            : score / maxScore >= 0.5
-                                                                ? "bg-amber-500"
-                                                                : "bg-red-500"
+                                                        ? "bg-emerald-500"
+                                                        : score / maxScore >= 0.5
+                                                            ? "bg-amber-500"
+                                                            : "bg-red-500"
                                                         }`}
                                                     style={{ width: `${Math.min(100, (score / maxScore) * 100)}%` }}
                                                 />

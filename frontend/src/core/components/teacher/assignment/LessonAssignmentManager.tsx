@@ -8,7 +8,7 @@ import {
     useLinkAssignmentToLesson,
     useUnlinkAssignmentFromLesson,
     useCreateAssignment,
-} from "@/hooks/teacher/useAssignmentManagement";
+} from "@/hooks/teacher/useTeacherAssignment";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/core/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/core/components/ui/Dialog";
 import Button from "@/core/components/ui/Button";

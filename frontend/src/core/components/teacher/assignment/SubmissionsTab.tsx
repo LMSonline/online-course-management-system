@@ -6,7 +6,7 @@ import { SubmissionResponse, SubmissionStatus } from "@/services/assignment/assi
 import {
     useAssignmentSubmissions,
     useBulkGradeSubmissions,
-} from "@/hooks/teacher/useAssignmentManagement";
+} from "@/hooks/teacher/useTeacherAssignment";
 import { Card, CardContent, CardHeader } from "@/core/components/ui/Card";
 import {
     Table,
@@ -37,14 +37,8 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 
 const statusConfig: Record<SubmissionStatus, { label: string; icon: React.ReactNode; bgColor: string; textColor: string }> = {
-    DRAFT: {
-        label: "Draft",
-        icon: <FileText className="h-3.5 w-3.5" />,
-        bgColor: "bg-slate-100 dark:bg-slate-700/50",
-        textColor: "text-slate-600 dark:text-slate-400",
-    },
-    SUBMITTED: {
-        label: "Submitted",
+    PENDING: {
+        label: "Pending",
         icon: <Clock className="h-3.5 w-3.5" />,
         bgColor: "bg-amber-50 dark:bg-amber-500/10",
         textColor: "text-amber-700 dark:text-amber-400",
@@ -55,17 +49,11 @@ const statusConfig: Record<SubmissionStatus, { label: string; icon: React.ReactN
         bgColor: "bg-emerald-50 dark:bg-emerald-500/10",
         textColor: "text-emerald-700 dark:text-emerald-400",
     },
-    RETURNED: {
-        label: "Returned",
-        icon: <AlertTriangle className="h-3.5 w-3.5" />,
+    REJECTED: {
+        label: "Rejected",
+        icon: <XCircle className="h-3.5 w-3.5" />,
         bgColor: "bg-red-50 dark:bg-red-500/10",
         textColor: "text-red-700 dark:text-red-400",
-    },
-    LATE: {
-        label: "Late",
-        icon: <Clock className="h-3.5 w-3.5" />,
-        bgColor: "bg-orange-50 dark:bg-orange-500/10",
-        textColor: "text-orange-700 dark:text-orange-400",
     },
 };
 
@@ -81,7 +69,6 @@ export function SubmissionsTab({ assignmentId, maxScore }: SubmissionsTabProps) 
 
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<SubmissionStatus | "all" | "pending">("all");
-    const [lateOnly, setLateOnly] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [gradingSubmission, setGradingSubmission] = useState<SubmissionResponse | null>(null);
     const [showBulkGradeModal, setShowBulkGradeModal] = useState(false);
@@ -90,24 +77,21 @@ export function SubmissionsTab({ assignmentId, maxScore }: SubmissionsTabProps) 
         return submissions.filter((sub) => {
             const matchesSearch =
                 searchQuery === "" ||
-                sub.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                sub.studentCode?.toLowerCase().includes(searchQuery.toLowerCase());
+                sub.studentName?.toLowerCase().includes(searchQuery.toLowerCase());
 
             let matchesStatus = true;
             if (statusFilter === "pending") {
-                matchesStatus = sub.status === "SUBMITTED" || sub.status === "LATE";
+                matchesStatus = sub.status === "PENDING";
             } else if (statusFilter !== "all") {
                 matchesStatus = sub.status === statusFilter;
             }
 
-            const matchesLate = !lateOnly || sub.isLate;
-
-            return matchesSearch && matchesStatus && matchesLate;
+            return matchesSearch && matchesStatus;
         });
-    }, [submissions, searchQuery, statusFilter, lateOnly]);
+    }, [submissions, searchQuery, statusFilter]);
 
     const pendingCount = useMemo(() => {
-        return submissions.filter(s => s.status === "SUBMITTED" || s.status === "LATE").length;
+        return submissions.filter(s => s.status === "PENDING").length;
     }, [submissions]);
 
     const handleSelectAll = (checked: boolean) => {
@@ -173,18 +157,11 @@ export function SubmissionsTab({ assignmentId, maxScore }: SubmissionsTabProps) 
                                 <SelectContent>
                                     <SelectItem value="all">All Status</SelectItem>
                                     <SelectItem value="pending">Pending ({pendingCount})</SelectItem>
-                                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                                    <SelectItem value="PENDING">Pending</SelectItem>
                                     <SelectItem value="GRADED">Graded</SelectItem>
-                                    <SelectItem value="RETURNED">Returned</SelectItem>
+                                    <SelectItem value="REJECTED">Rejected</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
-                                <Checkbox
-                                    checked={lateOnly}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLateOnly(e.target.checked)}
-                                />
-                                <span className="text-sm text-slate-600 dark:text-slate-400">Late only</span>
-                            </label>
                         </div>
                         <div className="flex items-center gap-3">
                             <Button
@@ -245,8 +222,8 @@ export function SubmissionsTab({ assignmentId, maxScore }: SubmissionsTabProps) 
                         </TableHeader>
                         <TableBody>
                             {filteredSubmissions.map((submission) => {
-                                const statusStyle = statusConfig[submission.status] || statusConfig.DRAFT;
-                                const isPending = submission.status === "SUBMITTED" || submission.status === "LATE";
+                                const statusStyle = statusConfig[submission.status] || statusConfig.PENDING;
+                                const isPending = submission.status === "PENDING";
                                 const isGraded = submission.status === "GRADED";
                                 return (
                                     <TableRow key={submission.id}>
@@ -261,21 +238,14 @@ export function SubmissionsTab({ assignmentId, maxScore }: SubmissionsTabProps) 
                                                 <p className="font-medium text-slate-800 dark:text-white">
                                                     {submission.studentName || "Unknown Student"}
                                                 </p>
-                                                {submission.studentCode && (
-                                                    <p className="text-sm text-slate-500 dark:text-slate-400">{submission.studentCode}</p>
-                                                )}
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">Attempt #{submission.attemptNumber}</p>
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             {submission.submittedAt ? (
-                                                <div>
-                                                    <p className={`text-sm ${submission.isLate ? "text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400"}`}>
-                                                        {format(new Date(submission.submittedAt), "MMM d, yyyy h:mm a")}
-                                                    </p>
-                                                    {submission.isLate && (
-                                                        <span className="text-xs text-red-500">Late submission</span>
-                                                    )}
-                                                </div>
+                                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                    {format(new Date(submission.submittedAt), "MMM d, yyyy h:mm a")}
+                                                </p>
                                             ) : (
                                                 <span className="text-slate-400">Not submitted</span>
                                             )}
@@ -289,10 +259,10 @@ export function SubmissionsTab({ assignmentId, maxScore }: SubmissionsTabProps) 
                                         <TableCell className="text-center">
                                             {submission.score != null ? (
                                                 <span className={`font-semibold ${submission.score / maxScore >= 0.7
-                                                        ? "text-emerald-600 dark:text-emerald-400"
-                                                        : submission.score / maxScore >= 0.5
-                                                            ? "text-amber-600 dark:text-amber-400"
-                                                            : "text-red-600 dark:text-red-400"
+                                                    ? "text-emerald-600 dark:text-emerald-400"
+                                                    : submission.score / maxScore >= 0.5
+                                                        ? "text-amber-600 dark:text-amber-400"
+                                                        : "text-red-600 dark:text-red-400"
                                                     }`}>
                                                     {submission.score}/{maxScore}
                                                 </span>

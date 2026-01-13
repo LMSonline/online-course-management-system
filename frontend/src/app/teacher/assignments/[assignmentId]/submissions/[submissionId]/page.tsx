@@ -67,8 +67,8 @@ export default function GradingPage() {
             return;
         }
 
-        if (assignment && assignment.maxScore && scoreValue > assignment.maxScore) {
-            alert(`Score cannot exceed maximum score of ${assignment.maxScore}`);
+        if (assignment && assignment.totalPoints && scoreValue > assignment.totalPoints) {
+            alert(`Score cannot exceed maximum score of ${assignment.totalPoints}`);
             return;
         }
 
@@ -80,7 +80,7 @@ export default function GradingPage() {
         await gradeMutation.mutateAsync({
             id: submissionId,
             payload: {
-                score: scoreValue,
+                grade: scoreValue,
                 feedback: feedback || undefined,
             },
         });
@@ -174,26 +174,26 @@ export default function GradingPage() {
                                 <div>
                                     <CardTitle>{submission.studentName}</CardTitle>
                                     <p className="text-sm text-muted-foreground mt-1">
-                                        {submission.studentCode}
+                                        Attempt #{submission.attemptNumber}
                                     </p>
                                 </div>
                                 <Badge
-                                    variant={submission.isLate ? "destructive" : "default"}
+                                    variant={submission.status === "GRADED" ? "default" : "secondary"}
                                     className={
-                                        submission.isLate
-                                            ? "bg-orange-100 text-orange-800"
-                                            : "bg-green-100 text-green-800"
+                                        submission.status === "GRADED"
+                                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                                            : "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300"
                                     }
                                 >
-                                    {submission.isLate ? (
+                                    {submission.status === "GRADED" ? (
                                         <>
-                                            <AlertCircle className="h-3 w-3 mr-1" />
-                                            Late Submission
+                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                            Graded
                                         </>
                                     ) : (
                                         <>
-                                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                                            On Time
+                                            <Clock className="h-3 w-3 mr-1" />
+                                            Pending
                                         </>
                                     )}
                                 </Badge>
@@ -236,11 +236,6 @@ export default function GradingPage() {
                                                 <FileText className="h-5 w-5 text-blue-500" />
                                                 <div>
                                                     <p className="font-medium text-sm">{file.fileName}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {file.fileSize
-                                                            ? `${(file.fileSize / 1024).toFixed(2)} KB`
-                                                            : "Unknown size"}
-                                                    </p>
                                                 </div>
                                             </div>
                                             <a
@@ -278,9 +273,8 @@ export default function GradingPage() {
                                     {submission.feedback}
                                 </p>
                                 {submission.gradedAt && (
-                                    <p className="text-xs text-green-600 mt-2">
+                                    <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                                         Graded {formatDistanceToNow(new Date(submission.gradedAt), { addSuffix: true })}
-                                        {submission.graderName && ` by ${submission.graderName}`}
                                     </p>
                                 )}
                             </CardContent>
@@ -308,15 +302,16 @@ export default function GradingPage() {
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setScore(e.target.value)}
                                         placeholder="0"
                                         min={0}
-                                        max={assignment.maxScore || 100}
+                                        max={assignment.totalPoints || 100}
+                                        step="0.1"
                                         className="flex-1"
                                     />
                                     <span className="text-sm text-muted-foreground">
-                                        / {assignment.maxScore || 100}
+                                        / {assignment.totalPoints || 100}
                                     </span>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Enter score out of {assignment.maxScore || 100} points
+                                    Enter grade (0-10 scale) - Max: {assignment.totalPoints || 100} points
                                 </p>
                             </div>
 
