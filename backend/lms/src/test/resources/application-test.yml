@@ -61,16 +61,19 @@ logging:
 jwt:
   secret: Sk9Q3TwckIpyw0YWwfq8ln/7BWAY80oAaChfAbFtL3M=
   access-token:
-    expiration: 3600000  # 1 hour in milliseconds
+    expiration: 3600000 # 1 hour in milliseconds
   refresh-token:
-    expiration: 86400000  # 24 hours in milliseconds
+    expiration: 86400000 # 24 hours in milliseconds
 
 # MinIO configuration for tests
 minio:
   url: http://localhost:9000
-  access-key: test-access-key
-  secret-key: test-secret-key
-  bucket: test-bucket
+  username: minioadmin
+  password: minioadmin123
+  buckets:
+    videos: lms-videos-test
+    images: lms-images-test
+    documents: lms-documents-test
 
 # VNPay configuration for tests
 vnpay:
@@ -122,7 +125,7 @@ app:
         - image/webp
 
   file:
-    max-size-bytes: 104857600  # 100MB
+    max-size-bytes: 104857600 # 100MB
 
   metadata:
     author: "© 2025 Group 5 / VN.UIT.LMS - Test Environment"
@@ -162,4 +165,3 @@ zalo-pay:
       refund: /v2/refund
       refund-query: /v2/query_refund
       callback: http://localhost:8080/api/v1/payments/callback
-
