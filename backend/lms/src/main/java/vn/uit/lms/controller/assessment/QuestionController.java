@@ -94,4 +94,16 @@ public class QuestionController {
     public ResponseEntity<Map<String, Integer>> getQuestionCount(@PathVariable Long bankId) {
         return ResponseEntity.ok(Map.of("count", questionService.getQuestionCount(bankId)));
     }
+
+    @GetMapping("/questions/{id}/in-use")
+    @TeacherOnly
+    public ResponseEntity<Map<String, Boolean>> checkQuestionInUse(@PathVariable Long id) {
+        return ResponseEntity.ok(Map.of("inUse", questionService.isQuestionInUse(id)));
+    }
+
+    @GetMapping("/questions/{id}/quizzes")
+    @TeacherOnly
+    public ResponseEntity<Map<String, List<Long>>> getQuizzesUsingQuestion(@PathVariable Long id) {
+        return ResponseEntity.ok(Map.of("quizIds", questionService.getQuizzesUsingQuestion(id)));
+    }
 }

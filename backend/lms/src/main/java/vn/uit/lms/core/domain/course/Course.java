@@ -13,6 +13,7 @@ import vn.uit.lms.shared.entity.BaseEntity;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Entity
 @Table(name = "courses")
 @Getter
@@ -49,8 +50,7 @@ public class Course extends BaseEntity {
     @Builder.Default
     private Boolean isClosed = false;
 
-
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<CourseVersion> versions = new ArrayList<>();
 

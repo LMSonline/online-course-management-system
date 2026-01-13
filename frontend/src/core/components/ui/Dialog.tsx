@@ -12,7 +12,7 @@ export const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
-                className="fixed inset-0 bg-black/50"
+                className="fixed inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm"
                 onClick={() => onOpenChange?.(false)}
             />
             {children}
@@ -30,7 +30,7 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
         return (
             <div
                 ref={ref}
-                className={`relative z-50 w-full max-w-lg rounded-lg bg-white p-6 shadow-lg ${className}`}
+                className={`relative z-50 w-full max-w-lg rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-lg ${className}`}
                 {...props}
             >
                 {children}
@@ -64,7 +64,7 @@ export const DialogTitle = React.forwardRef<HTMLHeadingElement, DialogTitleProps
         return (
             <h2
                 ref={ref}
-                className={`text-lg font-semibold leading-none tracking-tight ${className}`}
+                className={`text-lg font-semibold leading-none tracking-tight text-slate-900 dark:text-white ${className}`}
                 {...props}
             >
                 {children}
@@ -85,7 +85,7 @@ export const DialogDescription = React.forwardRef<HTMLParagraphElement, DialogDe
         return (
             <p
                 ref={ref}
-                className={`text-sm text-gray-500 ${className}`}
+                className={`text-sm text-slate-600 dark:text-slate-400 ${className}`}
                 {...props}
             >
                 {children}

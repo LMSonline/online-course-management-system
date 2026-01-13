@@ -2,6 +2,7 @@ package vn.uit.lms.shared.dto.request.assignment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import vn.uit.lms.shared.constant.AssignmentType;
 
@@ -18,10 +19,12 @@ public class AssignmentRequest {
     )
     private String title;
 
+    @NotNull(message = "Assignment type is required")
     @Schema(
         description = "Type of assignment",
         example = "HOMEWORK",
-        allowableValues = {"HOMEWORK", "PROJECT", "ESSAY", "QUIZ"}
+        allowableValues = {"HOMEWORK", "PROJECT", "ESSAY", "QUIZ"},
+        requiredMode = Schema.RequiredMode.REQUIRED
     )
     private AssignmentType assignmentType;
 

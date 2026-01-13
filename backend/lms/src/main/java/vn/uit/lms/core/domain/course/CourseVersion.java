@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Entity
 @Table(name = "course_versions",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"course_id","version_number"})})
@@ -72,7 +73,7 @@ public class CourseVersion extends BaseEntity {
     @Column(name = "published_at")
     private Instant publishedAt;
 
-    @OneToMany(mappedBy = "courseVersion", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "courseVersion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Chapter> chapters = new ArrayList<>();
 
     public int getAmountChapter(){

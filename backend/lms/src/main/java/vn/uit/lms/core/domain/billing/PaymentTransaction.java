@@ -34,14 +34,17 @@ public class PaymentTransaction extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ASSOCIATION: Student exists independently
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
+    // ASSOCIATION: Course exists independently
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    // ASSOCIATION: CourseVersion exists independently
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_version_id", nullable = false)
     private CourseVersion courseVersion;

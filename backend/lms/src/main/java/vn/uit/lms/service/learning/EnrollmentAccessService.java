@@ -188,7 +188,8 @@ public class EnrollmentAccessService {
 
     /**
      * Verify student has access to an assignment.
-     * Checks enrollment in the course containing the assignment's lesson.
+     * Only assignments linked to lessons are accessible to students.
+     * Independent assignments are not accessible until linked to a lesson.
      *
      * @param studentId Student ID
      * @param assignmentId Assignment ID
@@ -202,7 +203,7 @@ public class EnrollmentAccessService {
 
         Lesson lesson = assignment.getLesson();
         if (lesson == null) {
-            throw new ResourceNotFoundException("Assignment is not associated with a lesson");
+            throw new UnauthorizedException("This assignment is not available yet. It has not been linked to any lesson.");
         }
 
         Course course = getCourseFromLesson(lesson);
@@ -224,7 +225,8 @@ public class EnrollmentAccessService {
 
     /**
      * Verify student has access to a quiz.
-     * Checks enrollment in the course containing the quiz's lesson.
+     * Only quizzes linked to lessons are accessible to students.
+     * Independent quizzes are not accessible until linked to a lesson.
      *
      * @param studentId Student ID
      * @param quizId Quiz ID
@@ -238,7 +240,7 @@ public class EnrollmentAccessService {
 
         Lesson lesson = quiz.getLesson();
         if (lesson == null) {
-            throw new ResourceNotFoundException("Quiz is not associated with a lesson");
+            throw new UnauthorizedException("This quiz is not available yet. It has not been linked to any lesson.");
         }
 
         Course course = getCourseFromLesson(lesson);
@@ -300,7 +302,10 @@ public class EnrollmentAccessService {
     }
 
     /**
-     * Verify current teacher owns the assignment (through its course).
+     * Verify current teacher owns the assignment.
+     *
+     * For assignments linked to lessons: Verify ownership through course.
+     * For independent assignments: Verify ownership through createdBy field.
      *
      * @param assignmentId Assignment ID
      * @return Assignment entity
@@ -309,15 +314,34 @@ public class EnrollmentAccessService {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
+        Account account = accountService.verifyCurrentAccount();
+
+        if (!account.getRole().equals(Role.TEACHER)) {
+            throw new UnauthorizedException("Only teachers can access this resource");
+        }
+
         Lesson lesson = assignment.getLesson();
-        Course course = getCourseFromLesson(lesson);
-        verifyTeacherCourseOwnership(course.getId());
+
+        if (lesson != null) {
+            // Assignment is linked to lesson - verify through course ownership
+            Course course = getCourseFromLesson(lesson);
+            verifyTeacherCourseOwnership(course.getId());
+        } else {
+            // Independent assignment - verify through createdBy
+            String currentUsername = accountService.getCurrentUserLogin();
+            if (assignment.getCreatedBy() == null || !assignment.getCreatedBy().equals(currentUsername)) {
+                throw new UnauthorizedException("You do not own this assignment");
+            }
+        }
 
         return assignment;
     }
 
     /**
-     * Verify current teacher owns the quiz (through its course).
+     * Verify current teacher owns the quiz.
+     *
+     * For quizzes linked to lessons: Verify ownership through course.
+     * For independent quizzes: Verify ownership through createdBy field.
      *
      * @param quizId Quiz ID
      * @return Quiz entity
@@ -326,9 +350,25 @@ public class EnrollmentAccessService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
+        Account account = accountService.verifyCurrentAccount();
+
+        if (!account.getRole().equals(Role.TEACHER)) {
+            throw new UnauthorizedException("Only teachers can access this resource");
+        }
+
         Lesson lesson = quiz.getLesson();
-        Course course = getCourseFromLesson(lesson);
-        verifyTeacherCourseOwnership(course.getId());
+
+        if (lesson != null) {
+            // Quiz is linked to lesson - verify through course ownership
+            Course course = getCourseFromLesson(lesson);
+            verifyTeacherCourseOwnership(course.getId());
+        } else {
+            // Independent quiz - verify through createdBy
+            String currentUsername = accountService.getCurrentUserLogin();
+            if (quiz.getCreatedBy() == null || !quiz.getCreatedBy().equals(currentUsername)) {
+                throw new UnauthorizedException("You do not own this quiz");
+            }
+        }
 
         return quiz;
     }

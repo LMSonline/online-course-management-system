@@ -23,7 +23,7 @@ Table.displayName = 'Table';
 export const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
     ({ className = '', ...props }, ref) => {
         return (
-            <thead ref={ref} className={`[&_tr]:border-b ${className}`} {...props} />
+            <thead ref={ref} className={`[&_tr]:border-b dark:[&_tr]:border-slate-700 ${className}`} {...props} />
         );
     }
 );
@@ -45,7 +45,7 @@ export const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttribut
         return (
             <tr
                 ref={ref}
-                className={`border-b transition-colors hover:bg-gray-50 data-[state=selected]:bg-gray-100 ${className}`}
+                className={`border-b border-slate-200 dark:border-slate-700 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 data-[state=selected]:bg-slate-100 dark:data-[state=selected]:bg-slate-800 ${className}`}
                 {...props}
             />
         );
@@ -59,7 +59,7 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
         return (
             <th
                 ref={ref}
-                className={`h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0 ${className}`}
+                className={`h-12 px-4 text-left align-middle font-medium text-slate-500 dark:text-slate-400 [&:has([role=checkbox])]:pr-0 ${className}`}
                 {...props}
             />
         );
@@ -73,7 +73,7 @@ export const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttr
         return (
             <td
                 ref={ref}
-                className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 ${className}`}
+                className={`p-4 align-middle text-slate-900 dark:text-slate-100 [&:has([role=checkbox])]:pr-0 ${className}`}
                 {...props}
             />
         );
@@ -87,7 +87,7 @@ export const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLA
         return (
             <tfoot
                 ref={ref}
-                className={`bg-gray-900 font-medium text-white ${className}`}
+                className={`bg-slate-900 dark:bg-slate-50 font-medium text-white dark:text-slate-900 ${className}`}
                 {...props}
             />
         );
@@ -101,7 +101,7 @@ export const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTML
         return (
             <caption
                 ref={ref}
-                className={`mt-4 text-sm text-gray-500 ${className}`}
+                className={`mt-4 text-sm text-slate-500 dark:text-slate-400 ${className}`}
                 {...props}
             />
         );
@@ -110,4 +110,5 @@ export const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTML
 
 TableCaption.displayName = 'TableCaption';
 
+export { Table };
 export default Table;

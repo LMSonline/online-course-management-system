@@ -2,75 +2,91 @@
 // Assignment Types
 // ===========================
 
-export type AssignmentStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+/**
+ * Types of assignments in the LMS
+ * Backend: AssignmentType enum
+ */
+export type AssignmentType =
+  | "PRACTICE"
+  | "HOMEWORK"
+  | "PROJECT"
+  | "FINAL_REPORT";
 
+/**
+ * Request DTO for creating or updating an assignment
+ * Backend: AssignmentRequest
+ */
 export interface AssignmentRequest {
   title: string;
-  description?: string;
-  instructions?: string;
-  dueDate?: string; // ISO datetime string
-  maxScore?: number;
-  allowLateSubmission?: boolean;
-  status?: AssignmentStatus;
+  assignmentType: AssignmentType;
+  description?: string | null;
+  totalPoints?: number | null;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  dueDate?: string | null; // ISO 8601 Instant format: "2026-01-13T10:09:00Z"
 }
 
+/**
+ * Response DTO for assignment details
+ * Backend: AssignmentResponse
+ */
 export interface AssignmentResponse {
   id: number;
+  lessonId?: number | null;
+  assignmentType: AssignmentType;
   title: string;
-  description?: string;
-  instructions?: string;
-  lessonId: number;
-  lessonTitle?: string;
-  courseId?: number;
-  courseTitle?: string;
-  teacherId?: number;
-  teacherName?: string;
-  dueDate?: string;
-  maxScore?: number;
-  allowLateSubmission: boolean;
-  status: AssignmentStatus;
+  description?: string | null;
+  totalPoints?: number | null;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  dueDate?: string | null;
   createdAt: string;
   updatedAt: string;
-  totalSubmissions?: number;
-  gradedSubmissions?: number;
 }
 
 // ===========================
 // Submission Types
 // ===========================
 
-export type SubmissionStatus =
-  | "DRAFT"
-  | "SUBMITTED"
-  | "GRADED"
-  | "RETURNED"
-  | "LATE";
+/**
+ * Status of assignment submissions
+ * Backend: SubmissionStatus enum
+ */
+export type SubmissionStatus = "PENDING" | "GRADED" | "REJECTED";
 
+/**
+ * Response DTO for assignment submission details
+ * Backend: SubmissionResponse
+ */
 export interface SubmissionResponse {
   id: number;
   assignmentId: number;
-  assignmentTitle?: string;
   studentId: number;
-  studentName?: string;
-  studentCode?: string;
+  studentName?: string | null;
+  submittedAt: string;
+  content?: string | null;
+  score?: number | null;
+  gradedBy?: number | null;
+  gradedAt?: string | null;
+  feedback?: string | null;
+  attemptNumber: number;
   status: SubmissionStatus;
-  submittedAt?: string;
-  score?: number;
-  feedback?: string;
-  gradedAt?: string;
-  gradedBy?: number;
-  graderName?: string;
-  isLate: boolean;
-  createdAt: string;
-  updatedAt: string;
   files?: SubmissionFileResponse[];
 }
 
+/**
+ * Request DTO for grading a submission
+ * Backend: GradeSubmissionRequest
+ */
 export interface GradeSubmissionRequest {
-  score: number;
-  feedback?: string;
+  grade: number; // 0-10 scale
+  feedback?: string | null;
 }
 
+/**
+ * Request DTO for providing feedback on a submission
+ * Backend: FeedbackSubmissionRequest
+ */
 export interface FeedbackSubmissionRequest {
   feedback: string;
 }
@@ -79,57 +95,66 @@ export interface FeedbackSubmissionRequest {
 // Submission File Types
 // ===========================
 
+/**
+ * Response DTO for submission file
+ * Backend: SubmissionFileResponse
+ */
 export interface SubmissionFileResponse {
   id: number;
-  submissionId: number;
   fileName: string;
   fileUrl: string;
-  fileSize: number;
-  contentType?: string;
-  uploadedAt: string;
-}
-
-export interface UploadSubmissionFileRequest {
-  file: File;
 }
 
 // ===========================
 // Assignment Eligibility & Statistics Types
 // ===========================
 
+/**
+ * Response DTO for assignment eligibility check (for students)
+ * Backend: AssignmentEligibilityResponse
+ */
 export interface AssignmentEligibilityResponse {
-  eligible: boolean;
-  reason?: string;
-  dueDate?: string;
-  isLate?: boolean;
-  canSubmit?: boolean;
+  assignmentId: number;
+  assignmentTitle: string;
+  canSubmit: boolean;
+  currentAttempts: number;
+  maxAttempts?: number | null;
+  remainingAttempts?: number | null;
+  isPastDue: boolean;
+  reason?: string | null;
 }
 
+/**
+ * Response DTO for assignment statistics (for teachers)
+ * Backend: AssignmentStatisticsResponse
+ */
 export interface AssignmentStatisticsResponse {
   assignmentId: number;
   assignmentTitle: string;
   totalStudents: number;
   submittedCount: number;
   gradedCount: number;
-  averageScore?: number;
-  highestScore?: number;
-  lowestScore?: number;
-  onTimeSubmissions: number;
-  lateSubmissions: number;
+  pendingCount: number;
+  averageScore?: number | null;
+  highestScore?: number | null;
+  lowestScore?: number | null;
   submissionRate: number;
 }
 
-export interface StudentProgressResponse {
+/**
+ * Response DTO for student assignment progress
+ * Backend: StudentAssignmentProgressResponse
+ */
+export interface StudentAssignmentProgressResponse {
   assignmentId: number;
   assignmentTitle: string;
-  studentId: number;
-  studentName: string;
-  studentCode?: string;
-  status: SubmissionStatus;
-  submittedAt?: string;
-  score?: number;
-  maxScore?: number;
-  isLate: boolean;
-  feedback?: string;
-  filesCount?: number;
+  totalPoints?: number | null;
+  dueDate?: string | null;
+  hasSubmitted: boolean;
+  attemptCount: number;
+  latestSubmissionId?: number | null;
+  latestSubmissionStatus?: string | null;
+  latestScore?: number | null;
+  bestScore?: number | null;
+  isPassing?: boolean | null;
 }

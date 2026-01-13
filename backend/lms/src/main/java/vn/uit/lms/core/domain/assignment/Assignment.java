@@ -51,7 +51,7 @@ public class Assignment extends BaseEntity {
     @Column(name = "due_date")
     private Instant dueDate;
 
-    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Submission> submissions;
 
     /**
@@ -88,6 +88,9 @@ public class Assignment extends BaseEntity {
     public void validate() {
         if (title == null || title.isBlank()) {
             throw new IllegalStateException("Assignment title is required");
+        }
+        if (assignmentType == null) {
+            throw new IllegalStateException("Assignment type is required");
         }
         if (totalPoints != null && totalPoints < 0) {
             throw new IllegalStateException("Total points cannot be negative");

@@ -8,7 +8,6 @@ import vn.uit.lms.shared.entity.BaseEntity;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "chapters", indexes = {
         @Index(name = "idx_chapter_course_version", columnList = "course_version_id, order_index")

@@ -9,8 +9,14 @@ import Switch from "@/core/components/ui/Switch";
 import {
     AssignmentRequest,
     AssignmentResponse,
-    AssignmentStatus,
 } from "@/services/assignment/assignment.types";
+
+// Utility to convert datetime-local value to ISO 8601 Instant format
+const formatToInstant = (dateTimeLocal: string): string | undefined => {
+    if (!dateTimeLocal) return undefined;
+    const date = new Date(dateTimeLocal);
+    return date.toISOString();
+};
 
 interface AssignmentFormProps {
     initialData?: AssignmentResponse;
@@ -32,25 +38,26 @@ export function AssignmentForm({
         setValue,
         watch,
     } = useForm<AssignmentRequest>({
-        defaultValues: initialData || {
-            title: "",
-            description: "",
-            instructions: "",
-            dueDate: "",
-            maxScore: 100,
-            allowLateSubmission: false,
-            status: "DRAFT",
+        defaultValues: {
+            title: initialData?.title || "",
+            description: initialData?.description || "",
+            instructions: initialData?.instructions || "",
+            dueDate: initialData?.dueDate || "",
+            maxScore: initialData?.maxScore ?? 100,
+            allowLateSubmission: initialData?.allowLateSubmission ?? false,
         },
     });
 
     const allowLateSubmission = watch("allowLateSubmission");
-    const status = watch("status");
 
     const handleFormSubmit = (data: AssignmentRequest) => {
-        // Convert dueDate to ISO string if it exists
-        const payload = {
-            ...data,
-            dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+        const payload: AssignmentRequest = {
+            title: data.title,
+            description: data.description || undefined,
+            instructions: data.instructions || undefined,
+            dueDate: formatToInstant(data.dueDate || ""),
+            maxScore: data.maxScore || undefined,
+            allowLateSubmission: data.allowLateSubmission,
         };
         onSubmit(payload);
     };
@@ -147,23 +154,6 @@ export function AssignmentForm({
                         onCheckedChange={(checked) => setValue("allowLateSubmission", checked)}
                     />
                 </div>
-            </div>
-
-            {/* Status */}
-            <div className="space-y-2">
-                <Label>Status</Label>
-                <select
-                    value={status}
-                    onChange={(e) => setValue("status", e.target.value as AssignmentStatus)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="DRAFT">Draft</option>
-                    <option value="PUBLISHED">Published</option>
-                    <option value="ARCHIVED">Archived</option>
-                </select>
-                <p className="text-sm text-muted-foreground">
-                    Only published assignments are visible to students
-                </p>
             </div>
 
             {/* Form Actions */}
