@@ -23,7 +23,7 @@ export function AdminSidebar({ stats }: Props) {
         { id: "revenue", label: "Revenues", icon: BarChart3, href: "/admin/revenue-share" },
     { id: "violation_report", label: "Violation Report", icon: MessageSquare, href: "/admin/violation-report" },
     { id: "certificates", label: "Certificates", icon: Award, href: "/admin/certificate" },
-    { id: "reports", label: "Reports", icon: BarChart3, href: "/admin/reports" },
+    // { id: "reports", label: "Reports", icon: BarChart3, href: "/admin/reports" },
     { id: "settings", label: "Settings", icon: Settings, href: "/admin/settings" },
   ];
 
