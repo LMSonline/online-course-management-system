@@ -55,4 +55,25 @@ public class ApiResponse<T> {
         private String version;
     }
 
+    public static <T> ApiResponse<T> error(String code, String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .status(500)
+                .code(code)
+                .message(message)
+                .timestamp(Instant.now())
+                .build();
+    }
+
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .status(200)
+                .code("SUCCESS")
+                .message("OK")
+                .data(data)
+                .timestamp(Instant.now())
+                .build();
+    }
+
 }

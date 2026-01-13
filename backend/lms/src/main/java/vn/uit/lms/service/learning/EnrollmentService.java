@@ -23,6 +23,7 @@ import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.enrollment.CancelEnrollmentRequest;
 import vn.uit.lms.shared.dto.request.enrollment.EnrollCourseRequest;
 import vn.uit.lms.shared.dto.request.enrollment.UpdateScoreRequest;
+import vn.uit.lms.shared.dto.response.certificate.CertificateDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentStatsResponse;
@@ -47,6 +48,7 @@ public class EnrollmentService {
     private final CourseVersionRepository courseVersionRepository;
     private final EnrollmentMapper enrollmentMapper;
     private final AccountService accountService;
+    private final CertificateService certificateService;
 
     /**
      * Student enrolls in a FREE course
@@ -81,10 +83,12 @@ public class EnrollmentService {
      * 7. Save to database
      *
      * @param courseId The ID of the course to enroll in
-     * @param request Enrollment request (reserved for future use - e.g., referral codes, notes)
+     * @param request  Enrollment request (reserved for future use - e.g., referral
+     *                 codes, notes)
      * @return EnrollmentDetailResponse with enrollment details
      * @throws ResourceNotFoundException if student or course not found
-     * @throws InvalidRequestException if course is paid or student already enrolled
+     * @throws InvalidRequestException   if course is paid or student already
+     *                                   enrolled
      */
     @Transactional
     public EnrollmentDetailResponse enrollCourse(Long courseId, EnrollCourseRequest request) {
@@ -134,7 +138,8 @@ public class EnrollmentService {
 
     /**
      * Enroll student by ID (CALLED BY PAYMENT SYSTEM AFTER SUCCESSFUL PAYMENT)
-     * This method is invoked automatically when a payment transaction is completed successfully.
+     * This method is invoked automatically when a payment transaction is completed
+     * successfully.
      *
      * Business Logic:
      * - Creates enrollment for PAID courses after payment verification
@@ -143,8 +148,10 @@ public class EnrollmentService {
      * - Prevents duplicate enrollments
      * - Sets enrollment start and expiry dates
      *
-     * Important: This method assumes payment has been verified by the caller (PaymentService).
-     * It should NOT be called directly from controllers without payment verification.
+     * Important: This method assumes payment has been verified by the caller
+     * (PaymentService).
+     * It should NOT be called directly from controllers without payment
+     * verification.
      *
      * Preconditions:
      * - Student must exist in system
@@ -172,11 +179,12 @@ public class EnrollmentService {
      * - PaymentService.processPayment() after successful payment
      * - Admin enrollment creation (manual enrollment)
      *
-     * @param studentId The ID of the student to enroll
+     * @param studentId       The ID of the student to enroll
      * @param courseVersionId The ID of the course version to enroll in
      * @return EnrollmentDetailResponse with enrollment details
      * @throws ResourceNotFoundException if student or course version not found
-     * @throws InvalidRequestException if course version not published or student already enrolled
+     * @throws InvalidRequestException   if course version not published or student
+     *                                   already enrolled
      */
     @Transactional
     public EnrollmentDetailResponse enrollStudent(Long studentId, Long courseVersionId) {
@@ -251,8 +259,7 @@ public class EnrollmentService {
                 enrollmentPage.getTotalElements(),
                 enrollmentPage.getTotalPages(),
                 enrollmentPage.isFirst(),
-                enrollmentPage.isLast()
-        );
+                enrollmentPage.isLast());
     }
 
     /**
@@ -277,8 +284,7 @@ public class EnrollmentService {
                 enrollmentPage.getTotalElements(),
                 enrollmentPage.getTotalPages(),
                 enrollmentPage.isFirst(),
-                enrollmentPage.isLast()
-        );
+                enrollmentPage.isLast());
     }
 
     /**
@@ -321,17 +327,18 @@ public class EnrollmentService {
         // 3. Time since enrollment (check against refund window)
         // When Payment and Refund services are available:
         // if (enrollment.isEligibleForRefund()) {
-        //     Payment payment = paymentRepository.findByEnrollmentId(enrollmentId).orElse(null);
-        //     if (payment != null && payment.getStatus() == PaymentStatus.COMPLETED) {
-        //         RefundRequest refundRequest = RefundRequest.builder()
-        //             .payment(payment)
-        //             .enrollment(enrollment)
-        //             .reason(request.getReason())
-        //             .amount(payment.getAmount())
-        //             .build();
-        //         refundService.processRefund(refundRequest);
-        //         log.info("Initiated refund for enrollment {}", enrollmentId);
-        //     }
+        // Payment payment =
+        // paymentRepository.findByEnrollmentId(enrollmentId).orElse(null);
+        // if (payment != null && payment.getStatus() == PaymentStatus.COMPLETED) {
+        // RefundRequest refundRequest = RefundRequest.builder()
+        // .payment(payment)
+        // .enrollment(enrollment)
+        // .reason(request.getReason())
+        // .amount(payment.getAmount())
+        // .build();
+        // refundService.processRefund(refundRequest);
+        // log.info("Initiated refund for enrollment {}", enrollmentId);
+        // }
         // }
         log.warn("Refund processing pending - requires Payment and Refund services");
 
@@ -381,22 +388,20 @@ public class EnrollmentService {
         // Send notification to student - implementation pending
         // When NotificationService is available:
         // notificationService.sendStudentKickedNotification(
-        //     enrollment.getStudent().getAccount().getId(),
-        //     enrollment.getCourse().getTitle(),
-        //     request.getReason()
+        // enrollment.getStudent().getAccount().getId(),
+        // enrollment.getCourse().getTitle(),
+        // request.getReason()
         // );
         // emailService.sendKickedFromCourseEmail(
-        //     enrollment.getStudent().getAccount().getEmail(),
-        //     enrollment.getStudent().getFullName(),
-        //     enrollment.getCourse().getTitle(),
-        //     request.getReason()
+        // enrollment.getStudent().getAccount().getEmail(),
+        // enrollment.getStudent().getFullName(),
+        // enrollment.getCourse().getTitle(),
+        // request.getReason()
         // );
         log.warn("Student notification pending - requires NotificationService");
 
         return enrollmentMapper.toDetailResponse(enrollment);
     }
-
-
 
     /**
      * Update score after quiz/exam completion
@@ -442,21 +447,22 @@ public class EnrollmentService {
 
         // Check if eligible for certificate after score update
         if (enrollment.getStatus() == EnrollmentStatus.COMPLETED &&
-            enrollment.isEligibleForCertificate() &&
-            !enrollment.getCertificateIssued()) {
+                enrollment.isEligibleForCertificate() &&
+                !enrollment.getCertificateIssued()) {
             log.info("Enrollment {} is eligible for certificate after score update", enrollmentId);
 
             // Trigger automatic certificate issuance - implementation pending
             // When CertificateService integration is available:
-//             try {
-//                 CertificateDetailResponse certificate = certificateService.issueCertificate(enrollmentId);
-//                 log.info("Auto-issued certificate {} for enrollment {}",
-//                         certificate.getId(), enrollmentId);
-//             } catch (Exception e) {
-//                 log.error("Failed to auto-issue certificate for enrollment {}: {}",
-//                         enrollmentId, e.getMessage());
-//                 // Don't fail the score update if certificate issuance fails
-//             }
+            try {
+            CertificateDetailResponse certificate =
+            certificateService.issueCertificate(enrollmentId);
+            log.info("Auto-issued certificate {} for enrollment {}",
+            certificate.getId(), enrollmentId);
+            } catch (Exception e) {
+            log.error("Failed to auto-issue certificate for enrollment {}: {}",
+            enrollmentId, e.getMessage());
+            // Don't fail the score update if certificate issuance fails
+            }
             log.warn("Automatic certificate issuance pending - requires CertificateService integration");
         }
 
@@ -523,9 +529,6 @@ public class EnrollmentService {
                 .totalLessons(totalLessons)
                 .build();
 
-
-
-
     }
 
     /**
@@ -550,23 +553,23 @@ public class EnrollmentService {
 
         // Trigger certificate generation if eligible - implementation pending
         // When CertificateService integration is available:
-        // if (enrollment.isEligibleForCertificate() && !enrollment.getCertificateIssued()) {
-        //     try {
-        //         CertificateDetailResponse certificate = certificateService.issueCertificate(enrollmentId);
-        //         log.info("Auto-issued certificate {} for completed enrollment {}",
-        //                 certificate.getId(), enrollmentId);
-        //     } catch (Exception e) {
-        //         log.error("Failed to auto-issue certificate for enrollment {}: {}",
-        //                 enrollmentId, e.getMessage());
-        //         // Certificate can be issued manually later
-        //     }
-        // } else if (!enrollment.isEligibleForCertificate()) {
-        //     log.info("Enrollment {} completed but not eligible for certificate yet. " +
-        //             "Progress: {}%, Score: {}",
-        //             enrollmentId,
-        //             enrollment.getCompletionPercentage(),
-        //             enrollment.getAverageScore());
-        // }
+        if (enrollment.isEligibleForCertificate() && !enrollment.getCertificateIssued()) {
+            try {
+                CertificateDetailResponse certificate = certificateService.issueCertificate(enrollmentId);
+                log.info("Auto-issued certificate {} for completed enrollment {}",
+                        certificate.getId(), enrollmentId);
+            } catch (Exception e) {
+                log.error("Failed to auto-issue certificate for enrollment {}: {}",
+                        enrollmentId, e.getMessage());
+                // Certificate can be issued manually later
+            }
+        } else if (!enrollment.isEligibleForCertificate()) {
+            log.info("Enrollment {} completed but not eligible for certificate yet. " +
+                    "Progress: {}%, Score: {}",
+                    enrollmentId,
+                    enrollment.getCompletionPercentage(),
+                    enrollment.getAverageScore());
+        }
         log.warn("Automatic certificate generation pending - requires CertificateService integration");
 
         return enrollmentMapper.toDetailResponse(enrollment);
@@ -589,6 +592,7 @@ public class EnrollmentService {
 
     /**
      * Get currently authenticated student
+     * 
      * @throws ResourceNotFoundException if student not found
      */
     private Student getCurrentAuthenticatedStudent() {
@@ -599,8 +603,9 @@ public class EnrollmentService {
 
     /**
      * Validate course is available for enrollment
+     * 
      * @throws ResourceNotFoundException if course not found
-     * @throws InvalidRequestException if course is closed
+     * @throws InvalidRequestException   if course is closed
      */
     private Course validateCourseForEnrollment(Long courseId) {
         Course course = courseRepository.findById(courseId)
@@ -615,6 +620,7 @@ public class EnrollmentService {
 
     /**
      * Get published version of course
+     * 
      * @throws InvalidRequestException if no published version exists
      */
     private CourseVersion getPublishedVersion(Course course) {
@@ -628,6 +634,7 @@ public class EnrollmentService {
     /**
      * Check if student is already enrolled in course
      * Checks for active enrollments (ENROLLED status)
+     * 
      * @throws InvalidRequestException if already enrolled
      */
     private void checkNotAlreadyEnrolled(Long studentId, Long courseId) {
@@ -640,6 +647,7 @@ public class EnrollmentService {
     /**
      * Create and start enrollment
      * Sets status to ENROLLED and calculates expiry date
+     * 
      * @return Saved enrollment entity
      */
     private Enrollment createAndStartEnrollment(Student student, Course course, CourseVersion courseVersion) {
@@ -655,7 +663,7 @@ public class EnrollmentService {
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
         log.debug("Created enrollment {} for student {} in course {}",
-                 savedEnrollment.getId(), student.getId(), course.getId());
+                savedEnrollment.getId(), student.getId(), course.getId());
 
         return savedEnrollment;
     }
@@ -674,7 +682,7 @@ public class EnrollmentService {
      * - ADMIN: Can kick students from any course
      *
      * @param currentUser Currently authenticated user
-     * @param course Course to validate ownership for
+     * @param course      Course to validate ownership for
      * @throws UnauthorizedException if user doesn't have permission
      */
     private void validateTeacherOwnershipForKick(Account currentUser, Course course) {
@@ -688,7 +696,7 @@ public class EnrollmentService {
         // TEACHER can only kick from their own courses
         if (currentRole == Role.TEACHER) {
             if (course.getTeacher() == null ||
-                !course.getTeacher().getAccount().getId().equals(currentUser.getId())) {
+                    !course.getTeacher().getAccount().getId().equals(currentUser.getId())) {
                 throw new UnauthorizedException("You can only kick students from your own courses");
             }
             return;
@@ -725,4 +733,3 @@ public class EnrollmentService {
                 .build();
     }
 }
-

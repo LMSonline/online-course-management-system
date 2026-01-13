@@ -112,3 +112,23 @@ axiosClient.interceptors.response.use(
     );
   }
 );
+
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    //  Bypass for file download (blob)
+    if (
+      error.response?.request?.responseType === "blob" ||
+      error.config?.responseType === "blob"
+    ) {
+      return Promise.reject(error);
+    }
+
+    throw new AppError(
+      error.response?.data?.message || "Request failed",
+      error.response?.status || 500,
+      error.response?.data?.code || "UNKNOWN_ERROR"
+    );
+  }
+);

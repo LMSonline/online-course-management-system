@@ -1,4 +1,5 @@
 package vn.uit.lms.service.community.report;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +26,8 @@ import java.time.Instant;
 /**
  * ViolationReportService - Orchestrates violation report business logic
  *
- * This service acts as an orchestrator, delegating domain logic to the ViolationReport entity
+ * This service acts as an orchestrator, delegating domain logic to the
+ * ViolationReport entity
  * and coordinating with other services/repositories as needed.
  */
 @Service
@@ -117,8 +119,15 @@ public class ViolationReportService {
      */
     @Transactional(readOnly = true)
     public ViolationReportDetailResponse getById(Long id) {
+        Account me = accountService.verifyCurrentAccount();
+
         ViolationReport vr = vrRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
+
+        if (!me.isAdmin() && !vr.getReporter().getId().equals(me.getId())) {
+            throw new InvalidRequestException("You are not allowed to view this report");
+        }
+
         return ViolationReportMapper.toDetail(vr);
     }
 
