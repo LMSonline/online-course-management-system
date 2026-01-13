@@ -41,8 +41,6 @@ out/
 # Ignore all real config files
 application.yml
 application.properties
-application-*.yml
-application-*.properties
 !application.yml.example
 !application.properties.example
 
