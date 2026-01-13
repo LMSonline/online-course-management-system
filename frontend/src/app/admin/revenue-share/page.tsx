@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Percent, Plus, X } from "lucide-react";
 import {
-  useAdminRevenueShareConfigs,
+  useRevenueShareConfigs,
   useDeleteRevenueShareConfig,
   useDeactivateRevenueShareConfig,
 } from "@/hooks/admin/useRevenueShare";
@@ -24,15 +24,39 @@ export default function AdminRevenueSharePage() {
 
   const pageSize = 10;
 
-  const { data, isLoading, isError } = useAdminRevenueShareConfigs({
+  const { data, isLoading, isError } = useRevenueShareConfigs({
     isActive,
     categoryId: categoryId ? Number(categoryId) : undefined,
     page,
     size: pageSize,
   });
 
+  // Get ALL configs for stats (without filters)
+  const { data: allConfigsData } = useRevenueShareConfigs({
+    page: 0,
+    size: 1000, // Large number to get all
+  });
+
   const deleteMutation = useDeleteRevenueShareConfig();
   const deactivateMutation = useDeactivateRevenueShareConfig();
+
+  /* =====================
+   * Calculate Stats
+   * ===================== */
+  const stats = useMemo(() => {
+    const allConfigs = allConfigsData?.content ?? [];
+    const total = allConfigs.length;
+    const active = allConfigs.filter((c) => c.isActive).length;
+    const inactive = allConfigs.filter((c) => !c.isActive).length;
+    const categorySpecific = allConfigs.filter((c) => c.categoryId !== null && c.categoryId !== undefined).length;
+
+    return {
+      total,
+      active,
+      inactive,
+      categorySpecific,
+    };
+  }, [allConfigsData]);
 
   /* =====================
    * Modals
@@ -60,6 +84,17 @@ export default function AdminRevenueSharePage() {
 
   const handleEdit = (config: RevenueShareConfigResponse) => {
     setEditingConfig(config);
+  };
+
+  // Reset to page 0 when filters change
+  const handleIsActiveChange = (newIsActive: boolean | undefined) => {
+    setIsActive(newIsActive);
+    setPage(0);
+  };
+
+  const handleCategoryIdChange = (newCategoryId: string) => {
+    setCategoryId(newCategoryId);
+    setPage(0);
   };
 
   /* =====================
@@ -112,7 +147,7 @@ export default function AdminRevenueSharePage() {
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="px-6 py-3 bg-green-600 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all flex items-center gap-2"
+          className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-all flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Create Config
@@ -120,15 +155,44 @@ export default function AdminRevenueSharePage() {
       </div>
 
       {/* Stats Overview */}
-      <RevenueShareStats totalConfigs={data?.totalItems ?? 0} />
+      <RevenueShareStats 
+        totalConfigs={stats.total}
+        activeConfigs={stats.active}
+        inactiveConfigs={stats.inactive}
+        categoryConfigs={stats.categorySpecific}
+      />
 
       {/* Filters */}
       <RevenueShareFilters
         isActive={isActive}
         categoryId={categoryId}
-        onIsActiveChange={setIsActive}
-        onCategoryIdChange={setCategoryId}
+        onIsActiveChange={handleIsActiveChange}
+        onCategoryIdChange={handleCategoryIdChange}
       />
+
+      {/* Results Summary */}
+      {(isActive !== undefined || categoryId) && (
+        <div className="bg-[#1a2332] border border-gray-700 rounded-xl p-4">
+          <p className="text-gray-400 text-sm">
+            Found <span className="font-semibold text-white">{data?.totalItems ?? 0}</span>{" "}
+            {(data?.totalItems ?? 0) === 1 ? "configuration" : "configurations"}
+            {isActive !== undefined && (
+              <span>
+                {" "}
+                with status{" "}
+                <span className="text-emerald-400">{isActive ? "Active" : "Inactive"}</span>
+              </span>
+            )}
+            {categoryId && (
+              <span>
+                {" "}
+                for category{" "}
+                <span className="text-cyan-400">#{categoryId}</span>
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Table */}
       <RevenueShareTable
