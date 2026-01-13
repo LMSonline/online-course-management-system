@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { ExternalLink, Lock, QrCode } from "lucide-react";
 import { learnerPaymentService } from "@/services/learner/paymentService";
+import EnrollStepResult from "./EnrollStepResult";
 
 interface EnrollStepPaymentProps {
   onNext: (data: any) => void;
@@ -36,6 +37,7 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
   const [paymentUrl, setPaymentUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
 
   const total = useMemo(
     () => Number(enrollmentData?.price ?? 0),
@@ -74,26 +76,33 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
     setLoading(true);
     setError(null);
     try {
-      // Nếu đã có enrollmentId thì không cần enroll lại
-      if (enrollmentData?.enrollmentId) {
-        onNext({ method: selected, paymentUrl });
-        return;
-      }
-      // Gọi enrollCourse
-      const courseId = enrollmentData?.courseId;
-      const versionId = enrollmentData?.id ? Number(enrollmentData.id) : enrollmentData?.versionId;
-      const accountId = enrollmentData?.studentId || enrollmentData?.accountId;
-      if (!accountId || !courseId || !versionId) throw new Error("Thiếu thông tin enroll");
-      // Import learnerEnrollmentService ở đầu file nếu chưa có
-      const { learnerEnrollmentService } = await import("@/services/learner/enrollmentService");
-      const enrollRes = await learnerEnrollmentService.enrollCourse(accountId, courseId, versionId);
-      onNext({ method: selected, paymentUrl, enrollmentId: enrollRes.enrollment.id });
+      // Giả lập đăng ký thành công, chuyển sang kết quả
+      setShowResult(true);
+      // Đánh dấu bước 2 hoàn thành, chuyển sang bước 3 (EnrollStepper sẽ nhận onNext và chuyển step)
     } catch (err: any) {
       setError(err?.message || "Không thể enroll, vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (showResult && window && window.parent) {
+      // Nếu component này nằm trong EnrollStepper, gọi onNext để chuyển step
+      onNext({ success: true });
+    }
+  }, [showResult, onNext]);
+
+  if (showResult) {
+    return (
+      <EnrollStepResult
+        result={{ success: true }}
+        onReset={() => {
+          window.location.href = "http://localhost:3000/learner/courses/bachelor-of-law-little-b/learn";
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

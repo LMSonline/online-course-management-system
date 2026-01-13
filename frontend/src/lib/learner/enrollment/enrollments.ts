@@ -11,6 +11,7 @@ export interface Enrollment {
 
 export interface EnrollmentListResponse {
   enrollments: Enrollment[];
+  items?: any[]; // Cho phép lấy từ response backend thực tế
   totalItems?: number;
 }
 

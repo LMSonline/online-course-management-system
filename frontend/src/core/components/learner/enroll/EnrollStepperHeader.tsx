@@ -29,6 +29,8 @@ export default function EnrollStepperHeader({ step }: { step: EnrollStep }) {
                       ? "bg-emerald-500 text-white"
                       : active
                       ? "bg-[var(--brand-600)] text-white shadow-[0_0_18px_rgba(34,197,94,0.25)]"
+                      : idx < currentIndex
+                      ? "bg-emerald-500/30 text-emerald-300 border border-emerald-400"
                       : "bg-slate-800 text-slate-400"
                   }`}
                 >
@@ -39,7 +41,11 @@ export default function EnrollStepperHeader({ step }: { step: EnrollStep }) {
               <div className="min-w-0">
                 <div
                   className={`text-sm ${
-                    active ? "text-white font-semibold" : "text-slate-400"
+                    active
+                      ? "text-white font-semibold"
+                      : done
+                      ? "text-emerald-300 font-semibold"
+                      : "text-slate-400"
                   }`}
                 >
                   {s.label}

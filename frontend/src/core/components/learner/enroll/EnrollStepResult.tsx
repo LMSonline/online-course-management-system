@@ -34,7 +34,7 @@ const EnrollStepResult: React.FC<EnrollStepResultProps> = ({ result, onReset }) 
           onClick={onReset}
           className="w-full rounded-2xl bg-[var(--brand-600)] py-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
         >
-          {isSuccess ? "Go to course" : "Try again"}
+          Let's started
         </button>
 
         <div className="text-[11px] text-slate-500">

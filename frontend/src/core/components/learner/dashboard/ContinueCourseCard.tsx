@@ -3,18 +3,19 @@
 import { Play } from "lucide-react";
 import type { CourseProgress } from "@/lib/learner/progress/progress";
 
+
 export type ContinueCourseCardProps = {
     course: {
-        id: number;
+        id: string;
         title: string;
         slug: string;
-        progressPercent: number;
+        progress: number;
     };
 };
 
 export function ContinueCourseCard({ course }: ContinueCourseCardProps) {
     const href = `/learner/courses/${course.slug}`;
-    const percent = Math.min(100, Math.round(course.progressPercent));
+    const percent = Math.min(100, Math.round(course.progress));
 
     return (
         <div className="relative overflow-hidden rounded-2xl border border-[var(--brand-600)]/40 bg-gradient-to-br from-[var(--brand-600)]/20 via-slate-950 to-slate-950 px-4 py-4 md:px-5 md:py-5">

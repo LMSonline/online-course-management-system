@@ -28,7 +28,7 @@ export type CourseDetail = {
     avatarUrl?: string;
     about: string;
   };
-  thumbnailUrl?: string;
+  thumbnail_Url?: string;
 };
 
 export const MOCK_COURSE: CourseDetail = {

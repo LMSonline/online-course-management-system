@@ -12,11 +12,11 @@ import {
   Menu,
   X,
   Sun,
-  Moon, // thêm icon
+  Moon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; // ⬅️ thêm
+import { LearnerProfileMenu } from "@/core/components/learner/navbar/LearnerProfileMenu"; 
 import { useAssistantStore } from "@/core/components/public/store";
 import { CartQueue } from "@/core/components/learner/cart/CartQueue";
 
@@ -93,7 +93,6 @@ export default function LearnerNavbar() {
   return (
     <header className="navbar">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4 text-body">
-        {/* LEFT: logo + Explore */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <button
             aria-label="Menu"
@@ -123,7 +122,6 @@ export default function LearnerNavbar() {
           />
         </div>
 
-        {/* CENTER: big search bar giống Udemy */}
         <div className="flex-1 max-w-[960px]">
           <div className="searchbar">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 input-icon" size={18} />
@@ -137,7 +135,6 @@ export default function LearnerNavbar() {
           </div>
         </div>
 
-        {/* RIGHT: business + instructor + my learning + icons + avatar */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link href="/business" className="hidden xl:block nav-link">
             LMS Business
@@ -149,7 +146,7 @@ export default function LearnerNavbar() {
             My learning
           </Link>
 
-          {/* Wishlist */}
+
           <button
             className="btn-icon hidden sm:inline-flex"
             aria-label="Wishlist"
@@ -157,7 +154,6 @@ export default function LearnerNavbar() {
             <Heart size={18} />
           </button>
 
-          {/* Cart */}
           <div className="relative">
             <button
               className="btn-icon hidden sm:inline-flex"
@@ -173,12 +169,12 @@ export default function LearnerNavbar() {
             )}
           </div>
 
-          {/* Notifications */}
+    
           <button className="btn-icon hidden sm:inline-flex" aria-label="Notifications">
             <Bell size={18} />
           </button>
 
-          {/* AI Tutor button – thay cho nút chọn ngôn ngữ */}
+
           <button
             onClick={openPopup}
             aria-label="Open AI study assistant"
@@ -190,7 +186,6 @@ export default function LearnerNavbar() {
             <Bot className="w-5 h-5" />
           </button>
 
-          {/* Theme toggle button */}
           <button
             aria-label="Toggle theme"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 
@@ -206,7 +201,6 @@ export default function LearnerNavbar() {
             )}
           </button>
 
-          {/* Avatar learner – hiện để static, sau bind user data */}
           <div className="relative" ref={profileRef}>
             <button
               className="h-9 w-9 rounded-full bg-slate-900 text-xs font-semibold text-white 
@@ -214,7 +208,7 @@ export default function LearnerNavbar() {
               aria-label="Profile"
               onClick={() => setProfileOpen((v) => !v)}
             >
-              TD
+              U
             </button>
 
             {profileOpen && <LearnerProfileMenu onClose={() => setProfileOpen(false)} />}
@@ -222,7 +216,7 @@ export default function LearnerNavbar() {
         </div>
       </div>
 
-      {/* MOBILE DRAWER */}
+
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden transition",
@@ -263,7 +257,6 @@ export default function LearnerNavbar() {
             </button>
           </div>
 
-          {/* Mobile search */}
           <div className="searchbar mt-1">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 input-icon"
@@ -281,7 +274,6 @@ export default function LearnerNavbar() {
             />
           </div>
 
-          {/* Quick links */}
           <div className="flex flex-col gap-1 mt-2">
             <NavItem href="/explore" label="Explore" />
             <NavItem href="/my-learning" label="My learning" />

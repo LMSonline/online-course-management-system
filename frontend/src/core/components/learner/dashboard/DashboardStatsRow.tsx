@@ -3,12 +3,13 @@
 import { WeeklyStreakCard } from "./WeeklyStreakCard";
 import { LearningTimeCard } from "./LearningTimeCard";
 import { ContinueCourseCard } from "./ContinueCourseCard";
-import { useStudentCoursesWithProgress } from "@/hooks/learner/useCourse";
+import { useEnrollments } from "@/hooks/learner/useEnrollment";
 
 export function DashboardStatsRow() {
-  // Lấy danh sách khoá học của student từ hệ thống
-  const { data: courses, isLoading } = useStudentCoursesWithProgress();
-  const continueCourse = courses?.find((c: { progressPercent: number }) => c.progressPercent < 100);
+  // Lấy danh sách khoá học đã đăng ký của student từ hệ thống
+  const { courses, isLoading } = useEnrollments(1, 100);
+  // Tìm khoá học chưa hoàn thành (progress < 100)
+  const continueCourse = courses.find((c) => (c.progress ?? 0) < 100);
 
   return (
     <div className="grid gap-4 md:gap-5 md:grid-cols-3 mb-6 md:mb-8">
