@@ -51,7 +51,7 @@ public class Assignment extends BaseEntity {
     @Column(name = "due_date")
     private Instant dueDate;
 
-    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Submission> submissions;
 
     /**

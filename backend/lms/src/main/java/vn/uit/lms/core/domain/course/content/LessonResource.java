@@ -5,6 +5,17 @@ import lombok.*;
 import vn.uit.lms.shared.constant.ResourceType;
 import vn.uit.lms.shared.entity.BaseEntity;
 
+/**
+ * LessonResource Entity
+ *
+ * Relationship Type: COMPOSITION
+ * - Parent: Lesson (owns LessonResource)
+ * - When Lesson is deleted → LessonResource is deleted
+ * - LessonResource cannot exist without Lesson
+ *
+ * Referenced:
+ * - FileStorage: ASSOCIATION (FileStorage exists independently, NO CASCADE)
+ */
 @Entity
 @Table(name = "lesson_resources", indexes = {
         @Index(name = "idx_resource_lesson", columnList = "lesson_id"),
@@ -21,6 +32,7 @@ public class LessonResource extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // COMPOSITION: LessonResource belongs to Lesson
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id", nullable = false)
     private Lesson lesson;
@@ -35,6 +47,7 @@ public class LessonResource extends BaseEntity {
     @Column(name = "description", length = 2048)
     private String description;
 
+    // ASSOCIATION: FileStorage exists independently
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_storage_id")
     private FileStorage fileStorage;

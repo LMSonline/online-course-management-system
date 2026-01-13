@@ -9,6 +9,7 @@ import vn.uit.lms.shared.entity.BaseEntity;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Entity
 @Table(name = "lessons", indexes = {
         @Index(name = "idx_lesson_chapter", columnList = "chapter_id, order_index"),
