@@ -195,23 +195,26 @@ public class FakeDataInitializer implements CommandLineRunner {
             return;
         }
 
-        logger.info("======== Starting Fake Data Initialization ========");
+        logger.info("======== Starting Comprehensive Fake Data Initialization ========");
+        logger.info("Creating demo data with rich datasets for student0 and teacher0...");
 
         // 1. Create base data (Safe from Duplicate Key Errors)
         List<Category> categories = createCategories();
         List<Tag> tags = createTags();
 
-        // 2. Create accounts and profiles
-        List<Student> students = createStudents(30);
-        List<Teacher> teachers = createTeachers(10);
+        // 2. Create accounts and profiles - student0 and teacher0 will be created first
+        List<Student> students = createStudents(50); // Increased from 30 to 50
+        List<Teacher> teachers = createTeachers(15); // Increased from 10 to 15
 
         // 3. Create revenue share config
         createRevenueShareConfig();
 
         // 4. Create courses with full content
+        // teacher0 will have the most courses
         List<Course> courses = createCoursesWithContent(teachers, categories, tags);
 
         // 5. Create enrollments and progress
+        // student0 will have the most enrollments
         createEnrollmentsAndProgress(students, courses);
 
         // 6. Create payments
@@ -225,7 +228,14 @@ public class FakeDataInitializer implements CommandLineRunner {
         createNotifications(students, teachers);
         createViolationReports(students, courses);
 
+        // 9. Enrich student0 and teacher0 with additional data
+        enrichStudent0(students.get(0), courses);
+        enrichTeacher0(teachers.get(0), students, courses);
+
         logger.info("======== Fake Data Initialization Completed ========");
+        logger.info("Special accounts with rich data:");
+        logger.info("  - student0@lms.com / password123 (richest student data)");
+        logger.info("  - teacher0@lms.com / password123 (richest teacher data)");
     }
 
     // ==========================================
@@ -411,9 +421,11 @@ public class FakeDataInitializer implements CommandLineRunner {
 
         if (teachers.isEmpty()) return courses; // Guard
 
-        for (Teacher teacher : teachers) {
-            // Each teacher creates 2-4 courses
-            int courseCount = faker.random().nextInt(2, 5);
+        for (int t = 0; t < teachers.size(); t++) {
+            Teacher teacher = teachers.get(t);
+
+            // teacher0 gets MORE courses (8-12), others get 2-4
+            int courseCount = (t == 0) ? faker.random().nextInt(10, 15) : faker.random().nextInt(2, 5);
 
             for (int c = 0; c < courseCount; c++) {
                 Course course = createCourse(teacher, categories, tags);
@@ -665,9 +677,12 @@ public class FakeDataInitializer implements CommandLineRunner {
     private void createEnrollmentsAndProgress(List<Student> students, List<Course> courses) {
         logger.info("Creating enrollments and progress...");
 
-        for (Student student : students) {
-            // Each student enrolls in 2-5 courses
-            int enrollCount = faker.random().nextInt(2, 6);
+        for (int s = 0; s < students.size(); s++) {
+            Student student = students.get(s);
+
+            // student0 enrolls in MORE courses (15-20), others enroll in 2-5
+            int enrollCount = (s == 0) ? faker.random().nextInt(20, 30) : faker.random().nextInt(2, 6);
+
             Collections.shuffle(courses);
 
             for (int i = 0; i < Math.min(enrollCount, courses.size()); i++) {
@@ -697,8 +712,10 @@ public class FakeDataInitializer implements CommandLineRunner {
                 // Create submissions
                 createSubmissions(student, courseVersion);
 
-                // Maybe complete the course
-                if (faker.random().nextInt(10) > 7) {
+                // student0 has higher completion rate (80%), others have 30%
+                boolean shouldComplete = (s == 0) ? faker.random().nextInt(10) > 2 : faker.random().nextInt(10) > 7;
+
+                if (shouldComplete) {
                     enrollment.setStatus(EnrollmentStatus.COMPLETED);
                     enrollment.setEndAt(Instant.now().minus(faker.random().nextInt(1, 30), ChronoUnit.DAYS));
                     enrollmentRepository.save(enrollment);
@@ -707,8 +724,10 @@ public class FakeDataInitializer implements CommandLineRunner {
                     createCertificate(student, course, courseVersion);
                 }
 
-                // Create review
-                if (faker.random().nextInt(10) > 5) {
+                // student0 reviews more courses (90%), others review 50%
+                boolean shouldReview = (s == 0) ? faker.random().nextInt(10) > 1 : faker.random().nextInt(10) > 5;
+
+                if (shouldReview) {
                     createReview(student, course);
                 }
             }
@@ -1114,7 +1133,273 @@ public class FakeDataInitializer implements CommandLineRunner {
             default -> faker.lorem().paragraph(2);
         };
     }
+
+    /**
+     * Enrich student0 with maximum data for demonstration purposes
+     */
+    private void enrichStudent0(Student student0, List<Course> courses) {
+        logger.info("Enriching student0 with additional rich data...");
+
+        Account account0 = student0.getAccount();
+
+        // Add more detailed profile information
+        student0.setFullName("Nguyễn Văn An - Học viên Demo");
+        student0.setBio("Tôi là một học viên tích cực, đam mê học tập và phát triển bản thân. " +
+                "Tôi đã hoàn thành nhiều khóa học và luôn sẵn sàng chia sẻ kiến thức với cộng đồng. " +
+                "Mục tiêu của tôi là trở thành một chuyên gia trong lĩnh vực công nghệ thông tin.");
+        student0.setPhone("0901234567");
+        studentRepository.save(student0);
+
+        // Add extensive comments and Q&A across multiple courses
+        int additionalComments = 30;
+        for (int i = 0; i < additionalComments && i < courses.size(); i++) {
+            Course course = courses.get(i);
+
+            // Add course-level questions
+            for (int q = 0; q < 3; q++) {
+                Comment question = new Comment();
+                question.setUser(account0);
+                question.setCourse(course);
+                question.setContent(generateDetailedQuestion());
+                question.setUpvotes(faker.random().nextInt(5, 25));
+                question.setIsPublic(true);
+                commentRepository.save(question);
+            }
+
+            // Add lesson-level comments
+            List<CourseVersion> versions = course.getVersions();
+            if (versions != null && !versions.isEmpty()) {
+                CourseVersion version = versions.get(0);
+                List<Chapter> chapters = chapterRepository.findAllByCourseVersionOrderByOrderIndexAsc(version);
+
+                for (Chapter chapter : chapters) {
+                    List<Lesson> lessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+                    if (!lessons.isEmpty()) {
+                        Lesson lesson = lessons.get(0);
+
+                        Comment lessonComment = new Comment();
+                        lessonComment.setUser(account0);
+                        lessonComment.setLesson(lesson);
+                        lessonComment.setContent("Bài học này rất hay! " + faker.lorem().paragraph());
+                        lessonComment.setUpvotes(faker.random().nextInt(3, 15));
+                        lessonComment.setIsPublic(true);
+                        commentRepository.save(lessonComment);
+                    }
+                }
+            }
+        }
+
+        // Add more notifications for student0
+        String[] studentNotificationTypes = {
+            "COURSE_UPDATE", "ASSIGNMENT_GRADE", "COMMENT_REPLY",
+            "NEW_LESSON", "CERTIFICATE_ISSUED", "COURSE_COMPLETED",
+            "QUIZ_RESULT", "ENROLLMENT_SUCCESS", "PAYMENT_SUCCESS"
+        };
+
+        for (int i = 0; i < 25; i++) {
+            Notification notification = new Notification();
+            notification.setRecipient(account0);
+            String type = studentNotificationTypes[faker.random().nextInt(studentNotificationTypes.length)];
+            notification.setType(type);
+            notification.setTitle(generateStudentNotificationTitle(type));
+            notification.setContent(faker.lorem().paragraph(2));
+            notification.setIsRead(faker.random().nextInt(10) > 3); // 70% read
+
+            if (notification.getIsRead()) {
+                notification.setDeliveredAt(Instant.now().minus(faker.random().nextInt(1, 15), ChronoUnit.DAYS));
+            }
+
+            notificationRepository.save(notification);
+        }
+
+        logger.info("Student0 enrichment completed - now has richest dataset");
+    }
+
+    /**
+     * Enrich teacher0 with maximum data for demonstration purposes
+     */
+    private void enrichTeacher0(Teacher teacher0, List<Student> students, List<Course> courses) {
+        logger.info("Enriching teacher0 with additional rich data...");
+
+        Account account0 = teacher0.getAccount();
+
+        // Add more detailed profile information
+        teacher0.setFullName("TS. Trần Thị Hương - Giảng viên Demo");
+        teacher0.setBio("Tôi là giảng viên có hơn 10 năm kinh nghiệm trong lĩnh vực giáo dục và công nghệ. " +
+                "Tôi đã đào tạo hơn 10,000 học viên và tạo ra nhiều khóa học chất lượng cao. " +
+                "Chuyên môn của tôi bao gồm lập trình web, khoa học dữ liệu, và trí tuệ nhân tạo. " +
+                "Tôi luôn cập nhật kiến thức mới và chia sẻ kinh nghiệm thực tế với học viên.");
+        teacher0.setPhone("0912345678");
+        teacher0.setDegree("Tiến sĩ Khoa học Máy tính");
+        teacher0.setSpecialty("Lập trình Web, AI, Machine Learning, Data Science");
+        teacherRepository.save(teacher0);
+
+        // Get all courses by teacher0
+        List<Course> teacher0Courses = courses.stream()
+                .filter(c -> c.getTeacher().getId().equals(teacher0.getId()))
+                .toList();
+
+        // Add extensive replies to student comments in teacher0's courses
+        for (Course course : teacher0Courses) {
+            List<Comment> courseComments = commentRepository.findByCourseIdAndParentIsNullAndDeletedAtIsNull(course.getId());
+
+            for (Comment studentComment : courseComments) {
+                // Teacher0 replies to most comments (90%)
+                if (faker.random().nextInt(10) > 1) {
+                    Comment reply = new Comment();
+                    reply.setUser(account0);
+                    reply.setParent(studentComment);
+                    reply.setCourse(course);
+                    reply.setLesson(studentComment.getLesson());
+                    reply.setContent(generateDetailedAnswer());
+                    reply.setUpvotes(faker.random().nextInt(5, 30));
+                    reply.setIsPublic(true);
+                    commentRepository.save(reply);
+                }
+            }
+        }
+
+        // Grade more assignments for teacher0's courses
+        for (Course course : teacher0Courses) {
+            List<CourseVersion> versions = course.getVersions();
+            if (versions != null && !versions.isEmpty()) {
+                CourseVersion version = versions.get(0);
+                List<Chapter> chapters = chapterRepository.findAllByCourseVersionOrderByOrderIndexAsc(version);
+
+                for (Chapter chapter : chapters) {
+                    List<Lesson> lessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+
+                    for (Lesson lesson : lessons) {
+                        List<Assignment> assignments = assignmentRepository.findByLessonId(lesson.getId());
+
+                        for (Assignment assignment : assignments) {
+                            List<Submission> submissions = submissionRepository.findByAssignmentId(assignment.getId());
+
+                            for (Submission submission : submissions) {
+                                // Grade all ungraded submissions
+                                if (submission.getScore() == null) {
+                                    submission.setScore((double) faker.random().nextInt(70, 100));
+                                    submission.setFeedback(generateDetailedFeedback());
+                                    submission.setGradedAt(Instant.now().minus(faker.random().nextInt(1, 7), ChronoUnit.DAYS));
+                                    submissionRepository.save(submission);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add more notifications for teacher0
+        String[] teacherNotificationTypes = {
+            "NEW_ENROLLMENT", "NEW_COMMENT", "NEW_SUBMISSION",
+            "NEW_REVIEW", "COURSE_APPROVED", "PAYOUT_COMPLETED",
+            "STUDENT_COMPLETED", "HIGH_RATING", "MILESTONE_REACHED"
+        };
+
+        for (int i = 0; i < 30; i++) {
+            Notification notification = new Notification();
+            notification.setRecipient(account0);
+            String type = teacherNotificationTypes[faker.random().nextInt(teacherNotificationTypes.length)];
+            notification.setType(type);
+            notification.setTitle(generateTeacherNotificationTitle(type));
+            notification.setContent(faker.lorem().paragraph(2));
+            notification.setIsRead(faker.random().nextInt(10) > 4); // 60% read
+
+            if (notification.getIsRead()) {
+                notification.setDeliveredAt(Instant.now().minus(faker.random().nextInt(1, 20), ChronoUnit.DAYS));
+            }
+
+            notificationRepository.save(notification);
+        }
+
+        // Add interaction with students (teacher0 views student progress more frequently)
+        logger.info("Teacher0 enrichment completed - now has richest dataset with {} courses", teacher0Courses.size());
+    }
+
+    private String generateDetailedQuestion() {
+        String[] questionTemplates = {
+            "Thầy ơi, em có thắc mắc về phần %s. Cụ thể là %s. Em đã thử %s nhưng vẫn chưa hiểu rõ. Thầy có thể giải thích chi tiết hơn được không ạ?",
+            "Cho em hỏi về %s. Em đang làm bài tập và gặp vấn đề %s. Em đã tham khảo %s nhưng vẫn chưa giải quyết được. Mong thầy hướng dẫn ạ.",
+            "Thầy có thể giải thích thêm về %s không ạ? Em thấy phần này khá khó hiểu, đặc biệt là %s. Em cần thêm ví dụ về %s để hiểu rõ hơn ạ.",
+            "Em có câu hỏi về %s. Khi em áp dụng vào thực tế thì %s. Vậy %s có đúng không ạ? Mong thầy giải đáp giúp em.",
+            "Thầy ơi, em muốn tìm hiểu sâu hơn về %s. Em đã nghiên cứu %s và nhận thấy %s. Thầy có thể gợi ý thêm tài liệu không ạ?"
+        };
+
+        String template = questionTemplates[faker.random().nextInt(questionTemplates.length)];
+        return String.format(template,
+            faker.programmingLanguage().name(),
+            faker.lorem().sentence(8),
+            faker.lorem().sentence(6)
+        );
+    }
+
+    private String generateDetailedAnswer() {
+        String[] answerTemplates = {
+            "Chào bạn! Cảm ơn câu hỏi rất hay của bạn. %s\n\nCụ thể hơn, %s\n\nVí dụ: %s\n\nHy vọng giải đáp được thắc mắc của bạn. Nếu còn thắc mắc gì, cứ hỏi thầy nhé!",
+            "Câu hỏi của bạn rất thú vị! %s\n\nĐể hiểu rõ hơn, bạn cần nắm vững: %s\n\nBạn có thể tham khảo thêm: %s\n\nChúc bạn học tốt!",
+            "Đây là một vấn đề quan trọng mà nhiều bạn thắc mắc. %s\n\nThầy giải thích chi tiết như sau: %s\n\nLưu ý: %s",
+            "Cảm ơn bạn đã đặt câu hỏi. %s\n\nTrong thực tế, %s\n\nThầy khuyên bạn nên: %s\n\nChúc bạn thành công!"
+        };
+
+        String template = answerTemplates[faker.random().nextInt(answerTemplates.length)];
+        return String.format(template,
+            faker.lorem().paragraph(2),
+            faker.lorem().paragraph(2),
+            faker.lorem().paragraph(1)
+        );
+    }
+
+    private String generateDetailedFeedback() {
+        int score = faker.random().nextInt(70, 100);
+        String feedback = "**Đánh giá bài làm**\n\n";
+
+        feedback += "**Điểm mạnh:**\n";
+        feedback += "- " + faker.lorem().sentence(10) + "\n";
+        feedback += "- " + faker.lorem().sentence(12) + "\n";
+        feedback += "- " + faker.lorem().sentence(8) + "\n\n";
+
+        if (score < 90) {
+            feedback += "**Cần cải thiện:**\n";
+            feedback += "- " + faker.lorem().sentence(10) + "\n";
+            feedback += "- " + faker.lorem().sentence(8) + "\n\n";
+        }
+
+        feedback += "**Nhận xét chung:**\n";
+        feedback += faker.lorem().paragraph(3) + "\n\n";
+        feedback += "**Gợi ý:**\n";
+        feedback += faker.lorem().paragraph(2);
+
+        return feedback;
+    }
+
+    private String generateStudentNotificationTitle(String type) {
+        return switch (type) {
+            case "COURSE_UPDATE" -> "Khóa học đã được cập nhật nội dung mới";
+            case "ASSIGNMENT_GRADE" -> "Bài tập của bạn đã được chấm điểm";
+            case "COMMENT_REPLY" -> "Giảng viên đã trả lời câu hỏi của bạn";
+            case "NEW_LESSON" -> "Bài học mới đã được thêm vào khóa học";
+            case "CERTIFICATE_ISSUED" -> "Chứng chỉ hoàn thành khóa học của bạn đã sẵn sàng";
+            case "COURSE_COMPLETED" -> "Chúc mừng! Bạn đã hoàn thành khóa học";
+            case "QUIZ_RESULT" -> "Kết quả bài kiểm tra của bạn";
+            case "ENROLLMENT_SUCCESS" -> "Đăng ký khóa học thành công";
+            case "PAYMENT_SUCCESS" -> "Thanh toán thành công";
+            default -> "Thông báo mới";
+        };
+    }
+
+    private String generateTeacherNotificationTitle(String type) {
+        return switch (type) {
+            case "NEW_ENROLLMENT" -> "Có học viên mới đăng ký khóa học của bạn";
+            case "NEW_COMMENT" -> "Học viên đã đặt câu hỏi trong khóa học";
+            case "NEW_SUBMISSION" -> "Học viên đã nộp bài tập";
+            case "NEW_REVIEW" -> "Khóa học của bạn nhận được đánh giá mới";
+            case "COURSE_APPROVED" -> "Khóa học đã được phê duyệt và xuất bản";
+            case "PAYOUT_COMPLETED" -> "Thanh toán doanh thu đã được xử lý";
+            case "STUDENT_COMPLETED" -> "Học viên đã hoàn thành khóa học";
+            case "HIGH_RATING" -> "Khóa học nhận được đánh giá 5 sao";
+            case "MILESTONE_REACHED" -> "Chúc mừng! Khóa học đạt mốc quan trọng";
+            default -> "Thông báo mới";
+        };
+    }
 }
-
-
-

@@ -49,6 +49,16 @@ export interface ResendVerifyEmailRequest {
 }
 
 //Response
+export interface StudentProfile {
+  studentId: number;
+  studentCode: string;
+  fullName: string;
+  phone?: string | null;
+  birthDate?: string | null;
+  bio?: string | null;
+  gender?: string | null;
+}
+
 export interface MeUser {
   accountId: number;
   username: string;

@@ -209,7 +209,7 @@ export interface CourseVersionResponse {
 //   teacherId: number;
 //   teacherName: string;
 
-//   pendingVersionCount: number; // ⭐
+//   pendingVersionCount: number; // 
 // }
 
 // Course Review
