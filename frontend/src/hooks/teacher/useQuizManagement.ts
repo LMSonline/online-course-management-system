@@ -25,7 +25,7 @@ export function useQuizzesByLesson(lessonId: number | null) {
 }
 
 /**
- * Hook để lấy chi tiết một quiz
+ * Hook để lấy chi tiết một quiz (bao gồm cả questions)
  */
 export function useQuizById(quizId: number | null) {
   return useQuery({
@@ -34,20 +34,6 @@ export function useQuizById(quizId: number | null) {
       quizId
         ? assessmentService.getQuizById(quizId)
         : Promise.reject("No quiz ID"),
-    enabled: !!quizId,
-  });
-}
-
-/**
- * Hook để lấy danh sách câu hỏi của quiz
- */
-export function useQuizQuestions(quizId: number | null) {
-  return useQuery({
-    queryKey: ["quiz", quizId, "questions"],
-    queryFn: () =>
-      quizId
-        ? assessmentService.getQuizQuestions(quizId)
-        : Promise.resolve([]),
     enabled: !!quizId,
   });
 }
@@ -123,6 +109,7 @@ export function useAddQuestionsToQuiz(quizId: number) {
     mutationFn: (payload: AddQuestionsRequest) =>
       assessmentService.addQuestionsToQuiz(quizId, payload),
     onSuccess: () => {
+      // Invalidate quiz details to refetch with updated questions
       queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
       toast.success("Questions added to quiz successfully");
     },
@@ -142,6 +129,7 @@ export function useRemoveQuestionFromQuiz(quizId: number) {
     mutationFn: (questionId: number) =>
       assessmentService.removeQuestionFromQuiz(quizId, questionId),
     onSuccess: () => {
+      // Invalidate quiz details to refetch with updated questions
       queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
       toast.success("Question removed from quiz");
     },
@@ -247,6 +235,7 @@ export function useAddQuestionsFromBank(quizId: number) {
       count?: number;
     }) => assessmentService.addQuestionsFromBank(quizId, questionBankId, count),
     onSuccess: () => {
+      // Invalidate quiz details to refetch with updated questions
       queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
       toast.success("Questions added from bank successfully");
     },
@@ -265,6 +254,7 @@ export function useRemoveAllQuestions(quizId: number) {
   return useMutation({
     mutationFn: () => assessmentService.removeAllQuestions(quizId),
     onSuccess: () => {
+      // Invalidate quiz details to refetch with updated questions
       queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
       toast.success("All questions removed");
     },
@@ -284,6 +274,7 @@ export function useReorderQuestions(quizId: number) {
     mutationFn: (questionIdsInOrder: number[]) =>
       assessmentService.reorderQuestions(quizId, questionIdsInOrder),
     onSuccess: () => {
+      // Invalidate quiz details to refetch with updated questions
       queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
       toast.success("Questions reordered");
     },
@@ -374,7 +365,9 @@ export function useLinkQuiz(lessonId: number) {
     mutationFn: (quizId: number) =>
       assessmentService.linkQuizToLesson(lessonId, quizId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes", "lesson", lessonId] });
+      queryClient.invalidateQueries({
+        queryKey: ["quizzes", "lesson", lessonId],
+      });
       queryClient.invalidateQueries({ queryKey: ["quizzes", "independent"] });
       toast.success("Quiz linked to lesson successfully");
     },
@@ -394,7 +387,9 @@ export function useUnlinkQuiz(lessonId: number) {
     mutationFn: (quizId: number) =>
       assessmentService.unlinkQuizFromLesson(lessonId, quizId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quizzes", "lesson", lessonId] });
+      queryClient.invalidateQueries({
+        queryKey: ["quizzes", "lesson", lessonId],
+      });
       queryClient.invalidateQueries({ queryKey: ["quizzes", "independent"] });
       toast.success("Quiz unlinked from lesson");
     },
@@ -403,4 +398,3 @@ export function useUnlinkQuiz(lessonId: number) {
     },
   });
 }
-
