@@ -89,6 +89,9 @@ public class Assignment extends BaseEntity {
         if (title == null || title.isBlank()) {
             throw new IllegalStateException("Assignment title is required");
         }
+        if (assignmentType == null) {
+            throw new IllegalStateException("Assignment type is required");
+        }
         if (totalPoints != null && totalPoints < 0) {
             throw new IllegalStateException("Total points cannot be negative");
         }

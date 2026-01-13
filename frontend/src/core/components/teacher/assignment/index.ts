@@ -1,2 +1,10 @@
+export { AssignmentCard } from "./AssignmentCard";
 export { AssignmentForm } from "./AssignmentForm";
+export { CreateAssignmentDialog } from "./CreateAssignmentDialog";
+export { DeleteAssignmentDialog } from "./DeleteAssignmentDialog";
+export { AssignmentSettingsTab } from "./AssignmentSettingsTab";
+export { SubmissionsTab } from "./SubmissionsTab";
+export { GradingModal } from "./GradingModal";
+export { BulkGradeModal } from "./BulkGradeModal";
+export { LessonAssignmentManager } from "./LessonAssignmentManager";
 export { LessonAssignmentManagement } from "./LessonAssignmentManagement";

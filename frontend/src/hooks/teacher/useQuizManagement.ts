@@ -6,6 +6,7 @@ import {
   AddQuestionsRequest,
   QuizStatisticsResponse,
   QuizResultResponse,
+  QuestionResponse,
 } from "@/services/assessment/assessment.types";
 import { toast } from "sonner";
 
@@ -33,6 +34,20 @@ export function useQuizById(quizId: number | null) {
       quizId
         ? assessmentService.getQuizById(quizId)
         : Promise.reject("No quiz ID"),
+    enabled: !!quizId,
+  });
+}
+
+/**
+ * Hook để lấy danh sách câu hỏi của quiz
+ */
+export function useQuizQuestions(quizId: number | null) {
+  return useQuery({
+    queryKey: ["quiz", quizId, "questions"],
+    queryFn: () =>
+      quizId
+        ? assessmentService.getQuizQuestions(quizId)
+        : Promise.resolve([]),
     enabled: !!quizId,
   });
 }
@@ -163,3 +178,229 @@ export function useQuizResults(quizId: number | null) {
     enabled: !!quizId,
   });
 }
+
+/**
+ * Hook để lấy tất cả quizzes độc lập (Quiz Library)
+ */
+export function useAllIndependentQuizzes() {
+  return useQuery({
+    queryKey: ["quizzes", "independent"],
+    queryFn: () => assessmentService.getAllIndependentQuizzes(),
+  });
+}
+
+/**
+ * Hook để tạo quiz độc lập
+ */
+export function useCreateIndependentQuiz() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: QuizRequest) =>
+      assessmentService.createIndependentQuiz(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      toast.success("Quiz created successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to create quiz");
+    },
+  });
+}
+
+/**
+ * Hook để clone quiz
+ */
+export function useCloneQuiz() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      targetLessonId,
+    }: {
+      id: number;
+      targetLessonId: number;
+    }) => assessmentService.cloneQuiz(id, targetLessonId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      toast.success("Quiz cloned successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to clone quiz");
+    },
+  });
+}
+
+/**
+ * Hook để thêm câu hỏi ngẫu nhiên từ bank
+ */
+export function useAddQuestionsFromBank(quizId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      questionBankId,
+      count,
+    }: {
+      questionBankId: number;
+      count?: number;
+    }) => assessmentService.addQuestionsFromBank(quizId, questionBankId, count),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+      toast.success("Questions added from bank successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to add questions from bank");
+    },
+  });
+}
+
+/**
+ * Hook để xóa tất cả câu hỏi
+ */
+export function useRemoveAllQuestions(quizId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => assessmentService.removeAllQuestions(quizId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+      toast.success("All questions removed");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to remove questions");
+    },
+  });
+}
+
+/**
+ * Hook để sắp xếp lại câu hỏi
+ */
+export function useReorderQuestions(quizId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (questionIdsInOrder: number[]) =>
+      assessmentService.reorderQuestions(quizId, questionIdsInOrder),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+      toast.success("Questions reordered");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to reorder questions");
+    },
+  });
+}
+
+/**
+ * Hook để lấy số lượng câu hỏi
+ */
+export function useQuestionCount(quizId: number | null) {
+  return useQuery({
+    queryKey: ["quiz", "questionCount", quizId],
+    queryFn: () =>
+      quizId
+        ? assessmentService.getQuestionCount(quizId)
+        : Promise.reject("No quiz ID"),
+    enabled: !!quizId,
+  });
+}
+
+/**
+ * Hook để cập nhật time limit
+ */
+export function useUpdateTimeLimit(quizId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (timeLimitMinutes: number) =>
+      assessmentService.updateTimeLimit(quizId, timeLimitMinutes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+      toast.success("Time limit updated");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update time limit");
+    },
+  });
+}
+
+/**
+ * Hook để cập nhật passing score
+ */
+export function useUpdatePassingScore(quizId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (passingScore: number) =>
+      assessmentService.updatePassingScore(quizId, passingScore),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+      toast.success("Passing score updated");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update passing score");
+    },
+  });
+}
+
+/**
+ * Hook để cập nhật max attempts
+ */
+export function useUpdateMaxAttempts(quizId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (maxAttempts: number) =>
+      assessmentService.updateMaxAttempts(quizId, maxAttempts),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+      toast.success("Max attempts updated");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update max attempts");
+    },
+  });
+}
+
+/**
+ * Hook để link quiz vào lesson
+ */
+export function useLinkQuiz(lessonId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (quizId: number) =>
+      assessmentService.linkQuizToLesson(lessonId, quizId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes", "lesson", lessonId] });
+      queryClient.invalidateQueries({ queryKey: ["quizzes", "independent"] });
+      toast.success("Quiz linked to lesson successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to link quiz to lesson");
+    },
+  });
+}
+
+/**
+ * Hook để unlink quiz khỏi lesson
+ */
+export function useUnlinkQuiz(lessonId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (quizId: number) =>
+      assessmentService.unlinkQuizFromLesson(lessonId, quizId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quizzes", "lesson", lessonId] });
+      queryClient.invalidateQueries({ queryKey: ["quizzes", "independent"] });
+      toast.success("Quiz unlinked from lesson");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to unlink quiz from lesson");
+    },
+  });
+}
+

@@ -56,7 +56,7 @@ public class AssignmentService {
         // Business logic - create assignment WITHOUT lesson
         Assignment assignment = Assignment.builder()
                 .lesson(null) // Explicitly null - assignment is independent
-                .assignmentType(request.getAssignmentType())
+                .assignmentType(request.getAssignmentType()) // Required field, validated by @NotNull
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .totalPoints(request.getTotalPoints() != null ? request.getTotalPoints() : 10)
@@ -174,11 +174,11 @@ public class AssignmentService {
         Assignment assignment = enrollmentAccessService.verifyTeacherAssignmentOwnership(id);
 
         // Business logic - assume access is validated
-        if (request.getAssignmentType() != null) {
-            assignment.setAssignmentType(request.getAssignmentType());
-        }
+        // AssignmentType is required (NOT NULL in DB)
+        assignment.setAssignmentType(request.getAssignmentType());
         assignment.setTitle(request.getTitle());
         assignment.setDescription(request.getDescription());
+
         if (request.getTotalPoints() != null) {
             assignment.setTotalPoints(request.getTotalPoints());
         }

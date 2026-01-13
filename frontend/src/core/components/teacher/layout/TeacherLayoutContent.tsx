@@ -9,8 +9,9 @@ const PREFETCH_ROUTES = [
     "/teacher/dashboard",
     "/teacher/courses",
     "/teacher/question-banks",
-    "/teacher/students",
+    "/teacher/quizzes",
     "/teacher/assignments",
+    "/teacher/students",
     "/teacher/qna",
     "/teacher/analytics",
 ];

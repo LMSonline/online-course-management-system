@@ -3,7 +3,7 @@
 import React from "react";
 import { QuestionResponse } from "@/services/assessment/assessment.types";
 import { calculateBankStats, getTypeConfig } from "@/lib/teacher/question-banks/questionHelpers";
-import { BarChart3, Target, Trophy } from "lucide-react";
+import { BarChart3, Target, Trophy, Sparkles } from "lucide-react";
 
 interface QuestionBankStatsProps {
     questions: QuestionResponse[];
@@ -15,101 +15,99 @@ export function QuestionBankStats({
     const stats = calculateBankStats(questions);
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
-                <BarChart3 className="h-5 w-5 mr-2 text-purple-600 dark:text-purple-400" />
-                Question Bank Statistics
-            </h3>
+        <div className="bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 dark:border-slate-700/50">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    Bank Statistics
+                </h3>
+            </div>
 
-            <div className="grid grid-cols-1 gap-4 mb-6">
-                {/* Total Questions */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950 rounded-lg p-4 border border-purple-100 dark:border-purple-800">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Total Questions</p>
-                            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                                {stats.total}
-                            </p>
-                        </div>
-                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                            <Target className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <div className="p-5 space-y-4">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 gap-3">
+                    {/* Total Questions */}
+                    <div className="group relative bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800/50 overflow-hidden transition-all hover:shadow-md">
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Questions</p>
+                                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                                    {stats.total}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl flex items-center justify-center">
+                                <Target className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Total Points */}
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Total Points</p>
-                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                {stats.totalPoints.toFixed(1)}
+                    {/* Points Row */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* Total Points */}
+                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 rounded-xl p-4 border border-amber-100 dark:border-amber-800/50">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Total Pts</p>
+                            <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                                {stats.totalPoints.toFixed(0)}
                             </p>
                         </div>
-                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                            <Trophy className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                        </div>
-                    </div>
-                </div>
 
-                {/* Average Points */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg p-4 border border-green-100 dark:border-green-800">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Avg Points/Question</p>
-                            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                        {/* Average Points */}
+                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 rounded-xl p-4 border border-emerald-100 dark:border-emerald-800/50">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Avg Pts</p>
+                            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
                                 {stats.avgPoints.toFixed(1)}
                             </p>
                         </div>
-                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                            <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400" />
-                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Question Types Breakdown */}
-            {stats.total > 0 && (
-                <div>
-                    <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                        Questions by Type
-                    </h4>
-                    <div className="space-y-2">
-                        {Object.entries(stats.byType).map(([type, count]) => {
-                            const config = getTypeConfig(type as any);
-                            const percentage = ((count / stats.total) * 100).toFixed(1);
+                {/* Question Types Breakdown */}
+                {stats.total > 0 && (
+                    <div>
+                        <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+                            By Type
+                        </h4>
+                        <div className="space-y-3">
+                            {Object.entries(stats.byType).map(([type, count]) => {
+                                const config = getTypeConfig(type as any);
+                                const percentage = (count / stats.total) * 100;
 
-                            return (
-                                <div key={type} className="flex items-center">
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-1">
+                                return (
+                                    <div key={type}>
+                                        <div className="flex items-center justify-between mb-1.5">
                                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                                 {config.label}
                                             </span>
-                                            <span className="text-sm text-slate-500 dark:text-slate-400">
-                                                {count} ({percentage}%)
+                                            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                {count}
                                             </span>
                                         </div>
-                                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                        <div className="relative w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                             <div
-                                                className="bg-gradient-to-r from-purple-500 to-indigo-500 dark:from-purple-400 dark:to-indigo-400 h-2 rounded-full transition-all duration-300"
+                                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
                                                 style={{ width: `${percentage}%` }}
                                             />
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {stats.total === 0 && (
-                <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                    <p className="text-sm">No questions yet</p>
-                    <p className="text-xs mt-1">Add questions to see statistics</p>
-                </div>
-            )}
+                {/* Empty State */}
+                {stats.total === 0 && (
+                    <div className="text-center py-6">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                            <Sparkles className="w-6 h-6 text-slate-400" />
+                        </div>
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No questions yet</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Add questions to see stats</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

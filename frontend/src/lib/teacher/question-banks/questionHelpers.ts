@@ -22,12 +22,12 @@ export const questionTypeConfig = {
     icon: "✓/✗",
     description: "Simple true or false question",
   },
-  SHORT_ANSWER: {
-    label: "Short Answer",
-    shortLabel: "SA",
+  FILL_BLANK: {
+    label: "Fill in Blank",
+    shortLabel: "FB",
     color: "bg-yellow-100 text-yellow-700 border-yellow-200",
     icon: "—",
-    description: "Brief text response",
+    description: "Fill in the blank text response",
   },
   ESSAY: {
     label: "Essay",
@@ -61,7 +61,7 @@ export const formatQuestionContent = (
 export const validateQuestion = (
   content: string,
   type: QuestionType,
-  answerOptions?: Array<{ content: string; correct: boolean }>
+  answerOptions?: Array<{ content: string; isCorrect: boolean }>
 ): { valid: boolean; error?: string } => {
   if (!content.trim()) {
     return { valid: false, error: "Question content is required" };
@@ -76,7 +76,7 @@ export const validateQuestion = (
       return { valid: false, error: "Answer options are required" };
     }
 
-    const hasCorrect = answerOptions.some((opt) => opt.correct);
+    const hasCorrect = answerOptions.some((opt) => opt.isCorrect);
     if (!hasCorrect) {
       return {
         valid: false,
@@ -90,7 +90,7 @@ export const validateQuestion = (
     }
 
     if (type === "MULTIPLE_CHOICE") {
-      const correctCount = answerOptions.filter((opt) => opt.correct).length;
+      const correctCount = answerOptions.filter((opt) => opt.isCorrect).length;
       if (correctCount > 1) {
         return {
           valid: false,

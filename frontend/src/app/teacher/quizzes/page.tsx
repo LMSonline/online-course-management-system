@@ -1,263 +1,209 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { assessmentService } from "@/services/assessment/assessment.service";
-import { QuizResponse, QuizStatus } from "@/services/assessment/assessment.types";
-import { useTeacherId } from "@/hooks/useProfile";
+import Button from "@/core/components/ui/Button";
+import Input from "@/core/components/ui/Input";
+import {
+    QuizCard,
+    CreateQuizDialog,
+    DeleteQuizDialog,
+} from "@/core/components/teacher/quiz";
+import {
+    useAllIndependentQuizzes,
+    useCreateIndependentQuiz,
+    useDeleteQuiz,
+} from "@/hooks/teacher/useQuizManagement";
+import { QuizResponse, QuizRequest } from "@/services/assessment/assessment.types";
 import {
     Plus,
     Search,
-    Edit,
-    Trash2,
-    BarChart3,
-    Clock,
-    Target,
-    Trophy,
-    FileText,
-    Filter,
+    Library,
+    FileQuestion,
+    Loader2,
+    RefreshCw,
+    Sparkles
 } from "lucide-react";
 
 export default function TeacherQuizzesPage() {
     const router = useRouter();
-    const teacherId = useTeacherId();
-    const [quizzes, setQuizzes] = useState<QuizResponse[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [filterStatus, setFilterStatus] = useState<QuizStatus | "ALL">("ALL");
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
+    const [quizToDelete, setQuizToDelete] = useState<QuizResponse | null>(null);
 
-    useEffect(() => {
-        if (teacherId) {
-            loadQuizzes();
-        }
-    }, [teacherId]);
+    const { data: quizzes = [], isLoading, refetch, isRefetching } = useAllIndependentQuizzes();
+    const createMutation = useCreateIndependentQuiz();
+    const deleteMutation = useDeleteQuiz();
 
-    const loadQuizzes = async () => {
-        if (!teacherId) return;
-
-        try {
-            setLoading(true);
-            // This would need an API endpoint to get all quizzes for a teacher
-            // For now, this is a placeholder
-            // const data = await assessmentService.getQuizzesByTeacher(teacherId);
-            setQuizzes([]);
-        } catch (error) {
-            console.error("Failed to load quizzes:", error);
-        } finally {
-            setLoading(false);
-        }
+    const handleCreateQuiz = (values: QuizRequest) => {
+        createMutation.mutate(values, {
+            onSuccess: (data) => {
+                setShowCreateDialog(false);
+                router.push(`/teacher/quizzes/${data.id}/edit`);
+            },
+        });
     };
 
-    const handleCreateQuiz = () => {
-        router.push("/teacher/quizzes/create");
-    };
-
-    const handleEditQuiz = (quizId: number) => {
-        router.push(`/teacher/quizzes/${quizId}/edit`);
-    };
-
-    const handleViewResults = (quizId: number) => {
-        router.push(`/teacher/quizzes/${quizId}/results`);
-    };
-
-    const handleDeleteQuiz = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this quiz?")) return;
-
-        try {
-            await assessmentService.deleteQuiz(id);
-            setQuizzes(quizzes.filter((q) => q.id !== id));
-        } catch (error) {
-            console.error("Failed to delete quiz:", error);
+    const handleDeleteQuiz = () => {
+        if (quizToDelete) {
+            deleteMutation.mutate(quizToDelete.id, {
+                onSuccess: () => {
+                    setQuizToDelete(null);
+                },
+            });
         }
     };
 
-    const filteredQuizzes = quizzes.filter((quiz) => {
-        const matchesSearch = quiz.title
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
-        const matchesStatus = filterStatus === "ALL" || quiz.status === filterStatus;
-        return matchesSearch && matchesStatus;
-    });
+    const filteredQuizzes = quizzes.filter((quiz) =>
+        quiz.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    const getStatusColor = (status: QuizStatus) => {
-        const colors = {
-            DRAFT: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700",
-            PUBLISHED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
-            ARCHIVED: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",
-        };
-        return colors[status];
-    };
+    const totalQuizzes = quizzes.length;
 
-    const getTypeColor = (type: string) => {
-        const colors = {
-            PRACTICE: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-            GRADED: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-            FINAL: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-        };
-        return colors[type as keyof typeof colors] || "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
-    };
-
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/20">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-xl animate-pulse" />
+                            <Loader2 className="h-12 w-12 animate-spin text-purple-500 relative" />
+                        </div>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Loading your quizzes...</p>
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-            <div className="max-w-7xl mx-auto p-6 space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Quiz Management</h1>
-                        <p className="text-slate-600 dark:text-slate-400 mt-1">
-                            Create and manage quizzes using your question banks
-                        </p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/20">
+            <div className="container mx-auto px-4 py-8 space-y-8">
+                {/* Header Section */}
+                <div className="relative overflow-hidden bg-white dark:bg-slate-800/50 rounded-3xl shadow-sm shadow-slate-200/50 dark:shadow-none border border-slate-200/80 dark:border-slate-700/50 p-8 backdrop-blur-sm">
+                    {/* Background decoration */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+                    <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div className="flex items-center gap-5">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl blur-lg opacity-40" />
+                                <div className="relative p-4 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl shadow-lg">
+                                    <Library className="h-8 w-8 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                                    Quiz Library
+                                </h1>
+                                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                                    Create and manage quizzes for your courses
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => refetch()}
+                                disabled={isRefetching}
+                                className="hidden md:flex bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
+                                Refresh
+                            </Button>
+                            <Button onClick={() => setShowCreateDialog(true)} className="bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 border-0 shadow-lg shadow-purple-500/25">
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Create Quiz
+                            </Button>
+                        </div>
                     </div>
-                    <button
-                        onClick={handleCreateQuiz}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Create Quiz
-                    </button>
+
+                    {/* Stats */}
+                    <div className="relative mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/50">
+                        <div className="flex items-center gap-2">
+                            <div className="px-4 py-2 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
+                                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalQuizzes}</span>
+                                <span className="text-sm text-purple-500 dark:text-purple-400 ml-2">Total Quizzes</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Search and Filters */}
-                <div className="flex items-center gap-4">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input
+                {/* Search */}
+                <div className="bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/50 p-4 backdrop-blur-sm">
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <Input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search quizzes..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Search quizzes by title..."
+                            className="pl-12 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-base focus:ring-2 focus:ring-purple-500/20"
                         />
                     </div>
-
-                    <select
-                        value={filterStatus}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterStatus(e.target.value as QuizStatus | "ALL")}
-                        className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                        <option value="ALL">All Status</option>
-                        <option value="DRAFT">Draft</option>
-                        <option value="PUBLISHED">Published</option>
-                        <option value="ARCHIVED">Archived</option>
-                    </select>
                 </div>
+
+                {/* Quiz Grid */}
                 {filteredQuizzes.length === 0 ? (
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center">
-                        <FileText className="mx-auto w-12 h-12 text-slate-400" />
-                        <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">No quizzes</h3>
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                            {searchTerm || filterStatus !== "ALL"
-                                ? "No quizzes match your search criteria"
-                                : "Get started by creating your first quiz"}
-                        </p>
-                        {!searchTerm && filterStatus === "ALL" && (
-                            <button
-                                onClick={handleCreateQuiz}
-                                className="mt-6 flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg mx-auto"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Create Quiz
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-6">
-                        {filteredQuizzes.map((quiz) => (
-                            <div
-                                key={quiz.id}
-                                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg hover:shadow-xl transition-shadow"
-                            >
-                                <div className="p-6">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                                                    {quiz.title}
-                                                </h3>
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                                        quiz.status
-                                                    )}`}
-                                                >
-                                                    {quiz.status}
-                                                </span>
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(
-                                                        quiz.quizType
-                                                    )}`}
-                                                >
-                                                    {quiz.quizType}
-                                                </span>
-                                            </div>
-                                            {quiz.description && (
-                                                <p className="text-sm text-gray-500 mb-3">
-                                                    {quiz.description}
-                                                </p>
-                                            )}
-                                            <div className="flex items-center space-x-6 text-sm text-gray-600">
-                                                {quiz.lessonTitle && (
-                                                    <span className="flex items-center">
-                                                        <FileText className="h-4 w-4 mr-1" />
-                                                        {quiz.lessonTitle}
-                                                    </span>
-                                                )}
-                                                {quiz.totalQuestions !== undefined && (
-                                                    <span className="flex items-center">
-                                                        <Target className="h-4 w-4 mr-1" />
-                                                        {quiz.totalQuestions} questions
-                                                    </span>
-                                                )}
-                                                {quiz.timeLimit && (
-                                                    <span className="flex items-center">
-                                                        <Clock className="h-4 w-4 mr-1" />
-                                                        {quiz.timeLimit} min
-                                                    </span>
-                                                )}
-                                                {quiz.passingScore !== undefined && (
-                                                    <span className="flex items-center">
-                                                        <Trophy className="h-4 w-4 mr-1" />
-                                                        {quiz.passingScore}% to pass
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center space-x-2 ml-4">
-                                            <button
-                                                onClick={() => handleViewResults(quiz.id)}
-                                                className="p-2 text-gray-400 hover:text-blue-600 rounded-md transition-colors"
-                                                title="View Results"
-                                            >
-                                                <BarChart3 className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleEditQuiz(quiz.id)}
-                                                className="p-2 text-gray-400 hover:text-purple-600 rounded-md transition-colors"
-                                                title="Edit Quiz"
-                                            >
-                                                <Edit className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteQuiz(quiz.id)}
-                                                className="p-2 text-gray-400 hover:text-red-600 rounded-md transition-colors"
-                                                title="Delete Quiz"
-                                            >
-                                                <Trash2 className="h-5 w-5" />
-                                            </button>
-                                        </div>
-                                    </div>
+                    <div className="bg-white dark:bg-slate-800/50 rounded-3xl shadow-sm border border-dashed border-slate-300 dark:border-slate-600 backdrop-blur-sm">
+                        <div className="flex flex-col items-center justify-center py-20 px-4">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-purple-500/10 rounded-full blur-2xl" />
+                                <div className="relative w-24 h-24 bg-gradient-to-br from-purple-100 to-fuchsia-100 dark:from-purple-900/30 dark:to-fuchsia-900/30 rounded-full flex items-center justify-center">
+                                    <FileQuestion className="h-12 w-12 text-purple-500" />
                                 </div>
                             </div>
-                        ))}
+                            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mt-6 mb-2">
+                                {searchTerm ? "No quizzes found" : "No quizzes yet"}
+                            </h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm mb-8">
+                                {searchTerm
+                                    ? "Try adjusting your search to find what you're looking for."
+                                    : "Create your first quiz to get started. You can add questions and configure settings after creation."}
+                            </p>
+                            {!searchTerm && (
+                                <Button onClick={() => setShowCreateDialog(true)} size="lg" className="bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 border-0 shadow-lg shadow-purple-500/25">
+                                    <Plus className="mr-2 h-5 w-5" />
+                                    Create Your First Quiz
+                                </Button>
+                            )}
+                        </div>
                     </div>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                Showing <span className="font-semibold text-slate-700 dark:text-slate-300">{filteredQuizzes.length}</span> of {totalQuizzes} quizzes
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {filteredQuizzes.map((quiz) => (
+                                <QuizCard
+                                    key={quiz.id}
+                                    quiz={quiz}
+                                    onEdit={(q) => router.push(`/teacher/quizzes/${q.id}/edit`)}
+                                    onDelete={(q) => setQuizToDelete(q)}
+                                />
+                            ))}
+                        </div>
+                    </>
                 )}
+
+                {/* Dialogs */}
+                <CreateQuizDialog
+                    open={showCreateDialog}
+                    onOpenChange={setShowCreateDialog}
+                    onSubmit={handleCreateQuiz}
+                    isLoading={createMutation.isPending}
+                />
+
+                <DeleteQuizDialog
+                    quiz={quizToDelete}
+                    open={!!quizToDelete}
+                    onOpenChange={(open) => !open && setQuizToDelete(null)}
+                    onConfirm={handleDeleteQuiz}
+                    isLoading={deleteMutation.isPending}
+                />
             </div>
         </div>
     );

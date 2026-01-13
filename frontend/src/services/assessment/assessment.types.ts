@@ -2,43 +2,42 @@
 // Quiz Types
 // ===========================
 
-export type QuizType = "PRACTICE" | "GRADED" | "FINAL";
-export type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
-
 export interface QuizRequest {
   title: string;
   description?: string;
-  instructions?: string;
-  quizType: QuizType;
-  timeLimit?: number; // in minutes
-  passingScore?: number;
-  maxAttempts?: number;
-  shuffleQuestions?: boolean;
-  showCorrectAnswers?: boolean;
-  status?: QuizStatus;
+  timeLimitMinutes?: number | null;
+  passingScore?: number | null;
+  maxAttempts?: number | null;
+  randomizeQuestions?: boolean | null;
+  randomizeOptions?: boolean | null;
+}
+
+export interface QuizQuestionSummary {
+  id: number;
+  questionId: number;
+  questionContent: string;
+  questionType: QuestionType;
+  points?: number | null;
+  orderIndex: number;
 }
 
 export interface QuizResponse {
   id: number;
   title: string;
-  description?: string;
-  instructions?: string;
-  lessonId: number;
-  lessonTitle?: string;
-  courseId?: number;
-  courseTitle?: string;
-  teacherId?: number;
-  teacherName?: string;
-  quizType: QuizType;
-  timeLimit?: number;
-  passingScore?: number;
-  maxAttempts?: number;
-  shuffleQuestions: boolean;
-  showCorrectAnswers: boolean;
-  status: QuizStatus;
+  description?: string | null;
+  lessonId?: number | null;
+  totalPoints?: number | null;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
+  randomizeQuestions?: boolean | null;
+  randomizeOptions?: boolean | null;
+  passingScore?: number | null;
   totalQuestions?: number;
+  questions?: QuizQuestionSummary[];
   createdAt: string;
+  createdBy?: string;
   updatedAt: string;
+  updatedBy?: string;
 }
 
 // ===========================
@@ -49,28 +48,28 @@ export type QuestionType =
   | "MULTIPLE_CHOICE"
   | "MULTI_SELECT"
   | "TRUE_FALSE"
-  | "SHORT_ANSWER"
+  | "FILL_BLANK"
   | "ESSAY";
 
 export type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD";
 
 export interface AnswerOptionRequest {
   content: string;
-  correct: boolean;
+  isCorrect: boolean;
   orderIndex?: number;
 }
 
 export interface AnswerOptionResponse {
   id: number;
   content: string;
-  correct: boolean;
+  isCorrect: boolean;
   orderIndex: number;
 }
 
 export interface QuestionRequest {
   content: string;
   type: QuestionType;
-  metadata?: string; // JSON string for additional data like difficulty
+  metadata?: string;
   maxPoints?: number;
   answerOptions?: AnswerOptionRequest[];
 }
@@ -128,7 +127,7 @@ export interface QuizAttemptResponse {
   score?: number;
   totalPoints?: number;
   passed?: boolean;
-  timeSpent?: number; // in seconds
+  timeSpent?: number;
   answers?: QuizAnswerResponse[];
 }
 
@@ -192,4 +191,20 @@ export interface QuizStatisticsResponse {
   lowestScore: number;
   passingRate: number;
   averageTimeSpent?: number;
+}
+
+// ===========================
+// Additional Response Types
+// ===========================
+
+export interface QuestionCountResponse {
+  count: number;
+}
+
+export interface QuestionInUseResponse {
+  inUse: boolean;
+}
+
+export interface QuizzesUsingQuestionResponse {
+  quizIds: number[];
 }

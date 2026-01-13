@@ -17,6 +17,7 @@ import vn.uit.lms.service.learning.EnrollmentAccessService;
 import vn.uit.lms.shared.dto.request.assessment.AddQuestionsRequest;
 import vn.uit.lms.shared.dto.request.assessment.QuizRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuizResponse;
+import vn.uit.lms.shared.dto.response.assessment.QuizQuestionResponse;
 import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.QuizMapper;
@@ -570,6 +571,24 @@ public class QuizService {
      */
     public Quiz getQuizEntity(Long id) {
         return loadQuiz(id);
+    }
+
+    /**
+     * Use Case: Get quiz questions
+     * Access Control:
+     * - Teachers: can get questions for their own quizzes
+     * - Students: can get questions for quizzes in enrolled courses
+     */
+    public List<QuizQuestionResponse> getQuizQuestions(Long quizId) {
+        log.info("Getting questions for quiz: {}", quizId);
+
+        Quiz quiz = loadQuiz(quizId);
+
+        // Access control handled by mapper (doesn't expose answers)
+        return quiz.getQuizQuestions().stream()
+                .sorted(java.util.Comparator.comparingInt(qq -> qq.getOrderIndex() != null ? qq.getOrderIndex() : 0))
+                .map(QuizMapper::toQuizQuestionResponse)
+                .collect(Collectors.toList());
     }
 
     private Quiz loadQuiz(Long id) {

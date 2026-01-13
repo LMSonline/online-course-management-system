@@ -315,9 +315,21 @@ public class QuizAttemptService {
             return existingAnswer.get();
         }
 
+        // Find corresponding QuizQuestion to get effective points
+        Quiz quiz = attempt.getQuiz();
+        QuizQuestion quizQuestion = null;
+
+        if (quiz != null && quiz.getQuizQuestions() != null) {
+            quizQuestion = quiz.getQuizQuestions().stream()
+                    .filter(qq -> qq.getQuestion() != null && qq.getQuestion().getId().equals(questionId))
+                    .findFirst()
+                    .orElse(null);
+        }
+
         return QuizAttemptAnswer.builder()
                 .quizAttempt(attempt)
                 .question(question)
+                .quizQuestion(quizQuestion)  // Set QuizQuestion for proper grading
                 .build();
     }
 

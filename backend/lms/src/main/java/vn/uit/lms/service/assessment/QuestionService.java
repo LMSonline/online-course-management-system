@@ -6,9 +6,11 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.uit.lms.core.domain.assessment.AnswerOption;
 import vn.uit.lms.core.domain.assessment.Question;
 import vn.uit.lms.core.domain.assessment.QuestionBank;
+import vn.uit.lms.core.domain.assessment.QuizQuestion;
 import vn.uit.lms.core.repository.assessment.AnswerOptionRepository;
 import vn.uit.lms.core.repository.assessment.QuestionBankRepository;
 import vn.uit.lms.core.repository.assessment.QuestionRepository;
+import vn.uit.lms.core.repository.assessment.QuizQuestionRepository;
 import vn.uit.lms.service.TeacherService;
 import vn.uit.lms.shared.constant.QuestionType;
 import vn.uit.lms.shared.dto.request.assessment.AnswerOptionRequest;
@@ -32,6 +34,7 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final QuestionBankRepository questionBankRepository;
     private final AnswerOptionRepository answerOptionRepository;
+    private final QuizQuestionRepository quizQuestionRepository;
     private final TeacherService teacherService;
 
     /**
@@ -54,10 +57,9 @@ public class QuestionService {
                 .questionBank(bank)
                 .build();
 
-        // Use rich domain validation
-        question.validate();
 
-        question = questionRepository.save(question);
+
+
 
         // Add answer options using rich domain methods
         if (request.getAnswerOptions() != null && !request.getAnswerOptions().isEmpty()) {
@@ -75,10 +77,12 @@ public class QuestionService {
                 question.addAnswerOption(option);
             }
 
-            // Save question with options
-            question = questionRepository.save(question);
         }
 
+        // Use rich domain validation
+        question.validate();
+
+        question = questionRepository.save(question);
         return QuestionMapper.toResponse(question);
     }
 
@@ -117,13 +121,13 @@ public class QuestionService {
             question.setMaxPoints(request.getMaxPoints());
         }
 
-        // Use rich domain validation
-        question.validate();
-
         // Update answer options if provided
         if (request.getAnswerOptions() != null) {
             updateAnswerOptionsUsingDomain(question, request.getAnswerOptions());
         }
+
+        // Use rich domain validation
+        question.validate();
 
         question = questionRepository.save(question);
         return QuestionMapper.toResponse(question);
@@ -171,6 +175,7 @@ public class QuestionService {
 
     /**
      * Use Case: Delete question
+     * IMPORTANT: Handles foreign key constraints by removing quiz references first
      */
     @Transactional
     public void deleteQuestion(Long id) {
@@ -179,6 +184,21 @@ public class QuestionService {
         // Validate ownership - teacher can only delete questions in their own banks
         teacherService.validateTeacherAccess(question.getQuestionBank().getTeacher());
 
+        // Check if question is being used in any quizzes
+        List<QuizQuestion> quizQuestions = quizQuestionRepository.findAll().stream()
+                .filter(qq -> qq.getQuestion() != null && qq.getQuestion().getId().equals(id))
+                .collect(Collectors.toList());
+
+        if (!quizQuestions.isEmpty()) {
+            // Option 1: Prevent deletion if question is in use
+            throw new InvalidRequestException(
+                "Cannot delete question. It is being used in " + quizQuestions.size() +
+                " quiz(es). Please remove it from all quizzes first."
+            );
+
+        }
+
+        // Now safe to delete the question
         questionRepository.deleteById(id);
     }
 
@@ -274,6 +294,18 @@ public class QuestionService {
 
     @Transactional
     public void bulkDeleteQuestions(List<Long> questionIds) {
+        // Check if any questions are being used in quizzes
+        List<QuizQuestion> quizQuestions = quizQuestionRepository.findAll().stream()
+                .filter(qq -> qq.getQuestion() != null && questionIds.contains(qq.getQuestion().getId()))
+                .collect(Collectors.toList());
+
+        if (!quizQuestions.isEmpty()) {
+            throw new InvalidRequestException(
+                "Cannot delete questions. Some questions are being used in quizzes. " +
+                "Please remove them from all quizzes first."
+            );
+        }
+
         questionRepository.deleteAllById(questionIds);
     }
 
@@ -297,5 +329,24 @@ public class QuestionService {
 
     public int getQuestionCount(Long bankId) {
         return questionRepository.findByQuestionBankId(bankId).size();
+    }
+
+    /**
+     * Check if a question is being used in any quizzes
+     */
+    public boolean isQuestionInUse(Long questionId) {
+        return quizQuestionRepository.findAll().stream()
+                .anyMatch(qq -> qq.getQuestion() != null && qq.getQuestion().getId().equals(questionId));
+    }
+
+    /**
+     * Get list of quiz IDs where the question is being used
+     */
+    public List<Long> getQuizzesUsingQuestion(Long questionId) {
+        return quizQuestionRepository.findAll().stream()
+                .filter(qq -> qq.getQuestion() != null && qq.getQuestion().getId().equals(questionId))
+                .map(qq -> qq.getQuiz().getId())
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

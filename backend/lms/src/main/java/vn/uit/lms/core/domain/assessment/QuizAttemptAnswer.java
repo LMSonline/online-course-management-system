@@ -31,6 +31,10 @@ public class QuizAttemptAnswer extends BaseEntity {
     private Question question;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_question_id")
+    private QuizQuestion quizQuestion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "selected_option_id")
     private AnswerOption selectedOption;
 
@@ -73,7 +77,9 @@ public class QuizAttemptAnswer extends BaseEntity {
         if (selectedOption == null) {
             this.score = 0.0;
         } else {
-            this.score = question.calculateScore(selectedOption.getId());
+            // Use effective points from QuizQuestion (handles custom points)
+            Double maxScore = getMaxScoreForQuestion();
+            this.score = question.isCorrectOption(selectedOption.getId()) ? maxScore : 0.0;
         }
 
         this.graded = true;
@@ -91,7 +97,9 @@ public class QuizAttemptAnswer extends BaseEntity {
         if (selectedIds == null || selectedIds.isEmpty()) {
             this.score = 0.0;
         } else {
-            this.score = question.calculateScoreForMultiple(selectedIds);
+            // Use effective points from QuizQuestion (handles custom points)
+            Double maxScore = getMaxScoreForQuestion();
+            this.score = question.areCorrectOptions(selectedIds) ? maxScore : 0.0;
         }
 
         this.graded = true;
@@ -108,7 +116,9 @@ public class QuizAttemptAnswer extends BaseEntity {
         if (selectedOption == null) {
             this.score = 0.0;
         } else {
-            this.score = question.calculateScore(selectedOption.getId());
+            // Use effective points from QuizQuestion (handles custom points)
+            Double maxScore = getMaxScoreForQuestion();
+            this.score = question.isCorrectOption(selectedOption.getId()) ? maxScore : 0.0;
         }
 
         this.graded = true;
@@ -158,9 +168,34 @@ public class QuizAttemptAnswer extends BaseEntity {
         if (score < 0) {
             throw new IllegalArgumentException("Score cannot be negative");
         }
-        if (question != null && question.getMaxPoints() != null && score > question.getMaxPoints()) {
-            throw new IllegalArgumentException("Score cannot exceed max points: " + question.getMaxPoints());
+
+        // Validate against effective points (considering custom quiz points)
+        Double maxScore = getMaxScoreForQuestion();
+        if (score > maxScore) {
+            throw new IllegalArgumentException("Score cannot exceed max points: " + maxScore);
         }
+    }
+
+    /**
+     * Get maximum score for this question in the quiz context.
+     * Uses QuizQuestion.getEffectivePoints() if available (supports custom points),
+     * otherwise falls back to Question.maxPoints.
+     *
+     * @return Maximum possible score for this question
+     */
+    private Double getMaxScoreForQuestion() {
+        if (quizQuestion != null) {
+            // Use effective points (handles custom points per quiz)
+            return quizQuestion.getEffectivePoints();
+        }
+
+        // Fallback to question's default max points
+        if (question != null && question.getMaxPoints() != null) {
+            return question.getMaxPoints();
+        }
+
+        // Last resort default
+        return 0.0;
     }
 
     /**

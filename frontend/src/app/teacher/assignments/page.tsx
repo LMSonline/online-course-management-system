@@ -1,371 +1,273 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
     Search,
     Plus,
     FileText,
     Clock,
     CheckCircle2,
-    AlertCircle,
-    Eye,
-    Edit,
-    Calendar,
     Users,
-    Filter,
-    Download,
+    Loader2,
+    RefreshCw,
+    Sparkles,
+    Filter
 } from "lucide-react";
-import { courseService } from "@/services/courses";
-import { assignmentService } from "@/services/assignment";
-import type { AssignmentResponse } from "@/services/assignment";
+import Button from "@/core/components/ui/Button";
+import Input from "@/core/components/ui/Input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/core/components/ui/Select";
+import {
+    useAllIndependentAssignments,
+    useCreateIndependentAssignment,
+    useDeleteAssignment,
+} from "@/hooks/teacher/useAssignmentManagement";
+import { AssignmentCard, CreateAssignmentDialog, DeleteAssignmentDialog } from "@/core/components/teacher/assignment";
+import type { AssignmentResponse, AssignmentRequest, AssignmentStatus } from "@/services/assignment/assignment.types";
 
 export default function TeacherAssignmentsPage() {
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Closed">("all");
-    const [courseFilter, setCourseFilter] = useState<number | "all">("all");
+    const [statusFilter, setStatusFilter] = useState<AssignmentStatus | "all">("all");
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
+    const [assignmentToDelete, setAssignmentToDelete] = useState<AssignmentResponse | null>(null);
 
-    const { data: courses } = useQuery({
-        queryKey: ["teacher-courses"],
-        queryFn: () => courseService.getMyCourses(0, 100),
-    });
+    const { data: assignments = [], isLoading, refetch, isRefetching } = useAllIndependentAssignments();
+    const createMutation = useCreateIndependentAssignment();
+    const deleteMutation = useDeleteAssignment();
 
-    const assignments = useMemo(() => {
-        const mockData: Array<AssignmentResponse & {
-            course: string;
-            daysOverdue?: number;
-            submissions: number;
-            totalStudents: number;
-            pending: number;
-            avgScore: number;
-            displayStatus: string;
-        }> = [
-                {
-                    id: 1,
-                    title: "Responsive Design Project",
-                    course: "Complete Web Development Bootcamp",
-                    dueDate: "2024-11-15",
-                    daysOverdue: 381,
-                    submissions: 45,
-                    totalStudents: 52,
-                    pending: 11,
-                    avgScore: 87,
-                    displayStatus: "Active",
-                    lessonId: 1,
-                    allowLateSubmission: true,
-                    status: "PUBLISHED",
-                    createdAt: "2024-10-20",
-                    updatedAt: "2024-10-20",
-                    totalSubmissions: 45,
-                    gradedSubmissions: 34,
-                },
-                {
-                    id: 2,
-                    title: "JavaScript DOM Manipulation",
-                    course: "Complete Web Development Bootcamp",
-                    dueDate: "2024-11-20",
-                    daysOverdue: 353,
-                    submissions: 23,
-                    totalStudents: 23,
-                    pending: 0,
-                    avgScore: 92,
-                    displayStatus: "Closed",
-                    lessonId: 2,
-                    allowLateSubmission: false,
-                    status: "PUBLISHED",
-                    createdAt: "2024-10-15",
-                    updatedAt: "2024-10-15",
-                    totalSubmissions: 23,
-                    gradedSubmissions: 23,
-                },
-                {
-                    id: 3,
-                    title: "React Component Library",
-                    course: "Advanced React Patterns",
-                    dueDate: "2024-11-25",
-                    daysOverdue: 21,
-                    submissions: 15,
-                    totalStudents: 20,
-                    pending: 5,
-                    avgScore: 88,
-                    displayStatus: "Active",
-                    lessonId: 3,
-                    allowLateSubmission: true,
-                    status: "PUBLISHED",
-                    createdAt: "2024-11-10",
-                    updatedAt: "2024-11-10",
-                    totalSubmissions: 15,
-                    gradedSubmissions: 10,
-                },
-            ];
+    const handleCreateAssignment = (payload: AssignmentRequest) => {
+        createMutation.mutate(payload, {
+            onSuccess: (data) => {
+                setShowCreateDialog(false);
+                router.push(`/teacher/assignments/${data.id}`);
+            },
+        });
+    };
 
-        return mockData;
-    }, []);
+    const handleDeleteAssignment = () => {
+        if (assignmentToDelete) {
+            deleteMutation.mutate(assignmentToDelete.id, {
+                onSuccess: () => {
+                    setAssignmentToDelete(null);
+                },
+            });
+        }
+    };
 
     const filteredAssignments = useMemo(() => {
         return assignments.filter((assignment) => {
             const matchesSearch =
                 searchQuery === "" ||
                 assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                assignment.course.toLowerCase().includes(searchQuery.toLowerCase());
+                assignment.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesStatus =
-                statusFilter === "all" || assignment.displayStatus === statusFilter;
+                statusFilter === "all" || assignment.status === statusFilter;
 
-            const matchesCourse =
-                courseFilter === "all" || assignment.courseId === courseFilter;
-
-            return matchesSearch && matchesStatus && matchesCourse;
+            return matchesSearch && matchesStatus;
         });
-    }, [assignments, searchQuery, statusFilter, courseFilter]);
+    }, [assignments, searchQuery, statusFilter]);
 
     const stats = useMemo(() => {
         const total = assignments.length;
-        const active = assignments.filter((a) => a.displayStatus === "Active").length;
-        const totalSubmissions = assignments.reduce((sum, a) => sum + a.submissions, 0);
-        const totalPending = assignments.reduce((sum, a) => sum + a.pending, 0);
+        const published = assignments.filter((a) => a.status === "PUBLISHED").length;
+        const drafts = assignments.filter((a) => a.status === "DRAFT").length;
+        const pendingGrading = assignments.reduce((sum, a) => {
+            return sum + ((a.totalSubmissions ?? 0) - (a.gradedSubmissions ?? 0));
+        }, 0);
 
-        return { total, active, totalSubmissions, totalPending };
+        return { total, published, drafts, pendingGrading };
     }, [assignments]);
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 rounded-full bg-indigo-500/20 blur-xl animate-pulse" />
+                            <Loader2 className="h-12 w-12 animate-spin text-indigo-500 relative" />
+                        </div>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Loading assignments...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-            <div className="max-w-7xl mx-auto p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Assignments</h1>
-                        <p className="text-slate-600 dark:text-slate-400 mt-1">
-                            Manage and grade student assignments
-                        </p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
+            <div className="container mx-auto px-4 py-8 space-y-8">
+                {/* Header Section */}
+                <div className="relative overflow-hidden bg-white dark:bg-slate-800/50 rounded-3xl shadow-sm shadow-slate-200/50 dark:shadow-none border border-slate-200/80 dark:border-slate-700/50 p-8 backdrop-blur-sm">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+                    <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div className="flex items-center gap-5">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl blur-lg opacity-40" />
+                                <div className="relative p-4 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-lg">
+                                    <FileText className="h-8 w-8 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                                    Assignment Library
+                                </h1>
+                                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                                    Create and manage assignments for your courses
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => refetch()}
+                                disabled={isRefetching}
+                                className="hidden md:flex bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
+                                Refresh
+                            </Button>
+                            <Button
+                                onClick={() => setShowCreateDialog(true)}
+                                className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 border-0 shadow-lg shadow-indigo-500/25"
+                            >
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Create Assignment
+                            </Button>
+                        </div>
                     </div>
-                    <Link
-                        href="/teacher/assignments/create"
-                        className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Create Assignment
-                    </Link>
+
+                    {/* Stats */}
+                    <div className="relative mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/50">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mb-1">
+                                    <FileText className="h-4 w-4" />
+                                    Total
+                                </div>
+                                <span className="text-2xl font-bold text-slate-800 dark:text-white">{stats.total}</span>
+                            </div>
+                            <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
+                                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm mb-1">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Published
+                                </div>
+                                <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.published}</span>
+                            </div>
+                            <div className="px-4 py-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl">
+                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm mb-1">
+                                    <FileText className="h-4 w-4" />
+                                    Drafts
+                                </div>
+                                <span className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.drafts}</span>
+                            </div>
+                            <div className="px-4 py-3 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
+                                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm mb-1">
+                                    <Clock className="h-4 w-4" />
+                                    Pending Grading
+                                </div>
+                                <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.pendingGrading}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                            </div>
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                Total Assignments
-                            </span>
+                {/* Search & Filter */}
+                <div className="bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700/50 p-4 backdrop-blur-sm">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search assignments..."
+                                className="pl-12 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-base"
+                            />
                         </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                Active
-                            </span>
-                        </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.active}</p>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                Total Submissions
-                            </span>
-                        </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.totalSubmissions}</p>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                Pending Review
-                            </span>
-                        </div>
-                        <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats.totalPending}</p>
+                        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                            <SelectTrigger className="w-[180px] h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl">
+                                <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                                <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="PUBLISHED">Published</SelectItem>
+                                <SelectItem value="DRAFT">Draft</SelectItem>
+                                <SelectItem value="ARCHIVED">Archived</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg">
-                    <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search assignments..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                {/* Assignments Grid */}
+                {filteredAssignments.length === 0 ? (
+                    <div className="bg-white dark:bg-slate-800/50 rounded-3xl shadow-sm border border-dashed border-slate-300 dark:border-slate-600 backdrop-blur-sm">
+                        <div className="flex flex-col items-center justify-center py-20 px-4">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-2xl" />
+                                <div className="relative w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 rounded-full flex items-center justify-center">
+                                    <FileText className="h-12 w-12 text-indigo-500" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mt-6 mb-2">
+                                {searchQuery || statusFilter !== "all" ? "No assignments found" : "No assignments yet"}
+                            </h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm mb-8">
+                                {searchQuery || statusFilter !== "all"
+                                    ? "Try adjusting your search or filters."
+                                    : "Create your first assignment to get started."}
+                            </p>
+                            {!searchQuery && statusFilter === "all" && (
+                                <Button
+                                    onClick={() => setShowCreateDialog(true)}
+                                    size="lg"
+                                    className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 border-0 shadow-lg shadow-indigo-500/25"
+                                >
+                                    <Plus className="mr-2 h-5 w-5" />
+                                    Create Your First Assignment
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                Showing <span className="font-semibold text-slate-700 dark:text-slate-300">{filteredAssignments.length}</span> of {stats.total} assignments
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {filteredAssignments.map((assignment) => (
+                                <AssignmentCard
+                                    key={assignment.id}
+                                    assignment={assignment}
+                                    onEdit={(a) => router.push(`/teacher/assignments/${a.id}`)}
+                                    onDelete={(a) => setAssignmentToDelete(a)}
                                 />
-                            </div>
-
-                            <select
-                                value={courseFilter}
-                                onChange={(e) => setCourseFilter(e.target.value === "all" ? "all" : parseInt(e.target.value))}
-                                className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="all">All Courses</option>
-                                {courses?.items.map((course: any) => (
-                                    <option key={course.id} value={course.id}>
-                                        {course.title}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                                className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="all">All Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Closed">Closed</option>
-                            </select>
+                            ))}
                         </div>
-                    </div>
+                    </>
+                )}
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Assignment
-                                    </th>
-                                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Course
-                                    </th>
-                                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Due Date
-                                    </th>
-                                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Submissions
-                                    </th>
-                                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Avg Score
-                                    </th>
-                                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                                {filteredAssignments.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
-                                            No assignments found
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredAssignments.map((assignment) => {
-                                        const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
-                                        const isOverdue = dueDate && dueDate < new Date();
+                {/* Dialogs */}
+                <CreateAssignmentDialog
+                    open={showCreateDialog}
+                    onOpenChange={setShowCreateDialog}
+                    onSubmit={handleCreateAssignment}
+                    isLoading={createMutation.isPending}
+                />
 
-                                        return (
-                                            <tr
-                                                key={assignment.id}
-                                                className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                                                            <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-semibold text-slate-900 dark:text-white text-sm">
-                                                                {assignment.title}
-                                                            </p>
-                                                            <p className="text-xs text-slate-500">
-                                                                {assignment.pending} pending review
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                        {assignment.courseTitle || assignment.course}
-                                                    </p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar className="w-4 h-4 text-slate-400" />
-                                                        <span className={`text-sm ${isOverdue ? "text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400"}`}>
-                                                            {dueDate ? dueDate.toLocaleDateString() : "No due date"}
-                                                        </span>
-                                                    </div>
-                                                    {isOverdue && assignment.daysOverdue && (
-                                                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                                            {assignment.daysOverdue} days overdue
-                                                        </p>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="text-sm font-medium text-slate-900 dark:text-white">
-                                                        {assignment.submissions}/{assignment.totalStudents}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="text-sm font-medium text-slate-900 dark:text-white">
-                                                        {assignment.avgScore}%
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${assignment.displayStatus === "Active"
-                                                                ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                                                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                                            }`}
-                                                    >
-                                                        {assignment.displayStatus === "Active" ? (
-                                                            <CheckCircle2 className="w-3 h-3" />
-                                                        ) : (
-                                                            <AlertCircle className="w-3 h-3" />
-                                                        )}
-                                                        {assignment.displayStatus}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Link
-                                                            href={`/teacher/assignments/${assignment.id}`}
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                                            title="View Details"
-                                                        >
-                                                            <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                                                        </Link>
-                                                        <Link
-                                                            href={`/teacher/assignments/${assignment.id}/edit`}
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                                                        </Link>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <DeleteAssignmentDialog
+                    assignment={assignmentToDelete}
+                    open={!!assignmentToDelete}
+                    onOpenChange={(open) => !open && setAssignmentToDelete(null)}
+                    onConfirm={handleDeleteAssignment}
+                    isLoading={deleteMutation.isPending}
+                />
             </div>
         </div>
     );

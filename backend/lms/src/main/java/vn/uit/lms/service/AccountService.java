@@ -102,6 +102,16 @@ public class AccountService {
         return account;
     }
 
+    /**
+     * Get current logged-in user's username/email
+     * @return username (email)
+     */
+    public String getCurrentUserLogin() {
+        return SecurityUtils.getCurrentUserLogin()
+                .filter(e -> !SecurityConstants.ANONYMOUS_USER.equals(e))
+                .orElseThrow(() -> new UnauthorizedException("User not authenticated"));
+    }
+
     public Account validateCurrentAccountByRole(Role requiredRole) {
 
        Account account = verifyCurrentAccount();

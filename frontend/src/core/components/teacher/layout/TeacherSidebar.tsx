@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   GraduationCap,
   HelpCircle,
-  Bell
+  Bell,
+  ClipboardList
 } from "lucide-react";
 
 interface SidebarProps {
@@ -33,8 +34,9 @@ export const TeacherSidebar = memo(({ isCollapsed, onToggle, isMobileOpen, onMob
     { icon: LayoutDashboard, label: "Dashboard", href: "/teacher/dashboard" },
     { icon: BookOpen, label: "My Courses", href: "/teacher/courses" },
     { icon: HelpCircle, label: "Question Banks", href: "/teacher/question-banks" },
-    { icon: Users, label: "Students", href: "/teacher/students" },
+    { icon: ClipboardList, label: "Quizzes", href: "/teacher/quizzes" },
     { icon: FileText, label: "Assignments", href: "/teacher/assignments" },
+    { icon: Users, label: "Students", href: "/teacher/students" },
     { icon: MessageSquare, label: "Q&A", href: "/teacher/qna" },
     { icon: Bell, label: "Notifications", href: "/teacher/notifications" },
     { icon: Wallet, label: "Payouts", href: "/teacher/payouts" },

@@ -158,13 +158,16 @@ export function useUpdateQuestion() {
 /**
  * Hook để xóa question
  */
-export function useDeleteQuestion() {
+export function useDeleteQuestion(bankId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: number) => assessmentService.deleteQuestion(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["questions", "bank", bankId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["questionBanks"] });
       toast.success("Question deleted successfully");
     },
     onError: (error: any) => {
@@ -190,6 +193,67 @@ export function useManageAnswerOptions(questionId: number) {
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to update answer options");
+    },
+  });
+}
+
+/**
+ * Hook để clone question bank
+ */
+export function useCloneQuestionBank() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      bankId,
+      targetTeacherId,
+    }: {
+      bankId: number;
+      targetTeacherId: number;
+    }) => assessmentService.cloneQuestionBank(bankId, targetTeacherId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["questionBanks"] });
+      toast.success("Question bank cloned successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to clone question bank");
+    },
+  });
+}
+
+/**
+ * Hook để check xem question có đang được sử dụng trong quiz không
+ */
+export function useCheckQuestionInUse(questionId: number | null) {
+  return useQuery({
+    queryKey: ["questionInUse", questionId],
+    queryFn: () =>
+      questionId
+        ? assessmentService.checkQuestionInUse(questionId)
+        : Promise.resolve({ inUse: false }),
+    enabled: !!questionId,
+    staleTime: 0, // Always refetch to get latest status
+  });
+}
+
+/**
+ * Hook để bulk delete questions
+ */
+export function useBulkDeleteQuestions(bankId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (questionIds: number[]) =>
+      assessmentService.bulkDeleteQuestions(questionIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["questions", "bank", bankId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["questionBanks"] });
+      toast.success("Questions deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to delete questions");
     },
   });
 }

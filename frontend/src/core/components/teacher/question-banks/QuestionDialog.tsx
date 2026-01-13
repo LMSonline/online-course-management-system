@@ -9,6 +9,8 @@ import {
     AnswerOptionRequest,
 } from "@/services/assessment/assessment.types";
 import { X, Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface QuestionDialogProps {
     bankId: number;
@@ -23,6 +25,7 @@ export function QuestionDialog({
     onClose,
     onSuccess,
 }: QuestionDialogProps) {
+    const queryClient = useQueryClient();
     const [formData, setFormData] = useState<QuestionRequest>({
         content: question?.content || "",
         type: question?.type || "MULTIPLE_CHOICE",
@@ -30,7 +33,7 @@ export function QuestionDialog({
         metadata: question?.metadata || "",
         answerOptions: question?.answerOptions?.map((opt) => ({
             content: opt.content,
-            correct: opt.correct,
+            isCorrect: opt.isCorrect,
             orderIndex: opt.orderIndex,
         })) || [],
     });
@@ -44,18 +47,18 @@ export function QuestionDialog({
                 setFormData((prev) => ({
                     ...prev,
                     answerOptions: [
-                        { content: "", correct: false, orderIndex: 0 },
-                        { content: "", correct: false, orderIndex: 1 },
-                        { content: "", correct: false, orderIndex: 2 },
-                        { content: "", correct: false, orderIndex: 3 },
+                        { content: "", isCorrect: false, orderIndex: 0 },
+                        { content: "", isCorrect: false, orderIndex: 1 },
+                        { content: "", isCorrect: false, orderIndex: 2 },
+                        { content: "", isCorrect: false, orderIndex: 3 },
                     ],
                 }));
             } else if (formData.type === "TRUE_FALSE") {
                 setFormData((prev) => ({
                     ...prev,
                     answerOptions: [
-                        { content: "True", correct: false, orderIndex: 0 },
-                        { content: "False", correct: false, orderIndex: 1 },
+                        { content: "True", isCorrect: false, orderIndex: 0 },
+                        { content: "False", isCorrect: false, orderIndex: 1 },
                     ],
                 }));
             }
@@ -69,15 +72,15 @@ export function QuestionDialog({
 
             if (type === "MULTIPLE_CHOICE" || type === "MULTI_SELECT") {
                 answerOptions = [
-                    { content: "", correct: false, orderIndex: 0 },
-                    { content: "", correct: false, orderIndex: 1 },
-                    { content: "", correct: false, orderIndex: 2 },
-                    { content: "", correct: false, orderIndex: 3 },
+                    { content: "", isCorrect: false, orderIndex: 0 },
+                    { content: "", isCorrect: false, orderIndex: 1 },
+                    { content: "", isCorrect: false, orderIndex: 2 },
+                    { content: "", isCorrect: false, orderIndex: 3 },
                 ];
             } else if (type === "TRUE_FALSE") {
                 answerOptions = [
-                    { content: "True", correct: false, orderIndex: 0 },
-                    { content: "False", correct: false, orderIndex: 1 },
+                    { content: "True", isCorrect: false, orderIndex: 0 },
+                    { content: "False", isCorrect: false, orderIndex: 1 },
                 ];
             }
 
@@ -92,7 +95,7 @@ export function QuestionDialog({
                 ...(prev.answerOptions || []),
                 {
                     content: "",
-                    correct: false,
+                    isCorrect: false,
                     orderIndex: prev.answerOptions?.length || 0,
                 },
             ],
@@ -116,9 +119,9 @@ export function QuestionDialog({
             newOptions[index] = { ...newOptions[index], [field]: value };
 
             // For MULTIPLE_CHOICE, only one option can be correct
-            if (field === "correct" && value && prev.type === "MULTIPLE_CHOICE") {
+            if (field === "isCorrect" && value && prev.type === "MULTIPLE_CHOICE") {
                 newOptions.forEach((opt, i) => {
-                    if (i !== index) opt.correct = false;
+                    if (i !== index) opt.isCorrect = false;
                 });
             }
 
@@ -142,7 +145,7 @@ export function QuestionDialog({
                 formData.type === "TRUE_FALSE") &&
             formData.answerOptions
         ) {
-            const hasCorrect = formData.answerOptions.some((opt) => opt.correct);
+            const hasCorrect = formData.answerOptions.some((opt) => opt.isCorrect);
             if (!hasCorrect) {
                 setError("At least one answer must be marked as correct");
                 return;
@@ -162,12 +165,18 @@ export function QuestionDialog({
         try {
             if (question) {
                 await assessmentService.updateQuestion(question.id, formData);
+                toast.success("Question updated successfully");
             } else {
                 await assessmentService.createQuestion(bankId, formData);
+                toast.success("Question created successfully");
             }
+            // Invalidate queries to refresh the list
+            queryClient.invalidateQueries({ queryKey: ["questions", "bank", bankId] });
             onSuccess();
         } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to save question");
+            const errorMessage = err.response?.data?.message || err.message || "Failed to save question";
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -183,20 +192,20 @@ export function QuestionDialog({
             <div className="flex min-h-screen items-center justify-center p-4">
                 {/* Backdrop */}
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                    className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity"
                     onClick={onClose}
                 />
 
                 {/* Dialog */}
-                <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
                     {/* Header */}
-                    <div className="sticky top-0 bg-white flex items-center justify-between p-6 border-b border-gray-200 z-10">
-                        <h2 className="text-xl font-semibold text-gray-900">
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 z-10">
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                             {question ? "Edit Question" : "Add Question"}
                         </h2>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-500 transition-colors"
+                            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                         >
                             <X className="h-6 w-6" />
                         </button>
@@ -205,14 +214,14 @@ export function QuestionDialog({
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
                         {error && (
-                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-sm text-red-600">{error}</p>
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                             </div>
                         )}
 
                         {/* Question Type */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Question Type <span className="text-red-500">*</span>
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -220,7 +229,7 @@ export function QuestionDialog({
                                     { value: "MULTIPLE_CHOICE", label: "Multiple Choice" },
                                     { value: "MULTI_SELECT", label: "Multi Select" },
                                     { value: "TRUE_FALSE", label: "True/False" },
-                                    { value: "SHORT_ANSWER", label: "Short Answer" },
+                                    { value: "FILL_BLANK", label: "Fill in Blank" },
                                     { value: "ESSAY", label: "Essay" },
                                 ].map((type) => (
                                     <button
@@ -228,8 +237,8 @@ export function QuestionDialog({
                                         type="button"
                                         onClick={() => handleTypeChange(type.value as QuestionType)}
                                         className={`px-4 py-3 text-sm font-medium rounded-lg border-2 transition-colors ${formData.type === type.value
-                                            ? "border-purple-600 bg-purple-50 text-purple-700"
-                                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                                            ? "border-indigo-600 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
                                             }`}
                                     >
                                         {type.label}
@@ -242,7 +251,7 @@ export function QuestionDialog({
                         <div>
                             <label
                                 htmlFor="content"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
                             >
                                 Question <span className="text-red-500">*</span>
                             </label>
@@ -253,7 +262,7 @@ export function QuestionDialog({
                                     setFormData({ ...formData, content: e.target.value })
                                 }
                                 rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 placeholder="Enter your question..."
                                 required
                             />
@@ -263,7 +272,7 @@ export function QuestionDialog({
                         <div>
                             <label
                                 htmlFor="maxPoints"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
                             >
                                 Points
                             </label>
@@ -279,7 +288,7 @@ export function QuestionDialog({
                                 }
                                 min="0"
                                 step="0.5"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
                         </div>
 
@@ -287,14 +296,14 @@ export function QuestionDialog({
                         {showAnswerOptions && (
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                                         Answer Options <span className="text-red-500">*</span>
                                     </label>
                                     {formData.type !== "TRUE_FALSE" && (
                                         <button
                                             type="button"
                                             onClick={handleAddOption}
-                                            className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                                         >
                                             <Plus className="h-4 w-4 inline mr-1" />
                                             Add Option
@@ -308,11 +317,11 @@ export function QuestionDialog({
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    handleOptionChange(index, "correct", !option.correct)
+                                                    handleOptionChange(index, "isCorrect", !option.isCorrect)
                                                 }
-                                                className={`mt-2 flex-shrink-0 ${option.correct
-                                                    ? "text-green-600"
-                                                    : "text-gray-300 hover:text-gray-400"
+                                                className={`mt-2 flex-shrink-0 transition-colors ${option.isCorrect
+                                                    ? "text-green-600 dark:text-green-400"
+                                                    : "text-slate-300 dark:text-slate-600 hover:text-slate-400 dark:hover:text-slate-500"
                                                     }`}
                                             >
                                                 <CheckCircle2 className="h-6 w-6" />
@@ -324,7 +333,7 @@ export function QuestionDialog({
                                                     handleOptionChange(index, "content", e.target.value)
                                                 }
                                                 placeholder={`Option ${index + 1}`}
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                                 disabled={formData.type === "TRUE_FALSE"}
                                             />
                                             {formData.type !== "TRUE_FALSE" &&
@@ -333,7 +342,7 @@ export function QuestionDialog({
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRemoveOption(index)}
-                                                        className="mt-2 text-gray-400 hover:text-red-600 transition-colors"
+                                                        className="mt-2 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                                                     >
                                                         <Trash2 className="h-5 w-5" />
                                                     </button>
@@ -342,7 +351,7 @@ export function QuestionDialog({
                                     ))}
                                 </div>
 
-                                <p className="mt-2 text-xs text-gray-500">
+                                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                                     {formData.type === "MULTIPLE_CHOICE" &&
                                         "Click the checkmark to mark the correct answer"}
                                     {formData.type === "MULTI_SELECT" &&
@@ -357,7 +366,7 @@ export function QuestionDialog({
                         <div>
                             <label
                                 htmlFor="metadata"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
                             >
                                 Metadata (JSON - Optional)
                             </label>
@@ -368,27 +377,27 @@ export function QuestionDialog({
                                 onChange={(e) =>
                                     setFormData({ ...formData, metadata: e.target.value })
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 placeholder='e.g., {"difficulty": "medium", "topic": "algorithms"}'
                             />
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                                 Add extra information like difficulty level, topic, etc.
                             </p>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-6 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {loading ? "Saving..." : question ? "Update Question" : "Add Question"}
                             </button>

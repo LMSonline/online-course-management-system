@@ -9,6 +9,7 @@ import vn.uit.lms.service.assessment.QuizStatisticsService;
 import vn.uit.lms.shared.dto.request.assessment.AddQuestionsRequest;
 import vn.uit.lms.shared.dto.request.assessment.QuizRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuizEligibilityResponse;
+import vn.uit.lms.shared.dto.response.assessment.QuizQuestionResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuizResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuizStatisticsResponse;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
@@ -88,6 +89,15 @@ public class QuizController {
     @GetMapping("/quizzes/{id}")
     public ResponseEntity<QuizResponse> getQuiz(@PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuizById(id));
+    }
+
+    /**
+     * Get all questions in a quiz
+     * Returns ordered list of quiz questions
+     */
+    @GetMapping("/quizzes/{quizId}/questions")
+    public ResponseEntity<List<QuizQuestionResponse>> getQuizQuestions(@PathVariable Long quizId) {
+        return ResponseEntity.ok(quizService.getQuizQuestions(quizId));
     }
 
     @PutMapping("/quizzes/{id}")
