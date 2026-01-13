@@ -83,22 +83,6 @@ export function LearnerProfileMenu({ onClose }: Props) {
         >
           My learning
         </Link>
-
-        <Link
-          href="/learner/assignments"
-          onClick={handleClick}
-          className="rounded-xl px-3 py-2 hover:bg-slate-900/80 transition"
-        >
-          Quizzes & assignments
-        </Link>
-
-        <Link
-          href="/learner/settings"
-          onClick={handleClick}
-          className="rounded-xl px-3 py-2 hover:bg-slate-900/80 transition"
-        >
-          Account settings
-        </Link>
       </nav>
 
       <div className="my-2 h-px bg-white/10" />
