@@ -39,12 +39,12 @@ export function RevenueShareFormModal({ config, onClose }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Map frontend fields → backend DTO
+    //  Map frontend fields → backend DTO
     // Backend expects: { percentage, effectiveFrom, effectiveTo, categoryId, description?, versionNote? }
     // "percentage" = platform percentage (backend will calculate teacher % = 100 - platform %)
     const payload = {
       categoryId: formData.categoryId ? Number(formData.categoryId) : null,
-      percentage: formData.platformPercentage, // ✅ Map platformPercentage → percentage
+      percentage: formData.platformPercentage, //  Map platformPercentage → percentage
       effectiveFrom: formData.effectiveFrom,
       effectiveTo: formData.effectiveTo || null,
       description: formData.categoryId

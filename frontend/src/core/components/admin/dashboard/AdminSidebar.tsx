@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, BookOpen, DollarSign, MessageSquare, Award, BarChart3, Settings, DollarSignIcon } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, DollarSign, MessageSquare, Award, BarChart3, Settings, DollarSignIcon,LogOut } from "lucide-react";
 import { useAdmin } from "@/core/components/admin/AdminContext";
+import { useLogout } from "@/hooks/useAuth";
 
 type Props = {
   stats: any;
@@ -12,14 +13,15 @@ type Props = {
 export function AdminSidebar({ stats }: Props) {
   const pathname = usePathname();
   const { darkMode } = useAdmin();
+  const { mutate: logout, isPending } = useLogout();
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
     { id: "users", label: "Users", icon: Users, href: "/admin/users" },
     { id: "courses", label: "Courses", icon: BookOpen, href: "/admin/courses" },
     { id: "payments", label: "Payments", icon: DollarSign, href: "/admin/payment" },
-        { id: "revenue", label: "Revenues", icon: DollarSignIcon, href: "/admin/revenue-share" },
-    { id: "community", label: "Community", icon: MessageSquare, href: "/admin/community" },
+        { id: "revenue", label: "Revenues", icon: BarChart3, href: "/admin/revenue-share" },
+    { id: "violation_report", label: "Violation Report", icon: MessageSquare, href: "/admin/violation-report" },
     { id: "certificates", label: "Certificates", icon: Award, href: "/admin/certificate" },
     { id: "reports", label: "Reports", icon: BarChart3, href: "/admin/reports" },
     { id: "settings", label: "Settings", icon: Settings, href: "/admin/settings" },
@@ -58,6 +60,18 @@ export function AdminSidebar({ stats }: Props) {
           })}
         </ul>
       </nav>
+
+      {/* Logout */}
+      <div className="px-4 py-4 border-t border-gray-800">
+        <button
+          onClick={() => logout()}
+          disabled={isPending}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition disabled:opacity-50"
+        >
+          <LogOut className="w-5 h-5" />
+          {isPending ? "Logging out..." : "Logout"}
+        </button>
+      </div>
     </aside>
   );
 }
