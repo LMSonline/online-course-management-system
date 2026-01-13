@@ -25,6 +25,9 @@ import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.mapper.CertificateMapper;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,6 +83,28 @@ public class CertificateService {
     }
 
     /**
+     * Get ALL certificates (Admin Dashboard)
+     *
+     * Access Control:
+     * - ADMIN only
+     *
+     * Use cases:
+     * - Admin dashboard statistics
+     * - Certificate management overview
+     */
+    public List<CertificateResponse> getAllCertificates() {
+        log.info("Admin fetching all certificates");
+
+        List<Certificate> certificates = certificateRepository.findAll();
+
+        log.info("Found {} certificates", certificates.size());
+
+        return certificates.stream()
+                .map(certificateMapper::toResponse)
+                .toList();
+    }
+
+    /**
      * Get certificate by ID
      */
     public CertificateDetailResponse getCertificateById(Long certificateId) {
@@ -132,9 +157,9 @@ public class CertificateService {
      * - Certificate must exist
      * - Certificate must not be revoked
      * - User must have permission to download:
-     *   * Student: Only their own certificates
-     *   * Teacher: Certificates from their courses
-     *   * Admin: Any certificate
+     * * Student: Only their own certificates
+     * * Teacher: Certificates from their courses
+     * * Admin: Any certificate
      *
      * Returns:
      * - PDF file as byte array
@@ -143,41 +168,81 @@ public class CertificateService {
      * 1. Use iText 7 or Apache PDFBox library
      * 2. Load certificate template from resources
      * 3. Fill in dynamic fields:
-     *    - Student name
-     *    - Course title
-     *    - Certificate code (with QR code)
-     *    - Issue date
-     *    - Grade and score
-     *    - Teacher signature (digital)
+     * - Student name
+     * - Course title
+     * - Certificate code (with QR code)
+     * - Issue date
+     * - Grade and score
+     * - Teacher signature (digital)
      * 4. Add QR code for verification
      * 5. Add watermark/security features
      * 6. Cache generated PDFs in cloud storage
      */
+
+    // public byte[] downloadCertificate(Long certificateId) {
+    // log.info("Downloading certificate: {}", certificateId);
+
+    // Certificate certificate = certificateRepository.findById(certificateId)
+    // .orElseThrow(() -> new ResourceNotFoundException("Certificate not found with
+    // id: " + certificateId));
+
+    // // Precondition: Certificate must not be revoked
+    // if (certificate.getIsRevoked()) {
+    // throw new InvalidRequestException("Cannot download revoked certificate");
+    // }
+
+    // // Access Control: Verify ownership or authorization
+    // Account currentUser = accountService.verifyCurrentAccount();
+    // validateCertificateDownloadAccess(currentUser, certificate);
+
+    // // Generate PDF certificate
+    // // Implementation pending - requires PDF generation library
+    // // When PDF library is available:
+    // // byte[] pdfBytes = generateCertificatePdf(certificate);
+    // // Store PDF in cloud storage for caching
+    // // certificateFileService.storePdf(certificateId, pdfBytes);
+    // // return pdfBytes;
+
+    // log.warn("Certificate PDF generation not implemented yet - returning mock
+    // data");
+    // return generateMockCertificatePdf(certificate);
+    // }
+
     public byte[] downloadCertificate(Long certificateId) {
         log.info("Downloading certificate: {}", certificateId);
 
         Certificate certificate = certificateRepository.findById(certificateId)
-                .orElseThrow(() -> new ResourceNotFoundException("Certificate not found with id: " + certificateId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Certificate not found with id: " + certificateId));
 
         // Precondition: Certificate must not be revoked
         if (certificate.getIsRevoked()) {
             throw new InvalidRequestException("Cannot download revoked certificate");
         }
 
-        // Access Control: Verify ownership or authorization
+        // Access Control
         Account currentUser = accountService.verifyCurrentAccount();
         validateCertificateDownloadAccess(currentUser, certificate);
 
-        // Generate PDF certificate
-        // Implementation pending - requires PDF generation library
-        // When PDF library is available:
-        // byte[] pdfBytes = generateCertificatePdf(certificate);
-        // Store PDF in cloud storage for caching
-        // certificateFileService.storePdf(certificateId, pdfBytes);
-        // return pdfBytes;
+        String fileUrl = certificate.getFileUrl();
 
-        log.warn("Certificate PDF generation not implemented yet - returning mock data");
-        return generateMockCertificatePdf(certificate);
+        if (fileUrl == null || fileUrl.isBlank()) {
+            throw new ResourceNotFoundException("Certificate file path not set");
+        }
+
+        Path filePath = Path.of(fileUrl);
+
+        if (!Files.exists(filePath)) {
+            throw new ResourceNotFoundException(
+                    "Certificate file not found at: " + fileUrl);
+        }
+
+        try {
+            return Files.readAllBytes(filePath);
+        } catch (IOException e) {
+            log.error("Failed to read certificate file {}", fileUrl, e);
+            throw new InvalidRequestException("Failed to read certificate file");
+        }
     }
 
     /**
@@ -280,7 +345,7 @@ public class CertificateService {
      * @param enrollmentId The ID of the enrollment to issue certificate for
      * @return CertificateDetailResponse with certificate details
      * @throws ResourceNotFoundException if enrollment not found
-     * @throws InvalidRequestException if enrollment not eligible for certificate
+     * @throws InvalidRequestException   if enrollment not eligible for certificate
      */
     @Transactional
     public CertificateDetailResponse issueCertificate(Long enrollmentId) {
@@ -310,7 +375,7 @@ public class CertificateService {
                     enrollmentId, enrollment.getEndAt());
             throw new InvalidRequestException(
                     "Cannot issue certificate for expired enrollment. " +
-                    "Course duration exceeded. Please contact support for assistance.");
+                            "Course duration exceeded. Please contact support for assistance.");
         }
 
         // STEP 4: Check certificate not already issued (prevent duplicates)
@@ -318,7 +383,7 @@ public class CertificateService {
             log.warn("Certificate already issued for enrollment {}", enrollmentId);
             throw new InvalidRequestException(
                     "Certificate has already been issued for this enrollment. " +
-                    "Check your certificates list.");
+                            "Check your certificates list.");
         }
 
         // STEP 5: Validate eligibility using domain logic
@@ -344,8 +409,7 @@ public class CertificateService {
                             minProgressPct != null ? minProgressPct : 0,
                             passScore != null ? passScore : 0f,
                             completionPct != null ? completionPct : 0f,
-                            currentScore != null ? currentScore : 0f)
-            );
+                            currentScore != null ? currentScore : 0f));
         }
 
         // STEP 6: Extract enrollment details
@@ -432,25 +496,26 @@ public class CertificateService {
         // Send notification to student - implementation pending
         // When NotificationService is available:
         // notificationService.sendCertificateIssuedNotification(
-        //     student.getAccount().getId(),
-        //     certificate.getId(),
-        //     course.getTitle()
+        // student.getAccount().getId(),
+        // certificate.getId(),
+        // course.getTitle()
         // );
         // emailService.sendCertificateIssuedEmail(
-        //     student.getAccount().getEmail(),
-        //     student.getFullName(),
-        //     course.getTitle(),
-        //     certificate.getCode(),
-        //     generateCertificateViewUrl(certificate.getId())
+        // student.getAccount().getEmail(),
+        // student.getFullName(),
+        // course.getTitle(),
+        // certificate.getCode(),
+        // generateCertificateViewUrl(certificate.getId())
         // );
 
         // Generate and store PDF certificate file - implementation pending
         // When PDF generation service is available:
         // byte[] pdfBytes = certificatePdfService.generatePdf(certificate);
         // String pdfUrl = fileStorageService.uploadCertificatePdf(
-        //     certificate.getId(),
-        //     pdfBytes,
-        //     String.format("certificate_%s_%s.pdf", student.getStudentCode(), course.getId())
+        // certificate.getId(),
+        // pdfBytes,
+        // String.format("certificate_%s_%s.pdf", student.getStudentCode(),
+        // course.getId())
         // );
         // certificate.setFileUrl(pdfUrl);
         // certificateRepository.save(certificate);
@@ -521,19 +586,18 @@ public class CertificateService {
     private byte[] generateMockCertificatePdf(Certificate certificate) {
         String content = String.format(
                 "CERTIFICATE OF COMPLETION\n\n" +
-                "This certifies that\n%s\n\n" +
-                "has successfully completed\n%s\n\n" +
-                "Certificate Code: %s\n" +
-                "Issued: %s\n" +
-                "Grade: %s\n" +
-                "Score: %.2f",
+                        "This certifies that\n%s\n\n" +
+                        "has successfully completed\n%s\n\n" +
+                        "Certificate Code: %s\n" +
+                        "Issued: %s\n" +
+                        "Grade: %s\n" +
+                        "Score: %.2f",
                 certificate.getStudent().getFullName(),
                 certificate.getCourse().getTitle(),
                 certificate.getCode(),
                 certificate.getIssuedAt(),
                 certificate.getGrade(),
-                certificate.getFinalScore()
-        );
+                certificate.getFinalScore());
 
         return content.getBytes();
     }
@@ -543,7 +607,8 @@ public class CertificateService {
      *
      * Access Rules:
      * - STUDENT: Can only view their own certificates
-     * - TEACHER: Can view certificates for students enrolled in their courses (future implementation)
+     * - TEACHER: Can view certificates for students enrolled in their courses
+     * (future implementation)
      * - ADMIN: Can view any certificates
      */
     private void validateCertificateAccessForStudent(Account currentUser, Student targetStudent) {
@@ -566,14 +631,16 @@ public class CertificateService {
         }
 
         // TEACHER can view certificates for students in their courses
-        // Future implementation: Check if teacher owns any course the student is enrolled in
+        // Future implementation: Check if teacher owns any course the student is
+        // enrolled in
         if (currentRole == Role.TEACHER) {
             log.debug("Teacher access to student certificates - enrollment check pending");
             // When enrollment check is implemented:
             // boolean hasEnrollment = enrollmentRepository
-            //     .existsStudentInTeacherCourse(targetStudent.getId(), currentUser.getId());
+            // .existsStudentInTeacherCourse(targetStudent.getId(), currentUser.getId());
             // if (!hasEnrollment) {
-            //     throw new UnauthorizedException("You can only view certificates for students in your courses");
+            // throw new UnauthorizedException("You can only view certificates for students
+            // in your courses");
             // }
             return;
         }
@@ -612,7 +679,7 @@ public class CertificateService {
         if (currentRole == Role.TEACHER) {
             Course course = certificate.getCourse();
             if (course.getTeacher() == null ||
-                !course.getTeacher().getAccount().getId().equals(currentUser.getId())) {
+                    !course.getTeacher().getAccount().getId().equals(currentUser.getId())) {
                 throw new UnauthorizedException("You can only download certificates from your courses");
             }
             return;
@@ -639,7 +706,7 @@ public class CertificateService {
         // TEACHER can only access their own courses
         if (currentRole == Role.TEACHER) {
             if (course.getTeacher() == null ||
-                !course.getTeacher().getAccount().getId().equals(currentUser.getId())) {
+                    !course.getTeacher().getAccount().getId().equals(currentUser.getId())) {
                 throw new UnauthorizedException("You can only view certificates for your own courses");
             }
             return;

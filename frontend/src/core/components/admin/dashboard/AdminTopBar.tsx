@@ -1,14 +1,16 @@
+"use client";
+
 import { Search, Bell, Shield, ChevronDown, Sun, Moon } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
+import { useAdmin } from "@/core/components/admin/AdminContext";
 
 type Props = {
   stats: any;
 };
 
 export function AdminTopBar({ stats }: Props) {
-  const [darkMode, setDarkMode] = useState(true);
-
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
+  const { darkMode, setDarkMode } = useAdmin();
+  const toggleDarkMode = () => setDarkMode(!darkMode);
 
   return (
     <header
@@ -16,9 +18,9 @@ export function AdminTopBar({ stats }: Props) {
         darkMode
           ? "bg-[#0a0f1e] border-b border-gray-800"
           : "bg-white border-b border-gray-200"
-      } sticky top-0 z-10`}
+      } sticky top-0 z-10 h-[73px] flex items-center`}
     >
-      <div className="flex items-center justify-between px-8 py-4">
+      <div className="flex items-center justify-between px-4 w-full">
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search
