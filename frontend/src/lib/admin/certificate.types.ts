@@ -28,6 +28,7 @@ export interface CertificateDetailResponse extends CertificateResponse {
 }
 
 export interface CertificateVerificationResponse {
+  message: string;
   code: string;
   studentName: string;
   courseName: string;

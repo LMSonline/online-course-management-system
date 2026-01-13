@@ -20,6 +20,20 @@ export const adminCertificateService = {
    * ============================
    */
 
+
+
+  /**
+ * Get ALL certificates (Admin Dashboard)
+ * GET /api/v1/admin/certificates
+ */
+getAllCertificates: async (): Promise<CertificateResponse[]> => {
+  const response = await axiosClient.get<
+    ApiResponse<CertificateResponse[]>
+  >(ADMIN_CERTIFICATE_PREFIX);
+
+  return unwrapResponse(response);
+},
+
   /**
    * Get certificates of a student (Admin)
    * GET /api/v1/admin/certificates/student/{studentId}

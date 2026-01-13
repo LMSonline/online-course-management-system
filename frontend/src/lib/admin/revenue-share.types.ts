@@ -1,5 +1,5 @@
 /**
- * ✅ FIXED: Match actual backend response
+ * Match actual backend response
  * Backend returns:
  * - percentage (platform percentage)
  * Frontend calculates:
@@ -20,7 +20,7 @@ export interface RevenueShareConfigResponse {
 }
 
 /**
- * ✅ FIXED: Match backend DTO
+ * Match backend DTO
  * Backend expects:
  * - percentage (platform percentage, required)
  * - description (optional)
@@ -37,27 +37,27 @@ export interface CreateRevenueShareConfigRequest {
   effectiveTo?: string | null;
   description?: string;
   versionNote?: string;
-  minimumPayoutAmount?: number | null; // ✅ Minimum payout threshold in VND
+  minimumPayoutAmount?: number | null; //  Minimum payout threshold in VND
 }
 
 /**
- * ✅ FIXED: Match backend DTO for update
+ *  Match backend DTO for update
  */
 export interface UpdateRevenueShareConfigRequest {
-  percentage: number; // ✅ Platform percentage
+  percentage: number; //  Platform percentage
   effectiveFrom: string;
   effectiveTo?: string | null;
   description?: string;
   versionNote?: string;
-  minimumPayoutAmount?: number | null; // ✅ Minimum payout threshold in VND
+  minimumPayoutAmount?: number | null; //  Minimum payout threshold in VND
 }
 
 /**
- * ✅ FIXED: Match Spring Boot Page response structure
+ * Match Spring Boot Page response structure
  * Backend returns Page<T> with field "content" not "items"
  */
 export interface PagedRevenueShareResponse {
-  content: RevenueShareConfigResponse[]; // ✅ Changed from "items" to "content"
+  content: RevenueShareConfigResponse[]; //  Changed from "items" to "content"
   page: number;
   size: number;
   totalItems: number;

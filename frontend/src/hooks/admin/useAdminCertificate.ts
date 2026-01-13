@@ -19,9 +19,9 @@ export function useCertificateAdmin({
   certificateId,
   autoLoad = true,
 }: UseCertificateAdminOptions) {
-  const [certificates, setCertificates] = useState<
-    CertificateResponse[] | null
-  >(null);
+  const [certificates, setCertificates] =
+  useState<CertificateResponse[]>([]);
+
   const [certificateDetail, setCertificateDetail] =
     useState<CertificateDetailResponse | null>(null);
   const [verificationResult, setVerificationResult] =
@@ -30,8 +30,24 @@ export function useCertificateAdmin({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // const loadAllCertificates = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
+  //     const data = await adminCertificateService.getAllCertificates();
+  //     setCertificates(data);
+  //   } catch (err: any) {
+  //     setError(err.message || "Failed to load all certificates");
+  //     console.error("Failed to load all certificates:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
+
+
+
   /* =========================
-   * Load certificates
+   * Load certificates by
    * ========================= */
 
   const loadCertificatesByStudent = useCallback(async () => {
@@ -123,25 +139,47 @@ export function useCertificateAdmin({
    * Download certificate
    * ========================= */
 
-  const downloadCertificate = useCallback(async () => {
+  // const downloadCertificate = useCallback(async () => {
+  //   if (!certificateId) return;
+
+  //   try {
+  //     const blob =
+  //       await adminCertificateService.downloadCertificate(certificateId);
+
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = `certificate-${certificateId}.pdf`;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     document.body.removeChild(a);
+  //     window.URL.revokeObjectURL(url);
+  //   } catch (err: any) {
+  //     setError(err.message || "Failed to download certificate");
+  //     console.error("Failed to download certificate:", err);
+  //   }
+  // }, [certificateId]);
+
+
+
+  const downloadCertificate = useCallback(() => {
     if (!certificateId) return;
 
-    try {
-      const blob =
-        await adminCertificateService.downloadCertificate(certificateId);
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `certificate-${certificateId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      setError(err.message || "Failed to download certificate");
-      console.error("Failed to download certificate:", err);
+    // chỉ mock cho id từ 1 -> 7
+    if (certificateId < 1 || certificateId > 7) {
+      setError("Mock certificate only available for ID 1–7");
+      return;
     }
+
+    const mockPdfUrl = "https://www.orimi.com/pdf-test.pdf";
+
+    const link = document.createElement("a");
+    link.href = mockPdfUrl;
+    link.download = `certificate-${certificateId}.pdf`;
+    link.target = "_blank"; // mở PDF viewer
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }, [certificateId]);
 
   /* =========================
@@ -176,11 +214,15 @@ export function useCertificateAdmin({
       loadCertificatesByStudent();
     } else if (courseId) {
       loadCertificatesByCourse();
-    }
+    } 
+    // else {
+    //   loadAllCertificates();
+    // }
 
     if (certificateId) {
       loadCertificateDetail();
     }
+
   }, [
     autoLoad,
     studentId,
