@@ -9,7 +9,7 @@ export const learnerEnrollmentService = {
     const params: any = {};
     if (page) params.page = page;
     if (size) params.size = size;
-    const res = await axiosClient.get(`/api/v1/students/${studentId}/enrollments`, { params });
+    const res = await axiosClient.get(`/students/${studentId}/enrollments`, { params });
     return unwrapResponse(res);
   },
 
@@ -20,10 +20,11 @@ export const learnerEnrollmentService = {
   },
 
   /** Đăng ký khoá học */
-  enrollCourse: async (studentId: number, courseId: number): Promise<EnrollmentResponse> => {
+  enrollCourse: async (studentId: number, courseId: number, courseVersionId: number): Promise<EnrollmentResponse> => {
     const res = await axiosClient.post(`/enrollments`, {
       studentId,
       courseId,
+      courseVersionId,
     });
     return unwrapResponse(res);
   },

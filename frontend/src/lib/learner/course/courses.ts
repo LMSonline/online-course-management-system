@@ -26,6 +26,7 @@ export interface Course {
   approvedAt?: string; // ISO datetime string
   publishedAt?: string; // ISO datetime string
   chapterCount: number;
+  thumbnail?: string;
 }
 
 export interface CourseListResponse {

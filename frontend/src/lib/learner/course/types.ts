@@ -28,6 +28,7 @@ export type CourseDetail = {
     avatarUrl?: string;
     about: string;
   };
+  thumbnail_Url?: string;
 };
 
 export const MOCK_COURSE: CourseDetail = {

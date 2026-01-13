@@ -4,7 +4,7 @@ import { DashboardHeader } from "@/core/components/learner/dashboard/DashboardHe
 import { DashboardStatsRow } from "@/core/components/learner/dashboard/DashboardStatsRow";
 import MyCoursesSection from "@/core/components/learner/dashboard/MyCoursesSection";
 // import { MOCK_COURSES, RECOMMENDED_COURSES, } from "@/lib/learner/dashboard/types";
-import { useStudentCoursesWithProgress, useCourses } from "@/hooks/learner/useCourse";
+import { useCourses } from "@/hooks/learner/useCourse";
 import { useAuth } from "@/hooks/useAuth";
 import { RecommendedCarousel } from "@/core/components/learner/dashboard/RecommendedCarousel";
 
