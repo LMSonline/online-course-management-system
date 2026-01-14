@@ -19,9 +19,9 @@ public class CreatePaymentRequest {
     @NotNull(message = "Course version ID is required")
     private Long courseVersionId;
 
-    private PaymentProvider paymentMethod; // VNPAY, ZALOPAY, etc.
+    private PaymentProvider paymentMethod;
 
-    private String returnUrl; // URL to redirect after payment
+    private String returnUrl;
 
     private String userAgent;
 }

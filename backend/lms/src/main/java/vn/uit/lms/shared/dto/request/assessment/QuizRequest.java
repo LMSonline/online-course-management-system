@@ -1,8 +1,9 @@
 package vn.uit.lms.shared.dto.request.assessment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import java.time.Instant;
 
 @Data
 @Schema(description = "Request DTO for creating or updating a quiz")
@@ -30,4 +31,10 @@ public class QuizRequest {
 
     @Schema(description = "Minimum score to pass the quiz", example = "70.0")
     private Double passingScore;
+
+    @Schema(description = "Quiz start date/time (ISO 8601 format)", example = "2026-01-15T08:00:00Z")
+    private Instant startDate;
+
+    @Schema(description = "Quiz end date/time (ISO 8601 format)", example = "2026-01-30T23:59:59Z")
+    private Instant endDate;
 }

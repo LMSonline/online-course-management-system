@@ -60,6 +60,11 @@ public class QuizAttemptService {
         Student student = loadStudent(account);
         Quiz quiz = loadQuiz(quizId);
 
+//        Check if quiz is available (within time window)
+        if (!quiz.isAvailable()) {
+            throw new InvalidRequestException(quiz.getAvailabilityMessage());
+        }
+
         // STEP 3: Check if student can attempt (domain logic)
         long attemptCount = countStudentAttempts(student.getId(), quizId);
         if (!quiz.canAttempt((int) attemptCount)) {

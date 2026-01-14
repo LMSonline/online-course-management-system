@@ -41,6 +41,18 @@ public class QuizResponse {
     @Schema(description = "Minimum score to pass", example = "70.0")
     private Double passingScore;
 
+    @Schema(description = "Quiz start date/time", example = "2026-01-15T08:00:00Z")
+    private Instant startDate;
+
+    @Schema(description = "Quiz end date/time", example = "2026-01-30T23:59:59Z")
+    private Instant endDate;
+
+    @Schema(description = "Whether quiz is currently available", example = "true")
+    private Boolean isAvailable;
+
+    @Schema(description = "Availability message", example = "Quiz is available until 2026-01-30T23:59:59Z")
+    private String availabilityMessage;
+
     @Schema(description = "List of questions in the quiz")
     private List<QuizQuestionResponse> questions;
 

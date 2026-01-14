@@ -5,6 +5,7 @@ import lombok.*;
 import vn.uit.lms.core.domain.course.content.Lesson;
 import vn.uit.lms.shared.entity.BaseEntity;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,12 @@ public class Quiz extends BaseEntity {
 
     @Column(name = "passing_score")
     private Double passingScore;
+
+    @Column(name = "start_date")
+    private Instant startDate;
+
+    @Column(name = "end_date")
+    private Instant endDate;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -103,6 +110,9 @@ public class Quiz extends BaseEntity {
             if (totalPoints != null && passingScore > totalPoints) {
                 throw new IllegalStateException("Passing score cannot exceed total points");
             }
+        }
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalStateException("Start date must be before end date");
         }
     }
 
@@ -216,5 +226,78 @@ public class Quiz extends BaseEntity {
      */
     public boolean hasUnlimitedAttempts() {
         return maxAttempts == null;
+    }
+
+    /**
+     * Check if quiz has a start date
+     */
+    public boolean hasStartDate() {
+        return startDate != null;
+    }
+
+    /**
+     * Check if quiz has an end date
+     */
+    public boolean hasEndDate() {
+        return endDate != null;
+    }
+
+    /**
+     * Check if quiz is currently available (within time window)
+     */
+    public boolean isAvailable() {
+        Instant now = Instant.now();
+
+        // If start date is set and current time is before start date
+        if (startDate != null && now.isBefore(startDate)) {
+            return false;
+        }
+
+        // If end date is set and current time is after end date
+        if (endDate != null && now.isAfter(endDate)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if quiz has not started yet
+     */
+    public boolean isNotStarted() {
+        return startDate != null && Instant.now().isBefore(startDate);
+    }
+
+    /**
+     * Check if quiz has ended
+     */
+    public boolean isEnded() {
+        return endDate != null && Instant.now().isAfter(endDate);
+    }
+
+    /**
+     * Check if quiz is currently in progress (started but not ended)
+     */
+    public boolean isInProgress() {
+        Instant now = Instant.now();
+        boolean started = startDate == null || now.isAfter(startDate) || now.equals(startDate);
+        boolean notEnded = endDate == null || now.isBefore(endDate);
+        return started && notEnded;
+    }
+
+    /**
+     * Get availability message for display
+     */
+    public String getAvailabilityMessage() {
+        if (isNotStarted()) {
+            return "Quiz will be available starting from " + startDate;
+        }
+        if (isEnded()) {
+            return "Quiz ended on " + endDate;
+        }
+        if (endDate != null) {
+            return "Quiz is available until " + endDate;
+        }
+        return "Quiz is available";
     }
 }
