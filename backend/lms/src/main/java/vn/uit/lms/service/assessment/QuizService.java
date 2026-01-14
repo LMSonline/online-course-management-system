@@ -66,6 +66,8 @@ public class QuizService {
                 .randomizeQuestions(request.getRandomizeQuestions())
                 .randomizeOptions(request.getRandomizeOptions())
                 .passingScore(request.getPassingScore())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
                 .build();
 
         // Use rich domain validation
@@ -194,6 +196,8 @@ public class QuizService {
         quiz.setRandomizeQuestions(request.getRandomizeQuestions());
         quiz.setRandomizeOptions(request.getRandomizeOptions());
         quiz.setPassingScore(request.getPassingScore());
+        quiz.setStartDate(request.getStartDate());
+        quiz.setEndDate(request.getEndDate());
 
         // Use rich domain validation
         quiz.validate();
@@ -350,6 +354,8 @@ public class QuizService {
                 .randomizeQuestions(sourceQuiz.getRandomizeQuestions())
                 .randomizeOptions(sourceQuiz.getRandomizeOptions())
                 .passingScore(sourceQuiz.getPassingScore())
+                .startDate(sourceQuiz.getStartDate())
+                .endDate(sourceQuiz.getEndDate())
                 .build();
 
         // Use rich domain validation

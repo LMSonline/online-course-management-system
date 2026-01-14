@@ -41,10 +41,14 @@ public class QuizStatisticsService {
                 .collect(Collectors.toList());
         
         int attemptCount = attempts.size();
-        boolean canAttempt = quiz.canAttempt(attemptCount);
+        boolean canAttemptCount = quiz.canAttempt(attemptCount);
+        boolean isAvailable = quiz.isAvailable();
+        boolean canAttempt = canAttemptCount && isAvailable;
         String reason = null;
         
-        if (!canAttempt) {
+        if (!isAvailable) {
+            reason = quiz.getAvailabilityMessage();
+        } else if (!canAttemptCount) {
             reason = "Maximum attempts reached for this quiz";
         }
 
@@ -56,6 +60,10 @@ public class QuizStatisticsService {
                 .maxAttempts(quiz.getMaxAttempts())
                 .remainingAttempts(quiz.getRemainingAttempts(attemptCount))
                 .reason(reason)
+                .isAvailable(isAvailable)
+                .startDate(quiz.getStartDate())
+                .endDate(quiz.getEndDate())
+                .availabilityMessage(quiz.getAvailabilityMessage())
                 .build();
     }
 
