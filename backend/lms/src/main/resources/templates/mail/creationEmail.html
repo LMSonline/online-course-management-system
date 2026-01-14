@@ -7,7 +7,7 @@
 </head>
 <body>
 <p th:text="#{email.activation.greeting(${user.username})}">Dear</p>
-<p th:text="#{email.creation.text1}">Your JHipster account has been created, please click on the URL below to access it:</p>
+<p th:text="#{email.creation.text1}">Your JHipster account has been created, click on the URL below to access it:</p>
 <p>
   <a
      th:href="@{|${baseUrl}/${apiVersion}/reset/finish?key=${token}|}"
