@@ -47,7 +47,7 @@ def get_demo_chat_response(
    C. Tuple ✓
    D. Set
 
-4. Hàm nào dùng để in ra màn hình trong Python?
+4. Hàm nào dùng in ra màn hình trong Python?
    A. print() ✓
    B. echo()
    C. console.log()
