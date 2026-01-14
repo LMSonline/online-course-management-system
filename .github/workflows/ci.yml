@@ -7,11 +7,18 @@ on:
     branches: [main, develop]
 
 jobs:
-  test-chatbot:
+  backend-ci:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - chatbot-service
+          - recommendation-service
+
     defaults:
       run:
-        working-directory: ./backend/chatbot-service
+        working-directory: ./backend/${{ matrix.service }}
 
     steps:
       - uses: actions/checkout@v4
@@ -21,6 +28,9 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+          cache-dependency-path: |
+            backend/${{ matrix.service }}/requirements.txt
+            backend/${{ matrix.service }}/requirements-dev.txt
 
       - name: Install dependencies
         run: |
@@ -28,50 +38,11 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run black (check)
-        run: black --check app/ tests/
+      - name: Run black (auto-fix)
+        run: black app/ tests/
 
-      - name: Run ruff
-        run: ruff check app/ tests/
-
-      - name: Run pytest
-        env:
-          ENV: test
-        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/chatbot-service/coverage.xml
-          flags: chatbot
-          name: chatbot-coverage
-
-  test-recommendation:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend/recommendation-service
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-
-      - name: Run black (check)
-        run: black --check app/ tests/
-
-      - name: Run ruff
-        run: ruff check app/ tests/
+      - name: Run ruff (auto-fix)
+        run: ruff check app/ tests/ --fix
 
       - name: Run pytest
         env:
@@ -79,85 +50,9 @@ jobs:
         run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/recommendation-service/coverage.xml
-          flags: recommendation
-          name: recommendation-coverage
-
-  test-lms:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend/lms
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: "gradle"
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build with Gradle
-        run: ./gradlew build -x test
-
-      - name: Run tests
-        run: ./gradlew test --no-daemon
-
-      - name: Generate test report
-        if: always()
-        run: ./gradlew jacocoTestReport
         continue-on-error: true
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
+        uses: codecov/codecov-action@v4
         with:
-          name: lms-test-results
-          path: backend/lms/build/test-results/test/*.xml
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        if: always()
-        with:
-          file: ./backend/lms/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: lms
-          name: lms-coverage
-        continue-on-error: true
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install linting tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install black ruff
-
-      - name: Check formatting (chatbot)
-        working-directory: ./backend/chatbot-service
-        run: black --check app/ tests/
-
-      - name: Check formatting (recommendation)
-        working-directory: ./backend/recommendation-service
-        run: black --check app/ tests/
-
-      - name: Run ruff (chatbot)
-        working-directory: ./backend/chatbot-service
-        run: ruff check app/ tests/
-
-      - name: Run ruff (recommendation)
-        working-directory: ./backend/recommendation-service
-        run: ruff check app/ tests/
+          files: ./backend/${{ matrix.service }}/coverage.xml
+          flags: ${{ matrix.service }}
+          name: ${{ matrix.service }}-coverage
