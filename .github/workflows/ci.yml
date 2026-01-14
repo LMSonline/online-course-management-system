@@ -7,7 +7,6 @@ on:
     branches: [main, develop]
 
 jobs:
-
   backend-ci:
     name: backend-ci (${{ matrix.service }})
     runs-on: ubuntu-latest
@@ -21,7 +20,6 @@ jobs:
           echo "Stub check for ${{ matrix.service }} (always pass)."
           exit 0
 
- 
   lms-ci:
     name: lms-ci
     runs-on: ubuntu-latest
