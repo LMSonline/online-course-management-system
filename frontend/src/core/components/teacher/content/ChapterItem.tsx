@@ -20,6 +20,8 @@ import { LessonModal } from "./LessonModal";
 import { LessonItem } from "@/core/components/teacher/content/LessonItem";
 import { VideoUploadModal } from "./VideoUploadModal";
 import { DocumentUploadModal } from "./DocumentUploadModal";
+import { LinkQuizDialog } from "./LinkQuizDialog";
+import { LinkAssignmentDialog } from "./LinkAssignmentDialog";
 import { lessonResourceService } from "@/services/courses/content/lesson-resource.service";
 import { toast } from "sonner";
 
@@ -93,6 +95,16 @@ export const ChapterItem = ({
     const [documentModal, setDocumentModal] = useState<{
         isOpen: boolean;
         lesson?: LessonResponse;
+    }>({ isOpen: false });
+
+    const [linkQuizModal, setLinkQuizModal] = useState<{
+        isOpen: boolean;
+        lessonId?: number;
+    }>({ isOpen: false });
+
+    const [linkAssignmentModal, setLinkAssignmentModal] = useState<{
+        isOpen: boolean;
+        lessonId?: number;
     }>({ isOpen: false });
 
     const [uploadProgress, setUploadProgress] = useState<number | undefined>(undefined);
@@ -280,10 +292,10 @@ export const ChapterItem = ({
                                                 onManageVideo={(lesson) => setVideoModal({ isOpen: true, lesson })}
                                                 onManageDocument={(lesson) => setDocumentModal({ isOpen: true, lesson })}
                                                 onManageQuiz={(lessonId) => {
-                                                    router.push(`/teacher/quizzes/create?lessonId=${lessonId}`);
+                                                    setLinkQuizModal({ isOpen: true, lessonId });
                                                 }}
                                                 onManageAssignment={(lessonId) => {
-                                                    router.push(`/teacher/assignments/create?lessonId=${lessonId}`);
+                                                    setLinkAssignmentModal({ isOpen: true, lessonId });
                                                 }}
                                             />
                                         ))}
@@ -343,6 +355,32 @@ export const ChapterItem = ({
                     lesson={documentModal.lesson}
                     onUploadComplete={() => {
                         // Resources updated
+                    }}
+                />
+            )}
+
+            {/* Link Quiz Modal */}
+            {linkQuizModal.lessonId && (
+                <LinkQuizDialog
+                    open={linkQuizModal.isOpen}
+                    onOpenChange={(open) => !open && setLinkQuizModal({ isOpen: false })}
+                    lessonId={linkQuizModal.lessonId}
+                    onLinkSuccess={() => {
+                        toast.success("Quiz linked successfully!");
+                        setLinkQuizModal({ isOpen: false });
+                    }}
+                />
+            )}
+
+            {/* Link Assignment Modal */}
+            {linkAssignmentModal.lessonId && (
+                <LinkAssignmentDialog
+                    open={linkAssignmentModal.isOpen}
+                    onOpenChange={(open) => !open && setLinkAssignmentModal({ isOpen: false })}
+                    lessonId={linkAssignmentModal.lessonId}
+                    onLinkSuccess={() => {
+                        toast.success("Assignment linked successfully!");
+                        setLinkAssignmentModal({ isOpen: false });
                     }}
                 />
             )}

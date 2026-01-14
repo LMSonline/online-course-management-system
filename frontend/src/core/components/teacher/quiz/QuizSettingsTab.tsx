@@ -20,7 +20,8 @@ import {
     RefreshCcw,
     Shuffle,
     ListChecks,
-    Settings2
+    Settings2,
+    Calendar
 } from "lucide-react";
 
 const quizSettingsSchema = z.object({
@@ -31,7 +32,42 @@ const quizSettingsSchema = z.object({
     maxAttempts: z.coerce.number().min(1).optional().nullable(),
     randomizeQuestions: z.boolean(),
     randomizeOptions: z.boolean(),
-});
+    startDate: z.string().optional().nullable(),
+    endDate: z.string().optional().nullable(),
+}).refine(
+    (data) => {
+        if (data.startDate) {
+            return new Date(data.startDate) > new Date();
+        }
+        return true;
+    },
+    {
+        message: "Start date must be in the future",
+        path: ["startDate"],
+    }
+).refine(
+    (data) => {
+        if (data.endDate) {
+            return new Date(data.endDate) > new Date();
+        }
+        return true;
+    },
+    {
+        message: "End date must be in the future",
+        path: ["endDate"],
+    }
+).refine(
+    (data) => {
+        if (data.startDate && data.endDate) {
+            return new Date(data.endDate) > new Date(data.startDate);
+        }
+        return true;
+    },
+    {
+        message: "End date must be after start date",
+        path: ["endDate"],
+    }
+);
 
 type QuizSettingsFormData = z.infer<typeof quizSettingsSchema>;
 
@@ -49,7 +85,8 @@ export function QuizSettingsTab({ quiz }: QuizSettingsTabProps) {
         watch,
         setValue,
     } = useForm<QuizSettingsFormData>({
-        resolver: zodResolver(quizSettingsSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(quizSettingsSchema) as any,
         defaultValues: {
             title: quiz.title || "",
             description: quiz.description || "",
@@ -58,6 +95,8 @@ export function QuizSettingsTab({ quiz }: QuizSettingsTabProps) {
             maxAttempts: quiz.maxAttempts ?? null,
             randomizeQuestions: quiz.randomizeQuestions ?? false,
             randomizeOptions: quiz.randomizeOptions ?? false,
+            startDate: quiz.startDate ? new Date(quiz.startDate).toISOString().slice(0, 16) : null,
+            endDate: quiz.endDate ? new Date(quiz.endDate).toISOString().slice(0, 16) : null,
         },
     });
 
@@ -73,6 +112,8 @@ export function QuizSettingsTab({ quiz }: QuizSettingsTabProps) {
             maxAttempts: data.maxAttempts || undefined,
             randomizeQuestions: data.randomizeQuestions,
             randomizeOptions: data.randomizeOptions,
+            startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+            endDate: data.endDate ? new Date(data.endDate).toISOString() : undefined,
         };
         updateQuizMutation.mutate({ id: quiz.id, payload });
     };
@@ -118,6 +159,63 @@ export function QuizSettingsTab({ quiz }: QuizSettingsTabProps) {
                             {...register("description")}
                             className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                         />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Availability Card */}
+            <Card className="bg-white dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/50 shadow-sm overflow-hidden">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl">
+                            <Calendar className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-lg text-slate-800 dark:text-slate-100">Availability</CardTitle>
+                            <CardDescription className="text-slate-500 dark:text-slate-400">
+                                Set when students can access this quiz.
+                            </CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="startDate" className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                <Calendar className="h-4 w-4 text-emerald-500" />
+                                Start Date & Time
+                            </Label>
+                            <Input
+                                id="startDate"
+                                type="datetime-local"
+                                {...register("startDate")}
+                                className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${errors.startDate ? "border-red-500" : ""}`}
+                            />
+                            {errors.startDate && (
+                                <p className="text-xs text-red-500">{errors.startDate.message}</p>
+                            )}
+                            {!errors.startDate && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400">When quiz becomes available</p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="endDate" className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                <Calendar className="h-4 w-4 text-red-500" />
+                                End Date & Time
+                            </Label>
+                            <Input
+                                id="endDate"
+                                type="datetime-local"
+                                {...register("endDate")}
+                                className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${errors.endDate ? "border-red-500" : ""}`}
+                            />
+                            {errors.endDate && (
+                                <p className="text-xs text-red-500">{errors.endDate.message}</p>
+                            )}
+                            {!errors.endDate && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400">When quiz becomes unavailable</p>
+                            )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>

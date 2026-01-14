@@ -42,8 +42,42 @@ const formatToDateTimeLocal = (isoString: string | undefined): string => {
 const assignmentSettingsSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters").max(200),
     description: z.string().optional().nullable(),
+    startDate: z.string().optional().nullable(),
     dueDate: z.string().optional().nullable(),
-});
+}).refine(
+    (data) => {
+        if (data.startDate) {
+            return new Date(data.startDate) > new Date();
+        }
+        return true;
+    },
+    {
+        message: "Start date must be in the future",
+        path: ["startDate"],
+    }
+).refine(
+    (data) => {
+        if (data.dueDate) {
+            return new Date(data.dueDate) > new Date();
+        }
+        return true;
+    },
+    {
+        message: "Due date must be in the future",
+        path: ["dueDate"],
+    }
+).refine(
+    (data) => {
+        if (data.startDate && data.dueDate) {
+            return new Date(data.dueDate) > new Date(data.startDate);
+        }
+        return true;
+    },
+    {
+        message: "Due date must be after start date",
+        path: ["dueDate"],
+    }
+);
 
 type AssignmentSettingsFormData = z.infer<typeof assignmentSettingsSchema>;
 
@@ -68,6 +102,7 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
         defaultValues: {
             title: assignment.title || "",
             description: assignment.description || "",
+            startDate: formatToDateTimeLocal(assignment.startDate || undefined),
             dueDate: formatToDateTimeLocal(assignment.dueDate || undefined),
         },
     });
@@ -77,6 +112,7 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
             title: data.title,
             assignmentType: assignment.assignmentType,
             description: data.description || undefined,
+            startDate: formatToInstant(data.startDate || ""),
             dueDate: formatToInstant(data.dueDate || ""),
             totalPoints: assignment.totalPoints || undefined,
             timeLimitMinutes: assignment.timeLimitMinutes || undefined,
@@ -156,18 +192,42 @@ export function AssignmentSettingsTab({ assignment }: AssignmentSettingsTabProps
                         </div>
                     </CardHeader>
                     <CardContent className="pt-6">
-                        <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="startDate" className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                    <Calendar className="h-4 w-4 text-emerald-500" />
+                                    Start Date
+                                </Label>
+                                <Input
+                                    id="startDate"
+                                    type="datetime-local"
+                                    {...register("startDate")}
+                                    className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${errors.startDate ? "border-red-500" : ""}`}
+                                />
+                                {errors.startDate && (
+                                    <p className="text-xs text-red-500">{errors.startDate.message}</p>
+                                )}
+                                {!errors.startDate && (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">When assignment becomes available</p>
+                                )}
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="dueDate" className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                                    <Calendar className="h-4 w-4 text-slate-400" />
+                                    <Calendar className="h-4 w-4 text-red-500" />
                                     Due Date
                                 </Label>
                                 <Input
                                     id="dueDate"
                                     type="datetime-local"
                                     {...register("dueDate")}
-                                    className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                    className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 ${errors.dueDate ? "border-red-500" : ""}`}
                                 />
+                                {errors.dueDate && (
+                                    <p className="text-xs text-red-500">{errors.dueDate.message}</p>
+                                )}
+                                {!errors.dueDate && (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Submission deadline</p>
+                                )}
                             </div>
                         </div>
                     </CardContent>
