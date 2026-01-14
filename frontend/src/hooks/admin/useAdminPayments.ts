@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData, } from "@tanstack/react-query";
 import { adminPaymentService } from "@/services/admin/payment.service";
 import { revenueShareService } from "@/services/admin/revenue-share.service";
+import { toast } from "sonner";
 export const useAdminPayments = (params?: {
   status?: string;
   studentId?: number;
@@ -19,11 +20,34 @@ export const useAdminPayments = (params?: {
 
 export const useRefundPayment = () => {
   const qc = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: any }) =>
-      adminPaymentService.refundPayment(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: any;
+    }) => adminPaymentService.refundPayment(id, payload),
+
     onSuccess: () => {
-qc.invalidateQueries({ queryKey: ["admin-payments"] });
+      qc.invalidateQueries({ queryKey: ["admin-payments"] });
+
+      toast.success("Refund processed successfully");
+    },
+
+    onError: (error: any) => {
+      /**
+       * Axios error handling (chuẩn)
+       * Backend message nằm ở:
+       * error.response.data.message
+       */
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Refund failed";
+
+      toast.error(message);
     },
   });
 };

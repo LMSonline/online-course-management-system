@@ -9,6 +9,8 @@ import { courseReviewService } from "@/services/courses/course-review.service";
 import {
   CourseVersionResponse,
 } from "@/services/courses/course.types";
+import { toast } from "sonner";
+
 interface GetAllCoursesParams {
   page?: number;
   size?: number;
@@ -96,9 +98,15 @@ export const useApproveVersion = () => {
       queryClient.invalidateQueries({
         queryKey: ["version", variables.courseId, variables.versionId],
       });
+
+      toast.success("Course version approved successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to approve course version");
     },
   });
 };
+
 
 
 export const useRejectVersion = () => {
@@ -115,18 +123,28 @@ export const useRejectVersion = () => {
       reason: string;
     }) => {
       const payload: RejectRequest = { reason };
-      return await courseVersionService.rejectCourseVersion(courseId, versionId, payload);
+      return await courseVersionService.rejectCourseVersion(
+        courseId,
+        versionId,
+        payload
+      );
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["versions", "pending"],
       });
       queryClient.invalidateQueries({
         queryKey: ["version", variables.courseId, variables.versionId],
       });
+
+      toast.success("Course version rejected successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to reject course version");
     },
   });
 };
+
 
 export const usePublishVersion = () => {
   const queryClient = useQueryClient();
