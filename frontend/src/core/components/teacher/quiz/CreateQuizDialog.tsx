@@ -10,7 +10,7 @@ import Button from "@/core/components/ui/Button";
 import Input from "@/core/components/ui/Input";
 import Textarea from "@/core/components/ui/Textarea";
 import Label from "@/core/components/ui/Label";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Calendar } from "lucide-react";
 
 const createQuizSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters").max(200),
@@ -18,7 +18,42 @@ const createQuizSchema = z.object({
     timeLimitMinutes: z.coerce.number().min(0).optional().nullable(),
     passingScore: z.coerce.number().min(0).max(100).optional().nullable(),
     maxAttempts: z.coerce.number().min(1).optional().nullable(),
-});
+    startDate: z.string().optional().nullable(),
+    endDate: z.string().optional().nullable(),
+}).refine(
+    (data) => {
+        if (data.startDate) {
+            return new Date(data.startDate) > new Date();
+        }
+        return true;
+    },
+    {
+        message: "Start date must be in the future",
+        path: ["startDate"],
+    }
+).refine(
+    (data) => {
+        if (data.endDate) {
+            return new Date(data.endDate) > new Date();
+        }
+        return true;
+    },
+    {
+        message: "End date must be in the future",
+        path: ["endDate"],
+    }
+).refine(
+    (data) => {
+        if (data.startDate && data.endDate) {
+            return new Date(data.endDate) > new Date(data.startDate);
+        }
+        return true;
+    },
+    {
+        message: "End date must be after start date",
+        path: ["endDate"],
+    }
+);
 
 type CreateQuizFormData = z.infer<typeof createQuizSchema>;
 
@@ -41,13 +76,16 @@ export function CreateQuizDialog({
         reset,
         formState: { errors },
     } = useForm<CreateQuizFormData>({
-        resolver: zodResolver(createQuizSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(createQuizSchema) as any,
         defaultValues: {
             title: "",
             description: "",
             timeLimitMinutes: null,
             passingScore: 70,
             maxAttempts: 3,
+            startDate: null,
+            endDate: null,
         },
     });
 
@@ -60,6 +98,8 @@ export function CreateQuizDialog({
             maxAttempts: data.maxAttempts || undefined,
             randomizeQuestions: false,
             randomizeOptions: false,
+            startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+            endDate: data.endDate ? new Date(data.endDate).toISOString() : undefined,
         };
         onSubmit(payload);
     };
@@ -150,6 +190,40 @@ export function CreateQuizDialog({
                                 className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                             />
                         </div>
+                    </div>
+
+                    {/* Availability */}
+                    <div className="space-y-2">
+                        <Label className="text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-emerald-500" />
+                            Availability Period
+                        </Label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="startDate" className="text-xs text-slate-600 dark:text-slate-400">Start Date & Time</Label>
+                                <Input
+                                    id="startDate"
+                                    type="datetime-local"
+                                    {...register("startDate")}
+                                    className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm ${errors.startDate ? "border-red-500 dark:border-red-500" : ""}`}
+                                />
+                                {errors.startDate && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.startDate.message}</p>
+                                )}
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="endDate" className="text-xs text-slate-600 dark:text-slate-400">End Date & Time</Label>
+                                <Input
+                                    id="endDate"
+                                    type="datetime-local"
+                                    {...register("endDate")}
+                                    className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm ${errors.endDate ? "border-red-500 dark:border-red-500" : ""}`}
+                                />
+                            </div>
+                        </div>
+                        {(errors.startDate || errors.endDate) ? null : (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Leave empty for no time restrictions</p>
+                        )}
                     </div>
 
                     {/* Actions */}

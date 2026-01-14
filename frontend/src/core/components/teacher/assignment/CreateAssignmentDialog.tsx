@@ -63,6 +63,7 @@ export function CreateAssignmentDialog({
             totalPoints: "",
             timeLimitMinutes: "",
             maxAttempts: "",
+            startDate: null,
             dueDate: null,
         },
     });
@@ -185,21 +186,47 @@ export function CreateAssignmentDialog({
                         </div>
                     </div>
 
-                    {/* Due Date */}
+                    {/* Availability Period */}
                     <div className="space-y-2">
-                        <Label htmlFor="dueDate" className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                            <Calendar className="h-4 w-4 text-slate-400" />
-                            Due Date (Optional)
+                        <Label className="text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-emerald-500" />
+                            Availability Period
                         </Label>
-                        <Input
-                            id="dueDate"
-                            type="datetime-local"
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                setValue("dueDate", value ? new Date(value) : null);
-                            }}
-                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                        />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="startDate" className="text-xs text-slate-600 dark:text-slate-400">Start Date & Time</Label>
+                                <Input
+                                    id="startDate"
+                                    type="datetime-local"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setValue("startDate", value ? new Date(value) : null);
+                                    }}
+                                    className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm ${errors.startDate ? "border-red-500 dark:border-red-500" : ""}`}
+                                />
+                                {errors.startDate && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.startDate.message as string}</p>
+                                )}
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="dueDate" className="text-xs text-slate-600 dark:text-slate-400">Due Date & Time</Label>
+                                <Input
+                                    id="dueDate"
+                                    type="datetime-local"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setValue("dueDate", value ? new Date(value) : null);
+                                    }}
+                                    className={`bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm ${errors.dueDate ? "border-red-500 dark:border-red-500" : ""}`}
+                                />
+                                {errors.dueDate && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.dueDate.message as string}</p>
+                                )}
+                            </div>
+                        </div>
+                        {(errors.startDate || errors.dueDate) ? null : (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Leave empty for no time restrictions</p>
+                        )}
                     </div>
 
                     {/* Actions */}

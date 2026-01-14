@@ -23,6 +23,7 @@ export interface AssignmentRequest {
   totalPoints?: number | null;
   timeLimitMinutes?: number | null;
   maxAttempts?: number | null;
+  startDate?: string | null; // ISO 8601 Instant format: "2026-01-13T10:09:00Z"
   dueDate?: string | null; // ISO 8601 Instant format: "2026-01-13T10:09:00Z"
 }
 
@@ -39,7 +40,13 @@ export interface AssignmentResponse {
   totalPoints?: number | null;
   timeLimitMinutes?: number | null;
   maxAttempts?: number | null;
+  startDate?: string | null;
   dueDate?: string | null;
+
+  // Availability (if backend adds these)
+  isAvailable?: boolean;
+  availabilityMessage?: string;
+
   createdAt: string;
   updatedAt: string;
 }

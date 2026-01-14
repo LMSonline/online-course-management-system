@@ -5,39 +5,53 @@
 export interface QuizRequest {
   title: string;
   description?: string;
-  timeLimitMinutes?: number | null;
-  passingScore?: number | null;
-  maxAttempts?: number | null;
-  randomizeQuestions?: boolean | null;
-  randomizeOptions?: boolean | null;
+  totalPoints?: number;       // Mới thêm
+  timeLimitMinutes?: number;
+  maxAttempts?: number;
+  randomizeQuestions?: boolean;
+  randomizeOptions?: boolean;
+  passingScore?: number;
+  startDate?: string;         // Mới thêm (ISO 8601)
+  endDate?: string;           // Mới thêm (ISO 8601)
 }
 
-export interface QuizQuestionSummary {
+// Map với QuizQuestionResponse bên Backend
+export interface QuizQuestionResponse {
   id: number;
   questionId: number;
   questionContent: string;
   questionType: QuestionType;
-  points?: number | null;
+  points?: number;
   orderIndex: number;
 }
 
 export interface QuizResponse {
   id: number;
   title: string;
-  description?: string | null;
-  lessonId?: number | null;
-  totalPoints?: number | null;
-  timeLimitMinutes?: number | null;
-  maxAttempts?: number | null;
-  randomizeQuestions?: boolean | null;
-  randomizeOptions?: boolean | null;
-  passingScore?: number | null;
-  totalQuestions?: number;
-  questions?: QuizQuestionSummary[];
-  createdAt: string;
+  description?: string;
+  lessonId?: number;
+  totalPoints?: number;
+  timeLimitMinutes?: number;
+  maxAttempts?: number;
+  randomizeQuestions?: boolean;
+  randomizeOptions?: boolean;
+  passingScore?: number;
+  
+  // Thời gian & Khả dụng (Mới)
+  startDate?: string;         // Instant -> string
+  endDate?: string;           // Instant -> string
+  isAvailable?: boolean;
+  availabilityMessage?: string;
+
+  // Nội dung
+  questions?: QuizQuestionResponse[]; // Đổi tên từ QuizQuestionSummary
+  
+  // Audit (Mới)
+  createdAt?: string;
   createdBy?: string;
-  updatedAt: string;
+  updatedAt?: string;
   updatedBy?: string;
+  deletedAt?: string;
 }
 
 // ===========================
@@ -173,11 +187,19 @@ export interface StudentQuizResultResponse {
 // Quiz Eligibility & Statistics Types
 // ===========================
 
+// Cập nhật hoàn toàn theo DTO backend
 export interface QuizEligibilityResponse {
-  eligible: boolean;
+  quizId: number;
+  quizTitle: string;
+  canAttempt: boolean;        // Map từ backend field: canAttempt
+  currentAttempts: number;
+  maxAttempts?: number;
+  remainingAttempts: number;
   reason?: string;
-  remainingAttempts?: number;
-  nextAttemptAvailable?: string;
+  isAvailable: boolean;
+  startDate?: string;
+  endDate?: string;
+  availabilityMessage?: string;
 }
 
 export interface QuizStatisticsResponse {
