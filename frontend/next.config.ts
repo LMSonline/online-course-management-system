@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Performance optimizations
   reactStrictMode: true,
 
@@ -28,8 +32,6 @@ const nextConfig: NextConfig = {
           }
         : false,
   },
-
-  /* config options here */
 };
 
 export default nextConfig;

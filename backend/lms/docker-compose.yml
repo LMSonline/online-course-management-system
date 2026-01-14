@@ -72,7 +72,17 @@ services:
       ZALO_PAY_REFUND_QUERY_ORDER_ENDPOINT: ${ZALO_PAY_REFUND_QUERY_ORDER_ENDPOINT}
       ZALO_PAY_CALLBACK_URL: ${ZALO_PAY_CALLBACK_URL}
       ZALO_PAY_BANKS_ENDPOINT: ${ZALO_PAY_BANKS_ENDPOINT}
-
+      SPRING_FLYWAY_ENABLED: "false"
+      app.avatar.default-url: ${APP_AVATAR_DEFAULT_URL}
+      app.admin.username: ${APP_ADMIN_USERNAME}
+      app.admin.password: ${APP_ADMIN_PASSWORD}
+      app.admin.email: ${APP_ADMIN_EMAIL}
+      app.student.username: ${APP_STUDENT_USERNAME}
+      app.student.password: ${APP_STUDENT_PASSWORD}
+      app.student.email: ${APP_STUDENT_EMAIL}
+      app.teacher.username: ${APP_TEACHER_USERNAME}
+      app.teacher.password: ${APP_TEACHER_PASSWORD}
+      app.teacher.email: ${APP_TEACHER_EMAIL}
     depends_on:
       postgres:
         condition: service_healthy
