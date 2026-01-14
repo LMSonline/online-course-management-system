@@ -54,7 +54,7 @@ def get_demo_chat_response(
    D. System.out.println()
 
 5. Vòng lặp for trong Python có thể lặp qua:
-   A. Chỉ số
+   A. Chỉ số lặp
    B. Chỉ chuỗi
    C. Bất kỳ iterable nào ✓
    D. Chỉ list"""
