@@ -7,3 +7,6 @@ public record CourseVersionStatusChangeEvent (
     CourseVersion courseVersion,
     String reason
 ){}
+
+
+

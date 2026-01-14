@@ -13,49 +13,62 @@ import type {
 /* ================= MOCK DATA ================= */
 
 const MOCK_DASHBOARD: DashboardResponse = {
-  totalRevenue: 125000000,
-  totalUsers: 1280,
-  totalCourses: 120,
+  // 💰 35 transactions × 1,000,000
+  totalRevenue: 70_000_000,
 
-  avgStudentsPerCourse: 32.5,
+  // 👤 từ bảng accounts
+  totalUsers: 43,
+
+  // 📚 số course có giao dịch
+  totalCourses: 7,
+
+  // 5 students / 7 courses ≈ 0.7
+  avgStudentsPerCourse: 0.7,
+
+  // mock hợp lý vì chưa có progress thật
   avgCompletionRate: 68.4,
 
   teacherActivity: {
-    totalTeachers: 45,
-    activeTeachers: 32,
-    totalCoursesCreated: 120,
-    totalLessonsCreated: 860,
+    totalTeachers: 10,        // id 34 → 43
+    activeTeachers: 1,        // chưa approve teacher nào
+    totalCoursesCreated: 43,  // tổng course trong DB
+    totalLessonsCreated: 860, // khớp UI
   },
-  avgScore: 7.8
+
+  // dựa vào course_review (rating 2–5)
+  avgScore: 3.8,
 };
 
+
 const MOCK_STATISTICS: DashboardStatisticsResponse = {
-  userGrowth: 8.5,        // %
-  courseGrowth: 5.2,      // %
-  revenueGrowth: 12.3,    // %
-  completionRate: 68.4,   // %
+  userGrowth: 8.5,
+  courseGrowth: 5.2,
+  revenueGrowth: 12.3,
+  completionRate: 68.4,
 };
 
 const MOCK_REVENUE_REPORT: RevenueReportResponse = {
-  totalRevenue: 125_000_000,
+  totalRevenue: 70_000_000,
   chart: [
-    { label: "Week 1", value: 20_000_000 },
-    { label: "Week 2", value: 28_000_000 },
-    { label: "Week 3", value: 35_000_000 },
-    { label: "Week 4", value: 42_000_000 },
+    { label: "Week 1", value: 6_000_000 },
+    { label: "Week 2", value: 8_000_000 },
+    { label: "Week 3", value: 10_000_000 },
+    { label: "Week 4", value: 11_000_000 },
   ],
 };
 
+
 const MOCK_USER_REPORT: UserReportResponse = {
-  totalUsers: 1280,
-  activeUsers: 860,
-  inactiveUsers: 420,
+  totalUsers: 43,
+  activeUsers: 43,   // tất cả ACTIVE
+  inactiveUsers: 0,
 };
 
+
 const MOCK_COURSE_REPORT: CourseReportResponse = {
-  totalCourses: 120,
-  activeCourses: 95,
-  closedCourses: 25,
+  totalCourses: 43,   // toàn DB
+  activeCourses: 43,  // đều published
+  closedCourses: 0,
 };
 
 

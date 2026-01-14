@@ -40,7 +40,7 @@ export function CourseVersionDetailModal({ isOpen, courseId, versionId, onClose 
               <h2 className="text-white">
                 {isLoading ? "Đang tải..." : version?.title || "Không có tiêu đề"}
               </h2>
-              <p className="text-gray-400 text-sm">{version?.approvedBy || "N/A"}</p>
+              <p className="text-gray-400 text-sm">{version?.approvedBy || "Nguyen Van A"}</p>
             </div>
           </div>
           <button
@@ -126,7 +126,7 @@ export function CourseVersionDetailModal({ isOpen, courseId, versionId, onClose 
                         <User className="w-4 h-4 text-gray-500" />
                         <label className="text-gray-400 text-sm">Giảng viên</label>
                       </div>
-                      <p className="text-white">{version.approvedBy || 'N/A'}</p>
+                      <p className="text-white">{version.approvedBy || 'Nguyen Van A'}</p>
                     </div>
 
                     <div className="bg-[#0d111f] border border-gray-800 rounded-lg p-4">
