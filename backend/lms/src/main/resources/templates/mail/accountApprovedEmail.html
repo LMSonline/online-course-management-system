@@ -21,7 +21,7 @@
   </div>
   <div class="body">
     <p th:text="#{email.account_approved.greeting(${user.username})}">Xin chào bạn,</p>
-    <p th:text="#{email.account_approved.text1}">Tài khoản LMS của bạn đã được phê duyệt thành công!</p>
+    <p th:text="#{email.account_approved.text1}">Tài khoản LMS của bạn đã được phê duyệt thành công bởi quản trị viên!</p>
     <p th:text="#{email.account_approved.text2}">Bạn có thể đăng nhập tại liên kết bên dưới:</p>
     <p style="text-align:center; margin:28px 0;">
       <a class="button" th:href="@{|${frontendUrl}/login|}" th:text="#{email.account_approved.button}">Đăng nhập ngay</a>
