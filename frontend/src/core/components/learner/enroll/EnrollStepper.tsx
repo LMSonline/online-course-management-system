@@ -7,6 +7,7 @@ import EnrollStepperHeader, { EnrollStep } from "./EnrollStepperHeader";
 import EnrollStepCourseInfo from "./EnrollStepCourseInfo";
 import EnrollStepPayment from "./EnrollStepPayment";
 import EnrollStepResult from "./EnrollStepResult";
+import router from "next/router";
 
 interface EnrollStepperProps {
   course: any;
@@ -31,8 +32,15 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
     setLoading(true);
     try {
       console.log("DEBUG user:", user);
-      const accountId = user?.accountId;
-      if (!user || !accountId) throw new Error("Bạn cần đăng nhập để đăng ký.");
+
+
+    // if (!user) throw new Error("Bạn cần đăng nhập");
+
+      const studentId = user?.studentId;
+      if (!user ) {
+        throw new Error("Không tìm thấy studentId. Vui lòng đăng nhập lại.");
+      }
+
       const versionId = Number(course.id);
       if (!versionId) {
         setError("Không tìm thấy courseVersionId, vui lòng thử lại hoặc liên hệ hỗ trợ.");
@@ -42,13 +50,14 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
       if (!isPaidCourse) {
         // FREE: Gọi enroll luôn
         const enrollRes = await learnerEnrollmentService.enrollCourse(
-          accountId,
+          studentId,
           course.courseId,
           versionId
         );
-        setEnrollmentData({ ...course, enrollmentId: enrollRes.enrollment.id });
+        setEnrollmentData({ ...course, enrollmentId: enrollRes.enrolledAt.at });
         setResult({ success: true });
         setStep("result");
+
       } else {
         // PAID: Sang bước payment, truyền đủ courseId và versionId
         setEnrollmentData({ ...course, courseId: course.courseId, versionId });
@@ -62,36 +71,46 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
   };
 
   // Bước 2: Chọn phương thức thanh toán, tạo payment, sau đó check trạng thái enrollment
-  const handleNextFromPayment = async (data?: any) => {
-    setError(null);
-    setLoading(true);
-    try {
-      console.log("DEBUG user:", user);
-      const accountId = user?.accountId;
-      if (!user || !accountId) throw new Error("Bạn cần đăng nhập để thanh toán.");
-      const courseId = course.courseId;
-      const versionId = Number(course.id);
-      if (!courseId || !versionId) throw new Error("Thiếu courseId hoặc courseVersionId");
-      // Gọi createPayment với method và callback
-      const paymentRes = await learnerPaymentService.createPayment(
-        courseId,
-        versionId,
-        data?.method || "VNPAY",
-        window.location.origin + "/payment/callback"
-      );
-      setEnrollmentData({ ...course, paymentId: paymentRes.payment.id, payment: paymentRes.payment });
-      // Sau khi tạo payment, có thể poll/check trạng thái enrollment nếu cần
-      // const statusRes = await learnerPaymentService.getEnrollmentStatus(paymentRes.payment.id);
-      setResult({ success: true, payment: paymentRes.payment });
-      setStep("result");
-    } catch (err: any) {
-      setError(err?.message || "Thanh toán thất bại");
+  // const handleNextFromPayment = async (data?: any) => {
+  //   setError(null);
+  //   setLoading(true);
+  //   try {
+  //     console.log("DEBUG user:", user);
+  //     const accountId = user?.accountId;
+  //     if (!user || !accountId) throw new Error("Bạn cần đăng nhập để thanh toán.");
+  //     const courseId = course.courseId;
+  //     const versionId = Number(course.id);
+  //     if (!courseId || !versionId) throw new Error("Thiếu courseId hoặc courseVersionId");
+  //     // Gọi createPayment với method và callback
+  //     const paymentRes = await learnerPaymentService.createPayment(
+  //       courseId,
+  //       versionId,
+  //       data?.method || "VNPAY",
+  //       window.location.origin + "/payment/callback"
+  //     );
+  //     setEnrollmentData({ ...course, paymentId: paymentRes.payment.id, payment: paymentRes.payment });
+  //     // Sau khi tạo payment, có thể poll/check trạng thái enrollment nếu cần
+  //     // const statusRes = await learnerPaymentService.getEnrollmentStatus(paymentRes.payment.id);
+  //     setResult({ success: true, payment: paymentRes.payment });
+  //     setStep("result");
+  //   } catch (err: any) {
+  //     setError(err?.message || "Thanh toán thất bại");
+  //     setResult({ success: false });
+  //     setStep("result");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const handleNextFromPayment = (data?: any) => {
+    if (!data?.success) {
       setResult({ success: false });
-      setStep("result");
-    } finally {
-      setLoading(false);
+    } else {
+      setResult(data);
     }
+    setStep("result");
   };
+
 
   const handleBack = () => {
     if (step === "payment") setStep("course");
@@ -206,7 +225,9 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
 
           {step === "result" && (
             <button
-              onClick={handleFinish}
+              // onClick={handleFinish}
+              onClick={() => router.push("/learner/my-learning")}
+
               className="rounded-xl bg-[var(--brand-600)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
             >
               Go to course
@@ -219,3 +240,5 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
 };
 
 export default EnrollStepper;
+
+

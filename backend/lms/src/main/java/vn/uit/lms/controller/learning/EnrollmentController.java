@@ -21,6 +21,7 @@ import vn.uit.lms.shared.dto.response.enrollment.EnrollmentDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentStatsResponse;
 import vn.uit.lms.shared.dto.response.enrollment.FinalExamEligibilityResponse;
+import vn.uit.lms.shared.dto.response.enrollment.MyLearningCourseResponse;
 import vn.uit.lms.shared.util.annotation.StudentOnly;
 import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
 import vn.uit.lms.shared.util.annotation.TeacherOnly;
@@ -68,6 +69,23 @@ public class EnrollmentController {
         PageResponse<EnrollmentResponse> response = enrollmentService.getStudentEnrollments(studentId, pageable);
         return ResponseEntity.ok(response);
     }
+
+
+
+// @GetMapping("/students/{studentId}/my-learning")
+// @StudentOnly
+// public ResponseEntity<PageResponse<MyLearningCourseResponse>> getMyLearning(
+//     @PathVariable Long studentId,
+//     Pageable pageable
+// ) {
+//     return ResponseEntity.ok(
+//         enrollmentService.getMyLearningCourses(studentId, pageable)
+//     );
+// }
+
+
+
+
 
     /**
      * GET /courses/{courseId}/enrollments - Danh sách học sinh (Teacher)

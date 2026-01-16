@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   ShoppingCart,
@@ -13,6 +13,7 @@ import {
   X,
   Sun,
   Moon,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
@@ -41,12 +42,17 @@ function NavItem({
 
 export default function LearnerNavbar() {
   const openPopup = useAssistantStore((s) => s.openPopup);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [open, setOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [theme, setTheme] = useState<"light" | "dark">(
     typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -58,6 +64,12 @@ export default function LearnerNavbar() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sync search input with URL params
+  useEffect(() => {
+    const query = searchParams.get("search") || "";
+    setSearchQuery(query);
+  }, [searchParams]);
 
   useEffect(() => {
     if (theme === "dark") {
@@ -90,6 +102,39 @@ export default function LearnerNavbar() {
   }, [profileOpen]);
 
   const [cartOpen, setCartOpen] = useState(false);
+
+  // Handle search
+  const handleSearch = () => {
+    const trimmedQuery = searchQuery.trim();
+    
+    // Nếu đang ở My Learning, giữ nguyên và thêm search param
+    if (pathname === "/learner/my-learning") {
+      if (trimmedQuery) {
+        router.push(`/learner/my-learning?search=${encodeURIComponent(trimmedQuery)}`);
+      } else {
+        router.push("/learner/my-learning");
+      }
+    } else {
+      // Nếu ở trang khác, redirect đến explore với search
+      if (trimmedQuery) {
+        router.push(`/explore?search=${encodeURIComponent(trimmedQuery)}`);
+      } else {
+        router.push("/explore");
+      }
+    }
+  };
+
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    // Remove search param from URL
+    if (pathname === "/learner/my-learning") {
+      router.push("/learner/my-learning");
+    } else {
+      router.push(pathname);
+    }
+  };
+
   return (
     <header className="navbar">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4 text-body">
@@ -128,10 +173,22 @@ export default function LearnerNavbar() {
             <input
               placeholder="Search for anything"
               className="search-input w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") location.href = "/explore";
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
               }}
             />
+            {searchQuery && (
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 input-icon"
+                onClick={handleClearSearch}
+              >
+                <XCircle size={18} className="text-muted" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -142,7 +199,7 @@ export default function LearnerNavbar() {
           <Link href="/teach" className="hidden lg:block nav-link">
             Teacher
           </Link>
-          <Link href="/learner/dashboard" className="hidden md:block nav-link">
+          <Link href="/learner/my-learning" className="hidden md:block nav-link">
             My learning
           </Link>
 
@@ -265,13 +322,23 @@ export default function LearnerNavbar() {
             <input
               placeholder="Search for anything"
               className="search-input w-full pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setOpen(false);
-                  location.href = "/learner/courses";
+                  handleSearch();
                 }
               }}
             />
+            {searchQuery && (
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 input-icon"
+                onClick={handleClearSearch}
+              >
+                <XCircle size={18} className="text-muted" />
+              </button>
+            )}
           </div>
 
           <div className="flex flex-col gap-1 mt-2">
@@ -320,6 +387,6 @@ export default function LearnerNavbar() {
           </div>
         </div>
       </div>
-      </header>
+    </header>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Star, Play, Clock3 } from "lucide-react";
 import type { MyCourse } from "@/lib/learner/dashboard/types";
-
+// Keep learning with your courses
 export function MyCourseRow({ course }: { course: MyCourse }) {
 
   return (

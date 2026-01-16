@@ -13,13 +13,13 @@ import type {
 /* ================= MOCK DATA ================= */
 
 const MOCK_DASHBOARD: DashboardResponse = {
-  // 💰 35 transactions × 1,000,000
+  //  35 transactions × 1,000,000
   totalRevenue: 70_000_000,
 
-  // 👤 từ bảng accounts
+  //  từ bảng accounts
   totalUsers: 43,
 
-  // 📚 số course có giao dịch
+  // số course có giao dịch
   totalCourses: 7,
 
   // 5 students / 7 courses ≈ 0.7

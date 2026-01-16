@@ -24,6 +24,7 @@ const paymentMethods = [
   },
 ];
 
+
 // giả lập link QR
 const MOCK_PAYMENT_URL =
   "https://img.vietqr.io/image/970422-123456789-qr_only.png";
@@ -60,7 +61,9 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
         courseId,
         versionId,
         selected.toUpperCase(),
-        window.location.origin + "/payment/callback"
+        // window.location.origin + "/payment/callback"
+        window.location.origin + "/learner/courses/" + enrollmentData.slug
+
       );
 
       setPaymentUrl(paymentRes.paymentUrl || "");
@@ -72,37 +75,100 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
     }
   };
 
+  // const handleDone = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     // Giả lập đăng ký thành công, chuyển sang kết quả
+  //     // setShowResult(true);
+  //     onNext({
+  //       success: true,
+  //       paymentUrl,
+  //       courseId,
+  //       versionId
+  //     });
+
+  //     // Đánh dấu bước 2 hoàn thành, chuyển sang bước 3 (EnrollStepper sẽ nhận onNext và chuyển step)
+  //   } catch (err: any) {
+  //     setError(err?.message || "Không thể enroll, vui lòng thử lại.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // bichla
+  //   const handleDone = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const courseId = enrollmentData?.courseId;
+  //     const versionId = enrollmentData?.id
+  //       ? Number(enrollmentData.id)
+  //       : undefined;
+
+  //     if (!courseId || !versionId) {
+  //       throw new Error("Thiếu courseId hoặc courseVersionId");
+  //     }
+
+  //     onNext({
+  //       success: true,
+  //       paymentUrl,
+  //       courseId,
+  //       versionId,
+  //     });
+  //   } catch (err: any) {
+  //     setError(err?.message || "Không thể enroll, vui lòng thử lại.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const [paidCourseId, setPaidCourseId] = useState<number | null>(null);
+
   const handleDone = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Giả lập đăng ký thành công, chuyển sang kết quả
-      setShowResult(true);
-      // Đánh dấu bước 2 hoàn thành, chuyển sang bước 3 (EnrollStepper sẽ nhận onNext và chuyển step)
+      const courseId = enrollmentData?.courseId;
+      if (!courseId) throw new Error("Thiếu courseId");
+
+      setPaidCourseId(courseId);
+      setShowResult(true); //  CHỈ HIỂN THỊ 1 MÀN HÌNH
     } catch (err: any) {
-      setError(err?.message || "Không thể enroll, vui lòng thử lại.");
+      setError(err?.message || "Không thể hoàn tất thanh toán");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (showResult && window && window.parent) {
-      // Nếu component này nằm trong EnrollStepper, gọi onNext để chuyển step
-      onNext({ success: true });
-    }
-  }, [showResult, onNext]);
 
-  if (showResult) {
-    return (
-      <EnrollStepResult
-        result={{ success: true }}
-        onReset={() => {
-          window.location.href = "http://localhost:3000/learner/courses/bachelor-of-law-little-b/learn";
-        }}
-      />
-    );
-  }
+
+  // useEffect(() => {
+  //   if (showResult && window && window.parent) {
+  //     // Nếu component này nằm trong EnrollStepper, gọi onNext để chuyển step
+  //     onNext({ success: true });
+  //   }
+  // }, [showResult, onNext]);
+
+  // này là redirect sang course chi tiết của một course rồi
+  // if (showResult) {
+  //   return (
+  //     <EnrollStepResult
+  //       result={{ success: true }}
+  //       onReset={() => {
+  //         window.location.href = "http://localhost:3000/learner/courses/bachelor-of-law-little-b/learn";
+  //       }}
+  //     />
+  //   );
+  // }
+
+  // if (showResult && paidCourseId) {
+  //   return (
+  //     <EnrollStepResult courseId={paidCourseId} />
+  //   );
+  // }
+
+
 
   return (
     <div className="space-y-6">
@@ -144,10 +210,9 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
                   type="button"
                   onClick={() => setSelected(pm.id)}
                   className={`group flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition
-                    ${
-                      active
-                        ? "border-[var(--brand-600)] bg-slate-900 shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
-                        : "border-white/10 bg-slate-900/40 hover:bg-slate-900/70"
+                    ${active
+                      ? "border-[var(--brand-600)] bg-slate-900 shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
+                      : "border-white/10 bg-slate-900/40 hover:bg-slate-900/70"
                     }`}
                 >
                   <img src={pm.logo} alt={pm.name} className="h-10 w-10" />
@@ -162,10 +227,9 @@ const EnrollStepPayment: React.FC<EnrollStepPaymentProps> = ({
 
                   <div
                     className={`h-4 w-4 rounded-full border transition
-                      ${
-                        active
-                          ? "border-[var(--brand-400)] bg-[var(--brand-600)]"
-                          : "border-slate-600 bg-transparent"
+                      ${active
+                        ? "border-[var(--brand-400)] bg-[var(--brand-600)]"
+                        : "border-slate-600 bg-transparent"
                       }`}
                   />
                 </button>

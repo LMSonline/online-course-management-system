@@ -16,6 +16,8 @@ export interface Course {
   title: string;
   description?: string;
   price?: number;
+    slug: string;        // BẮT BUỘC
+
   durationDays?: number;
   passScore?: number;
   finalWeight?: number;

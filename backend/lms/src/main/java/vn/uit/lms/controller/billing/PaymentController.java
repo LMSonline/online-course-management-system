@@ -44,8 +44,7 @@ public class PaymentController {
     @StudentOnly
     public ResponseEntity<PaymentUrlResponse> createPayment(
             @RequestBody @Valid CreatePaymentRequest request,
-            HttpServletRequest httpRequest
-    ) {
+            HttpServletRequest httpRequest) {
         return ResponseEntity.ok(paymentService.createPayment(request, httpRequest));
     }
 
@@ -64,7 +63,8 @@ public class PaymentController {
      * Supports: VNPay, ZaloPay, MoMo, and future gateways
      *
      * This endpoint can be used as a single callback URL for all payment gateways
-     * Each gateway will send different parameters, and the system automatically detects which one
+     * Each gateway will send different parameters, and the system automatically
+     * detects which one
      */
     @PostMapping("/callback")
     public ResponseEntity<?> unifiedPaymentCallback(@RequestBody Map<String, String> params) {
@@ -133,8 +133,7 @@ public class PaymentController {
             @RequestParam(required = false) PaymentStatus status,
             @RequestParam(required = false) Long studentId,
             @RequestParam(required = false) Long courseId,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         return ResponseEntity.ok(paymentService.getPayments(status, studentId, courseId, pageable));
     }
 
@@ -154,9 +153,20 @@ public class PaymentController {
     @AdminOnly
     public ResponseEntity<PaymentTransactionResponse> refundPayment(
             @PathVariable Long id,
-            @RequestBody @Valid RefundRequest request
-    ) {
+            @RequestBody @Valid RefundRequest request) {
         return ResponseEntity.ok(paymentService.refundPayment(id, request));
+    }
+
+    @GetMapping("/callback")
+    public ResponseEntity<Void> paymentRedirectCallback(
+            @RequestParam Map<String, String> params) {
+        log.info("ZaloPay REDIRECT callback (GET): {}", params);
+
+        // Gọi lại logic verify chung
+        paymentService.verifyPaymentAutoDetect(params);
+
+        //  BẮT BUỘC 200
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -208,15 +218,13 @@ public class PaymentController {
         try {
             var enrollment = enrollmentOrchestrator.retryEnrollment(paymentId);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Enrollment retried successfully",
-                "enrollment", enrollment
-            ));
+                    "success", true,
+                    "message", "Enrollment retried successfully",
+                    "enrollment", enrollment));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", e.getMessage()
-            ));
+                    "success", false,
+                    "message", e.getMessage()));
         }
     }
 
@@ -228,10 +236,10 @@ public class PaymentController {
     public ResponseEntity<?> checkEnrollmentStatus(@PathVariable Long paymentId) {
         boolean isPending = enrollmentOrchestrator.isEnrollmentPending(paymentId);
         return ResponseEntity.ok(Map.of(
-            "paymentId", paymentId,
-            "enrollmentPending", isPending,
-            "message", isPending ? "Enrollment failed and needs retry" : "Enrollment completed or payment not successful"
-        ));
+                "paymentId", paymentId,
+                "enrollmentPending", isPending,
+                "message",
+                isPending ? "Enrollment failed and needs retry" : "Enrollment completed or payment not successful"));
     }
-}
 
+}

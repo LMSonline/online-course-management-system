@@ -60,7 +60,10 @@ export interface StudentProfile {
 }
 
 export interface MeUser {
+
   accountId: number;
+  studentId: number;
+
   username: string;
   email: string;
   fullName?: string;

@@ -108,8 +108,7 @@ public class PaymentService {
         boolean alreadyPaid = paymentRepository.existsByStudentIdAndCourseIdAndStatus(
                 student.getId(),
                 course.getId(),
-                PaymentStatus.SUCCESS
-        );
+                PaymentStatus.SUCCESS);
         if (alreadyPaid) {
             throw new InvalidRequestException("You have already purchased this course");
         }
@@ -117,8 +116,7 @@ public class PaymentService {
         // Precondition: Check if student already enrolled (free or by other means)
         boolean alreadyEnrolled = enrollmentRepository.existsByStudentIdAndCourseVersionId(
                 student.getId(),
-                courseVersion.getId()
-        );
+                courseVersion.getId());
         if (alreadyEnrolled) {
             throw new InvalidRequestException("You are already enrolled in this course");
         }
@@ -152,8 +150,16 @@ public class PaymentService {
         String orderId = ORDER_ID_PREFIX + payment.getId();
         String orderInfo = "Thanh toan khoa hoc: " + course.getTitle();
         String returnUrl = request.getReturnUrl() != null ?
-                request.getReturnUrl() :
-                "http://localhost:3000/payment/result";
+        request.getReturnUrl() :
+        "http://localhost:3000/payment/result";
+        // String returnUrl;
+
+        // if (request.getReturnUrl() != null && !request.getReturnUrl().isBlank()) {
+        //     returnUrl = request.getReturnUrl();
+        // } else {
+        //     returnUrl = "http://localhost:3000/learner/courses/" + course.getSlug();
+        // }
+
         String ipAddress = getClientIpAddress(httpRequest);
 
         String paymentUrl = paymentGateway.createPaymentUrl(
@@ -161,8 +167,7 @@ public class PaymentService {
                 courseVersion.getPrice(),
                 orderInfo,
                 returnUrl,
-                ipAddress
-        );
+                ipAddress);
 
         // Postcondition: Payment created with PENDING status
         assert payment.getStatus() == PaymentStatus.PENDING;
@@ -289,8 +294,8 @@ public class PaymentService {
         } else {
             // Mark payment as failed using rich domain logic
             String errorMessage = paymentGateway.getErrorMessage(paymentData);
-            String errorCode = paymentProvider == PaymentProvider.VNPAY ?
-                    paymentData.get("vnp_ResponseCode") : paymentData.get("return_code");
+            String errorCode = paymentProvider == PaymentProvider.VNPAY ? paymentData.get("vnp_ResponseCode")
+                    : paymentData.get("return_code");
             payment.markAsFailed(errorMessage, errorCode);
 
             payment = paymentRepository.save(payment);
@@ -315,7 +320,8 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
         Student ownerStudent = payment.getStudent();
         Teacher teacherOwnCourse = payment.getCourse().getTeacher();
-        // Authorization: Only the student who made the payment or the teacher of the course can access
+        // Authorization: Only the student who made the payment or the teacher of the
+        // course can access
         switch (account.getRole()) {
             case STUDENT -> {
                 if (ownerStudent == null || !ownerStudent.getAccount().getId().equals(account.getId())) {
@@ -343,8 +349,7 @@ public class PaymentService {
             PaymentStatus status,
             Long studentId,
             Long courseId,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         Specification<PaymentTransaction> spec = (root, query, cb) -> cb.conjunction();
 
         if (status != null) {
@@ -402,23 +407,20 @@ public class PaymentService {
         // Precondition: Check if refundable using rich domain logic
         if (!payment.canRefund()) {
             throw new InvalidRequestException(
-                    "Payment cannot be refunded. Refund is only available within 7 days of purchase."
-            );
+                    "Payment cannot be refunded. Refund is only available within 7 days of purchase.");
         }
 
         // Additional check: Student must not have completed > 20% of course
         Enrollment enrollment = enrollmentRepository
                 .findByStudentIdAndCourseVersionId(
                         payment.getStudent().getId(),
-                        payment.getCourseVersion().getId()
-                )
+                        payment.getCourseVersion().getId())
                 .orElse(null);
 
         if (enrollment != null && enrollment.getCompletionPercentage() != null
                 && enrollment.getCompletionPercentage() > 20.0f) {
             throw new InvalidRequestException(
-                    "Refund is not available as you have completed more than 20% of the course"
-            );
+                    "Refund is not available as you have completed more than 20% of the course");
         }
 
         // Process refund using rich domain logic
@@ -482,8 +484,8 @@ public class PaymentService {
         BigDecimal netRevenue = totalRevenue.subtract(totalRefunded);
 
         // Get revenue share config
-        RevenueShareConfig revenueConfig = getRevenueShareConfig(course.getCategory() != null ?
-                course.getCategory().getId() : null);
+        RevenueShareConfig revenueConfig = getRevenueShareConfig(
+                course.getCategory() != null ? course.getCategory().getId() : null);
         Float revenueSharePercentage = revenueConfig.getPercentage().floatValue();
 
         BigDecimal teacherRevenue = payments.stream()
@@ -551,5 +553,3 @@ public class PaymentService {
         return ipAddress != null ? ipAddress : "0.0.0.0";
     }
 }
-
-

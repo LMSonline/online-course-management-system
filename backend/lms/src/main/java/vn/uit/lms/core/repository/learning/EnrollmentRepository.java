@@ -10,139 +10,170 @@ import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.learning.Enrollment;
 import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.EnrollmentStatus;
+import vn.uit.lms.shared.dto.response.enrollment.MyLearningCourseResponse;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long>, JpaSpecificationExecutor<Enrollment> {
 
-    /**
-     * Find enrollment by student and course version
-     */
-    @Query("SELECT e FROM Enrollment e " +
-            "WHERE e.student.id = :studentId " +
-            "AND e.courseVersion.id = :courseVersionId " +
-            "AND e.deletedAt IS NULL")
-    Optional<Enrollment> findByStudentIdAndCourseVersionId(
-            @Param("studentId") Long studentId,
-            @Param("courseVersionId") Long courseVersionId
-    );
+        /**
+         * Find enrollment by student and course version
+         */
+        @Query("SELECT e FROM Enrollment e " +
+                        "WHERE e.student.id = :studentId " +
+                        "AND e.courseVersion.id = :courseVersionId " +
+                        "AND e.deletedAt IS NULL")
+        Optional<Enrollment> findByStudentIdAndCourseVersionId(
+                        @Param("studentId") Long studentId,
+                        @Param("courseVersionId") Long courseVersionId);
 
-    /**
-     * Find all enrollments by student
-     */
-    @Query("SELECT e FROM Enrollment e " +
-            "LEFT JOIN FETCH e.course c " +
-            "LEFT JOIN FETCH e.courseVersion cv " +
-            "WHERE e.student.id = :studentId " +
-            "AND e.deletedAt IS NULL")
-    Page<Enrollment> findByStudentId(@Param("studentId") Long studentId, Pageable pageable);
+        /**
+         * Find all enrollments by student
+         */
+        @Query("SELECT e FROM Enrollment e " +
+                        "LEFT JOIN FETCH e.course c " +
+                        "LEFT JOIN FETCH e.courseVersion cv " +
+                        "WHERE e.student.id = :studentId " +
+                        "AND e.deletedAt IS NULL")
+        Page<Enrollment> findByStudentId(@Param("studentId") Long studentId, Pageable pageable);
 
-    /**
-     * Find all enrollments by course
-     */
-    @Query("SELECT e FROM Enrollment e " +
-            "LEFT JOIN FETCH e.student s " +
-            "LEFT JOIN FETCH e.courseVersion cv " +
-            "WHERE e.course.id = :courseId " +
-            "AND e.deletedAt IS NULL")
-    Page<Enrollment> findByCourseId(@Param("courseId") Long courseId, Pageable pageable);
+        // /**
+        //  * Find all enrollments by student full field for card course in http://localhost:3000/learner/my-learning
+        //  */
 
-    /**
-     * Count enrollments by course and status
-     */
-    @Query("SELECT COUNT(e) FROM Enrollment e " +
-            "WHERE e.course.id = :courseId " +
-            "AND e.status = :status " +
-            "AND e.deletedAt IS NULL")
-    Long countByCourseIdAndStatus(@Param("courseId") Long courseId, @Param("status") EnrollmentStatus status);
+        // @Query("""
+        //                 SELECT new vn.uit.lms.shared.dto.response.learning.MyLearningCourseResponse(
+        //                     e.id,
+        //                     c.id,
+        //                     c.title,
+        //                     c.slug,
+        //                     c.thumbnailUrl,
+        //                     c.difficulty,
+        //                     t.fullName,
+        //                     cat.name,
+        //                     e.completionPercentage,
+        //                     AVG(cr.rating),
+        //                     COUNT(cr.id),
+        //                     MAX(p.updatedAt)
+        //                 )
+        //                 FROM Enrollment e
+        //                 JOIN e.course c
+        //                 JOIN c.teacher t
+        //                 LEFT JOIN c.category cat
+        //                 LEFT JOIN CourseReview cr ON cr.course.id = c.id
+        //                 LEFT JOIN Progress p
+        //                     ON p.courseId = c.id AND p.studentId = e.student.id
+        //                 WHERE e.student.id = :studentId
+        //                 GROUP BY
+        //                     e.id, c.id, t.fullName, cat.name
+        //                 """)
+        // Page<MyLearningCourseResponse> findMyLearningCourses(
+        //                 @Param("studentId") Long studentId,
+        //                 Pageable pageable);
 
-    /**
-     * Count all enrollments by course
-     */
-    @Query("SELECT COUNT(e) FROM Enrollment e " +
-            "WHERE e.course.id = :courseId " +
-            "AND e.deletedAt IS NULL")
-    Long countByCourseId(@Param("courseId") Long courseId);
+        /**
+         * Find all enrollments by course
+         */
+        @Query("SELECT e FROM Enrollment e " +
+                        "LEFT JOIN FETCH e.student s " +
+                        "LEFT JOIN FETCH e.courseVersion cv " +
+                        "WHERE e.course.id = :courseId " +
+                        "AND e.deletedAt IS NULL")
+        Page<Enrollment> findByCourseId(@Param("courseId") Long courseId, Pageable pageable);
 
-    /**
-     * Get average completion percentage by course
-     */
-    @Query("SELECT AVG(e.completionPercentage) FROM Enrollment e " +
-            "WHERE e.course.id = :courseId " +
-            "AND e.deletedAt IS NULL")
-    Double getAverageCompletionPercentageByCourseId(@Param("courseId") Long courseId);
+        /**
+         * Count enrollments by course and status
+         */
+        @Query("SELECT COUNT(e) FROM Enrollment e " +
+                        "WHERE e.course.id = :courseId " +
+                        "AND e.status = :status " +
+                        "AND e.deletedAt IS NULL")
+        Long countByCourseIdAndStatus(@Param("courseId") Long courseId, @Param("status") EnrollmentStatus status);
 
-    /**
-     * Get average score by course
-     */
-    @Query("SELECT AVG(e.averageScore) FROM Enrollment e " +
-            "WHERE e.course.id = :courseId " +
-            "AND e.averageScore IS NOT NULL " +
-            "AND e.deletedAt IS NULL")
-    Double getAverageScoreByCourseId(@Param("courseId") Long courseId);
+        /**
+         * Count all enrollments by course
+         */
+        @Query("SELECT COUNT(e) FROM Enrollment e " +
+                        "WHERE e.course.id = :courseId " +
+                        "AND e.deletedAt IS NULL")
+        Long countByCourseId(@Param("courseId") Long courseId);
 
-    /**
-     * Count certificates issued by course
-     */
-    @Query("SELECT COUNT(e) FROM Enrollment e " +
-            "WHERE e.course.id = :courseId " +
-            "AND e.certificateIssued = true " +
-            "AND e.deletedAt IS NULL")
-    Long countCertificatesIssuedByCourseId(@Param("courseId") Long courseId);
+        /**
+         * Get average completion percentage by course
+         */
+        @Query("SELECT AVG(e.completionPercentage) FROM Enrollment e " +
+                        "WHERE e.course.id = :courseId " +
+                        "AND e.deletedAt IS NULL")
+        Double getAverageCompletionPercentageByCourseId(@Param("courseId") Long courseId);
 
-    /**
-     * Check if student already enrolled in course (any version, active status)
-     */
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Enrollment e " +
-            "WHERE e.student.id = :studentId " +
-            "AND e.course.id = :courseId " +
-            "AND e.status = 'ENROLLED' " +
-            "AND e.deletedAt IS NULL")
-    boolean existsByStudentIdAndCourseIdAndActiveStatus(
-            @Param("studentId") Long studentId,
-            @Param("courseId") Long courseId
-    );
+        /**
+         * Get average score by course
+         */
+        @Query("SELECT AVG(e.averageScore) FROM Enrollment e " +
+                        "WHERE e.course.id = :courseId " +
+                        "AND e.averageScore IS NOT NULL " +
+                        "AND e.deletedAt IS NULL")
+        Double getAverageScoreByCourseId(@Param("courseId") Long courseId);
 
-    /**
-     * Check if student already enrolled in specific course version
-     */
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Enrollment e " +
-            "WHERE e.student.id = :studentId " +
-            "AND e.courseVersion.id = :courseVersionId " +
-            "AND e.deletedAt IS NULL")
-    boolean existsByStudentIdAndCourseVersionId(
-            @Param("studentId") Long studentId,
-            @Param("courseVersionId") Long courseVersionId
-    );
+        /**
+         * Count certificates issued by course
+         */
+        @Query("SELECT COUNT(e) FROM Enrollment e " +
+                        "WHERE e.course.id = :courseId " +
+                        "AND e.certificateIssued = true " +
+                        "AND e.deletedAt IS NULL")
+        Long countCertificatesIssuedByCourseId(@Param("courseId") Long courseId);
 
-    /**
-     * Find all enrollments for a student in specific course (all versions)
-     */
-    @Query("SELECT e FROM Enrollment e " +
-            "WHERE e.student.id = :studentId " +
-            "AND e.course.id = :courseId " +
-            "AND e.deletedAt IS NULL " +
-            "ORDER BY e.enrolledAt DESC")
-    List<Enrollment> findAllByStudentIdAndCourseId(
-            @Param("studentId") Long studentId,
-            @Param("courseId") Long courseId
-    );
+        /**
+         * Check if student already enrolled in course (any version, active status)
+         */
+        @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Enrollment e " +
+                        "WHERE e.student.id = :studentId " +
+                        "AND e.course.id = :courseId " +
+                        "AND e.status = 'ENROLLED' " +
+                        "AND e.deletedAt IS NULL")
+        boolean existsByStudentIdAndCourseIdAndActiveStatus(
+                        @Param("studentId") Long studentId,
+                        @Param("courseId") Long courseId);
 
-    /**
-     * Find active enrollment for a student in a course (most recent)
-     */
-    @Query("SELECT e FROM Enrollment e " +
-            "WHERE e.student.id = :studentId " +
-            "AND e.course.id = :courseId " +
-            "AND e.status = 'ENROLLED' " +
-            "AND e.deletedAt IS NULL " +
-            "ORDER BY e.enrolledAt DESC")
-    Optional<Enrollment> findByStudentIdAndCourseId(
-            @Param("studentId") Long studentId,
-            @Param("courseId") Long courseId
-    );
+        /**
+         * Check if student already enrolled in specific course version
+         */
+        @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Enrollment e " +
+                        "WHERE e.student.id = :studentId " +
+                        "AND e.courseVersion.id = :courseVersionId " +
+                        "AND e.deletedAt IS NULL")
+        boolean existsByStudentIdAndCourseVersionId(
+                        @Param("studentId") Long studentId,
+                        @Param("courseVersionId") Long courseVersionId);
 
-    boolean existsByCourse(Course course);
-    int countByCourseAndStatus(Course course, EnrollmentStatus status);
+        /**
+         * Find all enrollments for a student in specific course (all versions)
+         */
+        @Query("SELECT e FROM Enrollment e " +
+                        "WHERE e.student.id = :studentId " +
+                        "AND e.course.id = :courseId " +
+                        "AND e.deletedAt IS NULL " +
+                        "ORDER BY e.enrolledAt DESC")
+        List<Enrollment> findAllByStudentIdAndCourseId(
+                        @Param("studentId") Long studentId,
+                        @Param("courseId") Long courseId);
+
+        /**
+         * Find active enrollment for a student in a course (most recent)
+         */
+        @Query("SELECT e FROM Enrollment e " +
+                        "WHERE e.student.id = :studentId " +
+                        "AND e.course.id = :courseId " +
+                        "AND e.status = 'ENROLLED' " +
+                        "AND e.deletedAt IS NULL " +
+                        "ORDER BY e.enrolledAt DESC")
+        Optional<Enrollment> findByStudentIdAndCourseId(
+                        @Param("studentId") Long studentId,
+                        @Param("courseId") Long courseId);
+
+        boolean existsByCourse(Course course);
+
+        int countByCourseAndStatus(Course course, EnrollmentStatus status);
 }

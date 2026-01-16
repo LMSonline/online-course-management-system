@@ -11,6 +11,7 @@ import {
   MeUser,
 } from "@/services/auth/auth.types";
 import { tokenStorage } from "@/lib/api/tokenStorage";
+import { useEffect, useState } from "react";
 
 // Login Hook
 export const useLogin = () => {
@@ -252,16 +253,29 @@ export const useResendVerificationEmail = () => {
 };
 
 // Main useAuth Hook - provides current user data and state
-export const useAuth = () => {
-  const { data: user, isLoading, error } = useCurrentUser();
-  const logout = useLogout();
+// export const useAuth = () => {
+//   const { data: user, isLoading, error } = useCurrentUser();
+//   const logout = useLogout();
 
-  return {
-    user: user || null,
-    isLoading,
-    isAuthenticated: !!user,
-    error,
-    logout: logout.mutate,
-    isLoggingOut: logout.isPending,
-  };
-};
+//   return {
+//     user: user || null,
+//     isLoading,
+//     isAuthenticated: !!user,
+//     error,
+//     logout: logout.mutate,
+//     isLoggingOut: logout.isPending,
+//   };
+// };
+
+export function useAuth() {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("user");
+    if (raw) setUser(JSON.parse(raw));
+    setIsLoading(false);
+  }, []);
+
+  return { user, isLoading };
+}

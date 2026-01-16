@@ -10,6 +10,7 @@ export const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+console.log("API BASE URL =", ENV.API.BASE_API_URL);
 
 const refreshClient = axios.create({
   baseURL: ENV.API.BASE_API_URL,
