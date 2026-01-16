@@ -341,7 +341,7 @@ export default function CourseDetailPage() {
                           className="h-12 w-12 rounded-full object-cover border-2 border-cyan-500/30"
                         />
                       ) : (
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold flex-shrink-0">
                           {(review.username || "A").charAt(0).toUpperCase()}
                         </div>
                       )}

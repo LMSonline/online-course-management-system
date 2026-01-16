@@ -34,10 +34,13 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
       console.log("DEBUG user:", user);
 
 
-    // if (!user) throw new Error("Bạn cần đăng nhập");
+      // if (!user) throw new Error("Bạn cần đăng nhập");
 
-      const studentId = user?.studentId;
-      if (!user ) {
+      // const studentId = user?.studentId;
+      // ⚠️ TEMP FIX: hard-code studentId để test
+      const studentId = user?.studentId ?? 2;
+
+      if (!user) {
         throw new Error("Không tìm thấy studentId. Vui lòng đăng nhập lại.");
       }
 
@@ -50,7 +53,8 @@ const EnrollStepper: React.FC<EnrollStepperProps> = ({ course, onClose }) => {
       if (!isPaidCourse) {
         // FREE: Gọi enroll luôn
         const enrollRes = await learnerEnrollmentService.enrollCourse(
-          studentId,
+          // studentId,
+          user?.studentId ?? 2, // ⚠️ hard-code tạm
           course.courseId,
           versionId
         );
