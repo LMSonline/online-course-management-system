@@ -1366,8 +1366,281 @@ public class FakeDataInitializer implements CommandLineRunner {
             notificationRepository.save(notification);
         }
 
+        // Add MORE student enrollments to teacher0's courses for better statistics
+        enrichTeacher0CoursesWithEnrollments(teacher0, teacher0Courses, students);
+
         // Add interaction with students (teacher0 views student progress more frequently)
         logger.info("Teacher0 enrichment completed - now has richest dataset with {} courses", teacher0Courses.size());
+    }
+
+    /**
+     * Add additional student enrollments to teacher0's courses with quiz attempts and assignments
+     */
+    private void enrichTeacher0CoursesWithEnrollments(Teacher teacher0, List<Course> teacher0Courses, List<Student> students) {
+        logger.info("Adding more student enrollments to teacher0's courses for statistics...");
+
+        // Each teacher0 course should have 20-35 students enrolled
+        for (Course course : teacher0Courses) {
+            List<CourseVersion> versions = course.getVersions();
+            if (versions == null || versions.isEmpty()) {
+                continue;
+            }
+            CourseVersion courseVersion = versions.get(0);
+
+            // Get current enrollments count
+            long currentEnrollments = enrollmentRepository.countByCourseId(course.getId());
+            int targetEnrollments = faker.random().nextInt(20, 36);
+            int toCreate = Math.max(0, targetEnrollments - (int) currentEnrollments);
+
+            logger.info("Course '{}' has {} enrollments, adding {} more to reach ~{}",
+                course.getTitle(), currentEnrollments, toCreate, targetEnrollments);
+
+            // Shuffle students and enroll them
+            List<Student> shuffledStudents = new ArrayList<>(students);
+            Collections.shuffle(shuffledStudents);
+
+            int enrolled = 0;
+            for (Student student : shuffledStudents) {
+                if (enrolled >= toCreate) break;
+
+                // Check if already enrolled
+                if (enrollmentRepository.findByStudentIdAndCourseId(student.getId(), course.getId()).isPresent()) {
+                    continue;
+                }
+
+                // Create enrollment
+                Enrollment enrollment = new Enrollment();
+                enrollment.setStudent(student);
+                enrollment.setCourse(course);
+                enrollment.setCourseVersion(courseVersion);
+                enrollment.setEnrolledAt(Instant.now().minus(faker.random().nextInt(5, 90), ChronoUnit.DAYS));
+                enrollment.setStatus(EnrollmentStatus.ENROLLED);
+                enrollment = enrollmentRepository.save(enrollment);
+
+                // 70% of students make progress
+                if (faker.random().nextInt(10) > 3) {
+                    createProgressForEnrollment(enrollment, courseVersion);
+                }
+
+                // 60% of students attempt quizzes
+                if (faker.random().nextInt(10) > 4) {
+                    createQuizAttemptsForStudent(student, courseVersion);
+                }
+
+                // 50% of students submit assignments
+                if (faker.random().nextInt(10) > 5) {
+                    createSubmissionsForStudent(student, courseVersion);
+                }
+
+                // 30% complete the course
+                if (faker.random().nextInt(10) > 7) {
+                    enrollment.setStatus(EnrollmentStatus.COMPLETED);
+                    enrollment.setEndAt(Instant.now().minus(faker.random().nextInt(1, 45), ChronoUnit.DAYS));
+                    enrollmentRepository.save(enrollment);
+
+                    // Create certificate for completed students
+                    createCertificate(student, course, courseVersion);
+                }
+
+                // 40% leave reviews
+                if (faker.random().nextInt(10) > 6) {
+                    createReview(student, course);
+                }
+
+                enrolled++;
+            }
+
+            logger.info("Added {} new enrollments to course '{}'", enrolled, course.getTitle());
+        }
+
+        logger.info("Teacher0 courses enriched with additional enrollments and student activities");
+    }
+
+    /**
+     * Create progress records for a student enrollment
+     */
+    private void createProgressForEnrollment(Enrollment enrollment, CourseVersion courseVersion) {
+        List<Chapter> chapters = chapterRepository.findAllByCourseVersionOrderByOrderIndexAsc(courseVersion);
+
+        int totalLessons = 0;
+        int completedLessons = 0;
+
+        for (Chapter chapter : chapters) {
+            List<Lesson> lessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+            totalLessons += lessons.size();
+
+            for (Lesson lesson : lessons) {
+                // Complete 40-80% of lessons randomly
+                if (faker.random().nextInt(10) > 3) {
+                    Progress progress = new Progress();
+                    progress.setStudent(enrollment.getStudent());
+                    progress.setCourse(enrollment.getCourse());
+                    progress.setCourseVersion(enrollment.getCourseVersion());
+                    progress.setLesson(lesson);
+                    progress.setStatus(ProgressStatus.COMPLETED);
+                    progress.setCompletedAt(enrollment.getEnrolledAt().plus(
+                        faker.random().nextInt(1, 45), ChronoUnit.DAYS));
+                    progressRepository.save(progress);
+                    completedLessons++;
+                }
+            }
+        }
+
+        logger.debug("Created progress: {}/{} lessons completed for student {}",
+            completedLessons, totalLessons, enrollment.getStudent().getStudentCode());
+    }
+
+    /**
+     * Create quiz attempts for a student in a course
+     */
+    private void createQuizAttemptsForStudent(Student student, CourseVersion courseVersion) {
+        List<Chapter> chapters = chapterRepository.findAllByCourseVersionOrderByOrderIndexAsc(courseVersion);
+
+        for (Chapter chapter : chapters) {
+            List<Lesson> lessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+
+            for (Lesson lesson : lessons) {
+                List<Quiz> quizzes = quizRepository.findByLessonId(lesson.getId());
+
+                for (Quiz quiz : quizzes) {
+                    // 70% chance to attempt each quiz
+                    if (faker.random().nextInt(10) > 3) {
+                        int attemptCount = faker.random().nextInt(1, 4); // 1-3 attempts
+
+                        for (int i = 0; i < attemptCount; i++) {
+                            QuizAttempt attempt = new QuizAttempt();
+                            attempt.setQuiz(quiz);
+                            attempt.setStudent(student);
+
+                            Instant startTime = Instant.now().minus(
+                                faker.random().nextInt(5, 60), ChronoUnit.DAYS);
+                            attempt.setStartedAt(startTime);
+                            attempt.setFinishedAt(startTime.plus(
+                                faker.random().nextInt(10, 60), ChronoUnit.MINUTES));
+
+                            // Score varies: first attempts lower, later attempts higher
+                            int baseScore = 50 + (i * 15); // Improvement with each attempt
+                            Double score = (double) faker.random().nextInt(
+                                baseScore, Math.min(100, baseScore + 35));
+                            attempt.setTotalScore(score);
+                            attempt.setStatus(QuizAttemptStatus.COMPLETED);
+                            attempt = quizAttemptRepository.save(attempt);
+
+                            // Create answers for this attempt
+                            createQuizAttemptAnswersForAttempt(attempt);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Create quiz attempt answers for a specific attempt
+     */
+    private void createQuizAttemptAnswersForAttempt(QuizAttempt attempt) {
+        List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(attempt.getQuiz().getId());
+
+        for (QuizQuestion quizQuestion : quizQuestions) {
+            List<AnswerOption> options = answerOptionRepository.findByQuestionId(
+                quizQuestion.getQuestion().getId());
+
+            if (!options.isEmpty()) {
+                // Higher chance of correct answer for higher scoring attempts
+                boolean shouldAnswerCorrect = attempt.getTotalScore() > 70
+                    ? faker.random().nextInt(10) > 2  // 80% correct if high score
+                    : faker.random().nextInt(10) > 5; // 50% correct if low score
+
+                AnswerOption selectedOption;
+                if (shouldAnswerCorrect) {
+                    // Try to find a correct answer
+                    selectedOption = options.stream()
+                        .filter(AnswerOption::isCorrect)
+                        .findFirst()
+                        .orElse(options.get(0));
+                } else {
+                    // Select a random answer
+                    selectedOption = options.get(faker.random().nextInt(options.size()));
+                }
+
+                QuizAttemptAnswer answer = new QuizAttemptAnswer();
+                answer.setQuizAttempt(attempt);
+                answer.setQuestion(quizQuestion.getQuestion());
+                answer.setQuizQuestion(quizQuestion);
+                answer.setSelectedOption(selectedOption);
+                answer.setScore(selectedOption.isCorrect()
+                    ? quizQuestion.getQuestion().getMaxPoints() : 0.0);
+                answer.setGraded(true);
+                quizAttemptAnswerRepository.save(answer);
+            }
+        }
+    }
+
+    /**
+     * Create assignment submissions for a student in a course
+     */
+    private void createSubmissionsForStudent(Student student, CourseVersion courseVersion) {
+        List<Chapter> chapters = chapterRepository.findAllByCourseVersionOrderByOrderIndexAsc(courseVersion);
+
+        for (Chapter chapter : chapters) {
+            List<Lesson> lessons = lessonRepository.findByChapterOrderByOrderIndexAsc(chapter);
+
+            for (Lesson lesson : lessons) {
+                List<Assignment> assignments = assignmentRepository.findByLessonId(lesson.getId());
+
+                for (Assignment assignment : assignments) {
+                    // 60% chance to submit each assignment
+                    if (faker.random().nextInt(10) > 4) {
+                        Submission submission = new Submission();
+                        submission.setStudent(student);
+                        submission.setAssignment(assignment);
+
+                        // Generate realistic submission content
+                        submission.setContent(generateSubmissionContent());
+
+                        Instant submitTime = Instant.now().minus(
+                            faker.random().nextInt(3, 50), ChronoUnit.DAYS);
+                        submission.setSubmittedAt(submitTime);
+
+                        // 80% of submissions are graded
+                        if (faker.random().nextInt(10) > 2) {
+                            double score = faker.random().nextInt(60, 100);
+                            submission.setScore(score);
+                            submission.setFeedback(generateDetailedFeedback());
+                            submission.setGradedAt(submitTime.plus(
+                                faker.random().nextInt(1, 7), ChronoUnit.DAYS));
+                        }
+
+                        submission = submissionRepository.save(submission);
+
+                        // Add submission files (30% chance)
+                        if (faker.random().nextInt(10) > 7) {
+                            createSubmissionFiles(submission);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Generate realistic submission content
+     */
+    private String generateSubmissionContent() {
+        String[] contentTemplates = {
+            "# Bài làm của em\n\n## Phần 1: Phân tích\n\n%s\n\n## Phần 2: Giải pháp\n\n%s\n\n## Phần 3: Kết luận\n\n%s",
+            "## Tổng quan\n\n%s\n\n## Chi tiết thực hiện\n\n%s\n\n## Kết quả đạt được\n\n%s\n\n## Nhận xét cá nhân\n\n%s",
+            "# Báo cáo bài tập\n\n**Mục tiêu:** %s\n\n**Cách thực hiện:**\n\n%s\n\n**Kết quả:**\n\n%s\n\n**Bài học rút ra:**\n\n%s",
+            "### Phần trả lời\n\n1. %s\n\n2. %s\n\n3. %s\n\n### Giải thích thêm\n\n%s"
+        };
+
+        String template = contentTemplates[faker.random().nextInt(contentTemplates.length)];
+        return String.format(template,
+            faker.lorem().paragraph(3),
+            faker.lorem().paragraph(4),
+            faker.lorem().paragraph(3),
+            faker.lorem().paragraph(2)
+        );
     }
 
     private String generateDetailedQuestion() {
