@@ -20,7 +20,7 @@ import vn.uit.lms.shared.exception.DuplicateResourceException;
 import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.mapper.course.content.ChapterMapper;
-import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
+import vn.uit.lms.shared.annotation.EnableSoftDeleteFilter;
 
 import java.util.List;
 import java.util.stream.Collectors;

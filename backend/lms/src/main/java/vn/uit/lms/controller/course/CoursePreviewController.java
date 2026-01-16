@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.course.CoursePreviewService;
 import vn.uit.lms.shared.dto.response.course.CoursePreviewResponse;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.ApiMessage;
 
 import java.util.Map;
 

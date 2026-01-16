@@ -18,9 +18,9 @@ import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.student.UpdateStudentRequest;
 import vn.uit.lms.shared.dto.response.account.UploadAvatarResponse;
 import vn.uit.lms.shared.dto.response.student.*;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.StudentOrAdmin;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.StudentOrAdmin;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
 
 import java.util.Optional;
 

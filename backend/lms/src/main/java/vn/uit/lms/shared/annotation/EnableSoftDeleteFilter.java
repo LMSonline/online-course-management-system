@@ -1,12 +1,12 @@
-package vn.uit.lms.shared.util.annotation;
+package vn.uit.lms.shared.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ApiMessage {
-    String value();
+@Retention(RetentionPolicy.RUNTIME)
+public @interface EnableSoftDeleteFilter {
 }
+

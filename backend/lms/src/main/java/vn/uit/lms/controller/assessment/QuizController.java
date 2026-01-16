@@ -12,8 +12,8 @@ import vn.uit.lms.shared.dto.response.assessment.QuizEligibilityResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuizQuestionResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuizResponse;
 import vn.uit.lms.shared.dto.response.assessment.QuizStatisticsResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 

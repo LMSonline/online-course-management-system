@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import vn.uit.lms.shared.dto.request.admin.ReportPeriodRequest;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.io.IOException;
 

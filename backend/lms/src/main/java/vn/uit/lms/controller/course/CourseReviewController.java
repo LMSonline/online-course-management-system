@@ -14,7 +14,7 @@ import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.course.CourseReviewRequest;
 import vn.uit.lms.shared.dto.response.course.RatingSummaryResponse;
 import vn.uit.lms.shared.dto.response.course.CourseReviewResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
 
 @RestController
 @RequestMapping("/api/v1")

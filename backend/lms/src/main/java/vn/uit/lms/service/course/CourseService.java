@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +31,7 @@ import vn.uit.lms.shared.exception.InvalidRequestException;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.mapper.course.CourseMapper;
-import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
+import vn.uit.lms.shared.annotation.EnableSoftDeleteFilter;
 import vn.uit.lms.shared.constant.EnrollmentStatus;
 import vn.uit.lms.shared.constant.Role;
 

@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.course.content.ChapterService;
 import vn.uit.lms.service.course.content.LessonService;
@@ -14,8 +13,8 @@ import vn.uit.lms.service.course.content.LessonResourceService;
 import vn.uit.lms.shared.dto.response.course.content.ChapterDto;
 import vn.uit.lms.shared.dto.response.course.content.LessonDTO;
 import vn.uit.lms.shared.dto.response.resource.LessonResourceResponse;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.StudentOnly;
 
 import java.util.List;
 import java.util.Map;

@@ -17,9 +17,9 @@ import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.request.account.RejectRequest;
 import vn.uit.lms.shared.dto.request.course.CourseVersionRequest;
 import vn.uit.lms.shared.dto.response.course.CourseVersionResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOrAdmin;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.TeacherOrAdmin;
 
 import java.util.List;
 

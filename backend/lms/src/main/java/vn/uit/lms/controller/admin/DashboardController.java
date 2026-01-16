@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.admin.DashboardService;
 import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.dto.response.admin.*;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 @RestController
 @RequestMapping("/api/v1/admin")

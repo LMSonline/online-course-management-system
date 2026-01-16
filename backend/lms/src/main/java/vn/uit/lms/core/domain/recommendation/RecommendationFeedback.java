@@ -28,5 +28,4 @@ public class RecommendationFeedback {
     private String metadata;
 
 
-    private java.time.LocalDateTime createdAt;
 }

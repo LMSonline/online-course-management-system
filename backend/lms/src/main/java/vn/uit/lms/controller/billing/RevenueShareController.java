@@ -10,7 +10,7 @@ import vn.uit.lms.service.billing.RevenueShareService;
 import vn.uit.lms.shared.dto.request.billing.CreateRevenueShareConfigRequest;
 import vn.uit.lms.shared.dto.request.billing.UpdateRevenueShareConfigRequest;
 import vn.uit.lms.shared.dto.response.billing.RevenueShareConfigResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.time.LocalDate;
 import java.util.List;

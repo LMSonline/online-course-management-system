@@ -13,9 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.service.course.content.FileStorageService;
 import vn.uit.lms.shared.constant.StorageProvider;
 import vn.uit.lms.shared.dto.response.storage.FileStorageResponse;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.Authenticated;
-import vn.uit.lms.shared.util.annotation.TeacherOrAdmin;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.TeacherOrAdmin;
 
 import java.util.Map;
 

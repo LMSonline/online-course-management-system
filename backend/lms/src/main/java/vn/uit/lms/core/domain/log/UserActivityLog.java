@@ -22,5 +22,4 @@ public class UserActivityLog {
     @Column(columnDefinition = "JSON")
     private String metadata;
 
-    private java.time.LocalDateTime createdAt;
 }

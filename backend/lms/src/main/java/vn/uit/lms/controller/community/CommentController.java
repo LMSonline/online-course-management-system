@@ -7,9 +7,9 @@ import vn.uit.lms.service.community.comment.CommentService;
 import vn.uit.lms.shared.dto.request.community.comment.CommentCreateRequest;
 import vn.uit.lms.shared.dto.response.community.comment.CommentResponse;
 import vn.uit.lms.shared.dto.response.community.comment.CommentStatisticsResponse;
-import vn.uit.lms.shared.util.annotation.Authenticated;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 import java.util.Map;

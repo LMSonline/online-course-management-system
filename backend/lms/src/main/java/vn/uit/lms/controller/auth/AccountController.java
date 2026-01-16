@@ -31,9 +31,9 @@ import vn.uit.lms.shared.dto.response.log.AccountActionLogResponse;
 import vn.uit.lms.shared.exception.UnauthorizedException;
 import vn.uit.lms.shared.util.JsonViewUtils;
 import vn.uit.lms.shared.util.SecurityUtils;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.Authenticated;
 
 import java.util.Optional;
 

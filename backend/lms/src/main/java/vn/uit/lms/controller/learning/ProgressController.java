@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.learning.ProgressService;
 import vn.uit.lms.shared.dto.request.progress.UpdateWatchedDurationRequest;
 import vn.uit.lms.shared.dto.response.progress.*;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 @RestController
 @RequestMapping("/api/v1")

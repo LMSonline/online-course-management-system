@@ -8,7 +8,7 @@ import vn.uit.lms.shared.dto.response.billing.MonthlyRevenueResponse;
 import vn.uit.lms.shared.dto.response.billing.PaymentTransactionResponse;
 import vn.uit.lms.shared.dto.response.billing.RevenueBreakdownResponse;
 import vn.uit.lms.shared.dto.response.billing.TeacherRevenueResponse;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.time.YearMonth;
 import java.util.List;

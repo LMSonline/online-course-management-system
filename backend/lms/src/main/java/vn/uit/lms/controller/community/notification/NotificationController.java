@@ -15,7 +15,7 @@ import vn.uit.lms.shared.dto.PageResponse;
 import vn.uit.lms.shared.dto.response.community.notification.NotificationResponse;
 import vn.uit.lms.shared.mapper.community.NotificationMapper;
 import vn.uit.lms.shared.util.SecurityUtils;
-import vn.uit.lms.shared.util.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.Authenticated;
 
 import java.util.List;
 import java.util.Map;

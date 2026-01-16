@@ -31,6 +31,7 @@ public class Category extends BaseEntity {
     private String code;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean visible = true;
 
     @Column(columnDefinition = "TEXT")

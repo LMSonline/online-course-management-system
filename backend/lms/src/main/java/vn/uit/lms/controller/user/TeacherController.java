@@ -24,11 +24,11 @@ import vn.uit.lms.shared.dto.response.student.StudentResponse;
 import vn.uit.lms.shared.dto.response.teacher.TeacherDetailResponse;
 import vn.uit.lms.shared.dto.response.teacher.TeacherRevenueResponse;
 import vn.uit.lms.shared.dto.response.teacher.TeacherStatsResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.Authenticated;
-import vn.uit.lms.shared.util.annotation.TeacherOrAdmin;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.TeacherOrAdmin;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 @RestController
 @RequestMapping("/api/v1/teachers")

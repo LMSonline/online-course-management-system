@@ -11,7 +11,7 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import vn.uit.lms.shared.dto.ApiResponse;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.ApiMessage;
 
 import java.time.Instant;
 

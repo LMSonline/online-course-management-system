@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.system.SystemSettingService;
 import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.dto.request.system.SystemSettingRequest;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.time.Instant;
 

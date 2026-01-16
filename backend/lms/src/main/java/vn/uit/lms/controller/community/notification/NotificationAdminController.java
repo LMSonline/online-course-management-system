@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.community.notification.NotificationService;
 import vn.uit.lms.shared.dto.request.community.notification.SendBulkNotificationRequest;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.util.Map;
 

@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CourseVersionRepository
-        extends JpaRepository<CourseVersion, Long>, JpaSpecificationExecutor<CourseVersion> {
+public interface CourseVersionRepository extends JpaRepository<CourseVersion, Long>, JpaSpecificationExecutor<CourseVersion> {
     List<CourseVersion> findAllByCourseAndDeletedAtIsNull(Course course);
 
     List<CourseVersion> findAllByCourseAndDeletedAtIsNotNull(Course course);

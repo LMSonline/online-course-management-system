@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 import vn.uit.lms.service.log.AuditLogService;
 import vn.uit.lms.shared.dto.ApiResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.io.IOException;
 import java.time.Instant;

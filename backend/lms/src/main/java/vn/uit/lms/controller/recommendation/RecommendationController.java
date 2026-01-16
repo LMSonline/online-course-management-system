@@ -7,8 +7,8 @@ import vn.uit.lms.service.recommendation.RecommendationService;
 import vn.uit.lms.shared.dto.ApiResponse;
 import vn.uit.lms.shared.dto.request.recommendation.RecommendationFeedbackRequest;
 import vn.uit.lms.shared.util.SecurityUtils;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
 
 import java.time.Instant;
 

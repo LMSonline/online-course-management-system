@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.assessment.QuizAttemptService;
 import vn.uit.lms.shared.dto.request.assessment.SubmitAnswerRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuizAttemptResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 

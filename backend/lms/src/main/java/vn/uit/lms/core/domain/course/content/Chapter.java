@@ -34,6 +34,7 @@ public class Chapter extends BaseEntity {
     private String description;
 
     @Column(name = "order_index", nullable = false)
+    @Builder.Default
     private Integer orderIndex = 0;
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)

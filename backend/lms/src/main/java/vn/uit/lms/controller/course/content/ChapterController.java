@@ -12,8 +12,8 @@ import vn.uit.lms.service.course.content.ChapterService;
 import vn.uit.lms.shared.dto.request.course.content.ChapterRequest;
 import vn.uit.lms.shared.dto.request.course.content.ChapterReorderRequest;
 import vn.uit.lms.shared.dto.response.course.content.ChapterDto;
-import vn.uit.lms.shared.util.annotation.Authenticated;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 

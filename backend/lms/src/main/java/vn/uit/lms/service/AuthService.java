@@ -24,11 +24,10 @@ import vn.uit.lms.shared.exception.*;
 import vn.uit.lms.shared.mapper.AccountMapper;
 import vn.uit.lms.shared.util.SecurityUtils;
 import vn.uit.lms.shared.util.TokenHashUtil;
-import vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter;
+import vn.uit.lms.shared.annotation.EnableSoftDeleteFilter;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 /**
  * AuthService - Thin orchestrator following Rich Domain Model pattern

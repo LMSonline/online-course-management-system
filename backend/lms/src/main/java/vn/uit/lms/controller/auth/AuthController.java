@@ -22,8 +22,8 @@ import vn.uit.lms.shared.dto.response.auth.MeResponse;
 import vn.uit.lms.shared.dto.response.auth.RegisterResponse;
 import vn.uit.lms.shared.dto.response.auth.ResLoginDTO;
 import vn.uit.lms.shared.mapper.AccountMapper;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.Authenticated;
 
 /**
  * Authentication and authorization controller for user account operations.

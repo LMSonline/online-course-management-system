@@ -35,6 +35,7 @@ public class CourseVersion extends BaseEntity {
     private Course course;
 
     @Column(name = "version_number", nullable = false)
+    @Builder.Default
     private Integer versionNumber = 1;
 
     @Column(nullable = false)
@@ -44,18 +45,23 @@ public class CourseVersion extends BaseEntity {
     private String description;
 
     @Column(precision = 12, scale = 2)
+    @Builder.Default
     private BigDecimal price = BigDecimal.ZERO;
 
     @Column(name = "duration_days")
+    @Builder.Default
     private int durationDays = 0;
 
     @Column(name = "pass_score")
+    @Builder.Default
     private Float passScore = 8.0f;
 
     @Column(name = "final_weight")
+    @Builder.Default
     private Float finalWeight = 0.6f;
 
     @Column(name = "min_progress_pct")
+    @Builder.Default
     private Integer minProgressPct = 0;
 
     @Enumerated(EnumType.STRING)
@@ -74,6 +80,7 @@ public class CourseVersion extends BaseEntity {
     private Instant publishedAt;
 
     @OneToMany(mappedBy = "courseVersion", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Chapter> chapters = new ArrayList<>();
 
     public int getAmountChapter(){

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.assessment.QuestionBankService;
 import vn.uit.lms.shared.dto.request.assessment.QuestionBankRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuestionBankResponse;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 

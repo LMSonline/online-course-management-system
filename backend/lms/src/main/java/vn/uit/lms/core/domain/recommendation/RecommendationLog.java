@@ -28,6 +28,4 @@ public class RecommendationLog {
     @JdbcTypeCode(SqlTypes.JSON)
     private String context;
 
-
-    private java.time.LocalDateTime createdAt;
 }

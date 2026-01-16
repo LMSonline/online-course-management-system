@@ -20,8 +20,8 @@ import vn.uit.lms.shared.dto.request.course.CourseRequest;
 import vn.uit.lms.shared.dto.request.course.CourseUpdateRequest;
 import vn.uit.lms.shared.dto.response.course.CourseDetailResponse;
 import vn.uit.lms.shared.dto.response.course.CourseResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 @RestController
 @RequestMapping("/api/v1")

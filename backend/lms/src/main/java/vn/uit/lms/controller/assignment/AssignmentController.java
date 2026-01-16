@@ -11,9 +11,9 @@ import vn.uit.lms.shared.dto.response.assignment.AssignmentEligibilityResponse;
 import vn.uit.lms.shared.dto.response.assignment.AssignmentResponse;
 import vn.uit.lms.shared.dto.response.assignment.StudentAssignmentProgressResponse;
 import vn.uit.lms.shared.dto.response.assignment.SubmissionResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.time.Instant;
 import java.util.List;

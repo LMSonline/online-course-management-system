@@ -52,6 +52,7 @@ public class Lesson extends BaseEntity {
     private Integer durationSeconds;
 
     @Column(name = "order_index", nullable = false)
+    @Builder.Default
     private Integer orderIndex = 0;
 
     @Column(name = "is_preview", nullable = false)

@@ -20,8 +20,8 @@ import vn.uit.lms.shared.dto.request.admin.UserFilterRequest;
 import vn.uit.lms.shared.dto.response.admin.AdminUserListResponse;
 import vn.uit.lms.shared.dto.response.admin.UserStatsResponse;
 import vn.uit.lms.shared.exception.InvalidRequestException;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.ApiMessage;
 
 import java.io.IOException;
 

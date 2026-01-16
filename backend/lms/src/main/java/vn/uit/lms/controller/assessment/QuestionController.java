@@ -8,7 +8,7 @@ import vn.uit.lms.service.assessment.QuestionService;
 import vn.uit.lms.shared.dto.request.assessment.AnswerOptionRequest;
 import vn.uit.lms.shared.dto.request.assessment.QuestionRequest;
 import vn.uit.lms.shared.dto.response.assessment.QuestionResponse;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 import java.util.Map;

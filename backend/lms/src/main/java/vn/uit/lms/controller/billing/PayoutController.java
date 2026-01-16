@@ -12,8 +12,8 @@ import vn.uit.lms.shared.dto.request.billing.CompletePayoutRequest;
 import vn.uit.lms.shared.dto.request.billing.CreatePayoutRequest;
 import vn.uit.lms.shared.dto.request.billing.RejectPayoutRequest;
 import vn.uit.lms.shared.dto.response.billing.PayoutResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.math.BigDecimal;
 import java.util.List;

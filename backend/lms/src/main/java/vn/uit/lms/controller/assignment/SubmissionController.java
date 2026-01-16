@@ -9,9 +9,9 @@ import vn.uit.lms.shared.constant.SubmissionStatus;
 import vn.uit.lms.shared.dto.request.assignment.FeedbackSubmissionRequest;
 import vn.uit.lms.shared.dto.request.assignment.GradeSubmissionRequest;
 import vn.uit.lms.shared.dto.response.assignment.SubmissionResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 

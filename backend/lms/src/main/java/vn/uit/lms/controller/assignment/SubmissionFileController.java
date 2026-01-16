@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.service.assignment.SubmissionFileService;
 import vn.uit.lms.shared.dto.response.storage.FileStorageResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
 
 import java.util.List;
 import java.util.Map;

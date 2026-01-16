@@ -60,6 +60,7 @@ public class LessonResource extends BaseEntity {
 
 
     @Column(name = "is_required", nullable = false)
+    @Builder.Default
     private Boolean isRequired = false;
 
     @Column(name = "file_size_bytes")

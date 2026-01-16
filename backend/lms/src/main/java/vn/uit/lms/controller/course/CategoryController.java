@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.uit.lms.service.course.CategoryService;
 import vn.uit.lms.shared.dto.request.course.CategoryRequest;
 import vn.uit.lms.shared.dto.response.course.CategoryResponseDto;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.util.List;
 

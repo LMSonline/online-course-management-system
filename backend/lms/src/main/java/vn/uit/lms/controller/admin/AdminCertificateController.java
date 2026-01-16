@@ -10,8 +10,7 @@ import jakarta.annotation.PostConstruct;
 import vn.uit.lms.service.learning.CertificateService;
 import vn.uit.lms.shared.dto.response.certificate.CertificateDetailResponse;
 import vn.uit.lms.shared.dto.response.certificate.CertificateResponse;
-import vn.uit.lms.shared.dto.response.certificate.CertificateVerificationResponse;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.util.List;
 import java.util.Map;

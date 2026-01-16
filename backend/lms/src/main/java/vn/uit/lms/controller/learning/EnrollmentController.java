@@ -21,9 +21,9 @@ import vn.uit.lms.shared.dto.response.enrollment.EnrollmentDetailResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentResponse;
 import vn.uit.lms.shared.dto.response.enrollment.EnrollmentStatsResponse;
 import vn.uit.lms.shared.dto.response.enrollment.FinalExamEligibilityResponse;
-import vn.uit.lms.shared.util.annotation.StudentOnly;
-import vn.uit.lms.shared.util.annotation.StudentOrTeacher;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.StudentOnly;
+import vn.uit.lms.shared.annotation.StudentOrTeacher;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 @RestController
 @RequestMapping("/api/v1")

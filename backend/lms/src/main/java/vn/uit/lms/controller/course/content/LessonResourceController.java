@@ -15,9 +15,9 @@ import vn.uit.lms.service.course.content.LessonResourceService;
 import vn.uit.lms.shared.dto.request.resource.LessonResourceRequest;
 import vn.uit.lms.shared.dto.request.resource.ReorderResourcesRequest;
 import vn.uit.lms.shared.dto.response.resource.LessonResourceResponse;
-import vn.uit.lms.shared.util.annotation.ApiMessage;
-import vn.uit.lms.shared.util.annotation.Authenticated;
-import vn.uit.lms.shared.util.annotation.TeacherOnly;
+import vn.uit.lms.shared.annotation.ApiMessage;
+import vn.uit.lms.shared.annotation.Authenticated;
+import vn.uit.lms.shared.annotation.TeacherOnly;
 
 import java.util.List;
 

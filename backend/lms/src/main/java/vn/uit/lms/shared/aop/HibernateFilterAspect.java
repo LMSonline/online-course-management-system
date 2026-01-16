@@ -14,7 +14,7 @@ public class HibernateFilterAspect {
 
     private final HibernateFilterUtils hibernateFilterUtils;
 
-    @Around("@annotation(vn.uit.lms.shared.util.annotation.EnableSoftDeleteFilter)")
+    @Around("@annotation(vn.uit.lms.shared.annotation.EnableSoftDeleteFilter)")
     public Object aroundEnableSoftDelete(ProceedingJoinPoint joinPoint) throws Throwable {
         try {
             hibernateFilterUtils.enableSoftDeleteFilter();

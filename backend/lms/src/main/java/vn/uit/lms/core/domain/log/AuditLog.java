@@ -32,5 +32,4 @@ public class AuditLog {
     private Long userAccountId;
     private String ipAddress;
 
-    private LocalDateTime createdAt;
 }

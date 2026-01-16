@@ -13,11 +13,10 @@ import vn.uit.lms.core.domain.community.notification.Notification;
 import vn.uit.lms.core.domain.community.notification.NotificationChannel;
 import vn.uit.lms.core.repository.community.notification.NotificationChannelRepository;
 import vn.uit.lms.core.repository.community.notification.NotificationRepository;
-import vn.uit.lms.shared.constant.ChannelStatus;
 import vn.uit.lms.shared.constant.ChannelType;
 import vn.uit.lms.shared.dto.request.community.notification.NotificationChannelCreateRequest;
 import vn.uit.lms.shared.exception.ResourceNotFoundException;
-import vn.uit.lms.shared.util.annotation.AdminOnly;
+import vn.uit.lms.shared.annotation.AdminOnly;
 
 import java.util.List;
 import java.util.Map;
