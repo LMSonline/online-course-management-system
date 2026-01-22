@@ -78,7 +78,7 @@ public class TeacherService {
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + id));
 
         // Check authorization
-        validateTeacherAccess(teacher);
+        validateTeacherOwnershipOrAdmin(teacher);
 
         return TeacherMapper.toTeacherDetailResponse(teacher);
     }
@@ -96,7 +96,7 @@ public class TeacherService {
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with code: " + code));
 
         // Check authorization
-        validateTeacherAccess(teacher);
+        validateTeacherOwnershipOrAdmin(teacher);
 
         return TeacherMapper.toTeacherDetailResponse(teacher);
     }

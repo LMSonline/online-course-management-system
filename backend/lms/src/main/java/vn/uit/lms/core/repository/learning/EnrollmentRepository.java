@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import vn.uit.lms.core.domain.course.Course;
 import vn.uit.lms.core.domain.learning.Enrollment;
-import vn.uit.lms.shared.constant.CourseStatus;
 import vn.uit.lms.shared.constant.EnrollmentStatus;
 
 import java.util.List;
@@ -145,4 +144,16 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long>, J
 
     boolean existsByCourse(Course course);
     int countByCourseAndStatus(Course course, EnrollmentStatus status);
+
+    /**
+     * Check if student has any enrollment with a teacher
+     */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Enrollment e " +
+            "WHERE e.student.id = :studentId " +
+            "AND e.course.teacher.id = :teacherId " +
+            "AND e.deletedAt IS NULL")
+    boolean existsByStudentIdAndCourseTeacherId(
+            @Param("studentId") Long studentId,
+            @Param("teacherId") Long teacherId
+    );
 }

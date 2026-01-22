@@ -11,10 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import vn.uit.lms.core.domain.Account;
 import vn.uit.lms.core.domain.Student;
+import vn.uit.lms.core.domain.Teacher;
 import vn.uit.lms.core.domain.learning.Certificate;
 import vn.uit.lms.core.repository.AccountRepository;
 import vn.uit.lms.core.repository.StudentRepository;
+import vn.uit.lms.core.repository.TeacherRepository;
 import vn.uit.lms.core.repository.learning.CertificateRepository;
+import vn.uit.lms.core.repository.learning.EnrollmentRepository;
 import vn.uit.lms.service.learning.CertificateService;
 import vn.uit.lms.service.storage.CloudinaryStorageService;
 import vn.uit.lms.shared.annotation.Audit;
@@ -47,6 +50,8 @@ public class StudentService {
     private final CloudinaryUtils cloudinaryUtils;
     private final AccountService accountService;
     private final CertificateRepository certificateRepository;
+    private final TeacherRepository teacherRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Value("${app.avatar.max-size-bytes}")
     private long maxSizeBytes;
@@ -56,13 +61,17 @@ public class StudentService {
                           CloudinaryStorageService cloudinaryStorageService,
                           CloudinaryUtils cloudinaryUtils,
                           AccountService accountService,
-                          CertificateRepository certificateRepository) {
+                          CertificateRepository certificateRepository,
+                          TeacherRepository teacherRepository,
+                          EnrollmentRepository enrollmentRepository) {
         this.studentRepository = studentRepository;
         this.accountRepository = accountRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
         this.cloudinaryUtils = cloudinaryUtils;
         this.accountService = accountService;
         this.certificateRepository = certificateRepository;
+        this.teacherRepository = teacherRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     /**
@@ -397,13 +406,13 @@ public class StudentService {
         if (currentAccount.getRole() == Role.TEACHER) {
             // Implementation pending - requires Enrollment entity
             // When Enrollment entity is available:
-            // Teacher teacher = teacherRepository.findByAccountId(currentUserId)
-            //     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
-            // boolean hasEnrollment = enrollmentRepository
-            //     .existsByStudentIdAndCourseTeacherId(student.getId(), teacher.getId());
-            // if (!hasEnrollment) {
-            //     throw new UnauthorizedException("Teacher can only access students enrolled in their courses");
-            // }
+             Teacher teacher = teacherRepository.findByAccountId(currentUserId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
+             boolean hasEnrollment = enrollmentRepository
+                 .existsByStudentIdAndCourseTeacherId(student.getId(), teacher.getId());
+             if (!hasEnrollment) {
+                 throw new UnauthorizedException("Teacher can only access students enrolled in their courses");
+             }
 
             // For now, allow teacher access (will be restricted when Enrollment is implemented)
             log.debug("Teacher access granted for student id: {} (enrollment check pending)", student.getId());
